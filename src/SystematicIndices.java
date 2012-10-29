@@ -37,6 +37,15 @@ public abstract class SystematicIndices {
 			return getK(Encoder.KMAX);
 	}
 	
+	public static int ceil(int k){
+		for(int i=0; i<table2.length; i++){
+			if(table2[i][0]>=k){
+				return(table2[i][0]);
+			}
+		}
+		return(k);
+	}
+	
 	private static final int table2[][] = {
 		{10,254,7,10,17},
 		{12,630,7,10,19},

@@ -3,10 +3,20 @@ public class SourceBlock {
 
 	private short SBN;
 	private SubBlock[] sub_blocks;
+	private int K;
 	
-	public SourceBlock(short sBN, SubBlock[] sblocks){
+	public SourceBlock(short sBN, SubBlock[] sblocks, int k){
 		this.SBN = sBN;
 		this.sub_blocks = sblocks;
+		this.K = k;
+	}
+
+	public int getK() {
+		return K;
+	}
+
+	public void setK(int k) {
+		K = k;
 	}
 
 	public short getSBN() {
