@@ -2,8 +2,8 @@
 
 public class PayloadID {
 
-	private short SBN;
-	private int ESI;
+	private long SBN;
+	private long ESI;
 	
 	public PayloadID(){
 

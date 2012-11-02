@@ -1,30 +1,30 @@
 
 public abstract class SystematicIndices {
 
-	public static int getK(int i){
-		return table2[i][0];
+	public static long getK(long i){
+		return table2[(int) i][0];
 	}
 	
-	public static int J(int K){
-	 	return table2[K][1];
+	public static long J(long K){
+	 	return table2[(int) K][1];
 	}
 	
-	public static int S(int K){
-	 	return table2[K][2];
+	public static long S(long K){
+	 	return table2[(int) K][2];
 	}
 	
-	public static int H(int K){
-	 	return table2[K][3];
+	public static long H(long K){
+	 	return table2[(int) K][3];
 	}
 	
-	public static int W(int K){
-	 	return table2[K][4];
+	public static long W(long K){
+	 	return table2[(int) K][4];
 	}
 	
-	public static int KL(int n, int WS, short Al, int T){
+	public static long KL(long n, long WS, long Al, long T){
 		
-		int upper_bound = WS / (Al * (Encoder.ceil((double)T/(Al*n))));
-		int K=-1, i=0;
+		long upper_bound = WS / (Al * (Encoder.ceil((double)T/(Al*n))));
+		long K=-1, i=0;
 		
 		while(i<Encoder.KMAX && K<=upper_bound){
 			K = getK(i);
@@ -37,16 +37,16 @@ public abstract class SystematicIndices {
 			return getK(Encoder.KMAX);
 	}
 	
-	public static int ceil(int k){
-		for(int i=0; i<table2.length; i++){
-			if(table2[i][0]>=k){
-				return(table2[i][0]);
+	public static long ceil(long k){
+		for(long i=0; i<table2.length; i++){
+			if(table2[(int) i][0]>=k){
+				return(table2[(int) i][0]);
 			}
 		}
 		return(k);
 	}
 	
-	private static final int table2[][] = {
+	private static final long table2[][] = {
 		{10,254,7,10,17},
 		{12,630,7,10,19},
 		{18,682,11,10,29},

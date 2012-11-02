@@ -3,7 +3,7 @@
 public class CommonOTI {
 
 	private long F; // Transfer length
-	private int T; // Symbol size
+	private long T; // Symbol size
 	
 	public CommonOTI(){
 

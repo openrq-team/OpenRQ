@@ -2,12 +2,12 @@
 
 public class Partition {
 
-	private int Is;
-	private int Il;
-	private int Js;
-	private int Jl;
+	private long Is;
+	private long Il;
+	private long Js;
+	private long Jl;
 	
-	public Partition(int I, int J) {
+	public Partition(long I, long J) {
 		Il = Encoder.ceil((double)I/J);
 		Is = Encoder.floor((double)I/J);
 		Jl = I - (Is*J);
@@ -16,8 +16,8 @@ public class Partition {
 	
 	// Metodo mais estupido da minha vida
 	/*
-	public static Partition partition(int I, int J){
-		int Is, Il, Js, Jl;
+	public static Partition partition(long I, long J){
+		long Is, Il, Js, Jl;
 		
 		Il = Encoder.ceil(I/J);
 		Is = Encoder.floor(I/J);
@@ -27,35 +27,35 @@ public class Partition {
 		return new Partition(Is, Il, Js, Jl);
 	}*/
 
-	public int getIs() {
+	public long getIs() {
 		return Is;
 	}
 
-	public void setIs(int is) {
+	public void setIs(long is) {
 		Is = is;
 	}
 
-	public int getIl() {
+	public long getIl() {
 		return Il;
 	}
 
-	public void setIl(int il) {
+	public void setIl(long il) {
 		Il = il;
 	}
 
-	public int getJs() {
+	public long getJs() {
 		return Js;
 	}
 
-	public void setJs(int js) {
+	public void setJs(long js) {
 		Js = js;
 	}
 
-	public int getJl() {
+	public long getJl() {
 		return Jl;
 	}
 
-	public void setJl(int jl) {
+	public void setJl(long jl) {
 		Jl = jl;
 	}
 	

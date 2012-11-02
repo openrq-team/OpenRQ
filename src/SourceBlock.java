@@ -1,29 +1,30 @@
 
 public class SourceBlock {
 
-	private short SBN;
+	private long SBN;
 	private SubBlock[] sub_blocks;
-	private int K;
+	private long K;
+	public static long NL, NS; // TODO remover
 	
-	public SourceBlock(short sBN, SubBlock[] sblocks, int k){
+	public SourceBlock(long sBN, SubBlock[] sblocks, long k){
 		this.SBN = sBN;
 		this.sub_blocks = sblocks;
 		this.K = k;
 	}
 
-	public int getK() {
+	public long getK() {
 		return K;
 	}
 
-	public void setK(int k) {
+	public void setK(long k) {
 		K = k;
 	}
 
-	public short getSBN() {
+	public long getSBN() {
 		return SBN;
 	}
 
-	public void setSBN(short sBN) {
+	public void setSBN(long sBN) {
 		SBN = sBN;
 	}
 
