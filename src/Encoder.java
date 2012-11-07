@@ -3,21 +3,22 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import sun.misc.Unsafe;
 
 
 public class Encoder {
 	
-	public static final long MAX_PAYLOAD_SIZE = 512; // P
-	public static final long ALIGN_PARAM = 4; // Al
+	public static final int MAX_PAYLOAD_SIZE = 512; // P
+	public static final int ALIGN_PARAM = 4; // Al
 	public static final long MAX_SIZE_BLOCK = 76800; // WS // B
 	public static final long SSYMBOL_LOWER_BOUND = 8; // SS
 	public static final long KMAX = 56403;
 	
-	private long T; // symbol size
-	private long Z; // number of source blocks
-	private long N; // number of sub-blocks in each source block
+	private int T; // symbol size
+	private int Z; // number of source blocks
+	private int N; // number of sub-blocks in each source block
 	private long F; // transfer length
-	private long Kt; // total number of symbols required to represent the source data of the object
+	private int Kt; // total number of symbols required to represent the source data of the object
 	private byte[] data;
 	
 	public Encoder(byte[] file){
@@ -35,96 +36,112 @@ public class Encoder {
 		N = derivateN();
 	}
 
-	private long derivateT(long pLinha){
+	private int derivateT(int pLinha){
 		return pLinha;		
 	}
 	
-	private long derivateZ(){
+	private int derivateZ(){
 				
 		long N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
 		
 		return(ceil((double)Kt/SystematicIndices.KL(N_max, MAX_SIZE_BLOCK, ALIGN_PARAM, T)));
 	}
 	
-	private long derivateN(){
+	private int derivateN(){
 		
-		long N_max = floor((double)(T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM)));
+		int N_max = floor((double)(T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM)));
 
-		long n = 1;
+		int n = 1;
 		for(; n<=N_max && ceil((double)Kt/Z)>SystematicIndices.KL(n, MAX_SIZE_BLOCK, ALIGN_PARAM, T); n++);
 		
 		return n;
 	}
 	
-	public static long ceil(double x){
-		return((long)Math.ceil(x));
+	public static int ceil(double x){
+		return((int)Math.ceil(x));
 	}
 	
-	public static long floor(double x){
-		return((long)Math.floor(x));
+	public static int floor(double x){
+		return((int)Math.floor(x));
 	}
 	
 	public SourceBlock[] partition(){
 		
 		Partition KZ = new Partition(Kt, Z);
-		long KL = KZ.getIl();
-		long KS = KZ.getIs();
-		long ZL = KZ.getJl();
-		long ZS = KZ.getJs();
+		int KL = KZ.getIl();
+		int KS = KZ.getIs();
+		int ZL = KZ.getJl();
+		int ZS = KZ.getJs();
 		
 		Partition TN = new Partition(T/ALIGN_PARAM, N);
-		long TL = TN.getIl();
-		long TS = TN.getIs();
-		long NL = TN.getJl();
-		long NS = TN.getJs();
+		int TL = TN.getIl();
+		int TS = TN.getIs();
+		int NL = TN.getJl();
+		int NS = TN.getJs();
 		
-		SourceBlock.NL = NL;
-		SourceBlock.NS = NS;
-		SourceBlock[] object = new SourceBlock[(int) Z];
+		SourceBlock[] object = new SourceBlock[Z];
 		
-		long j;
-		long i;
-		
-		for(i=0,j=0; i<ZL; i++, j+=KL*T){
+		int i;
+		for(i=0; i<ZL; i++){
+			// Source block i
 			
-			byte[] aux = Arrays.copyOfRange(data, (int)j, (int)(j+KL*T));
-			SubBlock[] sblocks = new SubBlock[(int)N+1]; // +1 for extension (padding K'-K)
-			
-			long n, k;
-			for(n=0,k=0; n<NL; n++, k+=KL*TL*ALIGN_PARAM){
-				sblocks[(int)n] = new SubBlock(Arrays.copyOfRange(aux,(int)k, (int)(k+KL*TL*ALIGN_PARAM)),TL*ALIGN_PARAM);
+			byte[] aux2 = new byte[KL*T];
+					
+			int k;
+			for(k=0; k<KL; k++){
+				
+				int j = 0;
+				int index_data  = (i*KL*T) + (k*TL*ALIGN_PARAM); // sempre TL pq começa-se sempre pelo primeiro sub-bloco
+				int index_aux2 = 0;
+
+				for(; j<NL; j++, index_data+=KL*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
+					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
+				}
+				
+				for(; j<NS; j++, index_data+=KL*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
+					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
+				}
 			}
 			
-			for(long x=0; x<NS; x++, n++, k+=KL*TS*ALIGN_PARAM){
-				sblocks[(int)n] = new SubBlock(Arrays.copyOfRange(aux, (int)k, (int)(k+KL*TS*ALIGN_PARAM)),TS*ALIGN_PARAM );
-			}
-			
-			sblocks[(int)N] = new SubBlock(new byte[(int)((SystematicIndices.ceil(KL)-KL)*T)],T);
-			
-			object[(int)i] = new SourceBlock(i,sblocks,KL);
-			
+			object[i] = new SourceBlock(i, aux2, T, N, KL);	
 		}
 		
-		for(long z=0; z<ZS; z++, i++, j+=KS*T){
+		for(; i<ZS; i++){
+			// Source block i
 			
-			byte[] aux = Arrays.copyOfRange(data, (int)j, (int)(j+KS*T));
-			SubBlock[] sblocks = new SubBlock[(int)N+1]; // +1 for extension (padding K'-K)
-			
-			long n, k;
-			for(n=0,k=0; n<NL; n++, k+=KL*TL*ALIGN_PARAM){
-				sblocks[(int)n] = new SubBlock(Arrays.copyOfRange(aux, (int)k, (int)(k+KS*TL*ALIGN_PARAM)),TL*ALIGN_PARAM);
+			byte[] aux2 = new byte[KS*T];
+					
+			int k;
+			for(k=0; k<KS; k++){
+				
+				int j = 0;
+				int index_data  = (i*KS*T) + (k*TL*ALIGN_PARAM); // sempre TL pq começa-se sempre pelo primeiro sub-bloco
+				int index_aux2 = 0;
+
+				for(; j<NL; j++, index_data+=KS*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
+					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
+				}
+				
+				for(; j<NS; j++, index_data+=KS*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
+					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
+				}
 			}
 			
-			for(long x=0; x<NS; x++, n++, k+=KL*TS*ALIGN_PARAM){
-				sblocks[(int)n] = new SubBlock(Arrays.copyOfRange(aux, (int)k, (int)(k+KS*TS*ALIGN_PARAM)),TS*ALIGN_PARAM);
-			}
-			
-			sblocks[(int)N] = new SubBlock(new byte[(int)((SystematicIndices.ceil(KS)-KS)*T)],T);
-			
-			object[(int)i] = new SourceBlock(i,sblocks,KS);
+			object[i] = new SourceBlock(i, aux2, T, N, KS);
 		}
 		
 		return object;
+	}
+	
+	public byte[] unPartition(SourceBlock[] object){
+		
+		byte[] data = null;
+		
+		
+		// TODO
+		
+		
+		return data;		
 	}
 	
 	public void encode(SourceBlock[] object){
@@ -158,7 +175,7 @@ public class Encoder {
 		for(long i=0; i<object.length; i++){
 			SourceBlock sb = object[(int)i];
 			
-			long kLinha = sb.getSub_blocks().length;
+			long kLinha = sb.getSymbols().length;
 			Tuple[] tuples = new Tuple[(int)kLinha];
 			
 			for(long j=0; j<kLinha; j++){
