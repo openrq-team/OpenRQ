@@ -27,6 +27,7 @@ public class Partition {
 		return new Partition(Is, Il, Js, Jl);
 	}*/
 
+	//TODO change to generic gets and sets
 	public int getIs() {
 		return Is;
 	}

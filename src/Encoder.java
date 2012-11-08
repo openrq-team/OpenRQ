@@ -25,15 +25,19 @@ public class Encoder {
 		
 		F = file.length;
 		
-		data = new byte[(int) F];
-		
-		for(long i=0; i<F; i++)
-			data[(int) i] = file[(int) i];
-		
 		T = derivateT(MAX_PAYLOAD_SIZE);
 		Kt = ceil((double)F/T);
 		Z = derivateZ();
 		N = derivateN();
+		
+		if(F>Kt*T)
+			data = new byte[(int) F];
+		else
+			data = new byte[(int) Kt*T];
+		
+		for(int i=0; i<F; i++)
+			data[i] = file[i];
+		
 	}
 
 	private int derivateT(int pLinha){
@@ -123,7 +127,7 @@ public class Encoder {
 				}
 				
 				for(; j<NS; j++, index_data+=KS*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
-					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
+					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM); //TODO OFF BY ONE KUNG-FU
 				}
 			}
 			
@@ -135,10 +139,43 @@ public class Encoder {
 	
 	public byte[] unPartition(SourceBlock[] object){
 		
-		byte[] data = null;
+		byte[] data = new byte[(int) F];
 		
 		
-		// TODO
+		for(int i=0; i<object.length; i++){
+			// Source block i
+			
+			SourceBlock sb = object[i];
+			int Kappa   = (int)sb.getK();
+			int n_      = (int)sb.getN();
+			int t_      = (int)sb.getT();
+			byte[] aux2 = sb.getSymbols();
+			
+			Partition TN = new Partition(t_/ALIGN_PARAM, n_);
+			int TL = TN.getIl();
+			int TS = TN.getIs();
+			int NL = TN.getJl();
+			int NS = TN.getJs();
+			
+			
+			
+			for(int k=0; k<Kappa; k++){
+				
+				int j = 0;
+				int index_data  = (i*Kappa*T) + k*TL*ALIGN_PARAM; // sempre TL pq começa-se sempre pelo primeiro sub-bloco
+				int index_aux2 = k*t_;
+
+				for(; j<NL; j++, index_data+=Kappa*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
+					System.arraycopy(aux2, index_aux2, data, index_data, TL*ALIGN_PARAM);
+				}
+				
+				for(; j<NS; j++, index_data+=Kappa*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
+					System.arraycopy(aux2, index_aux2, data, index_data, TS*ALIGN_PARAM);
+				}
+				
+			}
+			
+		}
 		
 		
 		return data;		

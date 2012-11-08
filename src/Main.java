@@ -18,22 +18,28 @@ public class Main {
 			System.exit(-2);
 		}
 		
-		System.out.println("\n\n------ YOUR MESSAGE ------\n" + new String(msg));
+		int i;
+		for(i=0;i<msg.length;i++)
+        {
+                int bint = new Byte(msg[i]).intValue();
+                if(bint == 0)
+                {
+                     break;
+                }
+        }
 		
-		Encoder enc = new Encoder(msg);
+		byte[] msg2 = (new String(msg,0,i)).getBytes();
 		
-		System.out.println("------ PARTITIONED MESSAGE ------");
+		System.out.println("\n\n------ YOUR MESSAGE ------\n" + new String(msg2));
 		
-		SourceBlock[] data = enc.partition();
+		Encoder enc = new Encoder(msg2);
 		
-		for(int i = 0; i<data.length; i++){
+		System.out.println("------ (un)PARTITIONED MESSAGE ------");
+		
+		byte[] data = enc.unPartition(enc.partition());
+		
 			
-			SubBlock[] sblocks = data[i].getSub_blocks();
-			
-			for(int j=0; j<sblocks.length; j++){
-				System.out.print(new String(sblocks[j].getData()));
-			}
-		}
+			System.out.println(new String(data));
 		
 		
 	}
