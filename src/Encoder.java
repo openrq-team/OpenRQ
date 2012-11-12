@@ -4,15 +4,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import sun.misc.Unsafe;
-
+import Jama.Matrix;
 
 public class Encoder {
 	
 	public static final int MAX_PAYLOAD_SIZE = 512; // P
 	public static final int ALIGN_PARAM = 4; // Al
-	public static final long MAX_SIZE_BLOCK = 76800; // WS // B
+	public static final int MAX_SIZE_BLOCK = 76800; // WS // B
 	public static final long SSYMBOL_LOWER_BOUND = 8; // SS
-	public static final long KMAX = 56403;
+	public static final int KMAX = 56403;
 	
 	private int T; // symbol size
 	private int Z; // number of source blocks
@@ -46,7 +46,7 @@ public class Encoder {
 	
 	private int derivateZ(){
 				
-		long N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
+		int N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
 		
 		return(ceil((double)Kt/SystematicIndices.KL(N_max, MAX_SIZE_BLOCK, ALIGN_PARAM, T)));
 	}
@@ -89,7 +89,7 @@ public class Encoder {
 		for(i=0; i<ZL; i++){
 			// Source block i
 			
-			byte[] aux2 = new byte[KL*T];
+			byte[] aux2 = new byte[KL*T+1]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
 					
 			int k;
 			for(k=0; k<KL; k++){
@@ -113,7 +113,7 @@ public class Encoder {
 		for(; i<ZS; i++){
 			// Source block i
 			
-			byte[] aux2 = new byte[KS*T];
+			byte[] aux2 = new byte[KS*T+1]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
 					
 			int k;
 			for(k=0; k<KS; k++){
@@ -139,7 +139,12 @@ public class Encoder {
 	
 	public byte[] unPartition(SourceBlock[] object){
 		
-		byte[] data = new byte[(int) F];
+		byte[] data;
+		
+		if(F>Kt*T)
+			data = new byte[(int) F];
+		else
+			data = new byte[(int) Kt*T];
 		
 		
 		for(int i=0; i<object.length; i++){
@@ -193,12 +198,66 @@ public class Encoder {
 		Map<SourceBlock, Tuple[]> sbTuple = generateTuples(object);
 		
 		for(int i=0; i<object.length; i++){
-			long K = SystematicIndices.ceil(object[i].getK());
-			long S = SystematicIndices.S(K);
-			long H = SystematicIndices.H(K);
-			long W = SystematicIndices.W(K);
-			long L = K + S + H;
 			
+			SourceBlock sb = object[i];
+			byte[] ssymbols = sb.getSymbols();
+			
+			int K = SystematicIndices.ceil((int)sb.getK());
+			int S = SystematicIndices.S(K);
+			int H = SystematicIndices.H(K);
+			int W = SystematicIndices.W(K);
+			int L = K + S + H;
+			int P = L - W;
+			int B = W - S;
+			
+			
+			
+			// initialize C
+			byte[] C = new byte[L];
+			int k = (int) sb.getK();
+			int t = (int) sb.getT();
+			int kt = k*t;
+			for(int j=0; j<kt; j++){
+				C[j] = ssymbols[i];
+			}			
+			
+			/* Generate LxL A matrix */
+			byte[][] A = new byte[L][L];
+			
+			// Generate SxB G_LDPC1
+			for(int j=0; j<B; j++){
+				
+				int a = 1 + Encoder.floor((double)j/S);
+				int b = j % S;
+				
+				// D[b] = D[b] + C[i]
+				xorSymbol(C,(B + b) * t, C, j, t);
+				
+				b = (b + a) % S;
+				
+				// D[b] = D[b] + C[i]
+				xorSymbol(C,(B + b) * t, C, j, t);
+				
+				b = (b + a) % S;
+				
+				// D[b] = D[b] + C[i]
+				xorSymbol(C,(B + b) * t, C, j, t);
+			}
+			
+			// Generate SxP G_LDPC2
+			for(int j=0; j<S; j++){
+
+				int a = j % P;
+				int b = (j + 1) % S;
+
+				// D[i] = D[i] + C[W+a] + C[W+b]
+				// D[i] = D[i] + C[W+a]
+				xorSymbol(C, (B + j) * t, C, (W + a) * t, t);
+				
+				// D[i] = D[i] + C[W+b]
+				xorSymbol(C, (B + j) * t, C, (W + b) * t, t);				
+			}
+
 			
 			
 		}
@@ -212,7 +271,7 @@ public class Encoder {
 		for(long i=0; i<object.length; i++){
 			SourceBlock sb = object[(int)i];
 			
-			long kLinha = sb.getSymbols().length;
+			int kLinha = sb.getSymbols().length;
 			Tuple[] tuples = new Tuple[(int)kLinha];
 			
 			for(long j=0; j<kLinha; j++){
@@ -225,11 +284,11 @@ public class Encoder {
 		return sbTuple;
 	}
 	
-	public byte[] enc(long K, byte[] C, Tuple tuple){
+	public byte[] enc(int K, byte[] C, Tuple tuple){
 		
-		long S = SystematicIndices.S(K);
-		long H = SystematicIndices.H(K);
-		long W = SystematicIndices.W(K);
+		int S = SystematicIndices.S(K);
+		int H = SystematicIndices.H(K);
+		int W = SystematicIndices.W(K);
 		long L = K + S + H;
 		long P = L - W;
 		//long B = W - S;
@@ -277,6 +336,13 @@ public class Encoder {
 		return xor;
 	}
 	
+	public void xorSymbol(byte[] s1, int pos1, byte[] s2, int pos2, int length){
+		
+		for(int i=0; i<length; i++, pos1++, pos2++){
+			s1[pos1] = (byte) (s1[pos1] ^ s2[pos2]);
+		}
+	}
+	
 	public static long ceilPrime(long p){
 		
 		while(!isPrime(p)) p++;
@@ -300,14 +366,14 @@ class Tuple{
 	
 	long d,a,b,d1,a1,b1;
 	
-	Tuple(long K, long X){
+	Tuple(int K, long X){
 		
-		long S = SystematicIndices.S(K);
-		long H = SystematicIndices.H(K);
-		long W = SystematicIndices.W(K);
-		long L = K + S + H;
-		long J = SystematicIndices.J(K);
-		long P = L - W;
+		int S = SystematicIndices.S(K);
+		int H = SystematicIndices.H(K);
+		int W = SystematicIndices.W(K);
+		int L = K + S + H;
+		int J = SystematicIndices.J(K);
+		int P = L - W;
 		long P1 = Encoder.ceilPrime(P);
 		
 		long A = 53591 + J*997;
