@@ -208,21 +208,49 @@ public class Encoder {
 			int W = SystematicIndices.W(K);
 			int L = K + S + H;
 			int P = L - W;
+			int U = P - H;
 			int B = W - S;
 			
-			
-			
-			// initialize C
-			byte[] C = new byte[L];
 			int k = (int) sb.getK();
 			int t = (int) sb.getT();
-			int kt = k*t;
+			int kt = k*t; // inutil?
+			
+			
+			/* Generate LxL Constraint  Matrix*/
+			byte[][] constraint_matrix = new byte[S+H][L];
+			
+			// Initialize G_LPDC2
+			for(int row=0; row<S; row++){
+				for(int col=W; col<L; col++){
+					
+					// Consecutives 1's modulo P
+					constraint_matrix[row][col  %P] = 1;
+					constraint_matrix[row][col+1%P] = 1;
+					
+				}
+			}
+			
+			// Initialize G_LPDC1
+			for(int row=0; row<S; row++){
+				
+				constraint_matrix[row][0] = 1;
+				constraint_matrix[row]
+						
+				for(int col=1; col<B; col++){
+
+										
+											// TODO implementar em C --> memoria contigua pros cyclic down-shift :(
+					
+				}
+			}
+			
+			
+			/*
+			// initialize C
+			byte[] C = new byte[L];
 			for(int j=0; j<kt; j++){
 				C[j] = ssymbols[i];
-			}			
-			
-			/* Generate LxL A matrix */
-			byte[][] A = new byte[L][L];
+			}
 			
 			// Generate SxB G_LDPC1
 			for(int j=0; j<B; j++){
@@ -257,7 +285,7 @@ public class Encoder {
 				// D[i] = D[i] + C[W+b]
 				xorSymbol(C, (B + j) * t, C, (W + b) * t, t);				
 			}
-
+			*/
 			
 			
 		}
