@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import sun.misc.Unsafe;
-import Jama.Matrix;
 
 public class Encoder {
 	
@@ -219,6 +218,8 @@ public class Encoder {
 			/* Generate LxL Constraint  Matrix*/
 			byte[][] constraint_matrix = new byte[S+H][L];
 			
+			// Upper half
+			
 			// Initialize G_LPDC2
 			for(int row=0; row<S; row++){
 				for(int col=W; col<L; col++){
@@ -231,62 +232,111 @@ public class Encoder {
 			}
 			
 			// Initialize G_LPDC1
-			for(int row=0; row<S; row++){
+			int circulant_matrix = -1;
+			for(int col=0; col<B; col++){
 				
-				constraint_matrix[row][0] = 1;
-				constraint_matrix[row]
+				int circulant_matrix_column = col % S;
+				
+				if(circulant_matrix_column != 0){ 
+					
+					// cyclic down-shift													// FIXME implementar em C --> memoria contigua pros cyclic down-shift :(
+					constraint_matrix[0][col] = constraint_matrix[S-1][col-1];
+					
+					for(int row=1; row<S; row++){
 						
-				for(int col=1; col<B; col++){
-
-										
-											// TODO implementar em C --> memoria contigua pros cyclic down-shift :(
+						constraint_matrix[row][col] = constraint_matrix[row-1][col-1];
+						
+					}
+				}
+				else{ // if 0, then its the first column of the current circulant matrix
+					
+					circulant_matrix++;
+					
+					// 0
+					constraint_matrix[0][col] = 1;
+					
+					// (i + 1) mod S
+					constraint_matrix[(circulant_matrix + 1) % S][col] = 1;
+					
+					// (2 * (i + 1)) mod S
+					constraint_matrix[(2 * (circulant_matrix + 1)) % S][col] = 1;
 					
 				}
 			}
 			
-			
-			/*
-			// initialize C
-			byte[] C = new byte[L];
-			for(int j=0; j<kt; j++){
-				C[j] = ssymbols[i];
-			}
-			
-			// Generate SxB G_LDPC1
-			for(int j=0; j<B; j++){
-				
-				int a = 1 + Encoder.floor((double)j/S);
-				int b = j % S;
-				
-				// D[b] = D[b] + C[i]
-				xorSymbol(C,(B + b) * t, C, j, t);
-				
-				b = (b + a) % S;
-				
-				// D[b] = D[b] + C[i]
-				xorSymbol(C,(B + b) * t, C, j, t);
-				
-				b = (b + a) % S;
-				
-				// D[b] = D[b] + C[i]
-				xorSymbol(C,(B + b) * t, C, j, t);
-			}
-			
-			// Generate SxP G_LDPC2
-			for(int j=0; j<S; j++){
+			// Initialize I_s			
+			for(int row=0; row<S; row++){
+				for(int col=0; col<S; col++){
 
-				int a = j % P;
-				int b = (j + 1) % S;
-
-				// D[i] = D[i] + C[W+a] + C[W+b]
-				// D[i] = D[i] + C[W+a]
-				xorSymbol(C, (B + j) * t, C, (W + a) * t, t);
-				
-				// D[i] = D[i] + C[W+b]
-				xorSymbol(C, (B + j) * t, C, (W + b) * t, t);				
+					if(col != row)
+						continue;
+					else
+						constraint_matrix[row][col+B] = 1;
+				}
 			}
-			*/
 			
+			// Botton half
+			
+			// Initialize I_h
+			int lower_limit_col = W + U;
+			
+			for(int row=0; row<H; row++){
+				for(int col=0; col<H; col++){
+					
+					if(col != row)
+						continue;
+					else
+						constraint_matrix[row+S][col+lower_limit_col] = 1;
+				}
+			}
+			
+			// Initialize G_HDPC
+			// MT
+			final int alpha = 2;
+			byte[][] MT = new byte[H][K+S];
+			
+			for(int row=0; row<H; row++)
+				for(int col=0; col<K+S-1; col++)
+					
+					if(i != (int)(Rand.rand(col+1, 6, H)) && i != (((int)(Rand.rand(col+1, 6, H)) + (int)(Rand.rand(col+1, 7, H-1)) + 1) % H))
+						continue;
+					else
+						MT[row][col] = 1;
+			
+			for(int row=0; row<H; row++)
+				MT[row][K+S-1] = (byte)Encoder.power(alpha, row);
+			
+			
+			// GAMMA
+			byte[][] GAMMA = new byte[K+S][K+S];
+			
+			for(int row = 0; row<K+S; row++){
+				for(int col = 0; col<K+S; col++){
+					
+					if(row >= col)
+						GAMMA[row][col] = (byte)Encoder.power(alpha, row-col);
+					else
+						GAMMA[row][col] = 0;
+					
+				}	
+			}
+			
+			// G_HDPC = MT * GAMMA				// TODO implementar multiplicaçao directamente pra constraint_matrix
+			Matrix _mt    = new Matrix(MT);
+			Matrix _gamma = new Matrix(GAMMA); 
+			
+			Matrix g_hdpc = _mt.times(_gamma);
+			
+			byte[][] G_HDPC = g_hdpc.getData(); 
+			
+			// Initialize G_HDPC
+			for(int row=S; row<S+H; row++)
+				for(int col=0; col<W+U; col++)
+					constraint_matrix[row][col] = G_HDPC[row-S][col];
+			
+			// G_ENC
+			
+			//TODO continuar...
 			
 		}
 		
@@ -388,6 +438,25 @@ public class Encoder {
 	    }
 	    return true;
 	}
+	
+	 private static long power(int x,int y){
+		 
+		 long p=1;
+		 long b=((long)y) & 0x00000000ffffffffL;
+		 long powerN=x;
+		 
+		 while(b!=0){
+			
+			 if((b & 1) != 0) 
+				p*=powerN;
+			
+			b>>>=1;
+		 	powerN=powerN*powerN;
+		 }
+		 
+		 return p;
+	} 
+	
 }
 
 class Tuple{
