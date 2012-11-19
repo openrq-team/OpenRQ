@@ -1,7 +1,9 @@
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import sun.misc.Unsafe;
 
@@ -126,7 +128,7 @@ public class Encoder {
 				}
 				
 				for(; j<NS; j++, index_data+=KS*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
-					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM); //TODO OFF BY ONE KUNG-FU
+					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
 				}
 			}
 			
@@ -194,12 +196,13 @@ public class Encoder {
 	
 	public void generateIntermediateSymbols(SourceBlock[] object){
 		
-		Map<SourceBlock, Tuple[]> sbTuple = generateTuples(object);
+		// Map<SourceBlock, Tuple[]> sbTuple = generateTuples(object);
 		
 		for(int i=0; i<object.length; i++){
 			
 			SourceBlock sb = object[i];
 			byte[] ssymbols = sb.getSymbols();
+			// TODO create ssymbols + padding
 			
 			int K = SystematicIndices.ceil((int)sb.getK());
 			int S = SystematicIndices.S(K);
@@ -216,7 +219,7 @@ public class Encoder {
 			
 			
 			/* Generate LxL Constraint  Matrix*/
-			byte[][] constraint_matrix = new byte[S+H][L];
+			byte[][] constraint_matrix = new byte[L][L]; // A
 			
 			// Upper half
 			
@@ -304,8 +307,7 @@ public class Encoder {
 						MT[row][col] = 1;
 			
 			for(int row=0; row<H; row++)
-				MT[row][K+S-1] = (byte)Encoder.power(alpha, row);
-			
+				MT[row][K+S-1] = OctectOps.getExp(row);
 			
 			// GAMMA
 			byte[][] GAMMA = new byte[K+S][K+S];
@@ -314,7 +316,7 @@ public class Encoder {
 				for(int col = 0; col<K+S; col++){
 					
 					if(row >= col)
-						GAMMA[row][col] = (byte)Encoder.power(alpha, row-col);
+						GAMMA[row][col] = OctectOps.getExp(row-col);
 					else
 						GAMMA[row][col] = 0;
 					
@@ -335,9 +337,20 @@ public class Encoder {
 					constraint_matrix[row][col] = G_HDPC[row-S][col];
 			
 			// G_ENC
+			for(int row=S+H; row<L; row++){
 			
-			//TODO continuar...
-			
+				Tuple tuple = new Tuple(K, row-S-H);
+				
+				List<Integer> indexes = encIndexes(K, tuple);
+				
+				for(int j=0; j<indexes.size(); j++){
+					
+					constraint_matrix[row][indexes.get(j)] = 1;
+					
+					indexes.remove(j);
+					
+				}
+			}
 		}
 		
 	}
@@ -401,6 +414,47 @@ public class Encoder {
 		}
 		
 		return result;
+	}
+	
+	public List<Integer> encIndexes(int K, Tuple tuple){
+		
+		List<Integer> indexes = new ArrayList<Integer>();
+		
+		int S = SystematicIndices.S(K);
+		int H = SystematicIndices.H(K);
+		int W = SystematicIndices.W(K);
+		long L = K + S + H;
+		long P = L - W;
+		//long B = W - S;
+		long P1 = ceilPrime(P);
+		long d = tuple.getD();
+		long a = tuple.getA();
+		long b = tuple.getB();
+		long d1 = tuple.getD1();
+		long a1 = tuple.getA1();
+		long b1 = tuple.getB1();
+		
+		for(long j=0; j<d; j++){
+			b = (b+a) % W;
+			indexes.add((int) b);
+		}
+		
+		while(b1 >= P){
+			b1 = (b1 + a1) % P1;
+		}
+		
+		indexes.add((int) (W + b1));
+		
+		for(long j=1; j<d1; j++){
+			
+			do
+				b1 = (b1 + a1) % P1;
+			while(b1 >= P);
+			
+			indexes.add((int) (W+b1));
+		}
+		
+		return indexes;
 	}
 	
 	public byte[] xorSymbol(byte[] s1, byte[] s2){
