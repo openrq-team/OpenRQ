@@ -37,11 +37,15 @@ public class Main {
 		System.out.println("------ (un)PARTITIONED MESSAGE ------");
 		
 		byte[] data = enc.unPartition(enc.partition());
-		
-			
-			System.out.println(new String(data));
-		
-		
+
+
+		System.out.println(new String(data));
+
+		System.out.println("\n\n------ going for the encoding, buckle up...\n");	
+
+		enc.encode(enc.partition());
+	
+		System.out.println("over'n'out");
 	}
 
 }

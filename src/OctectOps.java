@@ -74,4 +74,45 @@ public abstract class OctectOps {
 		return ((byte)OCT_LOG[i]);		
 	}
 	
+	public static byte octDivision(byte u, byte v){
+		
+		if(u == 0) return 0;
+		else{
+			
+			byte quotient = (byte) OCT_EXP[OCT_LOG[u] - OCT_LOG[v] + 255];
+			
+			return quotient;
+		}
+	}
+	
+	public static byte octProduct(byte u, byte v){
+		
+		if(u == 0 || v == 0) return 0;
+		else{
+			
+			byte product = (byte) OCT_EXP[OCT_LOG[u] + OCT_LOG[v]];
+			
+			return product;
+		}
+		
+	}
+	
+	public static byte[] betaProduct(byte beta, byte[] U){
+		byte[] betaProduct = new byte[U.length];
+		
+		for(int i=0; i<U.length; i++)
+			betaProduct[i] = octProduct(beta, U[i]);
+		
+		return betaProduct;
+	}
+	
+	public static byte[] betaDivision(byte[] U, byte beta){
+		byte[] betaProduct = new byte[U.length];
+		
+		for(int i=0; i<U.length; i++)
+			betaProduct[i] = octDivision(U[i], beta);
+		
+		return betaProduct;
+	}
+	
 }

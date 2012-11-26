@@ -1,8 +1,13 @@
 
 public abstract class SystematicIndices {
 
-	public static int getK(int i){
-		return table2[i][0];
+	public static int getK(int K){
+	
+		for(int i=0; i<table2.length; i++)
+			if(table2[i][0] >= K)
+				return i;
+		
+		return -1; // TODO exception	
 	}
 	
 	public static int J(int K){
@@ -23,7 +28,7 @@ public abstract class SystematicIndices {
 	
 	public static int KL(int n, int WS, int Al, int T){
 		
-		int upper_bound = WS / (Al * (Encoder.ceil((double)T/(Al*n))));
+		int upper_bound = WS / (Al * (Encoder.ceil((double)T / (Al*n))));
 		int K=-1, i=0;
 		
 		while(i<Encoder.KMAX && K<=upper_bound){

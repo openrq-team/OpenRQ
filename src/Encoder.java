@@ -205,9 +205,10 @@ public class Encoder {
 			// TODO create ssymbols + padding
 			
 			int K = SystematicIndices.ceil((int)sb.getK());
-			int S = SystematicIndices.S(K);
-			int H = SystematicIndices.H(K);
-			int W = SystematicIndices.W(K);
+			int Ki = SystematicIndices.getK(K);
+			int S = SystematicIndices.S(Ki);
+			int H = SystematicIndices.H(Ki);
+			int W = SystematicIndices.W(Ki);
 			int L = K + S + H;
 			int P = L - W;
 			int U = P - H;
@@ -225,13 +226,11 @@ public class Encoder {
 			
 			// Initialize G_LPDC2
 			for(int row=0; row<S; row++){
-				for(int col=W; col<L; col++){
 					
-					// Consecutives 1's modulo P
-					constraint_matrix[row][col  %P] = 1;
-					constraint_matrix[row][col+1%P] = 1;
-					
-				}
+				// Consecutives 1's modulo P
+				constraint_matrix[row][(row   %P) + W] = 1;
+				constraint_matrix[row][(row+1 %P) + W] = 1;
+
 			}
 			
 			// Initialize G_LPDC1
@@ -295,7 +294,6 @@ public class Encoder {
 			
 			// Initialize G_HDPC
 			// MT
-			final int alpha = 2;
 			byte[][] MT = new byte[H][K+S];
 			
 			for(int row=0; row<H; row++)
@@ -323,7 +321,7 @@ public class Encoder {
 				}	
 			}
 			
-			// G_HDPC = MT * GAMMA				// TODO implementar multiplicaçao directamente pra constraint_matrix
+			// G_HDPC = MT * GAMMA				// TODO implementar multiplicacao directamente pra constraint_matrix
 			Matrix _mt    = new Matrix(MT);
 			Matrix _gamma = new Matrix(GAMMA); 
 			
@@ -336,9 +334,11 @@ public class Encoder {
 				for(int col=0; col<W+U; col++)
 					constraint_matrix[row][col] = G_HDPC[row-S][col];
 			
+			int a=1;
+			
 			// G_ENC
 			for(int row=S+H; row<L; row++){
-			
+				
 				Tuple tuple = new Tuple(K, row-S-H);
 				
 				List<Integer> indexes = encIndexes(K, tuple);
@@ -346,13 +346,126 @@ public class Encoder {
 				for(int j=0; j<indexes.size(); j++){
 					
 					constraint_matrix[row][indexes.get(j)] = 1;
-					
-					indexes.remove(j);
-					
+										
 				}
 			}
+			
+			// D
+			byte[][] D = new byte[L][T]; // TODO converter isto pra array
+			
+			for(int row=S+H, index=0; row<k+S+H; row++, index+=t){
+				
+				D[row] = Arrays.copyOfRange(ssymbols, index, (index+t));
+			}
+			
+			// Gauss elim
+			Matrix C = gaussElim(constraint_matrix, D, t);
+			
 		}
 		
+	}
+	
+	// Ax = b // TODO testar
+	public Matrix gaussElim(byte[][] A, byte[][] D, int symbol_size){
+		
+		if (A.length != A[0].length || D.length != A[0].length || D[0].length != symbol_size)
+            throw new RuntimeException("Illegal matrix dimensions.");
+
+		int A_columns = A[0].length;
+		
+		// Gaussian elimination with partial pivoting
+        for (int i = 0; i < A_columns; i++) {
+
+            // find pivot row and swap
+            int max = i;
+            for (int j = i + 1; j < A_columns; j++)
+                if (Math.abs(A[j][i]) > Math.abs(A[max][i]))
+                    max = j;
+            
+            // A.swap(i, max);
+            byte[] temp = A[i];
+            A[i] = A[max];
+            A[max] = temp;
+            
+            // b.swap(i, max);
+            temp = D[i];
+            D[i] = D[max];
+            D[max] = temp;         
+
+            // singular
+            if (A[i][i] == 0) throw new RuntimeException("Matrix is singular.");
+
+            // pivot within b
+            for (int j = i + 1; j < A_columns; j++){
+                // b.data[j][0] -= b.data[i][0] * A.data[j][i] / A.data[i][i];
+
+            	//A.data[j][i] / A.data[i][i]; // _aDiv
+            	byte _aDiv;
+            	if(A[j][i] == 0){
+            		
+            		_aDiv = 0;
+            	}
+            	else{
+            		
+            		_aDiv = OctectOps.getExp(OctectOps.getLog(A[j][i]) - OctectOps.getLog(A[i][i] + 255)); // TODO octDivide
+            	}
+            	
+            	// b.data[i][0] * _aDiv // _bMul
+            	byte[] _bMul;
+            	
+            	if(_aDiv == 0 || symbolIsZero(D[i])){
+            		
+            		_bMul = new byte[D[i].length];
+            	}
+            	else{
+            		
+            		_bMul = OctectOps.betaProduct(_aDiv, D[i]);
+            	}
+            	
+            	// b.data[j][0] -= _bMul
+            	D[j] = xorSymbol(D[j], _bMul);
+            }
+            	
+            // pivot within A
+            for(int j = i + 1; j < A_columns; j++){ 
+            	
+                byte m = OctectOps.octDivision(A[j][i], A[i][i]);
+                
+                for (int k = i+1; k < A_columns; k++) {
+                    // A.data[j][k] -= A.data[i][k] * m;
+                	
+                	// A.data[i][k] * m // _aXOR
+                	byte _aXOR = OctectOps.octProduct(A[i][k], m);
+                	
+                	// A.data[j][k] -= _aXOR
+                	A[j][k] = (byte) (A[j][k] ^ _aXOR);
+                }
+                
+                A[j][i] = 0;
+            }
+        }
+
+        // back substitution
+        Matrix x = new Matrix(A_columns, D[0].length);
+        for (int j = A_columns - 1; j >= 0; j--) {
+        	
+            byte[] sum = new byte[D[0].length];
+            
+            for (int k = j + 1; k < A_columns; k++)
+                sum = xorSymbol(sum, OctectOps.betaProduct(A[j][k], x.data[k]));
+            x.data[j] = OctectOps.betaDivision(xorSymbol(D[j], sum), A[j][j]);
+        }
+        
+        return x;
+	}
+	
+	public boolean symbolIsZero(byte[] symbol){
+		
+		for(byte b : symbol)
+			if(b != 0)
+				return false;
+
+		return true;
 	}
 	
 	public Map<SourceBlock, Tuple[]> generateTuples(SourceBlock[] object){
@@ -420,9 +533,10 @@ public class Encoder {
 		
 		List<Integer> indexes = new ArrayList<Integer>();
 		
-		int S = SystematicIndices.S(K);
-		int H = SystematicIndices.H(K);
-		int W = SystematicIndices.W(K);
+		int Ki = SystematicIndices.getK(K);
+		int S = SystematicIndices.S(Ki);
+		int H = SystematicIndices.H(Ki);
+		int W = SystematicIndices.W(Ki);
 		long L = K + S + H;
 		long P = L - W;
 		//long B = W - S;
@@ -458,11 +572,14 @@ public class Encoder {
 	}
 	
 	public byte[] xorSymbol(byte[] s1, byte[] s2){
+		if(s1.length != s2.length){
+			//TODO throw exception
+		}
 		
-		byte[] xor = new byte[(int)T];
+		byte[] xor = new byte[s1.length];
 		
-		for(long i=0; i<T; i++){
-			xor[(int)i] = (byte) (s1[(int)i] ^ s2[(int)i]);
+		for(int i=0; i<s1.length; i++){
+			xor[i] = (byte) (s1[i] ^ s2[i]);
 		}
 	
 		return xor;
