@@ -64,14 +64,18 @@ public abstract class OctectOps {
 			88, 175			
 		};
 	
+	private static final short UNSIGN(byte b){
+		return((short) (b & 0xFF));
+	}
+	
 	public static byte getExp(int i){
 		
-		return ((byte)OCT_EXP[i]);		
+		return ((byte)OCT_EXP[UNSIGN((byte)i)]);		
 	}
 	
 	public static byte getLog(int i){
 		
-		return ((byte)OCT_LOG[i]);		
+		return ((byte)OCT_LOG[UNSIGN((byte)(i-1))]);		
 	}
 	
 	public static byte octDivision(byte u, byte v){
@@ -79,7 +83,7 @@ public abstract class OctectOps {
 		if(u == 0) return 0;
 		else{
 			
-			byte quotient = (byte) OCT_EXP[OCT_LOG[u] - OCT_LOG[v] + 255];
+			byte quotient = (byte) OCT_EXP[UNSIGN((byte)(OCT_LOG[UNSIGN((byte)(u-1))] - OCT_LOG[UNSIGN((byte)(v-1))] + 255))];
 			
 			return quotient;
 		}
@@ -90,7 +94,7 @@ public abstract class OctectOps {
 		if(u == 0 || v == 0) return 0;
 		else{
 			
-			byte product = (byte) OCT_EXP[OCT_LOG[u] + OCT_LOG[v]];
+			byte product = (byte) OCT_EXP[UNSIGN((byte)(OCT_LOG[UNSIGN((byte)(u-1))] + OCT_LOG[UNSIGN((byte)(v-1))]))];
 			
 			return product;
 		}

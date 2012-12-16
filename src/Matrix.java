@@ -102,6 +102,7 @@ final public class Matrix {
     }
 
     // return C = A * B
+    /*
     public Matrix times(Matrix B) {
         Matrix A = this;
         if (A.N != B.M) throw new RuntimeException("Illegal matrix dimensions.");
@@ -112,7 +113,23 @@ final public class Matrix {
                     C.data[i][j] += (A.data[i][k] * B.data[k][j]);
         return C;
     }
-
+*/
+    
+    public Matrix times(Matrix B) {
+        Matrix A = this;
+        if (A.N != B.M) throw new RuntimeException("Illegal matrix dimensions.");
+        Matrix C = new Matrix(A.M, B.N);
+        
+        for (int i = 0; i < C.M; i++){
+            for (int j = 0; j < C.N; j++){
+                for (int k = 0; k < A.N; k++){
+                	byte temp = OctectOps.octProduct(A.data[i][k], B.data[k][j]);
+                	C.data[i][j] = (byte) (C.data[i][j] ^ temp);
+                }
+            }
+        }
+        return C;
+    }
 
     // return x = A^-1 b, assuming A is square and has full rank
     public Matrix solve(Matrix rhs) {
@@ -167,55 +184,9 @@ final public class Matrix {
     public void show() {
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < N; j++) 
-                System.out.printf("%9.4f ", data[i][j]);
-            System.out.println();
+            	System.out.printf("| %02X ", (data[i][j]));
+                //System.out.printf("| %02X ", Encoder.convert(data[i][j]));
+            System.out.println("|");
         }
-    }
-
-
-
-    // test client
-    public static void main(String[] args) {
-        byte[][] d = { { 1, 2, 3 }, { 4, 5, 6 }, { 9, 1, 3} };
-        Matrix D = new Matrix(d);
-        D.show();        
-        System.out.println();
-
-        Matrix A = Matrix.random(5, 5);
-        A.show(); 
-        System.out.println();
-
-        A.swap(1, 2);
-        A.show(); 
-        System.out.println();
-
-        Matrix B = A.transpose();
-        B.show(); 
-        System.out.println();
-
-        Matrix C = Matrix.identity(5);
-        C.show(); 
-        System.out.println();
-
-        A.plus(B).show();
-        System.out.println();
-
-        B.times(A).show();
-        System.out.println();
-
-        // shouldn't be equal since AB != BA in general    
-        System.out.println(A.times(B).eq(B.times(A)));
-        System.out.println();
-
-        Matrix b = Matrix.random(5, 1);
-        b.show();
-        System.out.println();
-
-        Matrix x = A.solve(b);
-        x.show();
-        System.out.println();
-
-        A.times(x).show();
-        
     }
 }
