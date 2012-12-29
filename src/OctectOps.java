@@ -1,7 +1,85 @@
 
 public abstract class OctectOps {
+	
+	public static final short UNSIGN(byte b){
+		
+		return((short) (b & 0xFF));
+	}
+	
+	public static final int UNSIGN(short b){
+		
+		return(b & 0xFF);
+	}
+	
+	public static final long UNSIGN(int b){
+	
+		return(b & 0xFF);
+	}
+	
+	public static final byte getExp(int i){
+		
+		//if(i < 0) throw new IllegalArgumentException("Index must be non-negative.");
+		
+		return ((byte)OCT_EXP[UNSIGN((byte)i)]);		
+	}
+	
+	public static final byte getLog(int i){
 
-	public final static char[] OCT_EXP = 
+//		if(i < 0 || i > 254) throw new IllegalArgumentException("Index must be non-negative, but less than 255.");
+
+		return ((byte)OCT_LOG[UNSIGN((byte)(i))]);		
+	}
+	
+	public static final byte octDivision(byte u, byte v){
+		
+		if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
+		
+		if(u == 0) return 0;
+		else{
+			
+			byte quotient = getExp(getLog(u-1) - getLog(v-1) + 255);
+			
+			return quotient;
+		}
+	}
+	
+	public static final byte octProduct(byte u, byte v){
+		
+		if(u == 0 || v == 0) return 0;
+		else{
+			
+			byte product = getExp(getLog(u-1) + getLog(v-1));
+			
+			return product;
+		}
+		
+	}
+	
+	public static final byte[] betaProduct(byte beta, byte[] U){
+		
+		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+		
+		byte[] betaProduct = new byte[U.length];
+		
+		for(int i=0; i<U.length; i++)
+			betaProduct[i] = octProduct(beta, U[i]);
+		
+		return betaProduct;
+	}
+	
+	public static final byte[] betaDivision(byte[] U, byte beta){
+		
+		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+		
+		byte[] betaProduct = new byte[U.length];
+		
+		for(int i=0; i<U.length; i++)
+			betaProduct[i] = octDivision(U[i], beta);
+		
+		return betaProduct;
+	}
+	
+	private static final char[] OCT_EXP = 
 		{
 			1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76,
 			152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192, 157,
@@ -40,9 +118,7 @@ public abstract class OctectOps {
 			142
 		};
 	
-	
-	
-	public final static char[] OCT_LOG = 
+	private static final char[] OCT_LOG = 
 		{
 			0, 1, 25, 2, 50, 26, 198, 3, 223, 51, 238, 27, 104, 199, 75, 4, 100,
 			224, 14, 52, 141, 239, 129, 28, 193, 105, 248, 200, 8, 76, 113, 5,
@@ -63,60 +139,4 @@ public abstract class OctectOps {
 			79, 174, 213, 233, 230, 231, 173, 232, 116, 214, 244, 234, 168, 80,
 			88, 175			
 		};
-	
-	private static final short UNSIGN(byte b){
-		return((short) (b & 0xFF));
-	}
-	
-	public static byte getExp(int i){
-		
-		return ((byte)OCT_EXP[UNSIGN((byte)i)]);		
-	}
-	
-	public static byte getLog(int i){
-		
-		return ((byte)OCT_LOG[UNSIGN((byte)(i-1))]);		
-	}
-	
-	public static byte octDivision(byte u, byte v){
-		
-		if(u == 0) return 0;
-		else{
-			
-			byte quotient = (byte) OCT_EXP[UNSIGN((byte)(OCT_LOG[UNSIGN((byte)(u-1))] - OCT_LOG[UNSIGN((byte)(v-1))] + 255))];
-			
-			return quotient;
-		}
-	}
-	
-	public static byte octProduct(byte u, byte v){
-		
-		if(u == 0 || v == 0) return 0;
-		else{
-			
-			byte product = (byte) OCT_EXP[UNSIGN((byte)(OCT_LOG[UNSIGN((byte)(u-1))] + OCT_LOG[UNSIGN((byte)(v-1))]))];
-			
-			return product;
-		}
-		
-	}
-	
-	public static byte[] betaProduct(byte beta, byte[] U){
-		byte[] betaProduct = new byte[U.length];
-		
-		for(int i=0; i<U.length; i++)
-			betaProduct[i] = octProduct(beta, U[i]);
-		
-		return betaProduct;
-	}
-	
-	public static byte[] betaDivision(byte[] U, byte beta){
-		byte[] betaProduct = new byte[U.length];
-		
-		for(int i=0; i<U.length; i++)
-			betaProduct[i] = octDivision(U[i], beta);
-		
-		return betaProduct;
-	}
-	
 }

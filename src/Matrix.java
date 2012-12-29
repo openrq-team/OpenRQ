@@ -100,20 +100,6 @@ final public class Matrix {
                 if (A.data[i][j] != B.data[i][j]) return false;
         return true;
     }
-
-    // return C = A * B
-    /*
-    public Matrix times(Matrix B) {
-        Matrix A = this;
-        if (A.N != B.M) throw new RuntimeException("Illegal matrix dimensions.");
-        Matrix C = new Matrix(A.M, B.N);
-        for (int i = 0; i < C.M; i++)
-            for (int j = 0; j < C.N; j++)
-                for (int k = 0; k < A.N; k++)
-                    C.data[i][j] += (A.data[i][k] * B.data[k][j]);
-        return C;
-    }
-*/
     
     public Matrix times(Matrix B) {
         Matrix A = this;

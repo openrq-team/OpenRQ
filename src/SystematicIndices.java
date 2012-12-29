@@ -1,54 +1,68 @@
 
 public abstract class SystematicIndices {
 
-	public static int getK(int K){
+	public static final int getKIndex(int K){
+		
+		if(K < 1)     throw new IllegalArgumentException("K must be positive.");
+		if(K > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
 	
 		for(int i=0; i<table2.length; i++)
 			if(table2[i][0] >= K)
 				return i;
 		
-		return -1; // TODO exception	
+		throw new RuntimeException("Not sure what just happened...");	
 	}
 	
-	public static int J(int K){
+	public static final int J(int K){
+		
 	 	return table2[K][1];
 	}
 	
-	public static int S(int K){
+	public static final int S(int K){
+		
 	 	return table2[K][2];
 	}
 	
-	public static int H(int K){
+	public static final int H(int K){
+		
 	 	return table2[K][3];
 	}
 	
-	public static int W(int K){
+	public static final int W(int K){
+		
 	 	return table2[K][4];
 	}
 	
-	public static int KL(int n, int WS, int Al, int T){
+	public static final int KL(int n, int WS, int Al, int T){
+		
+		if(n < 1 || WS < 1 || Al < 1 || T < 1) throw new IllegalArgumentException("All arguments must be positive.");
 		
 		int upper_bound = WS / (Al * (Encoder.ceil((double)T / (Al*n))));
-		int K=-1, i=0;
+		int K=-1, i=1;
 		
 		while(i<Encoder.KMAX && K<=upper_bound){
-			K = getK(i);
+			K = getKIndex(i);
 			i++;
 		}
 		
 		if(i<Encoder.KMAX)
-			return getK(i-2);
+			return getKIndex(i-2);
 		else
-			return getK(Encoder.KMAX);
+			return getKIndex(Encoder.KMAX);
 	}
 	
-	public static int ceil(int k){
+	public static final int ceil(int k){
+		
+		if(k < 1)     throw new IllegalArgumentException("K must be positive.");
+		if(k > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
+		
 		for(int i=0; i<table2.length; i++){
 			if(table2[i][0]>=k){
 				return(table2[i][0]);
 			}
 		}
-		return(k);
+		
+		throw new RuntimeException("Not sure what just happened...");
 	}
 	
 	private static final int table2[][] = {

@@ -1,57 +1,37 @@
 
 public class SourceBlock {
 
-	private long SBN;
-	private byte[] symbols;
-	private long K;
-	public  long T, N; // TODO remover
+	private int SBN; // Source Block Number
+	private byte[] symbols; 
+	private int K; // Number of source symbols
+	private int T; // Size of each source symbol
 	
-	public SourceBlock(long sBN, byte[] sblocks, long t, long n, long k){
+	public SourceBlock(int sBN, byte[] sblocks, int t, int k){
+		
+		if(sBN < 0) throw new IllegalArgumentException("Source Block Number must be non-negative.");
+		if(t   < 1) throw new IllegalArgumentException("Size of source symbol must be positive.");
+		if(k   < 1) throw new IllegalArgumentException("Number of source symbols must be positive.");
+		if(sblocks == null || sblocks.length == 0) throw new IllegalArgumentException("Array of source symbols must be initialized/allocated.");
+
 		this.SBN = sBN;
 		this.symbols = sblocks;
 		this.T = t;
-		this.N = n;
 		this.K = k;
 	}
 	
-	public long getK() {
+	public int getK() {
 		return K;
 	}
 
-	public void setK(long k) {
-		K = k;
-	}
-
-	public long getSBN() {
+	public int getSBN() {
 		return SBN;
-	}
-
-	public void setSBN(long sBN) {
-		SBN = sBN;
 	}
 
 	public byte[] getSymbols() {
 		return symbols;
 	}
-
-	public void setSymbols(byte[] symbols) {
-		this.symbols = symbols;
-	}
-
-	public long getT() {
+	
+	public int getT() {
 		return T;
 	}
-
-	public void setT(long t) {
-		T = t;
-	}
-
-	public long getN() {
-		return N;
-	}
-
-	public void setN(long n) {
-		N = n;
-	}
-	
 }

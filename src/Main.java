@@ -44,15 +44,15 @@ public class Main {
 
 		System.out.println("\n\n------ going for the encoding, buckle up...\n");	
 
-		List<EncodedSymbol> encoded_symbols = enc.encode(enc.partition());
+		List<EncodingSymbol> encoded_symbols = enc.encode(enc.partition());
 	
-		/*
+		
 		for(i=0; i<encoded_symbols.size(); i++){
 		
 			System.out.println("TESTE: " + new String(encoded_symbols.get(i).getData()));
-		}*/
+		}
 		
-		enc.decode(encoded_symbols);
+		//enc.decode(encoded_symbols);
 		
 		System.out.println("over'n'out");
 	}
