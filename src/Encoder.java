@@ -4,8 +4,12 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import sun.misc.Unsafe;
 
 public class Encoder {
@@ -184,24 +188,98 @@ public class Encoder {
 		return data;		
 	}
 
-	public List<EncodingSymbol> encode(SourceBlock[] object){
+	public void decode(EncodingPacket[] encoded_blocks) {
 
-		List<EncodingSymbol> encoded_symbols = new ArrayList<EncodingSymbol>(50);
+		// Decode each block
+		for(int source_block_index = 0; source_block_index<encoded_blocks.length; source_block_index++){
+			
+			EncodingPacket eb = encoded_blocks[source_block_index];
+			EncodingSymbol[] enc_symbols = eb.getEncoding_symbols();
+			int num_symbols = enc_symbols.length;
+			int SBN = eb.getSBN();
+			int K = eb.getK();
+			int T = eb.getT();
+			int kLinha = SystematicIndices.ceil(K);
+			
+			// Analyze received symbols "topology"
+			Set<Integer> missing_symbols = new TreeSet<Integer>();
+			int source_symbols = 0;
+			int repair_symbols = 0;
+			for(int symbol=0; symbol<num_symbols; symbol++){
+				
+				if(enc_symbols[symbol].getESI() < K){
+					
+					if(enc_symbols[symbol].getESI() != symbol){
+						
+						missing_symbols.add(symbol);
+					}
+					
+					source_symbols++;
+				}
+				else{
+					
+					repair_symbols++;
+				}
+			}
+			
+			if(repair_symbols < missing_symbols.size()) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
+			
+			// All source symbols received :D
+			if(source_symbols == K){
+				
+				// Collect all payloads from the source symbols
+				byte[] decoded_data = new byte[K*T];
+				
+				int src_symbols = 0;
+				for(int symbol=0; symbol<num_symbols; symbol++){
+					
+					if(enc_symbols[symbol].getESI() < K){
+						
+						System.arraycopy(enc_symbols[symbol].getData(), 0, decoded_data, src_symbols * T, T);
+						src_symbols++;
+					}
+				}
+				System.out.println("\n\n ALL SOURCE SYMBOLS RECEIVED");
+				System.out.println(new String(decoded_data));
+			}
+			// Not so lucky
+			else{
+				
+				// Generate original constraint matrix
+				byte[][] constraint_matrix = generateConstraintMatrix(K, T);
+				
+				
+			}
+			
+		}
+		
+		
+	}
+
+	public EncodingPacket[] encode(SourceBlock[] object){
+
+		EncodingPacket[] encoded_blocks = new EncodingPacket[object.length];
 		
 		for(int source_block_index = 0; source_block_index<object.length; source_block_index++){
+			
 			SourceBlock sb = object[source_block_index];
+			int SBN = sb.getSBN();
 			byte[] ssymbols = sb.getSymbols();
 			int K = (int)sb.getK();
 			int kLinha = SystematicIndices.ceil(K);
+			
+			EncodingSymbol[] encoded_symbols = new EncodingSymbol[21]; // FIXME arbitrary size ASAP
 			
 			// First encoding step
 			byte[] intermediate_symbols = generateIntermediateSymbols(sb);
 			
 			// Second encoding step
 			// Sending original source symbols
-			for(int source_symbol = 0, source_symbol_index = 0; source_symbol<sb.getK(); source_symbol++, source_symbol_index+=sb.getT()){
+			int source_symbol;
+			int source_symbol_index;
+			for(source_symbol = 0, source_symbol_index = 0; source_symbol<sb.getK(); source_symbol++, source_symbol_index+=sb.getT()){
 				
-				encoded_symbols.add(new EncodingSymbol(source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT()))));
+				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}
 			
 			// Generating/sending repair symbols
@@ -212,14 +290,14 @@ public class Encoder {
 				
 				byte[] enc_data = enc(kLinha, intermediate_symbols, new Tuple(kLinha, isi));
 				
-				encoded_symbols.add(new EncodingSymbol(esi, enc_data));
+				encoded_symbols[source_symbol + repair_symbol] = new EncodingSymbol(SBN,esi, enc_data);
 			}
+			
+			encoded_blocks[source_block_index] = new EncodingPacket(SBN, encoded_symbols, K, sb.getT());
 		}
 
-		return encoded_symbols;
+		return encoded_blocks;
 	}
-
-	// TODO dividir em varios metodos
 	
 	private void initializeG_LPDC2(byte[][] constraint_matrix, int S, int P, int W){
 		
@@ -368,12 +446,8 @@ public class Encoder {
 		}
 	}
 	
-	private byte[] generateIntermediateSymbols(SourceBlock sb){
+	private byte[][] generateConstraintMatrix(int K, int T){
 		
-		byte[] ssymbols = sb.getSymbols();
-		// TODO create ssymbols + padding
-
-		int K = SystematicIndices.ceil((int)sb.getK());
 		int Ki = SystematicIndices.getKIndex(K);
 		int S = SystematicIndices.S(Ki);
 		int H = SystematicIndices.H(Ki);
@@ -382,13 +456,9 @@ public class Encoder {
 		int P = L - W;
 		int U = P - H;
 		int B = W - S;
-
-		int k = sb.getK();
-		int t = sb.getT();
-
-		/* Generate LxL Constraint  Matrix*/
+		
 		byte[][] constraint_matrix = new byte[L][L]; // A
-
+		
 		// Upper half
 		// Initialize G_LPDC2
 		initializeG_LPDC2(constraint_matrix, S, P, W);
@@ -412,7 +482,7 @@ public class Encoder {
 
 		// G_HDPC = MT * GAMMA
 		byte[][] G_HDPC = multiplyMatrixes(MT, GAMMA);
-		
+
 		// Initialize G_HDPC
 		for(int row=S; row<S+H; row++)
 			for(int col=0; col<W+U; col++)
@@ -420,9 +490,51 @@ public class Encoder {
 
 		// Initialize G_ENC
 		initializeG_ENC(constraint_matrix, S, H, L, K);
+		
+		return constraint_matrix;
+	}
+	
+	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, byte symbol_size){
+		
+		// TODO verify size of matrixes?
+		
+		int L = A.length;
+		
+		// Gauss elim
+		Matrix C = gaussElim(A, D, symbol_size);
 
+		byte[] intermediate_symbols = new byte[L*symbol_size];
+
+		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < L; intermediate_symbols_index += symbol_size, intermediate_symbol++){
+			
+			System.arraycopy(C.getData()[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, symbol_size);
+		}
+
+		return intermediate_symbols;
+	}
+	
+	private byte[] generateIntermediateSymbols(SourceBlock sb){
+		
+		byte[] ssymbols = sb.getSymbols();
+		// TODO create ssymbols + padding
+
+		int K = SystematicIndices.ceil((int)sb.getK());
+		int Ki = SystematicIndices.getKIndex(K);
+		int S = SystematicIndices.S(Ki);
+		int H = SystematicIndices.H(Ki);
+		int W = SystematicIndices.W(Ki);
+		int L = K + S + H;
+		int P = L - W;
+		int U = P - H;
+		int B = W - S;
+
+		int k = sb.getK();
+		int t = sb.getT();
+
+		/* Generate LxL Constraint  Matrix*/
+		byte[][] constraint_matrix = generateConstraintMatrix(k, t); // A
+		
 		// D
-		// TODO converter isto pra array
 		byte[][] D = new byte[L][t]; 
 
 		for(int row=S+H, index=0; row<k+S+H; row++, index+=t){
@@ -433,11 +545,10 @@ public class Encoder {
 		System.out.println("\n\n------- CONSTRAINT MATRIX -------");
 		for(int row=0; row<L; row++){
 			for(int col=0; col<L; col++){
-				if(row<S || row > S+H-1 || (row>=S && col>=W+U)) // FIXME i think i can take out the S limit, but im too tired
+				if(row<S || row > S+H-1 || col>=W+U)
 					System.out.printf("|  %01X ",constraint_matrix[row][col]);
 				else
 					System.out.printf("| %02X ", convert(constraint_matrix[row][col]));
-				//System.out.printf("| %02X ", constraint_matrix[row][col]);
 			}
 			System.out.println("|");
 		}
@@ -447,8 +558,6 @@ public class Encoder {
 		(new Matrix(D)).show();
 		System.out.println("------- END -------");
 
-		//System.exit(-123);
-
 		// Gauss elim
 		Matrix C = gaussElim(constraint_matrix, D, t);
 
@@ -456,9 +565,9 @@ public class Encoder {
 		C.show();
 		System.out.println("------- END -------");
 
-		byte[] intermediate_symbols = new byte[C.getData().length*C.getData()[0].length]; // FIXME L*T
+		byte[] intermediate_symbols = new byte[L*T];
 		
-		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < C.getData().length; intermediate_symbols_index += t, intermediate_symbol++){
+		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < L; intermediate_symbols_index += t, intermediate_symbol++){
 			System.arraycopy(C.getData()[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, t);
 		}
 		
@@ -473,7 +582,6 @@ public class Encoder {
 		return (byte) (hex2 | hex1);
 	}
 
-	// Ax = b // TODO testar
 	public Matrix gaussElim(byte[][] A, byte[][] D, int symbol_size){
 
 		if (A.length != A[0].length || D.length != A.length || D[0].length != symbol_size)
@@ -739,11 +847,6 @@ public class Encoder {
 		}
 
 		return p;
-	}
-
-	public void decode(List<EncodingSymbol> encoded_symbols) {
-		// TODO Auto-generated method stub
-		
 	} 
 
 }
