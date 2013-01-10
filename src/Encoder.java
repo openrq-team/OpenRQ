@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -200,45 +201,56 @@ public class Encoder {
 			int K = eb.getK();
 			int T = eb.getT();
 			int kLinha = SystematicIndices.ceil(K);
+			int Ki = SystematicIndices.getKIndex(K);
+			int S = SystematicIndices.S(Ki);
+			int H = SystematicIndices.H(Ki);
 			
 			// Analyze received symbols "topology"
 			Set<Integer> missing_symbols = new TreeSet<Integer>();
-			int source_symbols = 0;
-			int repair_symbols = 0;
+			Set<EncodingSymbol> source_symbols = new TreeSet<EncodingSymbol>(); //TODO comparator
+			Set<EncodingSymbol> repair_symbols = new TreeSet<EncodingSymbol>();
+			int num_source_symbols = 0;
+			int num_repair_symbols = 0;
+			int missing_delta_index = 0;
+			
 			for(int symbol=0; symbol<num_symbols; symbol++){
 				
-				if(enc_symbols[symbol].getESI() < K){
+				EncodingSymbol enc_symbol = enc_symbols[symbol];
+				
+				if(enc_symbol.getESI() < K){
 					
-					if(enc_symbols[symbol].getESI() != symbol){
+					if(enc_symbol.getESI() != (symbol + missing_delta_index)){
 						
-						missing_symbols.add(symbol);
+						missing_delta_index++;
+						missing_symbols.add(symbol + missing_delta_index);
 					}
 					
-					source_symbols++;
+					source_symbols.add(enc_symbol);
+					num_source_symbols++;
 				}
 				else{
 					
-					repair_symbols++;
+					repair_symbols.add(enc_symbol);
+					num_repair_symbols++;
 				}
 			}
 			
-			if(repair_symbols < missing_symbols.size()) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
+			if(num_repair_symbols < (K - num_source_symbols)) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
 			// All source symbols received :D
-			if(source_symbols == K){
+			if(num_source_symbols == K){
 				
 				// Collect all payloads from the source symbols
 				byte[] decoded_data = new byte[K*T];
 				
 				int src_symbols = 0;
-				for(int symbol=0; symbol<num_symbols; symbol++){
+				
+				for(EncodingSymbol enc_symbol : source_symbols){
 					
-					if(enc_symbols[symbol].getESI() < K){
-						
-						System.arraycopy(enc_symbols[symbol].getData(), 0, decoded_data, src_symbols * T, T);
-						src_symbols++;
-					}
+					System.arraycopy(enc_symbol.getData(), 0, decoded_data, src_symbols * T, T);
+					src_symbols++;
 				}
+				
 				System.out.println("\n\n ALL SOURCE SYMBOLS RECEIVED");
 				System.out.println(new String(decoded_data));
 			}
@@ -248,6 +260,15 @@ public class Encoder {
 				// Generate original constraint matrix
 				byte[][] constraint_matrix = generateConstraintMatrix(K, T);
 				
+				// Identify missing source symbols and replace their lines with "repair lines"
+				Iterator repair_symbol = repair_symbols.iterator();
+				for(Integer missing_ESI : missing_symbols){
+					
+					// Substituir S + H + missing_ESI pela linha equivalente ao encIndexes do repair simbolo
+					
+					// fazer qq coisa com o D
+				
+				}
 				
 			}
 			
