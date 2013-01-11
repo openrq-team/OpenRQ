@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import sun.misc.Unsafe;
@@ -204,6 +205,7 @@ public class Encoder {
 			int Ki = SystematicIndices.getKIndex(K);
 			int S = SystematicIndices.S(Ki);
 			int H = SystematicIndices.H(Ki);
+			int L = kLinha + S + H;
 			
 			// Analyze received symbols "topology"
 			Set<Integer> missing_symbols = new TreeSet<Integer>();
@@ -237,18 +239,17 @@ public class Encoder {
 			
 			if(num_repair_symbols < (K - num_source_symbols)) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
+			Map<Integer, byte[]> esiToLTCode = new TreeMap<Integer, byte[]>();
+			
+			byte[] decoded_data = new byte[K*T];
+			
 			// All source symbols received :D
 			if(num_source_symbols == K){
 				
-				// Collect all payloads from the source symbols
-				byte[] decoded_data = new byte[K*T];
-				
-				int src_symbols = 0;
-				
+				// Collect all payloads from the source symbols				
 				for(EncodingSymbol enc_symbol : source_symbols){
 					
-					System.arraycopy(enc_symbol.getData(), 0, decoded_data, src_symbols * T, T);
-					src_symbols++;
+					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 				}
 				
 				System.out.println("\n\n ALL SOURCE SYMBOLS RECEIVED");
@@ -260,16 +261,78 @@ public class Encoder {
 				// Generate original constraint matrix
 				byte[][] constraint_matrix = generateConstraintMatrix(K, T);
 				
+				// initialize D
+				byte[][] D = new byte[L][T];
+				
+				if(num_source_symbols != 0){
+
+					Iterator<EncodingSymbol> it = source_symbols.iterator();
+
+					EncodingSymbol source_symbol = (EncodingSymbol) it.next();
+
+					for(int row=S+H; row<S+H+K; row++){
+
+						if(source_symbol.getESI() == row-S-H){
+
+							D[row] = source_symbol.getData();
+
+							if(it.hasNext()) source_symbol = (EncodingSymbol) it.next();
+							else break;
+						}
+						else continue;
+					}
+				}
+
 				// Identify missing source symbols and replace their lines with "repair lines"
-				Iterator repair_symbol = repair_symbols.iterator();
+				Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
 				for(Integer missing_ESI : missing_symbols){
 					
-					// Substituir S + H + missing_ESI pela linha equivalente ao encIndexes do repair simbolo
+					EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
+					int row = S+H+missing_ESI;
 					
-					// fazer qq coisa com o D
-				
+					// Substituir S + H + missing_ESI pela linha equivalente ao encIndexes do repair simbolo
+					Set<Integer> indexes = encIndexes(kLinha, new Tuple(kLinha, repair.getISI(K)));
+					
+					byte[] newLine = new byte[L];
+					
+					for(int col=0; col<L; col++){
+						
+						if(!indexes.contains(col)){
+							
+							continue;
+						}
+						else{
+							
+							newLine[col] = 1;
+						}
+					}
+					
+					esiToLTCode.put(missing_ESI, constraint_matrix[row]);
+					constraint_matrix[row] = newLine;
+					
+					// Fill in missing source symbols in D with the repair symbols
+					D[row] = repair.getData();
 				}
 				
+				// Generate the intermediate symbols
+				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T);
+				
+				// Recover missing source symbols
+				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
+					
+					byte[] original_symbol = multiplyByteLineBySymbolVector(missing.getValue(), intermediate_symbols, T);
+					
+					System.arraycopy(original_symbol, 0, decoded_data, missing.getKey() * T, T);
+				}
+			
+				// Merge with received source symbols
+				for(EncodingSymbol enc_symbol : source_symbols){
+					
+					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
+				}
+				
+				System.out.println("\n\n RECOVERED MOTHERFUCKER");
+				System.out.println(new String(decoded_data));
 			}
 			
 		}
@@ -452,17 +515,36 @@ public class Encoder {
         return C;
 	}
 	
+	public byte[] multiplyByteLineBySymbolVector(byte[] line, byte[] vector, int symbol_size){
+		
+		// TODO verify matrix sizes
+		
+		byte[] result = new byte[symbol_size];
+		
+		for(int octet=0; octet<symbol_size; octet++){
+
+			for(int colRow=0; colRow<line.length; colRow++){
+				
+				byte temp = OctectOps.octProduct(line[colRow], vector[(colRow * symbol_size) + octet]);
+				
+				result[octet] = (byte) (result[octet] ^ temp);
+			}
+		}
+		
+		return result;
+	}
+	
 	private void initializeG_ENC(byte[][] constraint_matrix, int S, int H, int L, int K){
 		
 		for(int row=S+H; row<L; row++){
 
 			Tuple tuple = new Tuple(K, row-S-H);
 
-			List<Integer> indexes = encIndexes(K, tuple);
+			Set<Integer> indexes = encIndexes(K, tuple);
 
-			for(int j=0; j<indexes.size(); j++){
+			for(Integer j : indexes){
 
-				constraint_matrix[row][indexes.get(j)] = 1;	
+				constraint_matrix[row][j] = 1;	
 			}
 		}
 	}
@@ -515,7 +597,7 @@ public class Encoder {
 		return constraint_matrix;
 	}
 	
-	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, byte symbol_size){
+	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size){
 		
 		// TODO verify size of matrixes?
 		
@@ -771,9 +853,10 @@ public class Encoder {
 		return result;
 	}
 
-	public List<Integer> encIndexes(int K, Tuple tuple){
+	public Set<Integer> encIndexes(int K, Tuple tuple){
 
-		List<Integer> indexes = new ArrayList<Integer>();
+		//TODO make it a set
+		Set<Integer> indexes = new TreeSet<Integer>();
 
 		int Ki = SystematicIndices.getKIndex(K);
 		int S = SystematicIndices.S(Ki);
