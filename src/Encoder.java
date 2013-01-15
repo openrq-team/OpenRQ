@@ -209,7 +209,7 @@ public class Encoder {
 			
 			// Analyze received symbols "topology"
 			Set<Integer> missing_symbols = new TreeSet<Integer>();
-			Set<EncodingSymbol> source_symbols = new TreeSet<EncodingSymbol>(); //TODO comparator
+			Set<EncodingSymbol> source_symbols = new TreeSet<EncodingSymbol>();
 			Set<EncodingSymbol> repair_symbols = new TreeSet<EncodingSymbol>();
 			int num_source_symbols = 0;
 			int num_repair_symbols = 0;
@@ -219,12 +219,20 @@ public class Encoder {
 				
 				EncodingSymbol enc_symbol = enc_symbols[symbol];
 				
+				if(enc_symbol == null){
+					
+					missing_symbols.add(symbol + missing_delta_index);
+					missing_delta_index++;
+					
+					continue;
+				}
+				
 				if(enc_symbol.getESI() < K){
 					
 					if(enc_symbol.getESI() != (symbol + missing_delta_index)){
 						
+						missing_symbols.add(symbol + missing_delta_index);						
 						missing_delta_index++;
-						missing_symbols.add(symbol + missing_delta_index);
 					}
 					
 					source_symbols.add(enc_symbol);
@@ -259,7 +267,7 @@ public class Encoder {
 			else{
 				
 				// Generate original constraint matrix
-				byte[][] constraint_matrix = generateConstraintMatrix(K, T);
+				byte[][] constraint_matrix = generateConstraintMatrix(kLinha, T);
 				
 				// initialize D
 				byte[][] D = new byte[L][T];
@@ -283,6 +291,14 @@ public class Encoder {
 					}
 				}
 
+				System.out.println("---- A ---- (initial)");
+				(new Matrix(constraint_matrix)).show();
+				System.out.println("---------------------");
+				
+				System.out.println("---- D ---- (initial)");
+				(new Matrix(D)).show();
+				System.out.println("---------------------");
+				
 				// Identify missing source symbols and replace their lines with "repair lines"
 				Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
 				for(Integer missing_ESI : missing_symbols){
@@ -314,8 +330,20 @@ public class Encoder {
 					D[row] = repair.getData();
 				}
 				
+				System.out.println("---- A ---- (recovered)");
+				(new Matrix(constraint_matrix)).show();
+				System.out.println("---------------------");
+				
+				System.out.println("---- D ---- (recovered)");
+				(new Matrix(D)).show();
+				System.out.println("---------------------");
+				
 				// Generate the intermediate symbols
 				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T);
+				
+				System.out.println("---- C ----");
+				(gaussElim(constraint_matrix, D, T)).show();
+				System.out.println("---------------------");
 				
 				// Recover missing source symbols
 				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
@@ -333,6 +361,17 @@ public class Encoder {
 				
 				System.out.println("\n\n RECOVERED MOTHERFUCKER");
 				System.out.println(new String(decoded_data));
+				
+				System.out.println("\n\n\nMy way, or the highway.\n");
+				byte[][] newD = new byte[L][T];
+				
+				for(int row=0; row<L; row++){
+					
+					newD[row] = multiplyByteLineBySymbolVector(constraint_matrix[row], intermediate_symbols, T);
+				}
+				
+				(new Matrix(newD)).show();
+				
 			}
 			
 		}
@@ -363,7 +402,7 @@ public class Encoder {
 			int source_symbol_index;
 			for(source_symbol = 0, source_symbol_index = 0; source_symbol<sb.getK(); source_symbol++, source_symbol_index+=sb.getT()){
 				
-				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
+				//encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}
 			
 			// Generating/sending repair symbols
@@ -635,7 +674,7 @@ public class Encoder {
 		int t = sb.getT();
 
 		/* Generate LxL Constraint  Matrix*/
-		byte[][] constraint_matrix = generateConstraintMatrix(k, t); // A
+		byte[][] constraint_matrix = generateConstraintMatrix(K, t); // A
 		
 		// D
 		byte[][] D = new byte[L][t]; 
