@@ -372,6 +372,46 @@ public class Encoder {
 				
 				(new Matrix(newD)).show();
 				
+				System.out.println("teste");
+				
+				byte[][] m1 = 
+					  {  {1,1,0,0},
+	                     {1,1,0,0},
+	                     {1,0,1,1},
+	                     {0,0,0,1}
+	                  };
+				
+				byte[][] m2 = {
+						{10, 15, 20},
+						{10, 15, 20},
+						{10, 15, 20}
+				};
+				
+				byte[][] m3 = {
+						{3,3,3},
+						{4,4,4},
+						{1,1,1}
+				};
+				
+				byte[] m21 = {10, 15, 20};
+				byte[] m31 = {3, 3, 3, 4, 4, 4, 1, 1, 1};
+				
+				(new Matrix(multiplyMatrixes(m1,m1))).show();
+				
+				byte[][] m23 = multiplyMatrixes(m2,m3);
+				
+				(new Matrix(m23)).show();
+				
+				System.out.println(multiplyByteLineBySymbolVector(m21,m31,3)[0]);
+				System.out.println(multiplyByteLineBySymbolVector(m21,m31,3)[1]);
+				System.out.println(multiplyByteLineBySymbolVector(m21,m31,3)[2]);
+				
+				// Gauss elim
+				
+				Matrix M23 = gaussElim(m2, m23, 3);
+
+				M23.show();
+				
 			}
 			
 		}
@@ -712,6 +752,16 @@ public class Encoder {
 		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < L; intermediate_symbols_index += t, intermediate_symbol++){
 			System.arraycopy(C.getData()[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, t);
 		}
+		
+		System.out.println("\n\n\nMy way, or the highway.\n");
+		byte[][] newD = new byte[L][T];
+		
+		for(int row=0; row<L; row++){
+			
+			newD[row] = multiplyByteLineBySymbolVector(constraint_matrix[row], intermediate_symbols, T);
+		}
+		
+		(new Matrix(newD)).show();
 		
 		return intermediate_symbols;
 	}
