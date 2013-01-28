@@ -5,54 +5,98 @@ public abstract class OctectOps {
 		
 		return((short) (b & 0xFF));
 	}
-	
+/*	
 	public static final int UNSIGN(short b){
 		
-		return(b & 0xFF);
+		if(b>127) // Dont ask me, I have no idea.
+			return (b & 0xFFFF);
+		else
+			return (b & 0xFF);
+
+		
+		if (b >= 0)
+			return (b & 0xDFFF);
+		else 
+			return (b & 0xDFFF) & 8000;
 	}
-	
+	*/
+
+	/* NOT READY
 	public static final long UNSIGN(int b){
 	
-		return(b & 0xFF);
+		return(b & 0xFFFFFFFF);
 	}
+	*/
 	
 	public static final byte getExp(int i){
 		
-		//if(i < 0) throw new IllegalArgumentException("Index must be non-negative.");
+		//int unsignd = UNSIGN((byte)i);
+		//int ret1 = (byte)OCT_EXP[i];
+		//int ret2 = (byte)OCT_EXP[UNSIGN((byte)i)];
 		
-		return ((byte)OCT_EXP[UNSIGN((byte)i)]);		
-	}
+		if(i >= 0)
+			return (byte)OCT_EXP[i];
+		else
+			return (byte)OCT_EXP[UNSIGN((byte)i)];
+	}		
 	
 	public static final byte getLog(int i){
+		
+		//int unsignd = UNSIGN((byte)i);
+		//int ret2 = (byte)OCT_LOG[UNSIGN((byte)i)];
+		
+		return ((byte)OCT_LOG[UNSIGN((byte)i)]);		
+	}
 
-//		if(i < 0 || i > 254) throw new IllegalArgumentException("Index must be non-negative, but less than 255.");
+	public static final byte addition(byte u, byte v){
 
-		return ((byte)OCT_LOG[UNSIGN((byte)(i))]);		
+		return (byte) (u ^ v);
 	}
 	
-	public static final byte octDivision(byte u, byte v){
+	public static final byte subtraction(byte u, byte v){
+
+		return addition(u,v);
+	}
+	
+	public static final byte division(byte u, byte v){
 		
 		if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
 		
 		if(u == 0) return 0;
 		else{
 			
-			byte quotient = getExp(getLog(u-1) - getLog(v-1) + 255);
+			int log1 = UNSIGN(getLog(u-1));
+			int log2 = UNSIGN(getLog(v-1));
+			int sub1 = UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1));
+			int sub2 = UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1)) + 255;
+			int quot = getExp(UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1)) + 255);
+			
+			byte quotient = getExp(UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1)) + 255);
 			
 			return quotient;
 		}
 	}
 	
-	public static final byte octProduct(byte u, byte v){
+	public static final byte product(byte u, byte v){
 		
 		if(u == 0 || v == 0) return 0;
 		else{
+
+			int log1 = UNSIGN(getLog(u-1));
+			int log2 = UNSIGN(getLog(v-1));
+			int soma = UNSIGN(getLog(u-1)) + UNSIGN(getLog(v-1));
+			int prod = UNSIGN(getExp(UNSIGN(getLog(u-1)) + UNSIGN(getLog(v-1))));
 			
-			byte product = getExp(getLog(u-1) + getLog(v-1));
+			byte product = getExp(UNSIGN(getLog(u-1)) + UNSIGN(getLog(v-1)));
 			
 			return product;
 		}
 		
+	}
+	
+	public static final byte alphaPower(int i){
+
+		return getExp(i);
 	}
 	
 	public static final byte[] betaProduct(byte beta, byte[] U){
@@ -62,7 +106,7 @@ public abstract class OctectOps {
 		byte[] betaProduct = new byte[U.length];
 		
 		for(int i=0; i<U.length; i++)
-			betaProduct[i] = octProduct(beta, U[i]);
+			betaProduct[i] = product(beta, U[i]);
 		
 		return betaProduct;
 	}
@@ -74,12 +118,12 @@ public abstract class OctectOps {
 		byte[] betaProduct = new byte[U.length];
 		
 		for(int i=0; i<U.length; i++)
-			betaProduct[i] = octDivision(U[i], beta);
+			betaProduct[i] = division(U[i], beta);
 		
 		return betaProduct;
 	}
 	
-	private static final char[] OCT_EXP = 
+	public static final char[] OCT_EXP = 
 		{
 			1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76,
 			152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192, 157,

@@ -342,7 +342,7 @@ public class Encoder {
 				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T);
 				
 				System.out.println("---- C ----");
-				(gaussElim(constraint_matrix, D, T)).show();
+				(new Matrix(supahGauss(constraint_matrix, D))).show();
 				System.out.println("---------------------");
 				
 				// Recover missing source symbols
@@ -359,7 +359,7 @@ public class Encoder {
 					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 				}
 				
-				System.out.println("\n\n RECOVERED MOTHERFUCKER");
+				System.out.println("\n\n RECOVERED");
 				System.out.println(new String(decoded_data));
 				
 				System.out.println("\n\n\nMy way, or the highway.\n");
@@ -371,86 +371,13 @@ public class Encoder {
 				}
 				
 				(new Matrix(newD)).show();
-				
-				System.out.println("teste");
-				
-				byte[][] m2 = {
-						{10, 15, 20},
-						{20, 15, 10},
-						{15, 10, 20}
-				};
-				
-				byte[][] m3 = {
-						{3,3,3},
-						{4,4,4},
-						{1,1,1}
-				};
-				
-				byte[] m211 = {10, 15, 20};
-				byte[] m212 = {20, 15, 10};
-				byte[] m213 = {15, 10, 20};
-				
-				byte[] m31 = {3, 3, 3, 4, 4, 4, 1, 1, 1};
-				
-				byte[][] m23 = multiplyMatrixes(m2,m3);
-				
-				System.out.println("\n\nM2");
-				(new Matrix(m2)).show();
-				
-				System.out.println("\nM3");
-				(new Matrix(m3)).show();
-					
-				System.out.println("\nM2 x M3 - (multiplyMatrixes)");
-				(new Matrix(m23)).show();
-			
-				System.out.println("\nbetaProduct - (2*m211)");
-				byte[] tempz = OctectOps.betaProduct((byte)2, m211);
-				System.out.printf("| ");
-				System.out.printf("%02X | ", tempz[0]);
-				System.out.printf("%02X | ", tempz[1]);
-				System.out.printf("%02X |\n", tempz[2]);
-				
-				System.out.println("\nbetaDivision - (m211(tempz/2))");
-				tempz = OctectOps.betaDivision(tempz, (byte)2);
-				System.out.printf("| ");
-				System.out.printf("%02X | ", tempz[0]);
-				System.out.printf("%02X | ", tempz[1]);
-				System.out.printf("%02X |\n", tempz[2]);
-				
-				// Gauss elim
-				System.out.println("\nGAUSS - M3");
-				
-				byte[][] newM3 = supahGauss(m2, m23);
-				(new Matrix(newM3)).show();				
-				
-				System.out.println("\nM2 x M3 - (multiplyByteLineBySymbolVector)");
-	
-				// linha 1
-				System.out.printf("| ");
-				System.out.printf("%02X | ", multiplyByteLineBySymbolVector(m211,m31,3)[0]);
-				System.out.printf("%02X | ", multiplyByteLineBySymbolVector(m211,m31,3)[1]);
-				System.out.printf("%02X |\n", multiplyByteLineBySymbolVector(m211,m31,3)[2]);
-				
-				// linha 2
-				System.out.printf("| ");
-				System.out.printf("%02X | ", multiplyByteLineBySymbolVector(m212,m31,3)[0]);
-				System.out.printf("%02X | ", multiplyByteLineBySymbolVector(m212,m31,3)[1]);
-				System.out.printf("%02X |\n", multiplyByteLineBySymbolVector(m212,m31,3)[2]);
-				
-				// linha 3
-				System.out.printf("| ");
-				System.out.printf("%02X | ", multiplyByteLineBySymbolVector(m213,m31,3)[0]);
-				System.out.printf("%02X | ", multiplyByteLineBySymbolVector(m213,m31,3)[1]);
-				System.out.printf("%02X |\n", multiplyByteLineBySymbolVector(m213,m31,3)[2]);
-				
 			}
-			
 		}
 	}
 
 	
 	// A * x = b
-	private byte[][] supahGauss(byte[][] A, byte[][] b){
+	public static byte[][] supahGauss(byte[][] A, byte[][] b){
 		
 		if (A.length != A[0].length || b.length != A.length)
 			throw new RuntimeException("Illegal matrix dimensions.");
@@ -468,6 +395,7 @@ public class Encoder {
 				if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row]))
 					max = i;
 
+			// FIXME this destroys the original matrixes... dont really need a fix, but should be kept in mind
 			byte[] temp = A[row];
 			A[row] = A[max];
 			A[max] = temp;
@@ -486,7 +414,7 @@ public class Encoder {
             for(int i=row+1; i<ROWS; i++) {
             	
             	//double alpha = A[i][row] / A[row][row];
-            	byte alpha = OctectOps.octDivision(A[i][row], A[row][row]);
+            	byte alpha = OctectOps.division(A[i][row], A[row][row]);
             	
             	//b[i] -= alpha * b[row];
             	// temp = alpha * b[row]
@@ -498,7 +426,10 @@ public class Encoder {
             	
             	for(int j=row; j<ROWS; j++) {
             	
-            		A[i][j] -= OctectOps.octProduct(alpha, A[row][j]);
+            		//A[i][j] -= OctectOps.product(alpha, A[row][j]); <--- wrong line of death WRLD
+            		byte aux = OctectOps.product(alpha, A[row][j]);
+            		
+            		A[i][j] = OctectOps.subtraction(A[i][j], aux);
             	}
             }
 		}
@@ -684,7 +615,7 @@ public class Encoder {
 		return GAMMA;
 	}
 	
-	public byte[][] multiplyMatrixes(byte[][] A, byte[][] B){
+	public static byte[][] multiplyMatrices(byte[][] A, byte[][] B){
 		
         if (A[0].length != B.length) throw new RuntimeException("Illegal matrix dimensions.");
         
@@ -694,7 +625,7 @@ public class Encoder {
             for (int j = 0; j < C[0].length; j++){
                 for (int k = 0; k < A[0].length; k++){
                 	
-                	byte temp = OctectOps.octProduct(A[i][k], B[k][j]);
+                	byte temp = OctectOps.product(A[i][k], B[k][j]);
                 	
                 	C[i][j] = (byte) (C[i][j] ^ temp);
                 }
@@ -704,7 +635,7 @@ public class Encoder {
         return C;
 	}
 	
-	public byte[] multiplyByteLineBySymbolVector(byte[] line, byte[] vector, int symbol_size){
+	public static byte[] multiplyByteLineBySymbolVector(byte[] line, byte[] vector, int symbol_size){
 		
 		// TODO verify matrix sizes
 		
@@ -714,7 +645,7 @@ public class Encoder {
 
 			for(int colRow=0; colRow<line.length; colRow++){
 				
-				byte temp = OctectOps.octProduct(line[colRow], vector[(colRow * symbol_size) + octet]);
+				byte temp = OctectOps.product(line[colRow], vector[(colRow * symbol_size) + octet]);
 				
 				result[octet] = (byte) (result[octet] ^ temp);
 			}
@@ -773,7 +704,7 @@ public class Encoder {
 		byte[][] GAMMA = generateGAMMA(K, S);
 
 		// G_HDPC = MT * GAMMA
-		byte[][] G_HDPC = multiplyMatrixes(MT, GAMMA);
+		byte[][] G_HDPC = multiplyMatrices(MT, GAMMA);
 
 		// Initialize G_HDPC
 		for(int row=S; row<S+H; row++)
@@ -793,13 +724,13 @@ public class Encoder {
 		int L = A.length;
 		
 		// Gauss elim
-		Matrix C = gaussElim(A, D, symbol_size);
+		byte[][] C = supahGauss(A, D);
 
 		byte[] intermediate_symbols = new byte[L*symbol_size];
 
 		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < L; intermediate_symbols_index += symbol_size, intermediate_symbol++){
 			
-			System.arraycopy(C.getData()[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, symbol_size);
+			System.arraycopy(C[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, symbol_size);
 		}
 
 		return intermediate_symbols;
@@ -851,20 +782,38 @@ public class Encoder {
 		System.out.println("------- END -------");
 
 		// Gauss elim
-		Matrix C = gaussElim(constraint_matrix, D, t);
+		byte[][] C = supahGauss(constraint_matrix, D);
 
+		System.out.println("---- SEGUNDA RONDA ----");
+		
+		System.out.println("\n\n------- CONSTRAINT MATRIX -------");
+		for(int row=0; row<L; row++){
+			for(int col=0; col<L; col++){
+				if(row<S || row > S+H-1 || col>=W+U)
+					System.out.printf("|  %01X ",constraint_matrix[row][col]);
+				else
+					System.out.printf("| %02X ", convert(constraint_matrix[row][col]));
+			}
+			System.out.println("|");
+		}
+		System.out.println("------- END -------");
+		
 		System.out.println("\n\n------- INTERMEDIATE SYMBOLS -------");
-		C.show();
+		(new Matrix(C)).show();
 		System.out.println("------- END -------");
 
 		System.out.println("\n\n------- D COLUMN MATRIX -------"+t);
 		(new Matrix(D)).show();
 		System.out.println("------- END -------");
 		
+		System.out.println("\n\n------- MULTIPLICACAO (A * C) = D -------"+t);
+		(new Matrix(multiplyMatrices(constraint_matrix, C))).show();
+		System.out.println("------- END -------");
+		
 		byte[] intermediate_symbols = new byte[L*T];
 		
 		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < L; intermediate_symbols_index += t, intermediate_symbol++){
-			System.arraycopy(C.getData()[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, t);
+			System.arraycopy(C[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, t);
 		}
 		
 		System.out.println("\n\n\nMy way, or the highway.\n");
@@ -932,7 +881,7 @@ public class Encoder {
 				}
 				else{
 
-					_aDiv = OctectOps.octDivision(A[j][i], A[i][i]);
+					_aDiv = OctectOps.division(A[j][i], A[i][i]);
 				}
 
 				// b.data[i][0] * _aDiv // _bMul
@@ -954,13 +903,13 @@ public class Encoder {
 			// pivot within A
 			for(int j = i + 1; j < A_columns; j++){ 
 
-				byte m = OctectOps.octDivision(A[j][i], A[i][i]);
+				byte m = OctectOps.division(A[j][i], A[i][i]);
 
 				for (int k = i+1; k < A_columns; k++) {
 					// A.data[j][k] -= A.data[i][k] * m;
 
 					// A.data[i][k] * m // _aXOR
-					byte _aXOR = OctectOps.octProduct(A[i][k], m);
+					byte _aXOR = OctectOps.product(A[i][k], m);
 
 					// A.data[j][k] -= _aXOR
 					A[j][k] = (byte) (A[j][k] ^ _aXOR);
@@ -1099,7 +1048,7 @@ public class Encoder {
 		return indexes;
 	}
 
-	public byte[] xorSymbol(byte[] s1, byte[] s2){
+	public static byte[] xorSymbol(byte[] s1, byte[] s2){
 		if(s1.length != s2.length){
 			throw new IllegalArgumentException("Symbols must be of the same size.");
 		}
