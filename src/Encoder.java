@@ -219,7 +219,7 @@ public class Encoder {
 				
 				EncodingSymbol enc_symbol = enc_symbols[symbol];
 				
-				if(enc_symbol == null){
+				if(enc_symbol == null){ // TODO think about this
 					
 					missing_symbols.add(symbol + missing_delta_index);
 					missing_delta_index++;
@@ -227,7 +227,7 @@ public class Encoder {
 					continue;
 				}
 				
-				if(enc_symbol.getESI() < K){
+				if(enc_symbol.getESI() < K){ // FIXME isto aqui falha se tiver a faltar o ultimo source symbol
 					
 					if(enc_symbol.getESI() != (symbol + missing_delta_index)){
 						
@@ -245,6 +245,21 @@ public class Encoder {
 				}
 			}
 			
+			StringBuilder st = new StringBuilder();
+			st.append("Symbols topology: \n");
+			st.append("# Source: ");
+			st.append(num_source_symbols);
+			st.append("\n# Repair: ");
+			st.append(num_repair_symbols);
+			st.append("\n# Missing: ");
+			st.append(missing_delta_index);
+			st.append("\n Missing indexes:\n");
+			for(Integer i : missing_symbols)
+				st.append(i + ", ");
+			System.out.println(st.toString());
+			
+			
+			// TODO prolly should be "< missing_delta_index", try it
 			if(num_repair_symbols < (K - num_source_symbols)) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
 			Map<Integer, byte[]> esiToLTCode = new TreeMap<Integer, byte[]>();
@@ -311,17 +326,8 @@ public class Encoder {
 					
 					byte[] newLine = new byte[L];
 					
-					for(int col=0; col<L; col++){
-						
-						if(!indexes.contains(col)){
-							
-							continue;
-						}
-						else{
-							
+					for(Integer col : indexes)
 							newLine[col] = 1;
-						}
-					}
 					
 					esiToLTCode.put(missing_ESI, constraint_matrix[row]);
 					constraint_matrix[row] = newLine;
@@ -984,14 +990,14 @@ public class Encoder {
 
 		for(long j=0; j<d; j++){
 			b = (b+a) % W;
-			result = xorSymbol(result, Arrays.copyOfRange(C, (int)(b*T), (int)((b+1)*T)));
+			result = xorSymbol(result, Arrays.copyOfRange(C, (int)(b*T), (int)((b+1)*T))); //FIXME method for XORing with indexes already exists, use it
 		}
 
 		while(b1 >= P){
 			b1 = (b1 + a1) % P1;
 		}
 
-		result = xorSymbol(result, Arrays.copyOfRange(C, (int)((W+b1)*T), (int)((W+b1+1)*T)));
+		result = xorSymbol(result, Arrays.copyOfRange(C, (int)((W+b1)*T), (int)((W+b1+1)*T))); //FIXME method for XORing with indexes already exists, use it
 
 		for(long j=1; j<d1; j++){
 
@@ -999,7 +1005,7 @@ public class Encoder {
 				b1 = (b1 + a1) % P1;
 			while(b1 >= P);
 
-			result = xorSymbol(result, Arrays.copyOfRange(C, (int)((W+b1)*T), (int)((W+b1+1)*T)));
+			result = xorSymbol(result, Arrays.copyOfRange(C, (int)((W+b1)*T), (int)((W+b1+1)*T))); //FIXME method for XORing with indexes already exists, use it
 		}
 
 		return result;
