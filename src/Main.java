@@ -258,7 +258,7 @@ public class Main {
 		
 		System.out.print("Message: ");
 		
-		byte[] msg = new byte[32000];
+		/*byte[] msg = new byte[32000];
 		
 		try {
 			System.in.read(msg, 0, 32000);
@@ -281,6 +281,19 @@ public class Main {
 		byte[] msg2 = (new String(msg,0,i)).getBytes();
 		
 		System.out.println("\n\n------ YOUR MESSAGE ------\n" + new String(msg2));
+*/
+		byte[] msg2 = {
+			0x01,
+			0x02,
+			0x03,
+			0x04,
+			0x05,
+			0x06,
+			0x07,
+			0x08,
+			0x09,
+			0x0A,
+		};
 		
 		Encoder enc = new Encoder(msg2);
 		
@@ -303,7 +316,7 @@ public class Main {
 		*/
 		enc.decode(encoded_symbols);
 		
-		System.out.println("over'n'out");
+		System.out.println(new String(msg2)+"\nover'n'out");
 	}
 
 }

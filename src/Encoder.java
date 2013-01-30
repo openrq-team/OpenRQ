@@ -17,10 +17,10 @@ import sun.misc.Unsafe;
 public class Encoder {
 
 	// TODO check patents for better default values
-	public static final int MAX_PAYLOAD_SIZE = 512; // P
-	public static final int ALIGN_PARAM = 4; // Al
+	public static final int MAX_PAYLOAD_SIZE = 1;//512; // P
+	public static final int ALIGN_PARAM = 1; // Al
 	public static final int MAX_SIZE_BLOCK = 76800; // WS // B
-	public static final long SSYMBOL_LOWER_BOUND = 8; // SS
+	public static final long SSYMBOL_LOWER_BOUND = 1;//8; // SS
 	public static final int KMAX = 56403;
 	public static final byte ALPHA = 2;
 
@@ -99,14 +99,14 @@ public class Encoder {
 		for(i=0; i<ZL; i++){
 			// Source block i
 
-			byte[] aux2 = new byte[KL*T+1]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
+			byte[] aux2 = new byte[KL*T]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
 
 			int k;
+			int index_aux2 = 0;
 			for(k=0; k<KL; k++){
 
 				int j = 0;
 				int index_data  = (i*KL*T) + (k*TL*ALIGN_PARAM); // always TL because you always start by the sub-block
-				int index_aux2 = 0;
 
 				for(; j<NL; j++, index_data+=KL*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
 					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
@@ -123,7 +123,7 @@ public class Encoder {
 		for(; i<ZS; i++){
 			// Source block i
 
-			byte[] aux2 = new byte[KS*T+1]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
+			byte[] aux2 = new byte[KS*T]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
 
 			int k;
 			for(k=0; k<KS; k++){
@@ -221,7 +221,7 @@ public class Encoder {
 				
 				if(enc_symbol == null){ // TODO think about this
 					
-					missing_symbols.add(symbol + missing_delta_index);
+					missing_symbols.add(symbol);
 					missing_delta_index++;
 					
 					continue;
@@ -478,7 +478,7 @@ public class Encoder {
 			int K = (int)sb.getK();
 			int kLinha = SystematicIndices.ceil(K);
 			
-			EncodingSymbol[] encoded_symbols = new EncodingSymbol[21]; // FIXME arbitrary size ASAP
+			EncodingSymbol[] encoded_symbols = new EncodingSymbol[30]; // FIXME arbitrary size ASAP
 			
 			// First encoding step
 			byte[] intermediate_symbols = generateIntermediateSymbols(sb);
@@ -759,6 +759,31 @@ public class Encoder {
 
 		int k = sb.getK();
 		int t = sb.getT();
+		
+		StringBuilder s = new StringBuilder();
+		s.append("K: ");
+		s.append(k);
+		s.append("\nK': ");
+		s.append(K);
+		s.append("\nKi: ");
+		s.append(Ki);
+		s.append("\nS: ");
+		s.append(S);
+		s.append("\nH: ");
+		s.append(H);
+		s.append("\nW: ");
+		s.append(W);
+		s.append("\nL: ");
+		s.append(L);
+		s.append("\nP: ");
+		s.append(P);
+		s.append("\nU: ");
+		s.append(U);
+		s.append("\nB: ");
+		s.append(B);
+		s.append("\nT: ");
+		s.append(t);
+		System.out.println(s.toString());
 
 		/* Generate LxL Constraint  Matrix*/
 		byte[][] constraint_matrix = generateConstraintMatrix(K, t); // A
