@@ -16,15 +16,15 @@ public abstract class Rand {
 		x2 = (Encoder.floor((double) y /    65536) + i) % 256;
 		x3 = (Encoder.floor((double) y / 16777216) + i) % 256;
 		
-		BigInteger bi;
-		bi = new BigInteger(toByteArray(V0[x0]));
-		bi = bi.xor(new BigInteger(toByteArray(V1[x1])));
-		bi = bi.xor(new BigInteger(toByteArray(V2[x2])));
-		bi = bi.xor(new BigInteger(toByteArray(V3[x3])));
+		long v0 = V0[x0];
+		long v1 = V1[x1];
+		long v2 = V2[x2];
+		long v3 = V3[x3];
 		
-		bi = bi.mod(new BigInteger(toByteArray(m)));
+		long ret2 = v0 ^ v1 ^ v2 ^ v3;
+		ret2 = ret2 % m;
 		
-		return bi.longValue();
+		return ret2;
 	}
 
 	private static byte[] toByteArray(long value){

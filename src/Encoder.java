@@ -75,7 +75,7 @@ public class Encoder {
 		return((int)Math.ceil(x));
 	}
 
-	public static final int floor(double x){
+	public static final int floor(double x){		
 		return((int)Math.floor(x));
 	}
 
@@ -227,9 +227,11 @@ public class Encoder {
 					continue;
 				}
 				
+				int esizord = enc_symbol.getESI();
+				
 				if(enc_symbol.getESI() < K){ // FIXME isto aqui falha se tiver a faltar o ultimo source symbol
 					
-					if(enc_symbol.getESI() != (symbol + missing_delta_index)){
+					if(enc_symbol.getESI() != symbol){ //+ missing_delta_index){
 						
 						missing_symbols.add(symbol + missing_delta_index);						
 						missing_delta_index++;
@@ -329,6 +331,8 @@ public class Encoder {
 					for(Integer col : indexes)
 							newLine[col] = 1;
 					
+					Tuple tup = new Tuple(kLinha, repair.getISI(K));
+					
 					esiToLTCode.put(missing_ESI, constraint_matrix[row]);
 					constraint_matrix[row] = newLine;
 					
@@ -351,6 +355,7 @@ public class Encoder {
 				(new Matrix(supahGauss(constraint_matrix, D))).show();
 				System.out.println("---------------------");
 				
+				
 				// Recover missing source symbols
 				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
 					
@@ -366,7 +371,9 @@ public class Encoder {
 				}
 				
 				System.out.println("\n\n RECOVERED");
-				System.out.println(new String(decoded_data));
+				//System.out.println(new String(decoded_data));
+				for(int g=0; g<decoded_data.length; g++)
+					System.out.printf("| %02X |\n", decoded_data[g]);
 				
 				System.out.println("\n\n\nMy way, or the highway.\n");
 				byte[][] newD = new byte[L][T];
@@ -488,9 +495,15 @@ public class Encoder {
 			int source_symbol;
 			int source_symbol_index;
 			for(source_symbol = 0, source_symbol_index = 0; source_symbol<sb.getK(); source_symbol++, source_symbol_index+=sb.getT()){
-				
-				//encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
+				if(source_symbol == 0) continue;
+				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}
+			
+			System.out.println("TESTE REPAIRS");
+			int Ki = SystematicIndices.getKIndex(K);
+			int S = SystematicIndices.S(Ki);
+			int H = SystematicIndices.H(Ki);
+			int L = kLinha + S + H;
 			
 			// Generating/sending repair symbols
 			for(int repair_symbol = 0; repair_symbol<20; repair_symbol++){
@@ -501,6 +514,21 @@ public class Encoder {
 				byte[] enc_data = enc(kLinha, intermediate_symbols, new Tuple(kLinha, isi));
 				
 				encoded_symbols[source_symbol + repair_symbol] = new EncodingSymbol(SBN,esi, enc_data);
+				
+				/* TESTE VECTORS */
+				// Test if (indexes * intermediate) = enc_data
+				Set<Integer> indexes = encIndexes(kLinha, new Tuple(kLinha, isi));
+				byte[] linha = new byte[L];
+				for(Integer ind : indexes)
+					linha[ind] = 1;
+				
+				byte[] newEnc_data = multiplyByteLineBySymbolVector(linha, intermediate_symbols, T);
+				
+				if(newEnc_data == enc_data)
+					break;
+				
+				// Test if the intermediate is recovered from enc_data "/" indexes
+				
 			}
 			
 			encoded_blocks[source_block_index] = new EncodingPacket(SBN, encoded_symbols, K, sb.getT());
@@ -516,7 +544,6 @@ public class Encoder {
 			// Consecutives 1's modulo P
 			constraint_matrix[row][(row   %P) + W] = 1;
 			constraint_matrix[row][(row+1 %P) + W] = 1;
-
 		}
 	}
 	
@@ -650,6 +677,8 @@ public class Encoder {
 		for(int octet=0; octet<symbol_size; octet++){
 
 			for(int colRow=0; colRow<line.length; colRow++){
+				
+				// FIXME if(line[colRow] == 0) continue;
 				
 				byte temp = OctectOps.product(line[colRow], vector[(colRow * symbol_size) + octet]);
 				
@@ -814,29 +843,8 @@ public class Encoder {
 
 		// Gauss elim
 		byte[][] C = supahGauss(constraint_matrix, D);
-
-		System.out.println("---- SEGUNDA RONDA ----");
 		
-		System.out.println("\n\n------- CONSTRAINT MATRIX -------");
-		for(int row=0; row<L; row++){
-			for(int col=0; col<L; col++){
-				if(row<S || row > S+H-1 || col>=W+U)
-					System.out.printf("|  %01X ",constraint_matrix[row][col]);
-				else
-					System.out.printf("| %02X ", convert(constraint_matrix[row][col]));
-			}
-			System.out.println("|");
-		}
-		System.out.println("------- END -------");
-		
-		System.out.println("\n\n------- INTERMEDIATE SYMBOLS -------");
-		(new Matrix(C)).show();
-		System.out.println("------- END -------");
-
-		System.out.println("\n\n------- D COLUMN MATRIX -------"+t);
-		(new Matrix(D)).show();
-		System.out.println("------- END -------");
-		
+		constraint_matrix = generateConstraintMatrix(K, t);
 		System.out.println("\n\n------- MULTIPLICACAO (A * C) = D -------"+t);
 		(new Matrix(multiplyMatrices(constraint_matrix, C))).show();
 		System.out.println("------- END -------");
@@ -1056,6 +1064,10 @@ public class Encoder {
 		long a1 = tuple.getA1();
 		long b1 = tuple.getB1();
 
+		/* A PUTA DA LINHA, NUNCA REMOVER PARA NUNCA ESQUECER O QUAO RETARDADO EU SOU */
+		indexes.add((int) b); /* A PUTA DA LINHA, NUNCA REMOVER PARA NUNCA ESQUECER O QUAO RETARDADO EU SOU */
+		/* A PUTA DA LINHA, NUNCA REMOVER PARA NUNCA ESQUECER O QUAO RETARDADO EU SOU */
+		
 		for(long j=0; j<d; j++){
 			b = (b+a) % W;
 			indexes.add((int) b);
@@ -1157,7 +1169,7 @@ class Tuple{
 		if(A % 2 == 0)
 			A++;
 
-		long B = 10267*(J+1);
+		long B = 10267 * (J+1);
 
 		long y = (B + X*A) % 4294967296L; // 2^^32
 
@@ -1166,7 +1178,7 @@ class Tuple{
 		this.d = Deg.deg(v,W);
 		this.a = 1 + Rand.rand(y, 1, W-1);
 		this.b = Rand.rand(y, 2, W);
-		if(d<4)
+		if(this.d<4)
 			d1 = 2 + Rand.rand(X, 3, 2L);
 		else
 			d1 = 2;
