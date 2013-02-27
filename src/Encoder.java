@@ -1,26 +1,19 @@
 
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import sun.misc.Unsafe;
-
 public class Encoder {
 
 	// TODO check patents for better default values
-	public static final int MAX_PAYLOAD_SIZE = 1;//512; // P
-	public static final int ALIGN_PARAM = 1; // Al
+	public static final int MAX_PAYLOAD_SIZE = 8; //512 // P
+	public static final int ALIGN_PARAM = 1; //4 // Al
 	public static final int MAX_SIZE_BLOCK = 76800; // WS // B
-	public static final long SSYMBOL_LOWER_BOUND = 1;//8; // SS
+	public static final long SSYMBOL_LOWER_BOUND = 8; // SS
 	public static final int KMAX = 56403;
 	public static final byte ALPHA = 2;
 
@@ -190,15 +183,18 @@ public class Encoder {
 		return data;		
 	}
 
-	public void decode(EncodingPacket[] encoded_blocks) {
+	public byte[] decode(EncodingPacket[] encoded_blocks) {
 
+		int num_blocks = encoded_blocks.length;
+		
+		byte[] recovered = new byte[num_blocks * Kt * T];
+		
 		// Decode each block
 		for(int source_block_index = 0; source_block_index<encoded_blocks.length; source_block_index++){
 			
 			EncodingPacket eb = encoded_blocks[source_block_index];
 			EncodingSymbol[] enc_symbols = eb.getEncoding_symbols();
 			int num_symbols = enc_symbols.length;
-			int SBN = eb.getSBN();
 			int K = eb.getK();
 			int T = eb.getT();
 			int kLinha = SystematicIndices.ceil(K);
@@ -226,10 +222,8 @@ public class Encoder {
 					
 					continue;
 				}
-				
-				int esizord = enc_symbol.getESI();
-				
-				if(enc_symbol.getESI() < K){ // FIXME isto aqui falha se tiver a faltar o ultimo source symbol
+								
+				if(enc_symbol.getESI() < K){ // acho que afinal nao //isto aqui falha se tiver a faltar o ultimo source symbol
 					
 					if(enc_symbol.getESI() != symbol){ //+ missing_delta_index){
 						
@@ -247,6 +241,7 @@ public class Encoder {
 				}
 			}
 			
+			// Print topology
 			StringBuilder st = new StringBuilder();
 			st.append("Symbols topology: \n");
 			st.append("# Source: ");
@@ -260,9 +255,7 @@ public class Encoder {
 				st.append(i + ", ");
 			System.out.println(st.toString());
 			
-			
-			// TODO prolly should be "< missing_delta_index", try it
-			if(num_repair_symbols < (K - num_source_symbols)) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
+			if(num_repair_symbols < missing_delta_index) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
 			Map<Integer, byte[]> esiToLTCode = new TreeMap<Integer, byte[]>();
 			
@@ -280,6 +273,7 @@ public class Encoder {
 				System.out.println("\n\n ALL SOURCE SYMBOLS RECEIVED");
 				System.out.println(new String(decoded_data));
 			}
+			
 			// Not so lucky
 			else{
 				
@@ -314,7 +308,7 @@ public class Encoder {
 				
 				System.out.println("---- D ---- (initial)");
 				(new Matrix(D)).show();
-				System.out.println("---------------------");
+				System.out.println("---------------------");				
 				
 				// Identify missing source symbols and replace their lines with "repair lines"
 				Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
@@ -330,8 +324,6 @@ public class Encoder {
 					
 					for(Integer col : indexes)
 							newLine[col] = 1;
-					
-					Tuple tup = new Tuple(kLinha, repair.getISI(K));
 					
 					esiToLTCode.put(missing_ESI, constraint_matrix[row]);
 					constraint_matrix[row] = newLine;
@@ -352,9 +344,11 @@ public class Encoder {
 				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T);
 				
 				System.out.println("---- C ----");
-				(new Matrix(supahGauss(constraint_matrix, D))).show();
+				for(int bite=0; bite<intermediate_symbols.length; bite++){
+					if(bite % T == 0) System.out.println("");
+					System.out.printf("| %02X |", intermediate_symbols[bite]);
+				}
 				System.out.println("---------------------");
-				
 				
 				// Recover missing source symbols
 				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
@@ -371,31 +365,30 @@ public class Encoder {
 				}
 				
 				System.out.println("\n\n RECOVERED");
-				//System.out.println(new String(decoded_data));
-				for(int g=0; g<decoded_data.length; g++)
-					System.out.printf("| %02X |\n", decoded_data[g]);
-				
-				System.out.println("\n\n\nMy way, or the highway.\n");
-				byte[][] newD = new byte[L][T];
-				
-				for(int row=0; row<L; row++){
-					
-					newD[row] = multiplyByteLineBySymbolVector(constraint_matrix[row], intermediate_symbols, T);
-				}
-				
-				(new Matrix(newD)).show();
-			}
-		}
-	}
 
+				for(int g=0; g<decoded_data.length; g++){
+					if(g % T == 0) System.out.println("");
+					System.out.printf("| %02X |", decoded_data[g]);
+				}
+				System.out.println("");
+			
+				// FIXME retire decoded_data, write directly here
+				System.arraycopy(decoded_data, 0, recovered, source_block_index * K * T, K*T);
+			}			
+		}				
+
+		return recovered;
+	}
 	
 	// A * x = b
-	public static byte[][] supahGauss(byte[][] A, byte[][] b){
+	public static byte[] supahGauss(byte[][] A, byte[][] b){
 		
 		if (A.length != A[0].length || b.length != A.length)
 			throw new RuntimeException("Illegal matrix dimensions.");
 		
-		byte[][] x = new byte[b.length][b[0].length];
+		int num_cols = b[0].length;
+		//byte[][] x = new byte[b.length][b[0].length];
+		byte[] x = new byte[b.length * num_cols];
 		
 		int ROWS = b.length;
 		
@@ -408,7 +401,7 @@ public class Encoder {
 				if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row]))
 					max = i;
 
-			// FIXME this destroys the original matrixes... dont really need a fix, but should be kept in mind
+			// this destroys the original matrixes... dont really need a fix, but should be kept in mind
 			byte[] temp = A[row];
 			A[row] = A[max];
 			A[max] = temp;
@@ -420,26 +413,21 @@ public class Encoder {
 			// singular or nearly singular
             if (A[row][row] == 0) {
 				System.err.println("LINHA QUE DEU SINGULAR: "+row);
-            	throw new RuntimeException("Matrix is singular");
+            	throw new RuntimeException("Matrix is singular"); // FIXME create exception
             }
 
             // pivot within A and b
             for(int i=row+1; i<ROWS; i++) {
             	
-            	//double alpha = A[i][row] / A[row][row];
             	byte alpha = OctectOps.division(A[i][row], A[row][row]);
             	
-            	//b[i] -= alpha * b[row];
-            	// temp = alpha * b[row]
             	temp = OctectOps.betaProduct(alpha, b[row]);
             	
-            	// b[i] -= temp
             	b[i] = xorSymbol(b[i], temp);
             	
             	
             	for(int j=row; j<ROWS; j++) {
             	
-            		//A[i][j] -= OctectOps.product(alpha, A[row][j]); <--- wrong line of death WRLD
             		byte aux = OctectOps.product(alpha, A[row][j]);
             		
             		A[i][j] = OctectOps.subtraction(A[i][j], aux);
@@ -450,24 +438,22 @@ public class Encoder {
 		// back substitution
         for(int i = ROWS-1; i >= 0; i--) {
         	
-            byte[] sum = new byte[x[0].length];
+            byte[] sum = new byte[num_cols];
             
             for(int j=i+1; j<ROWS; j++) {
-            
-            	//sum += A[i][j] * x[j];
-            	// temp = A[i][j] * x[j]
-            	byte[] temp = OctectOps.betaProduct(A[i][j], x[j]);
+
+            	byte[] temp = OctectOps.betaProduct(A[i][j], x, j*num_cols, num_cols);
             	
-            	// sum += temp
             	sum = xorSymbol(sum, temp);
             }
             
-            //x[i] = (b[i] - sum) / A[i][i];
-            // temp = (b[i] - sum)
             byte[] temp = xorSymbol(b[i], sum);
             
-            // x[i] = temp / A[i][i]
-            x[i] = OctectOps.betaDivision(temp, A[i][i]);
+            //x[i] = OctectOps.betaDivision(temp, A[i][i]);
+            for(int bite = 0; bite < num_cols; bite++){
+            	
+            	x[i+bite] = OctectOps.division(temp[bite], A[i][i]);
+            }
         }
 		
 		return x;
@@ -475,17 +461,18 @@ public class Encoder {
 	
 	public EncodingPacket[] encode(SourceBlock[] object){
 
-		EncodingPacket[] encoded_blocks = new EncodingPacket[object.length];
+		int num_src_symbols = object.length;
+		EncodingPacket[] encoded_blocks = new EncodingPacket[num_src_symbols];
 		
-		for(int source_block_index = 0; source_block_index<object.length; source_block_index++){
+		for(int source_block_index = 0; source_block_index<num_src_symbols; source_block_index++){
 			
 			SourceBlock sb = object[source_block_index];
 			int SBN = sb.getSBN();
 			byte[] ssymbols = sb.getSymbols();
-			int K = (int)sb.getK();
+			int K = sb.getK();
 			int kLinha = SystematicIndices.ceil(K);
 			
-			EncodingSymbol[] encoded_symbols = new EncodingSymbol[30]; // FIXME arbitrary size ASAP
+			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + 20]; // FIXME arbitrary size ASAP
 			
 			// First encoding step
 			byte[] intermediate_symbols = generateIntermediateSymbols(sb);
@@ -494,16 +481,11 @@ public class Encoder {
 			// Sending original source symbols
 			int source_symbol;
 			int source_symbol_index;
-			for(source_symbol = 0, source_symbol_index = 0; source_symbol<sb.getK(); source_symbol++, source_symbol_index+=sb.getT()){
-				if(source_symbol == 0) continue;
+
+			for(source_symbol = 0, source_symbol_index = 0; source_symbol<K; source_symbol++, source_symbol_index+=sb.getT()){
+				if(source_symbol == K-2) continue;
 				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}
-			
-			System.out.println("TESTE REPAIRS");
-			int Ki = SystematicIndices.getKIndex(K);
-			int S = SystematicIndices.S(Ki);
-			int H = SystematicIndices.H(Ki);
-			int L = kLinha + S + H;
 			
 			// Generating/sending repair symbols
 			for(int repair_symbol = 0; repair_symbol<20; repair_symbol++){
@@ -514,21 +496,6 @@ public class Encoder {
 				byte[] enc_data = enc(kLinha, intermediate_symbols, new Tuple(kLinha, isi));
 				
 				encoded_symbols[source_symbol + repair_symbol] = new EncodingSymbol(SBN,esi, enc_data);
-				
-				/* TESTE VECTORS */
-				// Test if (indexes * intermediate) = enc_data
-				Set<Integer> indexes = encIndexes(kLinha, new Tuple(kLinha, isi));
-				byte[] linha = new byte[L];
-				for(Integer ind : indexes)
-					linha[ind] = 1;
-				
-				byte[] newEnc_data = multiplyByteLineBySymbolVector(linha, intermediate_symbols, T);
-				
-				if(newEnc_data == enc_data)
-					break;
-				
-				// Test if the intermediate is recovered from enc_data "/" indexes
-				
 			}
 			
 			encoded_blocks[source_block_index] = new EncodingPacket(SBN, encoded_symbols, K, sb.getT());
@@ -563,7 +530,6 @@ public class Encoder {
 				for(int row=1; row<S; row++){
 
 					constraint_matrix[row][col] = constraint_matrix[row-1][col-1];
-
 				}
 			}
 			else{ // if 0, then its the first column of the current circulant matrix
@@ -659,8 +625,8 @@ public class Encoder {
                 for (int k = 0; k < A[0].length; k++){
                 	
                 	byte temp = OctectOps.product(A[i][k], B[k][j]);
-                	
-                	C[i][j] = (byte) (C[i][j] ^ temp);
+
+               		C[i][j] = (byte) (C[i][j] ^ temp);
                 }
             }
         }
@@ -670,7 +636,7 @@ public class Encoder {
 	
 	public static byte[] multiplyByteLineBySymbolVector(byte[] line, byte[] vector, int symbol_size){
 		
-		// TODO verify matrix sizes
+		if((line.length * symbol_size) != vector.length) throw new RuntimeException("Illegal line/vector dimensions.");
 		
 		byte[] result = new byte[symbol_size];
 		
@@ -678,7 +644,8 @@ public class Encoder {
 
 			for(int colRow=0; colRow<line.length; colRow++){
 				
-				// FIXME if(line[colRow] == 0) continue;
+				if(line[colRow] == 0) // null element for addition/multiplication
+					continue;
 				
 				byte temp = OctectOps.product(line[colRow], vector[(colRow * symbol_size) + octet]);
 				
@@ -753,78 +720,42 @@ public class Encoder {
 	}
 	
 	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size){
-		
-		// TODO verify size of matrixes?
-		
-		int L = A.length;
-		
+				
 		// Gauss elim
-		byte[][] C = supahGauss(A, D);
-
-		byte[] intermediate_symbols = new byte[L*symbol_size];
-
-		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < L; intermediate_symbols_index += symbol_size, intermediate_symbol++){
-			
-			System.arraycopy(C[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, symbol_size);
-		}
-
-		return intermediate_symbols;
+		byte[] C = supahGauss(A, D);
+		
+		return C;
 	}
 	
 	private byte[] generateIntermediateSymbols(SourceBlock sb){
 		
 		byte[] ssymbols = sb.getSymbols();
-		// TODO create ssymbols + padding
 
 		int K = SystematicIndices.ceil((int)sb.getK());
 		int Ki = SystematicIndices.getKIndex(K);
 		int S = SystematicIndices.S(Ki);
 		int H = SystematicIndices.H(Ki);
-		int W = SystematicIndices.W(Ki);
 		int L = K + S + H;
-		int P = L - W;
-		int U = P - H;
-		int B = W - S;
 
 		int k = sb.getK();
 		int t = sb.getT();
 		
-		StringBuilder s = new StringBuilder();
-		s.append("K: ");
-		s.append(k);
-		s.append("\nK': ");
-		s.append(K);
-		s.append("\nKi: ");
-		s.append(Ki);
-		s.append("\nS: ");
-		s.append(S);
-		s.append("\nH: ");
-		s.append(H);
-		s.append("\nW: ");
-		s.append(W);
-		s.append("\nL: ");
-		s.append(L);
-		s.append("\nP: ");
-		s.append(P);
-		s.append("\nU: ");
-		s.append(U);
-		s.append("\nB: ");
-		s.append(B);
-		s.append("\nT: ");
-		s.append(t);
-		System.out.println(s.toString());
-
 		/* Generate LxL Constraint  Matrix*/
 		byte[][] constraint_matrix = generateConstraintMatrix(K, t); // A
 		
 		// D
-		byte[][] D = new byte[L][t]; 
+		byte[][] D = new byte[L][t];
 
-		for(int row=S+H, index=0; row<k+S+H; row++, index+=t){
-
+		for(int row=S+H, index=0; row<k+S+H; row++, index+=t)
 			D[row] = Arrays.copyOfRange(ssymbols, index, (index+t));
-		}
 
+		// Gauss elim
+		byte[] C = supahGauss(constraint_matrix, D);
+				
+		// Print stuff
+		/*
+		constraint_matrix = generateConstraintMatrix(K, t);
+		
 		System.out.println("\n\n------- CONSTRAINT MATRIX -------");
 		for(int row=0; row<L; row++){
 			for(int col=0; col<L; col++){
@@ -840,32 +771,13 @@ public class Encoder {
 		System.out.println("\n\n------- D COLUMN MATRIX -------"+t);
 		(new Matrix(D)).show();
 		System.out.println("------- END -------");
-
-		// Gauss elim
-		byte[][] C = supahGauss(constraint_matrix, D);
 		
-		constraint_matrix = generateConstraintMatrix(K, t);
 		System.out.println("\n\n------- MULTIPLICACAO (A * C) = D -------"+t);
 		(new Matrix(multiplyMatrices(constraint_matrix, C))).show();
 		System.out.println("------- END -------");
+		*/
 		
-		byte[] intermediate_symbols = new byte[L*T];
-		
-		for(int intermediate_symbols_index = 0, intermediate_symbol=0; intermediate_symbol < L; intermediate_symbols_index += t, intermediate_symbol++){
-			System.arraycopy(C[intermediate_symbol], 0, intermediate_symbols, intermediate_symbols_index, t);
-		}
-		
-		System.out.println("\n\n\nMy way, or the highway.\n");
-		byte[][] newD = new byte[L][T];
-		
-		for(int row=0; row<L; row++){
-			
-			newD[row] = multiplyByteLineBySymbolVector(constraint_matrix[row], intermediate_symbols, T);
-		}
-		
-		(new Matrix(newD)).show();
-		
-		return intermediate_symbols;
+		return C;
 	}
 
 	public static final byte convert(byte in){
@@ -874,102 +786,6 @@ public class Encoder {
 		byte hex2 = (byte) ((in >>> 4) & 0xF);
 
 		return (byte) (hex2 | hex1);
-	}
-
-	public Matrix gaussElim(byte[][] A, byte[][] D, int symbol_size){
-
-		if (A.length != A[0].length || D.length != A.length || D[0].length != symbol_size)
-			throw new RuntimeException("Illegal matrix dimensions.");
-
-		int A_columns = A[0].length;
-
-		// Gaussian elimination with partial pivoting
-		for (int i = 0; i < A_columns; i++) {
-
-			// find pivot row and swap
-			int max = i;
-			for (int j = i + 1; j < A_columns; j++)
-				if (Math.abs(A[j][i]) > Math.abs(A[max][i]))
-					max = j;
-
-			// A.swap(i, max);
-			byte[] temp = A[i];
-			A[i] = A[max];
-			A[max] = temp;
-
-			// b.swap(i, max);
-			temp = D[i];
-			D[i] = D[max];
-			D[max] = temp;         
-
-			// singular
-			if (A[i][i] == 0) {
-				System.err.println("LINHA QUE DEU SINGULAR: "+i);
-				throw new RuntimeException("Matrix is singular.");
-			}
-
-			// pivot within b
-			for (int j = i + 1; j < A_columns; j++){
-				// b.data[j][0] -= b.data[i][0] * A.data[j][i] / A.data[i][i];
-
-				//A.data[j][i] / A.data[i][i]; // _aDiv
-				byte _aDiv;
-				if(A[j][i] == 0){
-
-					_aDiv = 0;
-				}
-				else{
-
-					_aDiv = OctectOps.division(A[j][i], A[i][i]);
-				}
-
-				// b.data[i][0] * _aDiv // _bMul
-				byte[] _bMul;
-
-				if(_aDiv == 0 || symbolIsZero(D[i])){
-
-					_bMul = new byte[D[i].length];
-				}
-				else{
-
-					_bMul = OctectOps.betaProduct(_aDiv, D[i]);
-				}
-
-				// b.data[j][0] -= _bMul
-				D[j] = xorSymbol(D[j], _bMul);
-			}
-
-			// pivot within A
-			for(int j = i + 1; j < A_columns; j++){ 
-
-				byte m = OctectOps.division(A[j][i], A[i][i]);
-
-				for (int k = i+1; k < A_columns; k++) {
-					// A.data[j][k] -= A.data[i][k] * m;
-
-					// A.data[i][k] * m // _aXOR
-					byte _aXOR = OctectOps.product(A[i][k], m);
-
-					// A.data[j][k] -= _aXOR
-					A[j][k] = (byte) (A[j][k] ^ _aXOR);
-				}
-
-				A[j][i] = 0;
-			}
-		}
-
-		// back substitution
-		Matrix x = new Matrix(A_columns, D[0].length);
-		for (int j = A_columns - 1; j >= 0; j--) {
-
-			byte[] sum = new byte[D[0].length];
-
-			for (int k = j + 1; k < A_columns; k++)
-				sum = xorSymbol(sum, OctectOps.betaProduct(A[j][k], x.data[k]));
-			x.data[j] = OctectOps.betaDivision(xorSymbol(D[j], sum), A[j][j]);
-		}
-
-		return x;
 	}
 
 	public boolean symbolIsZero(byte[] symbol){
@@ -1003,34 +819,32 @@ public class Encoder {
 
 	public byte[] enc(int K, byte[] C, Tuple tuple){
 
-		int Ki = SystematicIndices.getKIndex(K);
-		int S = SystematicIndices.S(Ki);
-		int H = SystematicIndices.H(Ki);
-		int W = SystematicIndices.W(Ki);
-		long L = K + S + H;
-		long P = L - W;
-		//long B = W - S;
-		long P1 = ceilPrime(P);
-		long d = tuple.getD();
-		long a = tuple.getA();
-		long b = tuple.getB();
+		int Ki  = SystematicIndices.getKIndex(K);
+		int S   = SystematicIndices.S(Ki);
+		int H   = SystematicIndices.H(Ki);
+		int W   = SystematicIndices.W(Ki);
+		long L  = K + S + H;
+		long P  = L - W;
+		int P1  = (int)ceilPrime(P);
+		long d  = tuple.getD();
+		int a   = (int)tuple.getA();
+		int b   = (int)tuple.getB();
 		long d1 = tuple.getD1();
-		long a1 = tuple.getA1();
-		long b1 = tuple.getB1();
+		int a1  = (int)tuple.getA1();
+		int b1  = (int)tuple.getB1();
 
-		// TODO mudar todos estes copyOfRange para arrays originais com src e dst
 		byte[] result = Arrays.copyOfRange(C, (int)(b*T), (int)((b+1)*T));
 
 		for(long j=0; j<d; j++){
 			b = (b+a) % W;
-			result = xorSymbol(result, Arrays.copyOfRange(C, (int)(b*T), (int)((b+1)*T))); //FIXME method for XORing with indexes already exists, use it
+			result = xorSymbol(result, 0, C, b*T, T);
 		}
 
 		while(b1 >= P){
 			b1 = (b1 + a1) % P1;
 		}
 
-		result = xorSymbol(result, Arrays.copyOfRange(C, (int)((W+b1)*T), (int)((W+b1+1)*T))); //FIXME method for XORing with indexes already exists, use it
+		result = xorSymbol(result, 0, C, (W+b1)*T, T);
 
 		for(long j=1; j<d1; j++){
 
@@ -1038,7 +852,7 @@ public class Encoder {
 				b1 = (b1 + a1) % P1;
 			while(b1 >= P);
 
-			result = xorSymbol(result, Arrays.copyOfRange(C, (int)((W+b1)*T), (int)((W+b1+1)*T))); //FIXME method for XORing with indexes already exists, use it
+			result = xorSymbol(result, 0, C, (W+b1)*T, T);
 		}
 
 		return result;
@@ -1046,7 +860,6 @@ public class Encoder {
 
 	public Set<Integer> encIndexes(int K, Tuple tuple){
 
-		//TODO make it a set
 		Set<Integer> indexes = new TreeSet<Integer>();
 
 		int Ki = SystematicIndices.getKIndex(K);
@@ -1055,8 +868,9 @@ public class Encoder {
 		int W = SystematicIndices.W(Ki);
 		long L = K + S + H;
 		long P = L - W;
-		//long B = W - S;
 		long P1 = ceilPrime(P);
+		
+		// Tuple
 		long d = tuple.getD();
 		long a = tuple.getA();
 		long b = tuple.getB();
@@ -1092,6 +906,8 @@ public class Encoder {
 	}
 
 	public static byte[] xorSymbol(byte[] s1, byte[] s2){
+		
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(s1.length != s2.length){
 			throw new IllegalArgumentException("Symbols must be of the same size.");
 		}
@@ -1105,11 +921,20 @@ public class Encoder {
 		return xor;
 	}
 
-	public void xorSymbol(byte[] s1, int pos1, byte[] s2, int pos2, int length){
+	public static byte[] xorSymbol(byte[] s1, int pos1, byte[] s2, int pos2, int length){
 
-		for(int i=0; i<length; i++, pos1++, pos2++){
-			s1[pos1] = (byte) (s1[pos1] ^ s2[pos2]);
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
+		if((s1.length - pos1) < length || (s2.length - pos2) < length ){
+			throw new IllegalArgumentException("Symbols must be of the same size.");
 		}
+
+		byte[] xor = new byte[length];
+		
+		for(int i=0; i<length; i++){
+			xor[i] = (byte) (s1[pos1+i] ^ s2[pos2+i]);
+		}
+		
+		return xor;
 	}
 
 	public static long ceilPrime(long p){
@@ -1120,34 +945,18 @@ public class Encoder {
 	}
 
 	public static boolean isPrime(long n){
+		
 		//check if n is a multiple of 2
 		if (n%2==0) return false;
+		
 		//if not, then just check the odds
 		for(long i=3;i*i<=n;i+=2) {
 			if(n%i==0)
 				return false;
 		}
+		
 		return true;
 	}
-
-	private static long power(int x,int y){
-
-		long p=1;
-		long b=((long)y) & 0x00000000ffffffffL;
-		long powerN=x;
-
-		while(b!=0){
-
-			if((b & 1) != 0) 
-				p*=powerN;
-
-			b>>>=1;
-		powerN=powerN*powerN;
-		}
-
-		return p;
-	} 
-
 }
 
 class Tuple{

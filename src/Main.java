@@ -8,8 +8,60 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		/* TEST VECTORS */
+		testsOctectAndMatricOps();
+		System.exit(-721);
+		
 		/*
+		
+		System.out.print("Message: ");
+		
+		byte[] msg = new byte[32000];
+		
+		try {
+			System.in.read(msg, 0, 32000);
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+			System.exit(-2);
+		}
+		
+		int i;
+		for(i=0;i<msg.length;i++)
+        {
+                int bint = new Byte(msg[i]).intValue();
+                if(bint == 0)
+                {
+                     break;
+                }
+        }
+		*/
+		
+		String msg = "ola 1 2 3 4 5 6 7 8 9 poema bonito bla bla ola";
+		byte[] msg2 = msg.getBytes();
+		
+		Encoder enc = new Encoder(msg2);
+
+		/*
+		System.out.println("\n\n------ YOUR MESSAGE ------\n" + new String(msg2));
+		
+		System.out.println("------ (un)PARTITIONED MESSAGE ------");
+		
+		byte[] data = enc.unPartition(enc.partition());
+
+		System.out.println(new String(data));
+
+		System.out.println("\n\n------ going for the encoding, buckle up...\n");	
+*/
+		EncodingPacket[] encoded_symbols = enc.encode(enc.partition());
+		
+		byte[] rec = enc.decode(encoded_symbols);
+		
+		System.out.println(new String(rec)+"\nover'n'out");
+	}
+	
+	public static void testsOctectAndMatricOps(){
+		
+		/* TEST VECTORS */
 		System.out.println("\n\nTABELA\n");
 		for(int i=0; i<510; i++)
 			System.out.println(i + ": " + (int)OctectOps.OCT_EXP[i]);
@@ -92,8 +144,11 @@ public class Main {
 		// Gauss elim
 		System.out.println("\nGAUSS - M3");
 		
-		byte[][] newM3 = Encoder.supahGauss(m2, m23);
-		(new Matrix(newM3)).show();				
+		byte[] newM3 = Encoder.supahGauss(m2, m23);
+		for(int bite=0; bite<newM3.length; bite++){
+			if(bite%3 == 0) System.out.println("");
+			System.out.printf("| %02X |", newM3[bite]);
+		}
 		
 		System.out.println("\nM2 x M3 - (multiplyByteLineBySymbolVector)");
 
@@ -148,7 +203,7 @@ public class Main {
 			System.out.println("RUN: "+runs);
 			// Generate random bytes matrix
 			// Alocate
-			int dimension = 500;
+			int dimension = 3;
 			byte[][] randomBytes1 = new byte[dimension][dimension];
 			byte[][] randomBytes2 = new byte[dimension][dimension];
 
@@ -165,7 +220,7 @@ public class Main {
 			
 			// Test it motherfucker!!!
 			byte[][] product  = Encoder.multiplyMatrices(randomBytes1, randomBytes2);
-			byte[][] gaussian;
+			byte[] gaussian;
 			try{
 				gaussian = Encoder.supahGauss(randomBytes1, product);
 			}catch(RuntimeException e){
@@ -175,9 +230,10 @@ public class Main {
 
 			// Check if equals
 			boolean passed = true;
-			for(int row=0; row<dimension; row++)
+			for(int row=0; row<dimension && passed; row++)
 				for(int col=0; col<dimension; col++)
-					if(gaussian[row][col] != randomBytes2[row][col]){
+					if(gaussian[dimension*row + col] != randomBytes2[row][col]){
+						System.out.println("i: "+(dimension*row + col)+" row: "+row+" col: "+col+" gaussian: "+gaussian[dimension*row + col]+" random: "+randomBytes2[row][col]);
 						passed = false;
 						break;
 					}
@@ -194,7 +250,10 @@ public class Main {
 				(new Matrix(product)).show();
 				
 				System.out.println("\nGaussian");
-				(new Matrix(gaussian)).show();
+				for(int bite=0; bite<dimension*dimension; bite++){
+					if(bite % dimension == 0) System.out.println("");
+					System.out.printf("| %02X |", gaussian[bite]);
+				}
 				System.exit(-23);
 			}
 		}
@@ -254,69 +313,7 @@ public class Main {
 		
 		
 		System.exit(2);
-		*/
 		
-		System.out.print("Message: ");
-		
-		/*byte[] msg = new byte[32000];
-		
-		try {
-			System.in.read(msg, 0, 32000);
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			System.exit(-2);
-		}
-		
-		int i;
-		for(i=0;i<msg.length;i++)
-        {
-                int bint = new Byte(msg[i]).intValue();
-                if(bint == 0)
-                {
-                     break;
-                }
-        }
-		
-		byte[] msg2 = (new String(msg,0,i)).getBytes();
-		
-		System.out.println("\n\n------ YOUR MESSAGE ------\n" + new String(msg2));
-*/
-		byte[] msg2 = {
-			0x01,
-			0x02,
-			0x03,
-			0x04,
-			0x05,
-			0x06,
-			0x07,
-			0x08,
-			0x09,
-			0x0A,
-		};
-		
-		Encoder enc = new Encoder(msg2);
-		
-		System.out.println("------ (un)PARTITIONED MESSAGE ------");
-		
-		byte[] data = enc.unPartition(enc.partition());
-
-
-		System.out.println(new String(data));
-
-		System.out.println("\n\n------ going for the encoding, buckle up...\n");	
-
-		EncodingPacket[] encoded_symbols = enc.encode(enc.partition());
-	
-		/*
-		for(i=0; i<encoded_symbols.length; i++){
-		
-			System.out.println("TESTE: " + new String(encoded_symbols[i].getEncoding_symbols()));
-		}
-		*/
-		enc.decode(encoded_symbols);
-		
-		System.out.println(new String(msg2)+"\nover'n'out");
 	}
 
 }

@@ -1,5 +1,3 @@
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 
 public abstract class Rand {
 		
@@ -26,25 +24,6 @@ public abstract class Rand {
 		
 		return ret2;
 	}
-
-	private static byte[] toByteArray(long value){
-		
-		 ByteBuffer bb = ByteBuffer.allocate(8);  
-	     return bb.putLong(value).array();  
-    }  
-	
-	/*
-	private static long xorLong(long l1, long l2){
-		
-		byte[] xor1 = toByteArray(l1);
-		byte[] xor2 = toByteArray(l2);
-		byte[] xor  = new byte[8];
-		
-		for(int i=0; i<8; i++)
-			xor[i] = (byte) (xor1[i] ^ xor2[i]);
-		
-		return(ByteBuffer.wrap(xor).getLong());
-	}*/
 	
 	private static final long[] V0 = {
 		251291136L, 3952231631L, 3370958628L, 4070167936L, 123631495L,

@@ -5,34 +5,8 @@ public abstract class OctectOps {
 		
 		return((short) (b & 0xFF));
 	}
-/*	
-	public static final int UNSIGN(short b){
-		
-		if(b>127) // Dont ask me, I have no idea.
-			return (b & 0xFFFF);
-		else
-			return (b & 0xFF);
 
-		
-		if (b >= 0)
-			return (b & 0xDFFF);
-		else 
-			return (b & 0xDFFF) & 8000;
-	}
-	*/
-
-	/* NOT READY
-	public static final long UNSIGN(int b){
-	
-		return(b & 0xFFFFFFFF);
-	}
-	*/
-	
 	public static final byte getExp(int i){
-		
-		//int unsignd = UNSIGN((byte)i);
-		//int ret1 = (byte)OCT_EXP[i];
-		//int ret2 = (byte)OCT_EXP[UNSIGN((byte)i)];
 		
 		if(i >= 0)
 			return (byte)OCT_EXP[i];
@@ -41,10 +15,7 @@ public abstract class OctectOps {
 	}		
 	
 	public static final byte getLog(int i){
-		
-		//int unsignd = UNSIGN((byte)i);
-		//int ret2 = (byte)OCT_LOG[UNSIGN((byte)i)];
-		
+
 		return ((byte)OCT_LOG[UNSIGN((byte)i)]);		
 	}
 
@@ -60,16 +31,11 @@ public abstract class OctectOps {
 	
 	public static final byte division(byte u, byte v){
 		
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
 		
 		if(u == 0) return 0;
 		else{
-			
-			int log1 = UNSIGN(getLog(u-1));
-			int log2 = UNSIGN(getLog(v-1));
-			int sub1 = UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1));
-			int sub2 = UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1)) + 255;
-			int quot = getExp(UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1)) + 255);
 			
 			byte quotient = getExp(UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1)) + 255);
 			
@@ -81,11 +47,6 @@ public abstract class OctectOps {
 		
 		if(u == 0 || v == 0) return 0;
 		else{
-
-			int log1 = UNSIGN(getLog(u-1));
-			int log2 = UNSIGN(getLog(v-1));
-			int soma = UNSIGN(getLog(u-1)) + UNSIGN(getLog(v-1));
-			int prod = UNSIGN(getExp(UNSIGN(getLog(u-1)) + UNSIGN(getLog(v-1))));
 			
 			byte product = getExp(UNSIGN(getLog(u-1)) + UNSIGN(getLog(v-1)));
 			
@@ -101,6 +62,7 @@ public abstract class OctectOps {
 	
 	public static final byte[] betaProduct(byte beta, byte[] U){
 		
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
 		
 		byte[] betaProduct = new byte[U.length];
@@ -113,6 +75,7 @@ public abstract class OctectOps {
 	
 	public static final byte[] betaDivision(byte[] U, byte beta){
 		
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
 		
 		byte[] betaProduct = new byte[U.length];
@@ -120,6 +83,33 @@ public abstract class OctectOps {
 		for(int i=0; i<U.length; i++)
 			betaProduct[i] = division(U[i], beta);
 		
+		return betaProduct;
+	}
+	
+	// betas com posioes
+	public static final byte[] betaProduct(byte beta, byte[] U, int pos, int length){
+
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
+		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+		
+		byte[] betaProduct = new byte[length];
+		
+		for(int i=0; i<length; i++)
+			betaProduct[i] = product(beta, U[i+pos]);
+		
+		return betaProduct;
+	}
+	
+	public static final byte[] betaDivision(byte[] U, int pos, int length, byte beta){
+
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
+		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+
+		byte[] betaProduct = new byte[length];
+
+		for(int i=0; i<length; i++)
+			betaProduct[i] = division(U[i+pos], beta);
+
 		return betaProduct;
 	}
 	
