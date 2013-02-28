@@ -8,8 +8,8 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		testsOctectAndMatricOps();
-		System.exit(-721);
+//		testsOctectAndMatricOps();
+	//	System.exit(-721);
 		
 		/*
 		
@@ -39,7 +39,7 @@ public class Main {
 		String msg = "ola 1 2 3 4 5 6 7 8 9 poema bonito bla bla ola";
 		byte[] msg2 = msg.getBytes();
 		
-		Encoder enc = new Encoder(msg2);
+		Encoder enc = new Encoder(msg2, 10, 2);
 
 		/*
 		System.out.println("\n\n------ YOUR MESSAGE ------\n" + new String(msg2));
@@ -56,7 +56,7 @@ public class Main {
 		
 		byte[] rec = enc.decode(encoded_symbols);
 		
-		System.out.println(new String(rec)+"\nover'n'out");
+		System.out.println(new String(rec));
 	}
 	
 	public static void testsOctectAndMatricOps(){
@@ -199,11 +199,11 @@ public class Main {
 		
 		System.out.println("Stage 1 (Octect operations over finite fields) [PASSED]");
 		
-		for(int runs=0; runs < 10; runs++){
+		for(int runs=0; runs < 100; runs++){
 			System.out.println("RUN: "+runs);
 			// Generate random bytes matrix
 			// Alocate
-			int dimension = 3;
+			int dimension = 1000;
 			byte[][] randomBytes1 = new byte[dimension][dimension];
 			byte[][] randomBytes2 = new byte[dimension][dimension];
 

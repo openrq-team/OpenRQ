@@ -109,7 +109,7 @@ final public class Matrix {
         for (int i = 0; i < C.M; i++){
             for (int j = 0; j < C.N; j++){
                 for (int k = 0; k < A.N; k++){
-                	byte temp = OctectOps.octProduct(A.data[i][k], B.data[k][j]);
+                	byte temp = OctectOps.product(A.data[i][k], B.data[k][j]);
                 	C.data[i][j] = (byte) (C.data[i][j] ^ temp);
                 }
             }

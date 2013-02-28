@@ -3,6 +3,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -24,8 +25,16 @@ public class Encoder {
 	private int Kt; // total number of symbols required to represent the source data of the object
 	private byte[] data;
 
-	public Encoder(byte[] file){
+	
+	/* Simulation variables */
+	private int LOSS;
+	private int OVERHEAD;
+	
+	public Encoder(byte[] file, int loss, int overhead){
 
+		LOSS = loss;
+		OVERHEAD = overhead;
+		
 		F = file.length;
 
 		T = derivateT(MAX_PAYLOAD_SIZE);
@@ -241,6 +250,7 @@ public class Encoder {
 				}
 			}
 			
+			/*
 			// Print topology
 			StringBuilder st = new StringBuilder();
 			st.append("Symbols topology: \n");
@@ -254,7 +264,7 @@ public class Encoder {
 			for(Integer i : missing_symbols)
 				st.append(i + ", ");
 			System.out.println(st.toString());
-			
+			*/
 			if(num_repair_symbols < missing_delta_index) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
 			Map<Integer, byte[]> esiToLTCode = new TreeMap<Integer, byte[]>();
@@ -272,6 +282,8 @@ public class Encoder {
 				
 				System.out.println("\n\n ALL SOURCE SYMBOLS RECEIVED");
 				System.out.println(new String(decoded_data));
+				
+				// FIXME ASAP USE RECOVERED_DATA
 			}
 			
 			// Not so lucky
@@ -302,6 +314,7 @@ public class Encoder {
 					}
 				}
 
+				/*
 				System.out.println("---- A ---- (initial)");
 				(new Matrix(constraint_matrix)).show();
 				System.out.println("---------------------");
@@ -309,6 +322,7 @@ public class Encoder {
 				System.out.println("---- D ---- (initial)");
 				(new Matrix(D)).show();
 				System.out.println("---------------------");				
+				*/
 				
 				// Identify missing source symbols and replace their lines with "repair lines"
 				Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
@@ -331,7 +345,7 @@ public class Encoder {
 					// Fill in missing source symbols in D with the repair symbols
 					D[row] = repair.getData();
 				}
-				
+				/*
 				System.out.println("---- A ---- (recovered)");
 				(new Matrix(constraint_matrix)).show();
 				System.out.println("---------------------");
@@ -339,17 +353,17 @@ public class Encoder {
 				System.out.println("---- D ---- (recovered)");
 				(new Matrix(D)).show();
 				System.out.println("---------------------");
-				
+				*/
 				// Generate the intermediate symbols
 				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T);
-				
+				/*
 				System.out.println("---- C ----");
 				for(int bite=0; bite<intermediate_symbols.length; bite++){
 					if(bite % T == 0) System.out.println("");
 					System.out.printf("| %02X |", intermediate_symbols[bite]);
 				}
 				System.out.println("---------------------");
-				
+				*/
 				// Recover missing source symbols
 				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
 					
@@ -363,7 +377,7 @@ public class Encoder {
 					
 					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 				}
-				
+				/*
 				System.out.println("\n\n RECOVERED");
 
 				for(int g=0; g<decoded_data.length; g++){
@@ -371,7 +385,7 @@ public class Encoder {
 					System.out.printf("| %02X |", decoded_data[g]);
 				}
 				System.out.println("");
-			
+			*/
 				// FIXME retire decoded_data, write directly here
 				System.arraycopy(decoded_data, 0, recovered, source_block_index * K * T, K*T);
 			}			
@@ -442,6 +456,7 @@ public class Encoder {
             
             for(int j=i+1; j<ROWS; j++) {
 
+            													// i*num_cols+j
             	byte[] temp = OctectOps.betaProduct(A[i][j], x, j*num_cols, num_cols);
             	
             	sum = xorSymbol(sum, temp);
@@ -452,7 +467,7 @@ public class Encoder {
             //x[i] = OctectOps.betaDivision(temp, A[i][i]);
             for(int bite = 0; bite < num_cols; bite++){
             	
-            	x[i+bite] = OctectOps.division(temp[bite], A[i][i]);
+            	x[(i*num_cols) + bite] = OctectOps.division(temp[bite], A[i][i]);
             }
         }
 		
@@ -472,7 +487,9 @@ public class Encoder {
 			int K = sb.getK();
 			int kLinha = SystematicIndices.ceil(K);
 			
-			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + 20]; // FIXME arbitrary size ASAP
+			/*//FIXME SIMULATION */
+			int num_repair_symbols = OVERHEAD + ceil(0.01*LOSS*K);
+			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 			
 			// First encoding step
 			byte[] intermediate_symbols = generateIntermediateSymbols(sb);
@@ -482,13 +499,19 @@ public class Encoder {
 			int source_symbol;
 			int source_symbol_index;
 
+			/*//FIXME SIMULATION */
+			Random lost = new Random(System.currentTimeMillis() + System.nanoTime());
+			
 			for(source_symbol = 0, source_symbol_index = 0; source_symbol<K; source_symbol++, source_symbol_index+=sb.getT()){
-				if(source_symbol == K-2) continue;
+
+				/*//FIXME SIMULATION */
+				if(lost.nextInt(100) < LOSS) continue;
+				
 				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}
 			
 			// Generating/sending repair symbols
-			for(int repair_symbol = 0; repair_symbol<20; repair_symbol++){
+			for(int repair_symbol = 0; repair_symbol<num_repair_symbols; repair_symbol++){
 				
 				int	isi = kLinha + repair_symbol;
 				int esi = K + repair_symbol;
