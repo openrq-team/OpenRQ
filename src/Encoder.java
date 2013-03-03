@@ -192,11 +192,11 @@ public class Encoder {
 		return data;		
 	}
 
-	public byte[] decode(EncodingPacket[] encoded_blocks) {
+	public SourceBlock[] decode(EncodingPacket[] encoded_blocks) {
 
 		int num_blocks = encoded_blocks.length;
 		
-		byte[] recovered = new byte[num_blocks * Kt * T];
+		SourceBlock[] recovered = new SourceBlock[num_blocks];
 		
 		// Decode each block
 		for(int source_block_index = 0; source_block_index<encoded_blocks.length; source_block_index++){
@@ -280,10 +280,7 @@ public class Encoder {
 					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 				}
 				
-				System.out.println("\n\n ALL SOURCE SYMBOLS RECEIVED");
-				System.out.println(new String(decoded_data));
-				
-				// FIXME ASAP USE RECOVERED_DATA
+				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
 			}
 			
 			// Not so lucky
@@ -386,8 +383,8 @@ public class Encoder {
 				}
 				System.out.println("");
 			*/
-				// FIXME retire decoded_data, write directly here
-				System.arraycopy(decoded_data, 0, recovered, source_block_index * K * T, K*T);
+				
+				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
 			}			
 		}				
 
@@ -488,7 +485,9 @@ public class Encoder {
 			int kLinha = SystematicIndices.ceil(K);
 			
 			/*//FIXME SIMULATION */
-			int num_repair_symbols = OVERHEAD + ceil(0.01*LOSS*K);
+			int num_to_lose_symbols = ceil(0.01*LOSS*K);
+			int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
+			
 			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 			
 			// First encoding step
@@ -501,11 +500,24 @@ public class Encoder {
 
 			/*//FIXME SIMULATION */
 			Random lost = new Random(System.currentTimeMillis() + System.nanoTime());
+			// Select indexes to be lost.
+			Set<Integer> oopsi_daisy = new TreeSet<Integer>();
+			while(num_to_lose_symbols > 0){
+				
+				int selected_index = lost.nextInt(K);
+				
+				if(!oopsi_daisy.contains(selected_index)){
+					oopsi_daisy.add(selected_index);
+					num_to_lose_symbols--;
+				}
+				else
+					continue;
+			}
 			
 			for(source_symbol = 0, source_symbol_index = 0; source_symbol<K; source_symbol++, source_symbol_index+=sb.getT()){
 
 				/*//FIXME SIMULATION */
-				if(lost.nextInt(100) < LOSS) continue;
+				if(oopsi_daisy.contains(source_symbol)) continue;
 				
 				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}

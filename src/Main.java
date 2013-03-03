@@ -54,7 +54,7 @@ public class Main {
 */
 		EncodingPacket[] encoded_symbols = enc.encode(enc.partition());
 		
-		byte[] rec = enc.decode(encoded_symbols);
+		byte[] rec = enc.unPartition(enc.decode(encoded_symbols));
 		
 		System.out.println(new String(rec));
 	}
