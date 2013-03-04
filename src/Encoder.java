@@ -11,10 +11,10 @@ import java.util.TreeSet;
 public class Encoder {
 
 	// TODO check patents for better default values
-	public static final int MAX_PAYLOAD_SIZE = 8; //512 // P
-	public static final int ALIGN_PARAM = 1; //4 // Al
+	public static final int MAX_PAYLOAD_SIZE = 1; //512 // P
+	public static final int ALIGN_PARAM = 1;  // Al // 4
 	public static final int MAX_SIZE_BLOCK = 76800; // WS // B
-	public static final long SSYMBOL_LOWER_BOUND = 8; // SS
+	public static final long SSYMBOL_LOWER_BOUND = 1; // SS // 8
 	public static final int KMAX = 56403;
 	public static final byte ALPHA = 2;
 
@@ -39,7 +39,11 @@ public class Encoder {
 
 		T = derivateT(MAX_PAYLOAD_SIZE);
 		Kt = ceil((double)F/T);
-		Z = derivateZ();
+		
+		/*//FIXME SIMULATION */
+		//Z = derivateZ();
+		Z = 1;
+		
 		N = derivateN();
 
 		if(F>Kt*T)
@@ -192,7 +196,7 @@ public class Encoder {
 		return data;		
 	}
 
-	public SourceBlock[] decode(EncodingPacket[] encoded_blocks) {
+	public SourceBlock[] decode(EncodingPacket[] encoded_blocks) throws SingularMatrixException {
 
 		int num_blocks = encoded_blocks.length;
 		
@@ -281,7 +285,7 @@ public class Encoder {
 				}
 				
 				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
-			}
+			}	
 			
 			// Not so lucky
 			else{
@@ -392,7 +396,7 @@ public class Encoder {
 	}
 	
 	// A * x = b
-	public static byte[] supahGauss(byte[][] A, byte[][] b){
+	public static byte[] supahGauss(byte[][] A, byte[][] b) throws SingularMatrixException{
 		
 		if (A.length != A[0].length || b.length != A.length)
 			throw new RuntimeException("Illegal matrix dimensions.");
@@ -424,7 +428,7 @@ public class Encoder {
 			// singular or nearly singular
             if (A[row][row] == 0) {
 				System.err.println("LINHA QUE DEU SINGULAR: "+row);
-            	throw new RuntimeException("Matrix is singular"); // FIXME create exception
+            	throw new SingularMatrixException();
             }
 
             // pivot within A and b
@@ -471,7 +475,7 @@ public class Encoder {
 		return x;
 	}
 	
-	public EncodingPacket[] encode(SourceBlock[] object){
+	public EncodingPacket[] encode(SourceBlock[] object) throws SingularMatrixException{
 
 		int num_src_symbols = object.length;
 		EncodingPacket[] encoded_blocks = new EncodingPacket[num_src_symbols];
@@ -544,8 +548,8 @@ public class Encoder {
 		for(int row=0; row<S; row++){
 
 			// Consecutives 1's modulo P
-			constraint_matrix[row][(row   %P) + W] = 1;
-			constraint_matrix[row][(row+1 %P) + W] = 1;
+			constraint_matrix[row][( row    %P) + W] = 1;
+			constraint_matrix[row][((row+1) %P) + W] = 1;
 		}
 	}
 	
@@ -754,7 +758,7 @@ public class Encoder {
 		return constraint_matrix;
 	}
 	
-	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size){
+	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size) throws SingularMatrixException{
 				
 		// Gauss elim
 		byte[] C = supahGauss(A, D);
@@ -762,7 +766,7 @@ public class Encoder {
 		return C;
 	}
 	
-	private byte[] generateIntermediateSymbols(SourceBlock sb){
+	private byte[] generateIntermediateSymbols(SourceBlock sb) throws SingularMatrixException{
 		
 		byte[] ssymbols = sb.getSymbols();
 

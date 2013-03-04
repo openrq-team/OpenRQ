@@ -3,6 +3,7 @@ public abstract class SystematicIndices {
 
 	public static final int getKIndex(int K){
 		
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(K < 1)     throw new IllegalArgumentException("K must be positive.");
 		if(K > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
 	
@@ -35,6 +36,7 @@ public abstract class SystematicIndices {
 	
 	public static final int KL(int n, int WS, int Al, int T){
 		
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(n < 1 || WS < 1 || Al < 1 || T < 1) throw new IllegalArgumentException("All arguments must be positive.");
 		
 		int upper_bound = WS / (Al * (Encoder.ceil((double)T / (Al*n))));
@@ -53,6 +55,7 @@ public abstract class SystematicIndices {
 	
 	public static final int ceil(int k){
 		
+		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(k < 1)     throw new IllegalArgumentException("K must be positive.");
 		if(k > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
 		

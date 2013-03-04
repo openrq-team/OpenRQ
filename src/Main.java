@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
@@ -9,7 +12,8 @@ public class Main {
 	public static void main(String[] args) {
 		
 //		testsOctectAndMatricOps();
-	//	System.exit(-721);
+		testFailureProbability();
+		System.exit(-721);
 		
 		/*
 		
@@ -35,10 +39,10 @@ public class Main {
                 }
         }
 		*/
-		
+				
 		String msg = "ola 1 2 3 4 5 6 7 8 9 poema bonito bla bla ola";
 		byte[] msg2 = msg.getBytes();
-		
+				
 		Encoder enc = new Encoder(msg2, 10, 2);
 
 		/*
@@ -52,14 +56,126 @@ public class Main {
 
 		System.out.println("\n\n------ going for the encoding, buckle up...\n");	
 */
-		EncodingPacket[] encoded_symbols = enc.encode(enc.partition());
-		
-		byte[] rec = enc.unPartition(enc.decode(encoded_symbols));
-		
-		System.out.println(new String(rec));
+		EncodingPacket[] encoded_symbols;
+		try {
+			encoded_symbols = enc.encode(enc.partition());
+			byte[] rec = enc.unPartition(enc.decode(encoded_symbols));
+			System.out.println(new String(rec));
+		} catch (SingularMatrixException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}			
 	}
 	
-	public static void testsOctectAndMatricOps(){
+	public static void testFailureProbability(){
+		
+		int[] K_VALUES        = { 10, 50, 100, 500, 1000, 5000, 10000, 20000, 30000, 50000 };
+		int[] OVERHEAD_VALUES = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40 };
+		int[] LOSS_VALUES     = { 10, 20, 30, 40, 50, 60, 70, 80, 90 };
+		
+		for(int loss_index = 0; loss_index < LOSS_VALUES.length; loss_index++){
+			
+			int loss = LOSS_VALUES[loss_index];
+			
+			for(int overhead_index = 0; overhead_index < OVERHEAD_VALUES.length; overhead_index++){
+				
+				int overhead = OVERHEAD_VALUES[overhead_index];
+				
+				for(int k_index = 0; k_index < K_VALUES.length; k_index++){
+					
+					int k = K_VALUES[k_index];
+					try {
+						
+						File file = new File("results/" + loss + "_" + overhead + "_" + "k" + ".txt");
+						
+						if (!file.exists()) {
+							file.createNewFile();
+						}
+						
+						FileWriter fw = new FileWriter(file.getAbsoluteFile());
+						BufferedWriter bw = new BufferedWriter(fw);
+						
+						bw.write(" ---- TEST RESULTS: \n\n - Total runs: 10.000.000 \n - Loss: " 
+									+ loss + "\n - Overhead: " + overhead + "\n - K: " + k + "\n ");
+						bw.flush();
+						
+						int failed_runs = testFailureProbability(k, loss, overhead);
+						
+						bw.write("- Failed runs: " + failed_runs);
+						bw.flush();						
+						bw.close();
+					}catch(IOException e){
+						e.printStackTrace();
+						System.err.println("IO Error, aborting...");
+						System.exit(-331);
+					}
+				}
+			}
+		}
+		
+	}
+	
+	public static int testFailureProbability(int K, int LOSS, int OVERHEAD){
+				
+		Random rand = new Random(System.currentTimeMillis() / K + System.nanoTime());
+		byte[] data = new byte[K];
+
+		try{
+			File file = new File("results/temp.txt");
+
+			if (file.exists()) {
+				file.createNewFile();
+			}
+
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			
+			bw.write(" ---- TEMPORARY TEST RESULTS: \n\n - Total runs: 10.000.000 \n - Loss: " 
+					+ LOSS + "\n - Overhead: " + OVERHEAD + "\n - K: " + K + "\n ");
+			bw.flush();
+			
+			int failed_runs = 0;
+			final int RUNS = 10000000; // 10M to catch the 10^-7 probabilities
+			for(int run = 0; run < RUNS; run++){
+
+				rand.nextBytes(data);
+
+				Encoder enc = new Encoder(data, LOSS, OVERHEAD);
+				EncodingPacket[] encoded_symbols = null;
+				try {
+					encoded_symbols = enc.encode(enc.partition());
+				} catch (SingularMatrixException e) {
+					e.printStackTrace();
+					System.err.println(e.getMessage());
+					System.err.println("\nBOOM @ Encoding !?!??! \n\n ABORT \n");
+					System.exit(-113);
+				}
+
+				try {
+					enc.unPartition(enc.decode(encoded_symbols));
+				} catch (SingularMatrixException e) {
+					failed_runs++;
+				}
+				
+				if(run % 100000 == 0){
+					bw.write("\n LATEST RUN : " + run + 
+							 "\n FAILED RUNS: " + failed_runs);
+					bw.flush();
+				}
+			}
+			
+			bw.close();
+			return failed_runs;
+		}catch(IOException e){
+			e.printStackTrace();
+			System.err.println("IO Error, aborting...");
+			System.exit(-331);
+		}
+		
+		return -1;
+	}
+
+	public static void testOctectAndMatricOps(){
 		
 		/* TEST VECTORS */
 		System.out.println("\n\nTABELA\n");
@@ -144,8 +260,16 @@ public class Main {
 		// Gauss elim
 		System.out.println("\nGAUSS - M3");
 		
-		byte[] newM3 = Encoder.supahGauss(m2, m23);
+		byte[] newM3 = null;
+		try {
+			newM3 = Encoder.supahGauss(m2, m23);
+		} catch (SingularMatrixException e1) {
+			e1.printStackTrace();
+			System.exit(12);
+		}
+		
 		for(int bite=0; bite<newM3.length; bite++){
+			
 			if(bite%3 == 0) System.out.println("");
 			System.out.printf("| %02X |", newM3[bite]);
 		}
@@ -223,7 +347,7 @@ public class Main {
 			byte[] gaussian;
 			try{
 				gaussian = Encoder.supahGauss(randomBytes1, product);
-			}catch(RuntimeException e){
+			}catch(SingularMatrixException e){
 				System.err.println("Matrix is singular! Continuing...");
 				continue;
 			}
