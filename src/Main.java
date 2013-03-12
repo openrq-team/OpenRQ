@@ -12,8 +12,8 @@ public class Main {
 	public static void main(String[] args) {
 		
 //		testsOctectAndMatricOps();
-		testFailureProbability();
-		System.exit(-721);
+//		testFailureProbability();
+//		System.exit(-721);
 		
 		/*
 		
@@ -86,7 +86,7 @@ public class Main {
 					int k = K_VALUES[k_index];
 					try {
 						
-						File file = new File("results/" + loss + "_" + overhead + "_" + "k" + ".txt");
+						File file = new File("results/" + loss + "_" + overhead + "_" + k + ".txt");
 						
 						if (!file.exists()) {
 							file.createNewFile();
@@ -98,9 +98,13 @@ public class Main {
 						bw.write(" ---- TEST RESULTS: \n\n - Total runs: 10.000.000 \n - Loss: " 
 									+ loss + "\n - Overhead: " + overhead + "\n - K: " + k + "\n ");
 						bw.flush();
-						
+						bw.close();
+						fw.close();
+
 						int failed_runs = testFailureProbability(k, loss, overhead);
 						
+						fw = new FileWriter(file.getAbsoluteFile());
+						bw = new BufferedWriter(fw);
 						bw.write("- Failed runs: " + failed_runs);
 						bw.flush();						
 						bw.close();
