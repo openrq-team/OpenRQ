@@ -53,7 +53,8 @@ public class testFailureProbability {
 			bw.flush();
 			
 			int failed_runs = 0;
-			for(int run = 0; run < N; run++){
+			int run;
+			for(run = 0; run < N; run++){
 
 				rand.nextBytes(data);
 
@@ -81,6 +82,9 @@ public class testFailureProbability {
 				}
 			}
 			
+			bw.write("\n LATEST RUN : " + run + 
+					 "\n FAILED RUNS: " + failed_runs);
+			bw.flush();
 			bw.close();
 			return failed_runs;
 		}catch(IOException e){

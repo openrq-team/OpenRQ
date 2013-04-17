@@ -644,7 +644,7 @@ public class Encoder {
 			for(int col = 0; col<K+S; col++){
 
 				if(row >= col)
-					GAMMA[row][col] = OctectOps.getExp(row-col);
+					GAMMA[row][col] = OctectOps.getExp((row-col) % 256); // FIXME talk to neves asap Page 63
 				else
 					continue;				
 			}	
