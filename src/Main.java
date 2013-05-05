@@ -43,7 +43,7 @@ public class Main {
 		String msg = "ola 1 2 3 4 5 6 7 8 9 poema bonito bla bla ola";
 		byte[] msg2 = msg.getBytes();
 				
-		Encoder enc = new Encoder(msg2, 10, 2);
+		Encoder enc = new Encoder(msg2, 0, 0);
 
 		/*
 		System.out.println("\n\n------ YOUR MESSAGE ------\n" + new String(msg2));

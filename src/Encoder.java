@@ -1,10 +1,14 @@
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -276,7 +280,7 @@ public class Encoder {
 			byte[] decoded_data = new byte[K*T];
 			
 			// All source symbols received :D
-			if(num_source_symbols == K){
+/*			if(num_source_symbols == K){
 				
 				// Collect all payloads from the source symbols				
 				for(EncodingSymbol enc_symbol : source_symbols){
@@ -288,7 +292,7 @@ public class Encoder {
 			}	
 			
 			// Not so lucky
-			else{
+			else{*/
 				
 				// Generate original constraint matrix
 				byte[][] constraint_matrix = generateConstraintMatrix(kLinha, T);
@@ -356,7 +360,7 @@ public class Encoder {
 				System.out.println("---------------------");
 				*/
 				// Generate the intermediate symbols
-				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T);
+				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, K);
 				/*
 				System.out.println("---- C ----");
 				for(int bite=0; bite<intermediate_symbols.length; bite++){
@@ -389,7 +393,7 @@ public class Encoder {
 			*/
 				
 				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
-			}			
+			//}			
 		}				
 
 		return recovered;
@@ -758,14 +762,388 @@ public class Encoder {
 		return constraint_matrix;
 	}
 	
-	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size) throws SingularMatrixException{
+	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size, int K) throws SingularMatrixException{
 				
 		// Gauss elim
-		byte[] C = supahGauss(A, D);
+		//byte[] C = supahGauss(A, D);
+		
+		// PInactivation Decoding
+		byte[] C = PInactivationDecoding(A, D, symbol_size, K);
 		
 		return C;
 	}
 	
+	private byte[] PInactivationDecoding(byte[][] A, byte[][] D, int symbol_size, int K) {
+
+		int Ki = SystematicIndices.getKIndex(K);
+		int S = SystematicIndices.S(Ki);
+		int H = SystematicIndices.H(Ki);
+		int W = SystematicIndices.W(Ki);
+		int L = A.length;
+		int P = L - W;
+		
+		// Allocate X and copy A into X
+		byte[][] X = new byte[A.length][A[0].length];
+		for(int row = 0; row < L; row++)
+			System.arraycopy(A[row], 0, X[row], 0, L);
+
+		int i = 0, u = P;
+		
+		/* PRINTING BLOCK */
+		System.out.println("--------- A ---------");
+		(new Matrix(A)).show();
+		System.out.println("---------------------");
+		/* END OF PRINTING */
+		
+		// First phase
+		while(i + u != L){
+			
+			/* PRINTING BLOCK */
+			System.out.println("STEP: "+i);
+			/* END OF PRINTING */
+			
+			int r = L, rLinha = 0	;			
+			Set<Integer> chosenRows = new HashSet<Integer>();
+			int nonHDPCRows = S + H;
+			Map<Integer, Row> rows = new HashMap<Integer, Row>();
+			int minDegree = 256*L;
+			
+			// find r
+			for(int row = i, nonZeros = 0, degree = 0; row < L; row++, nonZeros = 0, degree = 0){
+
+				// if(chosenRows.contains(row)) continue;
+				
+				Set<Integer> edges = new HashSet<Integer>();
+				
+				for(int col = i; col < L-u; col++){
+					if(A[row][col] == 0) // branch prediction
+						continue;
+					else{
+						nonZeros++;
+						degree += A[row][col];
+						edges.add(col);
+					}
+				}
+				
+				if(nonZeros == 2 && (row < S || row >= S+H))
+					rows.put(row, new Row(row, nonZeros, degree, edges));
+				else
+					rows.put(row, new Row(row, nonZeros, degree));	
+				
+				if(nonZeros > r || nonZeros == 0) // branch prediction
+					continue;
+				else{
+					if(nonZeros == r){
+						if(degree < minDegree){
+							rLinha = row;
+							minDegree = degree;
+						}
+					}
+					else{
+						r = nonZeros;
+						rLinha = row;
+						minDegree = degree;							
+					}
+					
+				}
+			}
+			
+			/* PRINTING BLOCK */
+			System.out.println("r: "+r);
+			/* END OF PRINTING */
+			
+			// choose the row
+			if(r != 2){
+				// check if rLinha is OK
+				if(rLinha >= S && rLinha < S+H && (chosenRows.size() != nonHDPCRows)){ // choose another line
+					
+					int newDegree = 256*L;
+					int newR = L;
+					
+					for(Row row : rows.values()){
+						
+						if((!chosenRows.contains(row)) && (row.id < S || row.id >= S+H)){
+							if(row.nonZeros <= newR){
+								if(row.nonZeros == newR){
+									if(row.degree < newDegree){
+										rLinha = row.id;
+										newDegree = row.degree;
+									}
+								}
+								else{
+									newR = row.nonZeros;
+									rLinha = row.id;
+									newDegree = row.degree;
+								}
+							}
+						}
+						else
+							continue;
+					}
+				}
+				// choose rLinha
+				chosenRows.add(rLinha);
+			}
+			else{
+				
+				boolean twoOnes = false;
+				
+				// row with with 2 ones
+				if(rows.get(rLinha).edges != null) // kewl, rLinha has 2 ones
+					twoOnes = true;
+				else{ // look for a row with 2 ones
+					
+					for(Row row : rows.values()){
+						if(row.nonZeros != 2 || row.edges == null)
+							continue;
+						else{
+							rLinha = row.id;
+							twoOnes = true;
+							break;
+						}
+					}
+				}
+
+				if(twoOnes){
+					
+					// create graph
+					Map<Integer, Set<Integer>> graph = new HashMap<Integer,Set<Integer>>();
+
+					for(Row row : rows.values()){
+						
+						//edge?
+						if(row.edges != null){
+							
+							Integer[] edge = row.edges.toArray(new Integer[2]);
+							int node1 = edge[0];
+							int node2 = edge[1];
+							
+							// node1 already in graph?
+							if(graph.keySet().contains(node1)){
+								
+								graph.get(node1).add(node2);
+							}
+							else{
+								Set<Integer> edges = new HashSet<Integer>();
+								
+								edges.add(node2);
+								graph.put(node1, edges);
+							}
+							
+							// node2 already in graph?
+							if(graph.keySet().contains(node2)){
+								
+								graph.get(node2).add(node1);
+							}
+							else{
+								Set<Integer> edges = new HashSet<Integer>();
+								
+								edges.add(node1);
+								graph.put(node2, edges);
+							}
+						}
+						else
+							continue;
+					} // graph'd
+					
+					// find largest component 
+					int maximumSize = graph.size();
+					boolean found = false;
+					Set<Integer> visited = null;
+					
+					while(maximumSize != 0 && !found){ 
+						
+						Set<Integer> used = new HashSet<Integer>();
+						Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
+						
+						while(it.hasNext() && !found){ // going breadth first, TODO optimize this with a better algorithm
+
+							Map.Entry<Integer, Set<Integer>> node = it.next();
+							int initialNode = node.getKey();
+							
+							if(used.contains(initialNode))
+								continue;
+							
+							Integer[] edges = (Integer[]) node.getValue().toArray(new Integer[1]);
+							visited = new HashSet<Integer>();
+							List<Integer> toVisit = new LinkedList<Integer>();
+							
+							// add self
+							visited.add(initialNode);
+							used.add(initialNode);
+							
+							// add my edges
+							for(Integer edge : edges){
+								toVisit.add(edge);
+								used.add(edge);
+							}
+							
+							// start visiting
+							while(toVisit.size() != 0){
+								
+								int no = toVisit.remove(0);
+								
+								// add node to visited set
+								visited.add(no);
+								
+								// queue edges
+								for(Integer edge : graph.get(no))
+									if(!visited.contains(edge))
+											toVisit.add(edge);
+							}
+							
+							// is it big?
+							if(visited.size() >= maximumSize) // yes it is
+								found = true;
+						}
+						
+						maximumSize--;
+					}
+					
+					// 'visited' is now our connected component
+					for(Row row : rows.values()){
+						
+						if(row.edges != null){
+						
+							Integer[] edge = row.edges.toArray(new Integer[2]);
+							int node1 = edge[0];
+							int node2 = edge[1];
+
+							if(visited.contains(node1) && visited.contains(node2)){ // found 2 ones (edge) in component
+								rLinha = row.id;
+								break;
+							}
+							else
+								continue;
+						}
+						else 
+							continue;
+					}
+					
+					chosenRows.add(rLinha);
+				}
+				else{ // no rows with 2 ones
+					chosenRows.add(rLinha);
+				}
+			}
+			
+			// 'rLinha' is the chosen row
+			Row chosenRow = rows.get(rLinha);
+			
+			/* PRINTING BLOCK */
+			System.out.println("----- CHOSEN ROW -----");
+			System.out.println("id : "+chosenRow.id);
+			System.out.println("nZ : "+chosenRow.nonZeros);
+			System.out.println("deg: "+chosenRow.degree);
+			System.out.println("----------------------");
+			/* END OF PRINTING */
+			
+			// swap i with rLinha in A
+			byte[] auxRow = A[i];
+			A[i] = A[rLinha];
+			A[rLinha] = auxRow;
+
+			// swap i with rLinha in X
+			auxRow = X[i];
+			X[i] = X[rLinha];
+			X[rLinha] = auxRow;
+			
+			/* PRINTING BLOCK */
+			System.out.println("TROCA DE LINHA");
+			System.out.println("--------- A ---------");
+			(new Matrix(A)).show();
+			System.out.println("---------------------");
+			/* END OF PRINTING */
+			
+			// re-order columns
+			Stack<Integer> nonZeros = new Stack();
+			for(int nZ = 0, col = 0; nZ < chosenRow.nonZeros; col++){
+				
+				if(A[i][col] == 0)
+					continue;
+				else{
+					nZ++;
+					nonZeros.push(col);
+				}
+			}
+			
+			int coluna = nonZeros.pop();
+			swapColumns(A, coluna, i);
+			swapColumns(X, coluna, i);
+			
+			/* PRINTING BLOCK */
+			System.out.println("TROCA DE COLUNA");
+			System.out.println("--------- A ---------");
+			(new Matrix(A)).show();
+			System.out.println("---------------------");
+			/* END OF PRINTING */
+			
+			for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--){		
+				
+				coluna = nonZeros.pop();
+				if(coluna == i) continue;
+				swapColumns(A, coluna, L-u-remainingNZ);
+				swapColumns(X, coluna, L-u-remainingNZ);
+				
+				/* PRINTING BLOCK */
+				System.out.println("TROCA DE COLUNA");
+				System.out.println("--------- A ---------");
+				(new Matrix(A)).show();
+				System.out.println("---------------------");
+				/* END OF PRINTING */
+			}
+			
+			// beta/alpha gewdness
+			byte alpha = A[i][i];
+			
+			for(int row = i+1; row < A.length; row++){
+				
+				if(A[row][i] == 0)
+					continue;
+				else{ 				// TODO Queue these row operations for when (if) the row is chosen - RFC 6330 @ Page 35 1st Par.
+					
+					// beta/alpha
+					byte beta   = A[row][i];
+					byte balpha = OctectOps.division(beta, alpha);
+					
+					// multiplication 
+					byte[] product = OctectOps.betaProduct(balpha, A[i]);
+					
+					// addition 
+					for(int col = i; col < L; col++)
+						A[row][col] = OctectOps.addition(A[row][col], product[col]);
+				
+					/* PRINTING BLOCK */
+					System.out.println("ELIMINATING");
+					System.out.println("--------- A ---------");
+					(new Matrix(A)).show();
+					System.out.println("---------------------");
+					/* END OF PRINTING */
+				}
+			}
+			
+			// update 'i' and 'u'
+			i++;
+			u += r-1;
+		}
+		
+		return null;
+	}
+	
+	private void swapColumns(byte[][] matrix, int a, int b){
+		
+		// check sizes and limits and whatnot bla bla bla
+		
+		byte auxPos;
+		
+		for(int row = 0; row < matrix.length; row++){
+			// swap
+			auxPos = matrix[row][a];
+			matrix[row][a] = matrix[row][b];
+			matrix[row][b] = auxPos;
+		}
+	}
+
 	private byte[] generateIntermediateSymbols(SourceBlock sb) throws SingularMatrixException{
 		
 		byte[] ssymbols = sb.getSymbols();
@@ -996,6 +1374,41 @@ public class Encoder {
 		
 		return true;
 	}
+}
+
+class Row{
+	
+	public int id;
+	public int nonZeros;
+	public int degree;
+	public Set<Integer> edges = null;
+	
+	public Row(int i, int r, int d){
+		
+		id = i;
+		nonZeros = r;
+		degree = d;
+	}
+	
+	public Row(int i, int r, int d, Set<Integer> e){
+	
+		id = i;
+		nonZeros = r;
+		degree = d;
+		edges = e;
+	}
+	
+	public boolean equals(Object o){
+		
+		if(!o.getClass().getName().equals(this.getClass().getName())) 
+			return false;
+		else
+			if(((Row) o).id == this.id)
+				return true;
+			else
+				return false;
+	}
+	
 }
 
 class Tuple{

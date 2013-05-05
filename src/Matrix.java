@@ -168,7 +168,15 @@ final public class Matrix {
 
     // print matrix to standard output
     public void show() {
+    	
+    	System.out.printf("    ");
+    	for (int j = 0; j < N; j++) 
+        	System.out.printf("* %02d ", j);
+    	
+    	System.out.println("|");
+    	
         for (int i = 0; i < M; i++) {
+        	System.out.printf(" %02d)", i);
             for (int j = 0; j < N; j++) 
             	System.out.printf("| %02X ", (data[i][j]));
                 //System.out.printf("| %02X ", Encoder.convert(data[i][j]));

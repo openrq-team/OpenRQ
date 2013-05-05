@@ -7,8 +7,7 @@ public class writeBytes {
 
 	public static void main(String[] args) {
 
-		
-		int N = 102400;
+		int N = 100000000;
 		byte[] buffer = new byte[N];
 		
 		for(int i = 0; i < N;)
@@ -24,6 +23,6 @@ public class writeBytes {
 			bos.close();
 		}catch(Exception e){
 			System.err.println("err");
-		} 
+		}
 	}
 }
