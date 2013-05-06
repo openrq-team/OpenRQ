@@ -495,6 +495,7 @@ public class Encoder {
 			/*//FIXME SIMULATION */
 			int num_to_lose_symbols = ceil(0.01*LOSS*K);
 			int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
+//			System.out.println("To lose: "+num_to_lose_symbols +"\nRepair: "+num_repair_symbols);
 			
 			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 			
@@ -513,6 +514,7 @@ public class Encoder {
 			while(num_to_lose_symbols > 0){
 				
 				int selected_index = lost.nextInt(K);
+//				System.out.println("Lost: "+selected_index);
 				
 				if(!oopsi_daisy.contains(selected_index)){
 					oopsi_daisy.add(selected_index);
@@ -781,10 +783,11 @@ public class Encoder {
 		int W = SystematicIndices.W(Ki);
 		int L = A.length;
 		int P = L - W;
+		int M = A.length;
 		
 		// Allocate X and copy A into X
-		byte[][] X = new byte[A.length][A[0].length];
-		for(int row = 0; row < L; row++)
+		byte[][] X = new byte[M][L];
+		for(int row = 0; row < M; row++)
 			System.arraycopy(A[row], 0, X[row], 0, L);
 
 		int i = 0, u = P;
@@ -795,7 +798,9 @@ public class Encoder {
 		System.out.println("---------------------");
 		/* END OF PRINTING */
 		
-		// First phase
+		/* 
+		 * First phase 
+		 * */
 		while(i + u != L){
 			
 			/* PRINTING BLOCK */
@@ -809,7 +814,7 @@ public class Encoder {
 			int minDegree = 256*L;
 			
 			// find r
-			for(int row = i, nonZeros = 0, degree = 0; row < L; row++, nonZeros = 0, degree = 0){
+			for(int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0){
 
 				// if(chosenRows.contains(row)) continue;
 				
@@ -1126,8 +1131,158 @@ public class Encoder {
 			i++;
 			u += r-1;
 		}
+		// END OF FIRST PHASE
+		
+		/* 
+		 * Second phase 
+		 * */
+		reduceToRowEchelonForm(A, i, M, L-u, L);
+		
+		/* PRINTING BLOCK */
+		System.out.println("GAUSSIAN U_lower");
+		System.out.println("M: "+M+"\nL: "+L+"\ni: "+i+"\nu: "+u);
+		System.out.println("--------- A ---------");
+		(new Matrix(A)).show();
+		System.out.println("---------------------");
+		/* END OF PRINTING */
+		
+		// A is now LxL
+		
+		// END OF SECOND PHASE
+		
+		/* 
+		 * Third phase 
+		 * */
+		
 		
 		return null;
+	}
+	
+	private void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col){
+		
+		int lead = 0;
+		int rowCount    = last_row - first_row;
+		int columnCount = last_col - first_col;
+		
+		for(int r = 0; r < rowCount; r++){
+			
+			if(columnCount <= lead)
+				return;
+			
+			int i = r;
+			while(A[i+first_row][lead+first_col] == 0){
+				
+				i++;
+				
+				if(rowCount == i){
+					
+					i = r;
+					lead++;
+					if(columnCount == lead)
+						return;
+				}
+			}
+			
+			if( i != r){
+
+				// swap row 'i' and 'r' (for U_lower only!!!)
+				byte[] auxRow = new byte[columnCount];													//
+				System.arraycopy(A[i+first_row], first_col, auxRow, 0, columnCount);    				// aux = i
+
+				System.arraycopy(A[r+first_row], first_col, A[i+first_row], first_col, columnCount);	// i = r
+
+				System.arraycopy(auxRow, 0, A[i+first_row], first_row, columnCount);					// r = aux
+			}
+
+			if(A[r+first_row][lead+first_col] != 0)		
+				for(int col = 0; col < columnCount; col++)
+					A[r+first_row][col+first_col] = OctectOps.division(A[r+first_row][col+first_col], A[r+first_row][lead+first_col]);
+			
+			for(i = 0; i < rowCount; i++){
+				
+				if(i != r){
+					
+					byte[] product = OctectOps.betaProduct(A[i+first_row][lead+first_col], A[r+first_row], first_col, columnCount);
+					for(int col = 0; col < columnCount; col++)
+						A[i+first_row][col+first_col] = OctectOps.subtraction(A[i+first_row][col+first_col], product[col]);						
+				}
+			}
+			
+			lead++;
+		}
+		/* 
+		 * Pseudo-code
+		 * 
+			 function ToReducedRowEchelonForm(Matrix M) is
+				lead := 0
+			    rowCount := the number of rows in M
+			    columnCount := the number of columns in M
+			    for 0 ² r < rowCount do
+			        if columnCount ² lead then
+			            stop
+			        end if
+			        i = r
+			        while M[i, lead] = 0 do
+			            i = i + 1
+			            if rowCount = i then
+			                i = r
+			                lead = lead + 1
+			                if columnCount = lead then
+			                    stop
+			                end if
+			            end if
+			        end while
+			        Swap rows i and r
+			        If M[r, lead] is not 0 divide row r by M[r, lead]
+			        for 0 ² i < rowCount do
+			            if i ­ r do
+			                Subtract M[i, lead] multiplied by row r from row i
+			            end if
+			        end for
+			        lead = lead + 1
+			    end for
+			 end function
+		 */
+	}
+	
+	private void gaussianTransformz(byte[][] A) throws SingularMatrixException{
+		
+		int ROWS = A.length;
+		
+		for(int row=0; row<ROWS; row++){
+			
+			int max = row;
+			
+			// find pivot row and swap
+			for (int i = row + 1; i < ROWS; i++)
+				if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row]))
+					max = i;
+
+			// this destroys the original matrixes... dont really need a fix, but should be kept in mind
+			byte[] temp = A[row];
+			A[row] = A[max];
+			A[max] = temp;
+
+			// singular or nearly singular
+            if (A[row][row] == 0) {
+				System.err.println("LINHA QUE DEU SINGULAR: "+row);
+            	throw new SingularMatrixException();
+            }
+
+            // pivot within A and b
+            for(int i=row+1; i<ROWS; i++) {
+            	
+            	byte alpha = OctectOps.division(A[i][row], A[row][row]);            	
+            	
+            	for(int j=row; j<ROWS; j++) {
+            	
+            		byte aux = OctectOps.product(alpha, A[row][j]);
+            		
+            		A[i][j] = OctectOps.subtraction(A[i][j], aux);
+            	}
+            }
+		}
+		
 	}
 	
 	private void swapColumns(byte[][] matrix, int a, int b){
@@ -1144,6 +1299,15 @@ public class Encoder {
 		}
 	}
 
+	private void swapRows(byte[][] matrix, int a, int b){
+
+		// check sizes and limits and whatnot bla bla bla
+
+		byte[] auxRow = matrix[a];
+		matrix[a] = matrix[b];
+		matrix[b] = auxRow;
+	}
+	
 	private byte[] generateIntermediateSymbols(SourceBlock sb) throws SingularMatrixException{
 		
 		byte[] ssymbols = sb.getSymbols();
