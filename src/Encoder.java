@@ -678,6 +678,54 @@ public class Encoder {
         
         return C;
 	}
+		
+	public static byte[][] multiplyMatrices(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA, 
+											byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB){
+		
+        if ((last_colA  - first_colA) != (last_rowB - first_rowB)) throw new RuntimeException("Illegal matrix dimensions.");
+        
+        int colsA = last_colA  - first_colA;
+        int colsB = last_colB  - first_colB;
+        int rowsA = last_rowA - first_rowA;
+        
+        byte[][] C = new byte[rowsA][colsB];
+        
+        for (int i = 0; i < C.length; i++){
+            for (int j = 0; j < C[0].length; j++){
+                for (int k = 0; k < colsA; k++){
+                	
+                	byte temp = OctectOps.product(A[i+first_rowA][k+first_colA], B[k+first_rowB][j+first_colB]);
+
+               		C[i][j] = (byte) (C[i][j] ^ temp);
+                }
+            }
+        }
+        
+        return C;
+	}
+	
+	// A.B = C
+	public static void multiplyMatrices(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA, 
+										byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB,
+										byte[][] C, int first_rowC, int first_colC, int last_rowC, int last_colC){
+
+		if ((last_colA  - first_colA) != (last_rowB - first_rowB)) throw new RuntimeException("Illegal matrix dimensions.");
+
+		int colsA = last_colA  - first_colA;
+		int colsC = last_colC  - first_colC;
+		int rowsC = last_rowC - first_rowC;
+
+		for (int i = 0; i < rowsC; i++){
+			for (int j = 0; j < colsC; j++){
+				for (int k = 0; k < colsA; k++){
+
+					byte temp = OctectOps.product(A[i+first_rowA][k+first_colA], B[k+first_rowB][j+first_colB]);
+
+					C[i+first_rowC][j+first_colC] = (byte) (C[i+first_rowC][j+first_colC] ^ temp);
+				}
+			}
+		}
+	}
 	
 	public static byte[] multiplyByteLineBySymbolVector(byte[] line, byte[] vector, int symbol_size){
 		
@@ -801,6 +849,10 @@ public class Encoder {
 		/* 
 		 * First phase 
 		 * */
+		Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
+		//Set<Integer> chosenRows = new HashSet<Integer>();
+		int chosenRowsCounter = 0;
+		int nonHDPCRows = S + H;
 		while(i + u != L){
 			
 			/* PRINTING BLOCK */
@@ -808,13 +860,12 @@ public class Encoder {
 			/* END OF PRINTING */
 			
 			int r = L, rLinha = 0	;			
-			Set<Integer> chosenRows = new HashSet<Integer>();
-			int nonHDPCRows = S + H;
 			Map<Integer, Row> rows = new HashMap<Integer, Row>();
 			int minDegree = 256*L;
+			//Set<Integer> chosenRows = new HashSet<Integer>();
 			
 			// find r
-			for(int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0){
+			for(int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0){ // FIXME fazer apenas uma vez (afinal eles dizem "minimum ORIGINAL degree", ver o impacto de performance...
 
 				// if(chosenRows.contains(row)) continue;
 				
@@ -825,17 +876,34 @@ public class Encoder {
 						continue;
 					else{
 						nonZeros++;
-						degree += A[row][col];
+						degree += OctectOps.UNSIGN(A[row][col]);
 						edges.add(col);
 					}
 				}
+				
+				/*
+				if(i == 0) originalDegrees.put(row, degree); // original degree? WHAT DOES IT ALL MEAN?!
+
+				if(nonZeros == 2 && (row < S || row >= S+H))
+					rows.put(row, new Row(row, nonZeros, originalDegrees.get(row), edges));
+				else
+					rows.put(row, new Row(row, nonZeros, originalDegrees.get(row)));	
+				*/
 				
 				if(nonZeros == 2 && (row < S || row >= S+H))
 					rows.put(row, new Row(row, nonZeros, degree, edges));
 				else
 					rows.put(row, new Row(row, nonZeros, degree));	
 				
-				if(nonZeros > r || nonZeros == 0) // branch prediction
+				/*
+				if(nonZeros < r){
+					r = nonZeros;
+					rLinha = row;
+				}
+				*/
+				
+				
+				if(nonZeros > r || nonZeros == 0 || degree == 0) // branch prediction
 					continue;
 				else{
 					if(nonZeros == r){
@@ -849,25 +917,38 @@ public class Encoder {
 						rLinha = row;
 						minDegree = degree;							
 					}
-					
 				}
+				
 			}
 			
 			/* PRINTING BLOCK */
 			System.out.println("r: "+r);
 			/* END OF PRINTING */
 			
+			//int newDegree = 256*L;
+			/*
+			for(Row row : rows.values()){
+				
+				if(row.nonZeros != r || chosenRows.contains(row.id))
+					continue;
+				else{
+					if(row.degree < newDegree){
+						rLinha = row.id;
+					}
+				}
+			}
+			*/
 			// choose the row
 			if(r != 2){
 				// check if rLinha is OK
-				if(rLinha >= S && rLinha < S+H && (chosenRows.size() != nonHDPCRows)){ // choose another line
+				if(rLinha >= S && rLinha < S+H && chosenRowsCounter != nonHDPCRows){ // choose another line
 					
 					int newDegree = 256*L;
 					int newR = L;
 					
 					for(Row row : rows.values()){
 						
-						if((!chosenRows.contains(row)) && (row.id < S || row.id >= S+H)){
+						if((row.id < S || row.id >= S+H) && row.degree != 0){
 							if(row.nonZeros <= newR){
 								if(row.nonZeros == newR){
 									if(row.degree < newDegree){
@@ -887,7 +968,7 @@ public class Encoder {
 					}
 				}
 				// choose rLinha
-				chosenRows.add(rLinha);
+				chosenRowsCounter++;
 			}
 			else{
 				
@@ -909,6 +990,7 @@ public class Encoder {
 					}
 				}
 
+				//FIXME trocar para if(minDegree == 2) e limpar o if de cima
 				if(twoOnes){
 					
 					// create graph
@@ -1025,10 +1107,10 @@ public class Encoder {
 							continue;
 					}
 					
-					chosenRows.add(rLinha);
+					chosenRowsCounter++;
 				}
 				else{ // no rows with 2 ones
-					chosenRows.add(rLinha);
+					chosenRowsCounter++;
 				}
 			}
 			
@@ -1042,7 +1124,13 @@ public class Encoder {
 			System.out.println("deg: "+chosenRow.degree);
 			System.out.println("----------------------");
 			/* END OF PRINTING */
-			
+
+			/*
+			// update degrees
+			int auxDegree = originalDegrees.get(i);
+			originalDegrees.put(i, originalDegrees.get(rLinha));
+			originalDegrees.put(rLinha, auxDegree);
+*/
 			// swap i with rLinha in A
 			byte[] auxRow = A[i];
 			A[i] = A[rLinha];
@@ -1061,69 +1149,78 @@ public class Encoder {
 			/* END OF PRINTING */
 			
 			// re-order columns
-			Stack<Integer> nonZeros = new Stack();
-			for(int nZ = 0, col = 0; nZ < chosenRow.nonZeros; col++){
-				
-				if(A[i][col] == 0)
-					continue;
-				else{
-					nZ++;
-					nonZeros.push(col);
+			if(chosenRow.degree > 0){
+				Stack<Integer> nonZeros = new Stack();
+				for(int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++){
+
+					if(A[i][col] == 0)
+						continue;
+					else{
+						nZ++;
+						nonZeros.push(col);
+					}
 				}
-			}
-			
-			int coluna = nonZeros.pop();
-			swapColumns(A, coluna, i);
-			swapColumns(X, coluna, i);
-			
-			/* PRINTING BLOCK */
-			System.out.println("TROCA DE COLUNA");
-			System.out.println("--------- A ---------");
-			(new Matrix(A)).show();
-			System.out.println("---------------------");
-			/* END OF PRINTING */
-			
-			for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--){		
-				
-				coluna = nonZeros.pop();
-				if(coluna == i) continue;
-				swapColumns(A, coluna, L-u-remainingNZ);
-				swapColumns(X, coluna, L-u-remainingNZ);
-				
+
+				int coluna;
+				if(A[i][i] == 0){
+					coluna = nonZeros.pop();
+					swapColumns(A, coluna, i);
+					swapColumns(X, coluna, i);
+				}
+				else
+					nonZeros.remove((Integer)i);
+
 				/* PRINTING BLOCK */
 				System.out.println("TROCA DE COLUNA");
 				System.out.println("--------- A ---------");
 				(new Matrix(A)).show();
 				System.out.println("---------------------");
 				/* END OF PRINTING */
-			}
-			
-			// beta/alpha gewdness
-			byte alpha = A[i][i];
-			
-			for(int row = i+1; row < A.length; row++){
-				
-				if(A[row][i] == 0)
-					continue;
-				else{ 				// TODO Queue these row operations for when (if) the row is chosen - RFC 6330 @ Page 35 1st Par.
-					
-					// beta/alpha
-					byte beta   = A[row][i];
-					byte balpha = OctectOps.division(beta, alpha);
-					
-					// multiplication 
-					byte[] product = OctectOps.betaProduct(balpha, A[i]);
-					
-					// addition 
-					for(int col = i; col < L; col++)
-						A[row][col] = OctectOps.addition(A[row][col], product[col]);
-				
+
+				for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--){		
+
+					coluna = nonZeros.pop();
+					if(coluna == i) continue;
+					swapColumns(A, coluna, L-u-remainingNZ);
+					swapColumns(X, coluna, L-u-remainingNZ);
+
 					/* PRINTING BLOCK */
-					System.out.println("ELIMINATING");
+					System.out.println("TROCA DE COLUNA");
 					System.out.println("--------- A ---------");
 					(new Matrix(A)).show();
 					System.out.println("---------------------");
 					/* END OF PRINTING */
+				}
+			
+				// beta/alpha gewdness
+				byte alpha = A[i][i];
+				
+				for(int row = i+1; row < A.length; row++){
+					
+					if(A[row][i] == 0)
+						continue;
+					else{ 				// TODO Queue these row operations for when (if) the row is chosen - RFC 6330 @ Page 35 1st Par.
+						
+						// beta/alpha
+						byte beta   = A[row][i];
+						byte balpha = OctectOps.division(beta, alpha);
+						
+						// multiplication 
+						byte[] product = OctectOps.betaProduct(balpha, A[i]);
+						
+						// addition 
+						for(int col = i; col < L; col++){
+							A[row][col] = OctectOps.addition(A[row][col], product[col]);
+							//X[row][col] = OctectOps.addition(X[row][col], product[col]); // to zero X or not to zero X, that is the question
+						}
+					
+						/* PRINTING BLOCK */
+						System.out.println("ELIMINATING");
+						System.out.println("--------- A ---------");
+						(new Matrix(A)).show();
+						System.out.println("---------------------");
+						/* END OF PRINTING */
+					}
 				}
 			}
 			
@@ -1136,6 +1233,8 @@ public class Encoder {
 		/* 
 		 * Second phase 
 		 * */
+		// X is no ixi
+		
 		reduceToRowEchelonForm(A, i, M, L-u, L);
 		
 		/* PRINTING BLOCK */
@@ -1153,7 +1252,40 @@ public class Encoder {
 		/* 
 		 * Third phase 
 		 * */
+		// sparse that shit up
 		
+		// multiply X by A submatrix
+		//multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L, A, 0, 0, i, L);
+		byte[][] XA = multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
+		for(int row = 0; row < i; row++)
+			A[row] = XA[row];
+		
+		/*  TEST BLOCK  */
+		for(int row = 0; row < i; row++){
+			for(int col = 0; col < i; col++){
+				if(X[row][col] != A[row][col]){
+					System.out.println("ERRO NA FASE 3 (row: "+row+" ; col: "+col+" )");
+					System.out.println("--------- X ---------");
+					(new Matrix(X)).show();
+					System.out.println("---------------------");
+					System.out.println("--------- A ---------");
+					(new Matrix(A)).show();
+					System.out.println("---------------------");
+					System.exit(-543534);
+				}
+			}
+		}
+		/* END OF BLOCK */
+		
+		/* PRINTING BLOCK */
+		System.out.println("SPARSED U_upper");
+		System.out.println("--------- A ---------");
+		(new Matrix(A)).show();
+		System.out.println("---------------------");/*
+		System.out.println("--------- X ---------");
+		(new Matrix(X)).show();
+		System.out.println("---------------------");
+		/* END OF PRINTING */
 		
 		return null;
 	}
