@@ -1287,6 +1287,23 @@ public class Encoder {
 		System.out.println("---------------------");
 		/* END OF PRINTING */
 		
+		/* 
+		 * Fourth phase 
+		 * */
+		// lets zero that motherfU_cker up(per)
+		
+		for(int row=0; row < i; row++)														// for each row in U_upper
+			for(int j = i; j < L; j++)														// check every position
+				if(A[row][j] != 0) 															// if position j is nonzero
+					for(short b = OctectOps.UNSIGN(A[row][j]); b > 0; b--)					// add b times
+						for(int col = i; col < L; col++)									// this row
+							A[row][col] = OctectOps.addition(A[row][col], A[j][col]);		// to row j in I_u
+		
+		System.out.println("ZEROED U_upper");
+		System.out.println("--------- A ---------");
+		(new Matrix(A)).show();
+		System.out.println("---------------------");
+		
 		return null;
 	}
 	
