@@ -1299,10 +1299,52 @@ public class Encoder {
 						for(int col = i; col < L; col++)									// this row
 							A[row][col] = OctectOps.addition(A[row][col], A[j][col]);		// to row j in I_u
 		
+		/* PRINTING BLOCK */
 		System.out.println("ZEROED U_upper");
 		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
 		System.out.println("---------------------");
+		/* END OF PRINTING */
+		
+		/* 
+		 * Fifth phase 
+		 * */
+		
+		for(int j = 0; j < i; j++){
+			
+			if(A[j][j] != 1 /*&& A[j][j] != 0*/){
+				
+				byte beta = A[j][j];
+				OctectOps.betaDivision(A[j], beta);
+			}
+			
+			for(int l = 0; l <= j-1; l++){
+				
+				if(A[j][l] != 0){
+					
+					byte beta = A[j][l];
+					byte[] product = OctectOps.betaProduct(beta, A[l]);
+					
+					for(int col = 0; col < L; col++)
+						A[j][col] = OctectOps.addition(A[j][col], product[col]);
+					
+ 					/* PRINTING BLOCK */
+					/*
+					System.out.println("--------- A ---------");
+					(new Matrix(A)).show();
+					System.out.println("---------------------");
+					*/
+					/* END OF PRINTING */
+				}
+			}
+		}
+		
+		/* PRINTING BLOCK */
+		System.out.println("IDENTITY");
+		System.out.println("--------- A ---------");
+		(new Matrix(A)).show();
+		System.out.println("---------------------");
+		/* END OF PRINTING */
 		
 		return null;
 	}
