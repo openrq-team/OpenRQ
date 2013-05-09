@@ -829,9 +829,22 @@ public class Encoder {
 		int S = SystematicIndices.S(Ki);
 		int H = SystematicIndices.H(Ki);
 		int W = SystematicIndices.W(Ki);
-		int L = A.length;
+		int L = K + S + H;
 		int P = L - W;
 		int M = A.length;
+		
+		// initialize c and d
+		int[] c = new int[L];
+		int[] d = new int[M];
+		
+		for(int i = 0; i < L; i++){
+			c[i] = i;
+			d[i] = i;
+		}
+		
+		for(int i = L; i < M; i++){
+			d[i] = i;
+		}
 		
 		// Allocate X and copy A into X
 		byte[][] X = new byte[M][L];
@@ -850,7 +863,6 @@ public class Encoder {
 		 * First phase 
 		 * */
 		Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
-		//Set<Integer> chosenRows = new HashSet<Integer>();
 		int chosenRowsCounter = 0;
 		int nonHDPCRows = S + H;
 		while(i + u != L){
@@ -862,13 +874,10 @@ public class Encoder {
 			int r = L, rLinha = 0	;			
 			Map<Integer, Row> rows = new HashMap<Integer, Row>();
 			int minDegree = 256*L;
-			//Set<Integer> chosenRows = new HashSet<Integer>();
 			
 			// find r
 			for(int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0){ // FIXME fazer apenas uma vez (afinal eles dizem "minimum ORIGINAL degree", ver o impacto de performance...
 
-				// if(chosenRows.contains(row)) continue;
-				
 				Set<Integer> edges = new HashSet<Integer>();
 				
 				for(int col = i; col < L-u; col++){
@@ -881,26 +890,10 @@ public class Encoder {
 					}
 				}
 				
-				/*
-				if(i == 0) originalDegrees.put(row, degree); // original degree? WHAT DOES IT ALL MEAN?!
-
-				if(nonZeros == 2 && (row < S || row >= S+H))
-					rows.put(row, new Row(row, nonZeros, originalDegrees.get(row), edges));
-				else
-					rows.put(row, new Row(row, nonZeros, originalDegrees.get(row)));	
-				*/
-				
 				if(nonZeros == 2 && (row < S || row >= S+H))
 					rows.put(row, new Row(row, nonZeros, degree, edges));
 				else
 					rows.put(row, new Row(row, nonZeros, degree));	
-				
-				/*
-				if(nonZeros < r){
-					r = nonZeros;
-					rLinha = row;
-				}
-				*/
 				
 				
 				if(nonZeros > r || nonZeros == 0 || degree == 0) // branch prediction
@@ -924,20 +917,7 @@ public class Encoder {
 			/* PRINTING BLOCK */
 			System.out.println("r: "+r);
 			/* END OF PRINTING */
-			
-			//int newDegree = 256*L;
-			/*
-			for(Row row : rows.values()){
-				
-				if(row.nonZeros != r || chosenRows.contains(row.id))
-					continue;
-				else{
-					if(row.degree < newDegree){
-						rLinha = row.id;
-					}
-				}
-			}
-			*/
+
 			// choose the row
 			if(r != 2){
 				// check if rLinha is OK
@@ -1125,12 +1105,6 @@ public class Encoder {
 			System.out.println("----------------------");
 			/* END OF PRINTING */
 
-			/*
-			// update degrees
-			int auxDegree = originalDegrees.get(i);
-			originalDegrees.put(i, originalDegrees.get(rLinha));
-			originalDegrees.put(rLinha, auxDegree);
-*/
 			// swap i with rLinha in A
 			byte[] auxRow = A[i];
 			A[i] = A[rLinha];
@@ -1140,6 +1114,11 @@ public class Encoder {
 			auxRow = X[i];
 			X[i] = X[rLinha];
 			X[rLinha] = auxRow;
+			
+			// decoding process - swap i with rLinha in d
+			int auxIndex = d[i];
+			d[i] = d[rLinha];
+			d[rLinha] = auxIndex;
 			
 			/* PRINTING BLOCK */
 			System.out.println("TROCA DE LINHA");
@@ -1166,6 +1145,10 @@ public class Encoder {
 					coluna = nonZeros.pop();
 					swapColumns(A, coluna, i);
 					swapColumns(X, coluna, i);
+					// decoding process - swap i and coluna in c
+					auxIndex = c[i];
+					c[i] = c[coluna];
+					c[coluna] = auxIndex;
 				}
 				else
 					nonZeros.remove((Integer)i);
@@ -1184,6 +1167,11 @@ public class Encoder {
 					swapColumns(A, coluna, L-u-remainingNZ);
 					swapColumns(X, coluna, L-u-remainingNZ);
 
+					// decoding process - swap coluna with L-u-remainingNZ in c
+					auxIndex = c[L-u-remainingNZ];
+					c[L-u-remainingNZ] = c[coluna];
+					c[coluna] = auxIndex;
+					
 					/* PRINTING BLOCK */
 					System.out.println("TROCA DE COLUNA");
 					System.out.println("--------- A ---------");
@@ -1209,11 +1197,12 @@ public class Encoder {
 						byte[] product = OctectOps.betaProduct(balpha, A[i]);
 						
 						// addition 
-						for(int col = i; col < L; col++){
-							A[row][col] = OctectOps.addition(A[row][col], product[col]);
-							//X[row][col] = OctectOps.addition(X[row][col], product[col]); // to zero X or not to zero X, that is the question
-						}
-					
+						A[row] = xorSymbol(A[row], product);
+
+						// decoding process - (beta * D[d[i]]) + D[d[row]]
+						product = OctectOps.betaProduct(balpha, D[d[i]]);
+						D[d[row]] = xorSymbol(D[d[row]], product);
+						
 						/* PRINTING BLOCK */
 						System.out.println("ELIMINATING");
 						System.out.println("--------- A ---------");
@@ -1235,7 +1224,7 @@ public class Encoder {
 		 * */
 		// X is no ixi
 		
-		reduceToRowEchelonForm(A, i, M, L-u, L);
+		reduceToRowEchelonForm(A, i, M, L-u, L, d, D);
 		
 		/* PRINTING BLOCK */
 		System.out.println("GAUSSIAN U_lower");
@@ -1290,14 +1279,20 @@ public class Encoder {
 		/* 
 		 * Fourth phase 
 		 * */
-		// lets zero that motherfU_cker up(per)
 		
-		for(int row=0; row < i; row++)														// for each row in U_upper
-			for(int j = i; j < L; j++)														// check every position
-				if(A[row][j] != 0) 															// if position j is nonzero
-					for(short b = OctectOps.UNSIGN(A[row][j]); b > 0; b--)					// add b times
+		for(int row=0; row < i; row++){														// for each row in U_upper
+			for(int j = i; j < L; j++){														// check every position
+				if(A[row][j] != 0){															// if position j is nonzero
+					for(short b = OctectOps.UNSIGN(A[row][j]); b > 0; b--){					// add b times
 						for(int col = i; col < L; col++)									// this row
-							A[row][col] = OctectOps.addition(A[row][col], A[j][col]);		// to row j in I_u
+							A[row][col] = OctectOps.addition(A[row][col], A[j][col]);		// to row j in I_u						
+						
+						// decoding process - D[d[row]] + D[d[j]]
+						D[d[row]] = xorSymbol(D[d[row]], D[d[j]]);
+					}
+				}
+			}
+		}
 		
 		/* PRINTING BLOCK */
 		System.out.println("ZEROED U_upper");
@@ -1315,7 +1310,10 @@ public class Encoder {
 			if(A[j][j] != 1 /*&& A[j][j] != 0*/){
 				
 				byte beta = A[j][j];
-				OctectOps.betaDivision(A[j], beta);
+				A[j] = OctectOps.betaDivision(A[j], beta);
+				
+				// decoding process - D[d[j]] / beta
+				D[d[j]] = OctectOps.betaDivision(D[d[j]], beta);
 			}
 			
 			for(int l = 0; l <= j-1; l++){
@@ -1325,8 +1323,11 @@ public class Encoder {
 					byte beta = A[j][l];
 					byte[] product = OctectOps.betaProduct(beta, A[l]);
 					
-					for(int col = 0; col < L; col++)
-						A[j][col] = OctectOps.addition(A[j][col], product[col]);
+					A[j] = xorSymbol(A[j], product);
+
+					// decoding process - D[d[j]] + (A[j][l] * D[d[l]])
+					product = OctectOps.betaProduct(beta, D[d[l]]);
+					D[d[j]] = xorSymbol(D[d[j]], product);
 					
  					/* PRINTING BLOCK */
 					/*
@@ -1349,7 +1350,7 @@ public class Encoder {
 		return null;
 	}
 	
-	private void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col){
+	private void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col, int[] d, byte[][] D){
 		
 		int lead = 0;
 		int rowCount    = last_row - first_row;
@@ -1376,104 +1377,46 @@ public class Encoder {
 			
 			if( i != r){
 
-				// swap row 'i' and 'r' (for U_lower only!!!)
+				// swap row 'i' and 'r' (for U_lower only!!!) // NOTE: to the left there is only zeros, no point on swapping those
 				byte[] auxRow = new byte[columnCount];													//
 				System.arraycopy(A[i+first_row], first_col, auxRow, 0, columnCount);    				// aux = i
-
 				System.arraycopy(A[r+first_row], first_col, A[i+first_row], first_col, columnCount);	// i = r
-
 				System.arraycopy(auxRow, 0, A[i+first_row], first_row, columnCount);					// r = aux
+				
+				// decoding process - swap d[i] with d[r] in d
+				int auxIndex = d[i];
+				d[i] = d[r];
+				d[r] = auxIndex;
+				
 			}
 
-			if(A[r+first_row][lead+first_col] != 0)		
+			if(A[r+first_row][lead+first_col] != 0){	
 				for(int col = 0; col < columnCount; col++)
 					A[r+first_row][col+first_col] = OctectOps.division(A[r+first_row][col+first_col], A[r+first_row][lead+first_col]);
+			
+				// decoding process - divide D[d[r]] by U_lower[r][lead]
+				D[d[r]] = OctectOps.betaDivision(D[d[r]], A[r+first_row][lead+first_col]);
+			}
+			
+			
 			
 			for(i = 0; i < rowCount; i++){
 				
 				if(i != r){
-					
+					// U_lower[i] - (U_lower[i][lead] * U_lower[r])
 					byte[] product = OctectOps.betaProduct(A[i+first_row][lead+first_col], A[r+first_row], first_col, columnCount);
+					
 					for(int col = 0; col < columnCount; col++)
 						A[i+first_row][col+first_col] = OctectOps.subtraction(A[i+first_row][col+first_col], product[col]);						
+				
+					// decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
+					product = OctectOps.betaProduct(A[i+first_row][lead+first_col], D[d[r+first_row]]);
+					D[d[i+first_row]] = xorSymbol(D[d[i+first_row]], product);
 				}
 			}
 			
 			lead++;
 		}
-		/* 
-		 * Pseudo-code
-		 * 
-			 function ToReducedRowEchelonForm(Matrix M) is
-				lead := 0
-			    rowCount := the number of rows in M
-			    columnCount := the number of columns in M
-			    for 0 ² r < rowCount do
-			        if columnCount ² lead then
-			            stop
-			        end if
-			        i = r
-			        while M[i, lead] = 0 do
-			            i = i + 1
-			            if rowCount = i then
-			                i = r
-			                lead = lead + 1
-			                if columnCount = lead then
-			                    stop
-			                end if
-			            end if
-			        end while
-			        Swap rows i and r
-			        If M[r, lead] is not 0 divide row r by M[r, lead]
-			        for 0 ² i < rowCount do
-			            if i ­ r do
-			                Subtract M[i, lead] multiplied by row r from row i
-			            end if
-			        end for
-			        lead = lead + 1
-			    end for
-			 end function
-		 */
-	}
-	
-	private void gaussianTransformz(byte[][] A) throws SingularMatrixException{
-		
-		int ROWS = A.length;
-		
-		for(int row=0; row<ROWS; row++){
-			
-			int max = row;
-			
-			// find pivot row and swap
-			for (int i = row + 1; i < ROWS; i++)
-				if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row]))
-					max = i;
-
-			// this destroys the original matrixes... dont really need a fix, but should be kept in mind
-			byte[] temp = A[row];
-			A[row] = A[max];
-			A[max] = temp;
-
-			// singular or nearly singular
-            if (A[row][row] == 0) {
-				System.err.println("LINHA QUE DEU SINGULAR: "+row);
-            	throw new SingularMatrixException();
-            }
-
-            // pivot within A and b
-            for(int i=row+1; i<ROWS; i++) {
-            	
-            	byte alpha = OctectOps.division(A[i][row], A[row][row]);            	
-            	
-            	for(int j=row; j<ROWS; j++) {
-            	
-            		byte aux = OctectOps.product(alpha, A[row][j]);
-            		
-            		A[i][j] = OctectOps.subtraction(A[i][j], aux);
-            	}
-            }
-		}
-		
 	}
 	
 	private void swapColumns(byte[][] matrix, int a, int b){
