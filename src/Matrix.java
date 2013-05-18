@@ -29,7 +29,12 @@ final public class Matrix {
     }
 
     public byte[][] getData() {
-		return data;
+    	//FIXME devolver referencia
+    	byte[][] ret = new byte[M][N];
+        for (int i = 0; i < M; i++)
+            for (int j = 0; j < N; j++)
+                    ret[i][j] = data[i][j];
+		return ret;
 	}
 
 	// copy constructor

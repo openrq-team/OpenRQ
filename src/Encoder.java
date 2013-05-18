@@ -273,6 +273,7 @@ public class Encoder {
 				st.append(i + ", ");
 			System.out.println(st.toString());
 			*/
+			
 			if(num_repair_symbols < missing_delta_index) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
 			Map<Integer, byte[]> esiToLTCode = new TreeMap<Integer, byte[]>();
@@ -280,7 +281,7 @@ public class Encoder {
 			byte[] decoded_data = new byte[K*T];
 			
 			// All source symbols received :D
-/*			if(num_source_symbols == K){
+			if(num_source_symbols == K){
 				
 				// Collect all payloads from the source symbols				
 				for(EncodingSymbol enc_symbol : source_symbols){
@@ -292,13 +293,13 @@ public class Encoder {
 			}	
 			
 			// Not so lucky
-			else{*/
-				
+			else{
+			
 				// Generate original constraint matrix
-				byte[][] constraint_matrix = generateConstraintMatrix(kLinha, T);
+				byte[][] constraint_matrix = generateConstraintMatrix(kLinha, T); // FIXME add support para M linhas
 				
 				// initialize D
-				byte[][] D = new byte[L][T];
+				byte[][] D = new byte[L][T]; // FIXME add support para M linhas
 				
 				if(num_source_symbols != 0){
 
@@ -306,6 +307,7 @@ public class Encoder {
 
 					EncodingSymbol source_symbol = (EncodingSymbol) it.next();
 
+					// FIXME isto ta mal, falha se os simbolos tiverem desordenados...
 					for(int row=S+H; row<S+H+K; row++){
 
 						if(source_symbol.getESI() == row-S-H){
@@ -350,6 +352,7 @@ public class Encoder {
 					// Fill in missing source symbols in D with the repair symbols
 					D[row] = repair.getData();
 				}
+				
 				/*
 				System.out.println("---- A ---- (recovered)");
 				(new Matrix(constraint_matrix)).show();
@@ -359,20 +362,23 @@ public class Encoder {
 				(new Matrix(D)).show();
 				System.out.println("---------------------");
 				*/
+				
 				// Generate the intermediate symbols
 				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, K);
-				/*
+				
+				
 				System.out.println("---- C ----");
 				for(int bite=0; bite<intermediate_symbols.length; bite++){
 					if(bite % T == 0) System.out.println("");
 					System.out.printf("| %02X |", intermediate_symbols[bite]);
 				}
 				System.out.println("---------------------");
-				*/
+				
 				// Recover missing source symbols
 				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
 					
 					byte[] original_symbol = multiplyByteLineBySymbolVector(missing.getValue(), intermediate_symbols, T);
+					//byte[] original_symbol = multiplyByteLineBySymbolVector(missing.getValue(), D, T);
 					
 					System.arraycopy(original_symbol, 0, decoded_data, missing.getKey() * T, T);
 				}
@@ -382,6 +388,7 @@ public class Encoder {
 					
 					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 				}
+				
 				/*
 				System.out.println("\n\n RECOVERED");
 
@@ -390,10 +397,10 @@ public class Encoder {
 					System.out.printf("| %02X |", decoded_data[g]);
 				}
 				System.out.println("");
-			*/
+				 */
 				
 				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
-			//}			
+			}			
 		}				
 
 		return recovered;
@@ -495,7 +502,7 @@ public class Encoder {
 			/*//FIXME SIMULATION */
 			int num_to_lose_symbols = ceil(0.01*LOSS*K);
 			int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
-//			System.out.println("To lose: "+num_to_lose_symbols +"\nRepair: "+num_repair_symbols);
+			System.out.println("To lose: "+num_to_lose_symbols +"\nRepair: "+num_repair_symbols);
 			
 			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 			
@@ -514,11 +521,11 @@ public class Encoder {
 			while(num_to_lose_symbols > 0){
 				
 				int selected_index = lost.nextInt(K);
-//				System.out.println("Lost: "+selected_index);
 				
 				if(!oopsi_daisy.contains(selected_index)){
 					oopsi_daisy.add(selected_index);
 					num_to_lose_symbols--;
+					System.out.println("Lost: "+selected_index);
 				}
 				else
 					continue;
@@ -684,15 +691,17 @@ public class Encoder {
 		
         if ((last_colA  - first_colA) != (last_rowB - first_rowB)) throw new RuntimeException("Illegal matrix dimensions.");
         
-        int colsA = last_colA  - first_colA;
-        int colsB = last_colB  - first_colB;
+        int colsA = last_colA - first_colA;
+        int colsB = last_colB - first_colB;
         int rowsA = last_rowA - first_rowA;
         
         byte[][] C = new byte[rowsA][colsB];
         
         for (int i = 0; i < C.length; i++){
             for (int j = 0; j < C[0].length; j++){
-                for (int k = 0; k < colsA; k++){
+          
+            	
+            	for (int k = 0; k < colsA; k++){
                 	
                 	byte temp = OctectOps.product(A[i+first_rowA][k+first_colA], B[k+first_rowB][j+first_colB]);
 
@@ -741,6 +750,28 @@ public class Encoder {
 					continue;
 				
 				byte temp = OctectOps.product(line[colRow], vector[(colRow * symbol_size) + octet]);
+				
+				result[octet] = (byte) (result[octet] ^ temp);
+			}
+		}
+		
+		return result;
+	}
+	
+	public static byte[] multiplyByteLineBySymbolVector(byte[] line, byte[][] vector, int symbol_size){
+		
+		if((line.length * symbol_size) != vector.length) throw new RuntimeException("Illegal line/vector dimensions.");
+		
+		byte[] result = new byte[symbol_size];
+		
+		for(int octet=0; octet<symbol_size; octet++){
+
+			for(int colRow=0; colRow<line.length; colRow++){
+				
+				if(line[colRow] == 0) // null element for addition/multiplication
+					continue;
+				
+				byte temp = OctectOps.product(line[colRow], vector[colRow][octet]);
 				
 				result[octet] = (byte) (result[octet] ^ temp);
 			}
@@ -813,7 +844,7 @@ public class Encoder {
 	}
 	
 	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size, int K) throws SingularMatrixException{
-				
+		
 		// Gauss elim
 		//byte[] C = supahGauss(A, D);
 		
@@ -862,7 +893,7 @@ public class Encoder {
 		/* 
 		 * First phase 
 		 * */
-		Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
+		//Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
 		int chosenRowsCounter = 0;
 		int nonHDPCRows = S + H;
 		while(i + u != L){
@@ -1204,10 +1235,12 @@ public class Encoder {
 						D[d[row]] = xorSymbol(D[d[row]], product);
 						
 						/* PRINTING BLOCK */
+						/*
 						System.out.println("ELIMINATING");
 						System.out.println("--------- A ---------");
 						(new Matrix(A)).show();
 						System.out.println("---------------------");
+						*/
 						/* END OF PRINTING */
 					}
 				}
@@ -1244,12 +1277,17 @@ public class Encoder {
 		// sparse that shit up
 		
 		// multiply X by A submatrix
-		//multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L, A, 0, 0, i, L);
-		byte[][] XA = multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
-		for(int row = 0; row < i; row++)
+		/*byte[][] XA = multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
+		for(int row = 0; row < i; row++){
 			A[row] = XA[row];
+		}
 		
-		/*  TEST BLOCK  */
+		/* Neves' logic: "multiplied A by X, so... lets multiply D by X." */
+		/*for(int row = 0; row < i; row++){
+			//D[row] = multiplyByteLineBySymbolVector(X[row], D, T);
+		}
+		
+		/*  TEST BLOCK  *//*
 		for(int row = 0; row < i; row++){
 			for(int col = 0; col < i; col++){
 				if(X[row][col] != A[row][col]){
@@ -1284,9 +1322,9 @@ public class Encoder {
 			for(int j = i; j < L; j++){														// check every position
 				if(A[row][j] != 0){															// if position j is nonzero
 					for(short b = OctectOps.UNSIGN(A[row][j]); b > 0; b--){					// add b times
-						for(int col = i; col < L; col++)									// this row
-							A[row][col] = OctectOps.addition(A[row][col], A[j][col]);		// to row j in I_u						
-						
+						for(int col = i; col < L; col++)									// to this row
+							A[row][col] = OctectOps.addition(A[row][col], A[j][col]);		// row j of I_u						
+						//FIXME metodo ja faz isto sem o for
 						// decoding process - D[d[row]] + D[d[j]]
 						D[d[row]] = xorSymbol(D[d[row]], D[d[j]]);
 					}
@@ -1316,7 +1354,7 @@ public class Encoder {
 				D[d[j]] = OctectOps.betaDivision(D[d[j]], beta);
 			}
 			
-			for(int l = 0; l <= j-1; l++){
+			for(int l = 0; l < j; l++){
 				
 				if(A[j][l] != 0){
 					
@@ -1347,7 +1385,11 @@ public class Encoder {
 		System.out.println("---------------------");
 		/* END OF PRINTING */
 		
-		return null;
+		byte[] C = new byte[L*T];
+		for(int symbol = 0; symbol < L; symbol++)
+			System.arraycopy(D[d[symbol]], 0, C, c[symbol]*T, T);
+			
+		return C;
 	}
 	
 	private void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col, int[] d, byte[][] D){
@@ -1377,11 +1419,17 @@ public class Encoder {
 			
 			if( i != r){
 
-				// swap row 'i' and 'r' (for U_lower only!!!) // NOTE: to the left there is only zeros, no point on swapping those
-				byte[] auxRow = new byte[columnCount];													//
+				//FIXME usar referencias, MUITO mais rapido que copiar as posioes // swap row 'i' and 'r' (for U_lower only!!!) // NOTE: to the left there is only zeros, no point on swapping those
+/*				byte[] auxRow = new byte[columnCount];													//
 				System.arraycopy(A[i+first_row], first_col, auxRow, 0, columnCount);    				// aux = i
 				System.arraycopy(A[r+first_row], first_col, A[i+first_row], first_col, columnCount);	// i = r
-				System.arraycopy(auxRow, 0, A[i+first_row], first_row, columnCount);					// r = aux
+				System.arraycopy(auxRow, 0, A[r+first_row], first_col, columnCount);					// r = aux
+				//System.arraycopy(auxRow, 0, A[i+first_row], first_row, columnCount); // CHANGED
+				//System.arraycopy(auxRow, 0, A[r+first_row], first_row, columnCount); // CHANGED 2
+	*/
+				byte[] auxRow = A[i+first_row];
+				A[i+first_row] = A[r+first_row];
+				A[r+first_row] = auxRow;
 				
 				// decoding process - swap d[i] with d[r] in d
 				int auxIndex = d[i];
@@ -1392,10 +1440,11 @@ public class Encoder {
 
 			if(A[r+first_row][lead+first_col] != 0){	
 				for(int col = 0; col < columnCount; col++)
-					A[r+first_row][col+first_col] = OctectOps.division(A[r+first_row][col+first_col], A[r+first_row][lead+first_col]);
+					A[r+first_row][col+first_col] = OctectOps.division(A[r+first_row][col+first_col], A[r+first_row][lead+first_col]); // FIXME metodo ja faz isto sem o for
 			
 				// decoding process - divide D[d[r]] by U_lower[r][lead]
-				D[d[r]] = OctectOps.betaDivision(D[d[r]], A[r+first_row][lead+first_col]);
+				//D[d[r]] = OctectOps.betaDivision(D[d[r]], A[r+first_row][lead+first_col]); // CHANGED
+				D[d[r+first_row]] = OctectOps.betaDivision(D[d[r+first_row]], A[r+first_row][lead+first_col]);
 			}
 			
 			
@@ -1407,7 +1456,7 @@ public class Encoder {
 					byte[] product = OctectOps.betaProduct(A[i+first_row][lead+first_col], A[r+first_row], first_col, columnCount);
 					
 					for(int col = 0; col < columnCount; col++)
-						A[i+first_row][col+first_col] = OctectOps.subtraction(A[i+first_row][col+first_col], product[col]);						
+						A[i+first_row][col+first_col] = OctectOps.subtraction(A[i+first_row][col+first_col], product[col]);	// FIXME metodo ja faz isto					
 				
 					// decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
 					product = OctectOps.betaProduct(A[i+first_row][lead+first_col], D[d[r+first_row]]);
