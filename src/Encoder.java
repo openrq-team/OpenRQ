@@ -15,20 +15,19 @@ import java.util.TreeSet;
 public class Encoder {
 
 	// TODO check patents for better default values
-	public static final int MAX_PAYLOAD_SIZE = 1; //512 // P
-	public static final int ALIGN_PARAM = 1;  // Al // 4
+	public static final int MAX_PAYLOAD_SIZE = 1; //1; //512 // P'
+	public static final int ALIGN_PARAM = 1;//1;  // Al // 4
 	public static final int MAX_SIZE_BLOCK = 76800; // WS // B
-	public static final long SSYMBOL_LOWER_BOUND = 1; // SS // 8
+	public static final int SSYMBOL_LOWER_BOUND = 1;//1; // SS // 8
 	public static final int KMAX = 56403;
 	public static final byte ALPHA = 2;
 
-	private int T; // symbol size
+	private static int T = 1; // symbol size
 	private int Z; // number of source blocks
 	private int N; // number of sub-blocks in each source block
 	private int F; // transfer length
 	private int Kt; // total number of symbols required to represent the source data of the object
 	private byte[] data;
-
 	
 	/* Simulation variables */
 	private int LOSS;
@@ -44,11 +43,11 @@ public class Encoder {
 		T = derivateT(MAX_PAYLOAD_SIZE);
 		Kt = ceil((double)F/T);
 		
-		/*//FIXME SIMULATION */
-		//Z = derivateZ();
-		Z = 1;
+		int N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
+
+		Z = derivateZ(N_max);
 		
-		N = derivateN();
+		N = derivateN(N_max);
 
 		if(F>Kt*T)
 			data = new byte[F];
@@ -64,18 +63,15 @@ public class Encoder {
 		return pLinha;		
 	}
 
-	private int derivateZ(){
-
-		int N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
+	private int derivateZ(int N_max){
 
 		return(ceil((double)Kt/SystematicIndices.KL(N_max, MAX_SIZE_BLOCK, ALIGN_PARAM, T)));
 	}
 
-	private int derivateN(){
-
-		int N_max = floor((double)(T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM)));
+	private int derivateN(int N_max){
 
 		int n = 1;
+		
 		for(; n<=N_max && ceil((double)Kt/Z)>SystematicIndices.KL(n, MAX_SIZE_BLOCK, ALIGN_PARAM, T); n++);
 
 		return n;
@@ -106,49 +102,52 @@ public class Encoder {
 		SourceBlock[] object = new SourceBlock[Z];
 
 		int i;
+		int index_master = 0;
 		for(i=0; i<ZL; i++){
 			// Source block i
 
-			byte[] aux2 = new byte[KL*T]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
+			byte[] aux2 = new byte[KL*T];
 
-			int k;
 			int index_aux2 = 0;
-			for(k=0; k<KL; k++){
+			for(int k=0; k<KL; k++){
 
 				int j = 0;
-				int index_data  = (i*KL*T) + (k*TL*ALIGN_PARAM); // always TL because you always start by the sub-block
+				int index_data  = index_master;
 
 				for(; j<NL; j++, index_data+=KL*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
 					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
 				}
 
-				for(; j<NS; j++, index_data+=KL*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
+				for(; j<N; j++, index_data+=KL*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
 					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
 				}
+				
+				index_master += TL*ALIGN_PARAM;
 			}
 
 			object[i] = new SourceBlock(i, aux2, T, KL);
 		}
 
-		for(; i<ZS; i++){
+		for(; i < Z; i++){
 			// Source block i
 
-			byte[] aux2 = new byte[KS*T]; //TODO NAO ESQUECER OS EFEITOS QUE ESTE '+1' PODE TER EM FICHEIROS QUE NAO STRING
+			byte[] aux2 = new byte[KS*T];
 
-			int k;
-			for(k=0; k<KS; k++){
+			int index_aux2 = 0;
+			for(int k=0; k<KS; k++){
 
 				int j = 0;
-				int index_data  = (i*KS*T) + (k*TL*ALIGN_PARAM); // always TL because you always start by the sub-block
-				int index_aux2 = 0;
+				int index_data  = index_master;
 
 				for(; j<NL; j++, index_data+=KS*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
 					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
 				}
 
-				for(; j<NS; j++, index_data+=KS*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
+				for(; j<N; j++, index_data+=KS*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
 					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
 				}
+
+				index_master += TL*ALIGN_PARAM;
 			}
 
 			object[i] = new SourceBlock(i, aux2, T, KS);
@@ -167,6 +166,7 @@ public class Encoder {
 			data = new byte[(int) Kt*T];
 
 
+		int index_master = 0;
 		for(int i=0; i<object.length; i++){
 			// Source block i
 
@@ -184,7 +184,8 @@ public class Encoder {
 			for(int k=0; k<Kappa; k++){
 
 				int j = 0;
-				int index_data  = (i*Kappa*T) + k*TL*ALIGN_PARAM; // always TL because you always start by the sub-block
+				//int index_data  = (i*Kappa*T) + k*TL*ALIGN_PARAM; // always TL because you always start by the sub-block
+				int index_data  = index_master + k*TL*ALIGN_PARAM; // always TL because you always start by the sub-block
 				int index_aux2 = k*t_;
 
 				for(; j<NL; j++, index_data+=Kappa*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
@@ -195,6 +196,8 @@ public class Encoder {
 					System.arraycopy(aux2, index_aux2, data, index_data, TS*ALIGN_PARAM);
 				}
 			}
+		
+			index_master += Kappa * T;
 		}
 
 		return data;		
@@ -276,6 +279,9 @@ public class Encoder {
 			
 			if(num_repair_symbols < missing_delta_index) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
+			int overhead = num_repair_symbols - missing_symbols.size();
+			int M = L + overhead;
+			
 			Map<Integer, byte[]> esiToLTCode = new TreeMap<Integer, byte[]>();
 			
 			byte[] decoded_data = new byte[K*T];
@@ -295,30 +301,27 @@ public class Encoder {
 			// Not so lucky
 			else{
 			
+				byte[][] constraint_matrix = new byte[M][];
+
 				// Generate original constraint matrix
-				byte[][] constraint_matrix = generateConstraintMatrix(kLinha, T); // FIXME add support para M linhas
+				byte[][] lConstraint = generateConstraintMatrix(kLinha, T);
+				
+				for(int row = 0; row < L; row++)
+					constraint_matrix[row] = lConstraint[row];
 				
 				// initialize D
-				byte[][] D = new byte[L][T]; // FIXME add support para M linhas
+				byte[][] D = new byte[M][T];
 				
 				if(num_source_symbols != 0){
 
 					Iterator<EncodingSymbol> it = source_symbols.iterator();
 
-					EncodingSymbol source_symbol = (EncodingSymbol) it.next();
+					do{
+						EncodingSymbol source_symbol = (EncodingSymbol) it.next();
 
-					// FIXME isto ta mal, falha se os simbolos tiverem desordenados...
-					for(int row=S+H; row<S+H+K; row++){
-
-						if(source_symbol.getESI() == row-S-H){
-
-							D[row] = source_symbol.getData();
-
-							if(it.hasNext()) source_symbol = (EncodingSymbol) it.next();
-							else break;
-						}
-						else continue;
-					}
+						D[source_symbol.getESI() + S + H] = source_symbol.getData();
+						
+					}while(it.hasNext());
 				}
 
 				/*
@@ -330,9 +333,10 @@ public class Encoder {
 				(new Matrix(D)).show();
 				System.out.println("---------------------");				
 				*/
+
+				Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
 				
 				// Identify missing source symbols and replace their lines with "repair lines"
-				Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
 				for(Integer missing_ESI : missing_symbols){
 					
 					EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
@@ -353,6 +357,26 @@ public class Encoder {
 					D[row] = repair.getData();
 				}
 				
+				// add values for overhead symbols					
+				for(int row = L; row < M; row++){
+
+					EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
+
+					// Generate the overhead lines
+					Tuple tuple = new Tuple(K, repair.getISI(K));
+
+					Set<Integer> indexes = encIndexes(K, tuple);
+
+					byte[] newLine = new byte[L];
+					for(Integer col : indexes)
+						newLine[col] = 1;
+					
+					constraint_matrix[row] = newLine;
+					
+					// update D with the data for that symbol
+					D[row] = repair.getData();
+				}
+				
 				/*
 				System.out.println("---- A ---- (recovered)");
 				(new Matrix(constraint_matrix)).show();
@@ -363,16 +387,16 @@ public class Encoder {
 				System.out.println("---------------------");
 				*/
 				
-				// Generate the intermediate symbols
-				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, K);
+				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, kLinha);
 				
-				
+				/*
 				System.out.println("---- C ----");
 				for(int bite=0; bite<intermediate_symbols.length; bite++){
 					if(bite % T == 0) System.out.println("");
 					System.out.printf("| %02X |", intermediate_symbols[bite]);
 				}
 				System.out.println("---------------------");
+				*/
 				
 				// Recover missing source symbols
 				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
@@ -438,8 +462,8 @@ public class Encoder {
 
 			// singular or nearly singular
             if (A[row][row] == 0) {
-				System.err.println("LINHA QUE DEU SINGULAR: "+row);
-            	throw new SingularMatrixException();
+				//System.err.println("LINHA QUE DEU SINGULAR: "+row);
+            	throw new SingularMatrixException("LINHA QUE DEU SINGULAR: "+row);
             }
 
             // pivot within A and b
@@ -502,7 +526,7 @@ public class Encoder {
 			/*//FIXME SIMULATION */
 			int num_to_lose_symbols = ceil(0.01*LOSS*K);
 			int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
-			System.out.println("To lose: "+num_to_lose_symbols +"\nRepair: "+num_repair_symbols);
+//			System.out.println("To lose: "+num_to_lose_symbols +"\nRepair: "+num_repair_symbols);
 			
 			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 			
@@ -525,7 +549,6 @@ public class Encoder {
 				if(!oopsi_daisy.contains(selected_index)){
 					oopsi_daisy.add(selected_index);
 					num_to_lose_symbols--;
-					System.out.println("Lost: "+selected_index);
 				}
 				else
 					continue;
@@ -657,7 +680,7 @@ public class Encoder {
 			for(int col = 0; col<K+S; col++){
 
 				if(row >= col)
-					GAMMA[row][col] = OctectOps.getExp((row-col) % 256); // FIXME talk to neves asap Page 63
+					GAMMA[row][col] = OctectOps.getExp((row-col) % 256);
 				else
 					continue;				
 			}	
@@ -746,9 +769,6 @@ public class Encoder {
 
 			for(int colRow=0; colRow<line.length; colRow++){
 				
-				if(line[colRow] == 0) // null element for addition/multiplication
-					continue;
-				
 				byte temp = OctectOps.product(line[colRow], vector[(colRow * symbol_size) + octet]);
 				
 				result[octet] = (byte) (result[octet] ^ temp);
@@ -768,8 +788,22 @@ public class Encoder {
 
 			for(int colRow=0; colRow<line.length; colRow++){
 				
-				if(line[colRow] == 0) // null element for addition/multiplication
-					continue;
+				byte temp = OctectOps.product(line[colRow], vector[colRow][octet]);
+				
+				result[octet] = (byte) (result[octet] ^ temp);
+			}
+		}
+		
+		return result;
+	}
+	
+	public static byte[] multiplyByteLineBySymbolVector(byte[] line, int line_length, byte[][] vector, int symbol_size){
+				
+		byte[] result = new byte[symbol_size];
+		
+		for(int octet=0; octet<symbol_size; octet++){
+
+			for(int colRow=0; colRow<line_length; colRow++){
 				
 				byte temp = OctectOps.product(line[colRow], vector[colRow][octet]);
 				
@@ -845,7 +879,6 @@ public class Encoder {
 	
 	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size, int K) throws SingularMatrixException{
 		
-		// Gauss elim
 		//byte[] C = supahGauss(A, D);
 		
 		// PInactivation Decoding
@@ -854,7 +887,7 @@ public class Encoder {
 		return C;
 	}
 	
-	private byte[] PInactivationDecoding(byte[][] A, byte[][] D, int symbol_size, int K) {
+	public static byte[] PInactivationDecoding(byte[][] A, byte[][] D, int symbol_size, int K) throws SingularMatrixException {
 
 		int Ki = SystematicIndices.getKIndex(K);
 		int S = SystematicIndices.S(Ki);
@@ -863,6 +896,27 @@ public class Encoder {
 		int L = K + S + H;
 		int P = L - W;
 		int M = A.length;
+		
+		
+		/* SIMULATION */
+/*		K = 3;	S = 1;	H = 1;	W = 4;	L = 5;	P = 1;	M = 5; T = 3;
+		
+		byte[][] zzz = {
+				{1, 0, 1, 1, 1},
+				{0, 1, 0, 1, 1},
+				{1, 1, 1, 0, 1},
+				{1, 0, 1, 0, 0},
+				{1, 1, 0, 0, 1}
+		}; 	A = zzz;
+		
+		byte[][] sss = {
+				{1, 0, 0},
+				{1, 0, 1},
+				{1, 1, 0},
+				{1, 1, 1},
+				{0, 1, 1}	
+		}; D = sss;		
+		/* END */
 		
 		// initialize c and d
 		int[] c = new int[L];
@@ -885,7 +939,7 @@ public class Encoder {
 		int i = 0, u = P;
 		
 		/* PRINTING BLOCK */
-		System.out.println("--------- A ---------");
+/*		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
 		System.out.println("---------------------");
 		/* END OF PRINTING */
@@ -893,21 +947,28 @@ public class Encoder {
 		/* 
 		 * First phase 
 		 * */
-		//Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
 		int chosenRowsCounter = 0;
 		int nonHDPCRows = S + H;
+
+		Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
+
+		/*
+		 *  TODO Optimização: ao inves de percorrer isto todas as vezes, ver só as linhas quer perderam
+		 *  um non-zero, e subtrair ao 'r' original. Como lidar com as novas dimensoes de V? 
+		 */
+		
 		while(i + u != L){
 			
 			/* PRINTING BLOCK */
-			System.out.println("STEP: "+i);
+/*			System.out.println("STEP: "+i);
 			/* END OF PRINTING */
 			
-			int r = L, rLinha = 0	;			
+			int r = L+1, rLinha = 0	;			
 			Map<Integer, Row> rows = new HashMap<Integer, Row>();
 			int minDegree = 256*L;
 			
 			// find r
-			for(int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0){ // FIXME fazer apenas uma vez (afinal eles dizem "minimum ORIGINAL degree", ver o impacto de performance...
+			for(int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0){
 
 				Set<Integer> edges = new HashSet<Integer>();
 				
@@ -921,11 +982,31 @@ public class Encoder {
 					}
 				}
 				
+				
 				if(nonZeros == 2 && (row < S || row >= S+H))
 					rows.put(row, new Row(row, nonZeros, degree, edges));
 				else
 					rows.put(row, new Row(row, nonZeros, degree));	
-				
+
+				/*// TODO testar tempos com isto o.O
+				if(i != 0){
+
+					if(nonZeros == 2 && (row < S || row >= S+H)) // FIXME do some branch prediction
+						rows.put(row, new Row(row, nonZeros, originalDegrees.get(d[row]), edges));
+					else
+						rows.put(row, new Row(row, nonZeros, originalDegrees.get(d[row])));	
+
+				}
+				else{
+
+					if(nonZeros == 2 && (row < S || row >= S+H))
+						rows.put(row, new Row(row, nonZeros, degree, edges));
+					else
+						rows.put(row, new Row(row, nonZeros, degree));	
+
+					originalDegrees.put(row, degree);
+				}
+				*/
 				
 				if(nonZeros > r || nonZeros == 0 || degree == 0) // branch prediction
 					continue;
@@ -946,16 +1027,19 @@ public class Encoder {
 			}
 			
 			/* PRINTING BLOCK */
-			System.out.println("r: "+r);
+/*			System.out.println("r: "+r);
 			/* END OF PRINTING */
 
+			if(r == L+1) // DECODING FAILURE
+				throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 1: All entries in V are zero.");
+			
 			// choose the row
 			if(r != 2){
 				// check if rLinha is OK
 				if(rLinha >= S && rLinha < S+H && chosenRowsCounter != nonHDPCRows){ // choose another line
 					
 					int newDegree = 256*L;
-					int newR = L;
+					int newR = L+1;
 					
 					for(Row row : rows.values()){
 						
@@ -982,27 +1066,8 @@ public class Encoder {
 				chosenRowsCounter++;
 			}
 			else{
-				
-				boolean twoOnes = false;
-				
-				// row with with 2 ones
-				if(rows.get(rLinha).edges != null) // kewl, rLinha has 2 ones
-					twoOnes = true;
-				else{ // look for a row with 2 ones
-					
-					for(Row row : rows.values()){
-						if(row.nonZeros != 2 || row.edges == null)
-							continue;
-						else{
-							rLinha = row.id;
-							twoOnes = true;
-							break;
-						}
-					}
-				}
 
-				//FIXME trocar para if(minDegree == 2) e limpar o if de cima
-				if(twoOnes){
+				if(minDegree == 2){
 					
 					// create graph
 					Map<Integer, Set<Integer>> graph = new HashMap<Integer,Set<Integer>>();
@@ -1045,11 +1110,20 @@ public class Encoder {
 					} // graph'd
 					
 					// find largest component 
-					int maximumSize = graph.size();
+					//int maximumSize = graph.size();
 					boolean found = false;
 					Set<Integer> visited = null;
 					
-					while(maximumSize != 0 && !found){ 
+					/* 
+					 * TODO Optimizaçao: - tentar fazer sem este while... nao ha de ser dificil
+					 * 					 - já procurei, e ha algoritmos optimizados para achar connected components
+					 * 					é só depois ver qual o maior...
+					 */
+					
+			//		while(maximumSize != 0 && !found){ 
+					
+						int maximumSize = 0;
+						Set<Integer> greatestComponent = null; // TODO testar tempos com isto o.O
 						
 						Set<Integer> used = new HashSet<Integer>();
 						Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
@@ -1089,14 +1163,23 @@ public class Encoder {
 									if(!visited.contains(edge))
 											toVisit.add(edge);
 							}
+						
+								
+							if(visited.size() > maximumSize){
+								
+								maximumSize 	  = visited.size();
+								greatestComponent = visited;
+							}
 							
+						/*	
 							// is it big?
 							if(visited.size() >= maximumSize) // yes it is
 								found = true;
-						}
+							*/
+						}/*
 						
 						maximumSize--;
-					}
+					}*/
 					
 					// 'visited' is now our connected component
 					for(Row row : rows.values()){
@@ -1125,38 +1208,47 @@ public class Encoder {
 				}
 			}
 			
+			/*  PRINT ROWS  */
+/*			for(Row row : rows.values()){
+				System.out.println("id: "+row.id+"  nZ: "+row.nonZeros+"  deg: "+row.degree);				
+			}
+			/* END OF PRINT */
+			
 			// 'rLinha' is the chosen row
 			Row chosenRow = rows.get(rLinha);
-			
 			/* PRINTING BLOCK */
-			System.out.println("----- CHOSEN ROW -----");
+/*			System.out.println("----- CHOSEN ROW -----");
 			System.out.println("id : "+chosenRow.id);
 			System.out.println("nZ : "+chosenRow.nonZeros);
 			System.out.println("deg: "+chosenRow.degree);
 			System.out.println("----------------------");
-			/* END OF PRINTING */
-
-			// swap i with rLinha in A
-			byte[] auxRow = A[i];
-			A[i] = A[rLinha];
-			A[rLinha] = auxRow;
-
-			// swap i with rLinha in X
-			auxRow = X[i];
-			X[i] = X[rLinha];
-			X[rLinha] = auxRow;
+			/* END OF PRINTING */		
 			
-			// decoding process - swap i with rLinha in d
-			int auxIndex = d[i];
-			d[i] = d[rLinha];
-			d[rLinha] = auxIndex;
+			if(rLinha != i){
+				 
+				// swap i with rLinha in A
+				byte[] auxRow = A[i];
+				A[i] = A[rLinha];
+				A[rLinha] = auxRow;
+
+				// swap i with rLinha in X
+				auxRow = X[i];
+				X[i] = X[rLinha];
+				X[rLinha] = auxRow;
+
+				// decoding process - swap i with rLinha in d
+				int auxIndex = d[i];
+				d[i] = d[rLinha];
+				d[rLinha] = auxIndex;
+				
+				/* PRINTING BLOCK */
+/*				System.out.println("TROCA DE LINHA");
+				System.out.println("--------- A ---------");
+				(new Matrix(A)).show();
+				System.out.println("---------------------");
+				/* END OF PRINTING */			
+			}
 			
-			/* PRINTING BLOCK */
-			System.out.println("TROCA DE LINHA");
-			System.out.println("--------- A ---------");
-			(new Matrix(A)).show();
-			System.out.println("---------------------");
-			/* END OF PRINTING */
 			
 			// re-order columns
 			if(chosenRow.degree > 0){
@@ -1173,48 +1265,52 @@ public class Encoder {
 
 				int coluna;
 				if(A[i][i] == 0){
+					
 					coluna = nonZeros.pop();
 					swapColumns(A, coluna, i);
 					swapColumns(X, coluna, i);
+				
 					// decoding process - swap i and coluna in c
-					auxIndex = c[i];
+					int auxIndex = c[i];
 					c[i] = c[coluna];
 					c[coluna] = auxIndex;
-				}
-				else
-					nonZeros.remove((Integer)i);
-
-				/* PRINTING BLOCK */
-				System.out.println("TROCA DE COLUNA");
-				System.out.println("--------- A ---------");
-				(new Matrix(A)).show();
-				System.out.println("---------------------");
-				/* END OF PRINTING */
-
-				for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--){		
-
-					coluna = nonZeros.pop();
-					if(coluna == i) continue;
-					swapColumns(A, coluna, L-u-remainingNZ);
-					swapColumns(X, coluna, L-u-remainingNZ);
-
-					// decoding process - swap coluna with L-u-remainingNZ in c
-					auxIndex = c[L-u-remainingNZ];
-					c[L-u-remainingNZ] = c[coluna];
-					c[coluna] = auxIndex;
-					
+				
 					/* PRINTING BLOCK */
-					System.out.println("TROCA DE COLUNA");
+/*					System.out.println("TROCA DE COLUNA");
 					System.out.println("--------- A ---------");
 					(new Matrix(A)).show();
 					System.out.println("---------------------");
 					/* END OF PRINTING */
 				}
+				else
+					nonZeros.remove((Integer)i);
+				
+				for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--){		
+
+					coluna = nonZeros.pop();
+					
+					// swap
+					swapColumns(A, coluna, L-u-remainingNZ);
+					swapColumns(X, coluna, L-u-remainingNZ);
+
+					// decoding process - swap coluna with L-u-remainingNZ in c
+					int auxIndex = c[L-u-remainingNZ];
+					c[L-u-remainingNZ] = c[coluna];
+					c[coluna] = auxIndex;
+					
+					/* PRINTING BLOCK */
+/*					System.out.println("TROCA DE COLUNA");
+					System.out.println("--------- A ---------");
+					(new Matrix(A)).show();
+					System.out.println("---------------------");
+					/* END OF PRINTING */
+					
+				}
 			
 				// beta/alpha gewdness
 				byte alpha = A[i][i];
 				
-				for(int row = i+1; row < A.length; row++){
+				for(int row = i+1; row < M; row++){
 					
 					if(A[row][i] == 0)
 						continue;
@@ -1235,17 +1331,22 @@ public class Encoder {
 						D[d[row]] = xorSymbol(D[d[row]], product);
 						
 						/* PRINTING BLOCK */
-						/*
-						System.out.println("ELIMINATING");
+/*						System.out.println("ELIMINATING");
 						System.out.println("--------- A ---------");
 						(new Matrix(A)).show();
 						System.out.println("---------------------");
-						*/
 						/* END OF PRINTING */
 					}
 				}
 			}
 			
+			/* PRINTING BLOCK */
+/*			System.out.println("END OF STEP "+i);
+			System.out.println("--------- A ---------");
+			(new Matrix(A)).show();
+			System.out.println("---------------------");
+			/* END OF PRINTING */
+
 			// update 'i' and 'u'
 			i++;
 			u += r-1;
@@ -1255,12 +1356,15 @@ public class Encoder {
 		/* 
 		 * Second phase 
 		 * */
-		// X is no ixi
-		
+		// X is now ixi
+
 		reduceToRowEchelonForm(A, i, M, L-u, L, d, D);
 		
+		if(!validateRank(A, i, i, M, L, u)) // DECODING FAILURE
+			throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 2: U_lower's rank is less than u.");
+		
 		/* PRINTING BLOCK */
-		System.out.println("GAUSSIAN U_lower");
+/*		System.out.println("GAUSSIAN U_lower");
 		System.out.println("M: "+M+"\nL: "+L+"\ni: "+i+"\nu: "+u);
 		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
@@ -1274,21 +1378,23 @@ public class Encoder {
 		/* 
 		 * Third phase 
 		 * */
-		// sparse that shit up
 		
 		// multiply X by A submatrix
-		/*byte[][] XA = multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
-		for(int row = 0; row < i; row++){
+		byte[][] XA = multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
+		for(int row = 0; row < i; row++)
 			A[row] = XA[row];
-		}
 		
-		/* Neves' logic: "multiplied A by X, so... lets multiply D by X." */
-		/*for(int row = 0; row < i; row++){
-			//D[row] = multiplyByteLineBySymbolVector(X[row], D, T);
-		}
+		// decoding process
+		byte[][] reordereD = new byte[L][];
 		
-		/*  TEST BLOCK  *//*
-		for(int row = 0; row < i; row++){
+		for(int index = 0; index < L; index++) 
+			reordereD[index] = D[d[index]]; // reorder D
+		
+		for(int row = 0; row < i; row++) // multiply X by D
+			D[d[row]] = multiplyByteLineBySymbolVector(X[row], i, reordereD, T);
+		
+		/*  TEST BLOCK  */
+/*		for(int row = 0; row < i; row++){
 			for(int col = 0; col < i; col++){
 				if(X[row][col] != A[row][col]){
 					System.out.println("ERRO NA FASE 3 (row: "+row+" ; col: "+col+" )");
@@ -1305,11 +1411,11 @@ public class Encoder {
 		/* END OF BLOCK */
 		
 		/* PRINTING BLOCK */
-		System.out.println("SPARSED U_upper");
+/*		System.out.println("SPARSED U_upper");
 		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
-		System.out.println("---------------------");/*
-		System.out.println("--------- X ---------");
+		System.out.println("---------------------");
+/*		System.out.println("--------- X ---------");
 		(new Matrix(X)).show();
 		System.out.println("---------------------");
 		/* END OF PRINTING */
@@ -1317,23 +1423,23 @@ public class Encoder {
 		/* 
 		 * Fourth phase 
 		 * */
-		
-		for(int row=0; row < i; row++){														// for each row in U_upper
-			for(int j = i; j < L; j++){														// check every position
-				if(A[row][j] != 0){															// if position j is nonzero
-					for(short b = OctectOps.UNSIGN(A[row][j]); b > 0; b--){					// add b times
-						for(int col = i; col < L; col++)									// to this row
-							A[row][col] = OctectOps.addition(A[row][col], A[j][col]);		// row j of I_u						
-						//FIXME metodo ja faz isto sem o for
-						// decoding process - D[d[row]] + D[d[j]]
-						D[d[row]] = xorSymbol(D[d[row]], D[d[j]]);
-					}
+
+		for(int row=0; row < i; row++){														
+			for(int j = i; j < L; j++){														
+				if(A[row][j] != 0){															
+
+					byte b    = A[row][j];
+					A[row][j] = 0;
+
+					// decoding process - (beta * D[d[j]]) + D[d[row]]
+					byte[] product = OctectOps.betaProduct(b, D[d[j]]);
+					D[d[row]] = xorSymbol(D[d[row]], product);
 				}
 			}
 		}
-		
+
 		/* PRINTING BLOCK */
-		System.out.println("ZEROED U_upper");
+/*		System.out.println("ZEROED U_upper");
 		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
 		System.out.println("---------------------");
@@ -1343,9 +1449,13 @@ public class Encoder {
 		 * Fifth phase 
 		 * */
 		
+		/*
+		 * TODO Optimizacao: acho que da para zerar directamente o A, e deixar apenas as operacoes em D...
+		 */
+		
 		for(int j = 0; j < i; j++){
 			
-			if(A[j][j] != 1 /*&& A[j][j] != 0*/){
+			if(A[j][j] != 1){ //A[j][j] != 0
 				
 				byte beta = A[j][j];
 				A[j] = OctectOps.betaDivision(A[j], beta);
@@ -1367,22 +1477,17 @@ public class Encoder {
 					product = OctectOps.betaProduct(beta, D[d[l]]);
 					D[d[j]] = xorSymbol(D[d[j]], product);
 					
- 					/* PRINTING BLOCK */
-					/*
-					System.out.println("--------- A ---------");
-					(new Matrix(A)).show();
-					System.out.println("---------------------");
-					*/
-					/* END OF PRINTING */
 				}
 			}
 		}
 		
 		/* PRINTING BLOCK */
-		System.out.println("IDENTITY");
+/*		System.out.println("IDENTITY");
 		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
 		System.out.println("---------------------");
+		
+		if(!checkIdentity(A,L)) System.exit(231);
 		/* END OF PRINTING */
 		
 		byte[] C = new byte[L*T];
@@ -1392,7 +1497,42 @@ public class Encoder {
 		return C;
 	}
 	
-	private void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col, int[] d, byte[][] D){
+	private static boolean checkIdentity(byte[][] A, int L) {
+		
+		for(int row = 0; row < L; row++)
+			for(int col = 0; col < L; col++)
+				if(row != col && A[row][col] != 0)
+					return false;
+				else if(row == col && A[row][col] != 1)
+					return false;
+		
+		return true;
+	}
+	
+	private static boolean validateRank(byte[][] matrix, int first_row, int first_col, int last_row, int last_col, int rank_lower_limit){
+		
+		int nonZeroRows = 0;
+		
+		for(int row = first_row; row < last_row; row++){
+			
+			for(int col = first_col; col < last_col; col++){
+				
+				if(matrix[row][col] == 0)
+					continue;
+				else{
+					nonZeroRows++;
+					break;
+				}
+			}
+		}
+		
+		if(nonZeroRows < rank_lower_limit)
+			return false;
+		else
+			return true;
+	}
+
+	private static void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col, int[] d, byte[][] D){
 		
 		int lead = 0;
 		int rowCount    = last_row - first_row;
@@ -1419,56 +1559,48 @@ public class Encoder {
 			
 			if( i != r){
 
-				//FIXME usar referencias, MUITO mais rapido que copiar as posiçoes // swap row 'i' and 'r' (for U_lower only!!!) // NOTE: to the left there is only zeros, no point on swapping those
-/*				byte[] auxRow = new byte[columnCount];													//
-				System.arraycopy(A[i+first_row], first_col, auxRow, 0, columnCount);    				// aux = i
-				System.arraycopy(A[r+first_row], first_col, A[i+first_row], first_col, columnCount);	// i = r
-				System.arraycopy(auxRow, 0, A[r+first_row], first_col, columnCount);					// r = aux
-				//System.arraycopy(auxRow, 0, A[i+first_row], first_row, columnCount); // CHANGED
-				//System.arraycopy(auxRow, 0, A[r+first_row], first_row, columnCount); // CHANGED 2
-	*/
 				byte[] auxRow = A[i+first_row];
 				A[i+first_row] = A[r+first_row];
 				A[r+first_row] = auxRow;
 				
 				// decoding process - swap d[i] with d[r] in d
-				int auxIndex = d[i];
-				d[i] = d[r];
-				d[r] = auxIndex;
+				int auxIndex = d[i+first_row];
+				d[i+first_row] = d[r+first_row];
+				d[r+first_row] = auxIndex;
 				
 			}
 
-			if(A[r+first_row][lead+first_col] != 0){	
+			byte beta = A[r+first_row][lead+first_col];
+			if(beta != 0){	
 				for(int col = 0; col < columnCount; col++)
-					A[r+first_row][col+first_col] = OctectOps.division(A[r+first_row][col+first_col], A[r+first_row][lead+first_col]); // FIXME metodo ja faz isto sem o for
+					A[r+first_row][col+first_col] = OctectOps.division(A[r+first_row][col+first_col], beta);
 			
 				// decoding process - divide D[d[r]] by U_lower[r][lead]
-				//D[d[r]] = OctectOps.betaDivision(D[d[r]], A[r+first_row][lead+first_col]); // CHANGED
-				D[d[r+first_row]] = OctectOps.betaDivision(D[d[r+first_row]], A[r+first_row][lead+first_col]);
+				D[d[r+first_row]] = OctectOps.betaDivision(D[d[r+first_row]], beta);
 			}
-			
-			
 			
 			for(i = 0; i < rowCount; i++){
 				
+				beta = A[i+first_row][lead+first_col];
+				
 				if(i != r){
 					// U_lower[i] - (U_lower[i][lead] * U_lower[r])
-					byte[] product = OctectOps.betaProduct(A[i+first_row][lead+first_col], A[r+first_row], first_col, columnCount);
+					byte[] product = OctectOps.betaProduct(beta, A[r+first_row], first_col, columnCount);
 					
 					for(int col = 0; col < columnCount; col++)
-						A[i+first_row][col+first_col] = OctectOps.subtraction(A[i+first_row][col+first_col], product[col]);	// FIXME metodo ja faz isto					
+						A[i+first_row][col+first_col] = OctectOps.subtraction(A[i+first_row][col+first_col], product[col]);				
 				
 					// decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
-					product = OctectOps.betaProduct(A[i+first_row][lead+first_col], D[d[r+first_row]]);
+					product = OctectOps.betaProduct(beta, D[d[r+first_row]]);
 					D[d[i+first_row]] = xorSymbol(D[d[i+first_row]], product);
-				}
+				}	
 			}
 			
 			lead++;
 		}
 	}
 	
-	private void swapColumns(byte[][] matrix, int a, int b){
+	private static void swapColumns(byte[][] matrix, int a, int b){
 		
 		// check sizes and limits and whatnot bla bla bla
 		
@@ -1509,37 +1641,12 @@ public class Encoder {
 		
 		// D
 		byte[][] D = new byte[L][t];
-
 		for(int row=S+H, index=0; row<k+S+H; row++, index+=t)
 			D[row] = Arrays.copyOfRange(ssymbols, index, (index+t));
 
-		// Gauss elim
-		byte[] C = supahGauss(constraint_matrix, D);
-				
-		// Print stuff
-		/*
-		constraint_matrix = generateConstraintMatrix(K, t);
-		
-		System.out.println("\n\n------- CONSTRAINT MATRIX -------");
-		for(int row=0; row<L; row++){
-			for(int col=0; col<L; col++){
-				if(row<S || row > S+H-1 || col>=W+U)
-					System.out.printf("|  %01X ",constraint_matrix[row][col]);
-				else
-					System.out.printf("| %02X ", convert(constraint_matrix[row][col]));
-			}
-			System.out.println("|");
-		}
-		System.out.println("------- END -------");
-
-		System.out.println("\n\n------- D COLUMN MATRIX -------"+t);
-		(new Matrix(D)).show();
-		System.out.println("------- END -------");
-		
-		System.out.println("\n\n------- MULTIPLICACAO (A * C) = D -------"+t);
-		(new Matrix(multiplyMatrices(constraint_matrix, C))).show();
-		System.out.println("------- END -------");
-		*/
+		// Solve system of equations
+		byte[] C = PInactivationDecoding(constraint_matrix, D, t, K);
+		//byte[] C = supahGauss(constraint_matrix, D);
 		
 		return C;
 	}
@@ -1642,9 +1749,7 @@ public class Encoder {
 		long a1 = tuple.getA1();
 		long b1 = tuple.getB1();
 
-		/* A PUTA DA LINHA, NUNCA REMOVER PARA NUNCA ESQUECER O QUAO RETARDADO EU SOU */
-		indexes.add((int) b); /* A PUTA DA LINHA, NUNCA REMOVER PARA NUNCA ESQUECER O QUAO RETARDADO EU SOU */
-		/* A PUTA DA LINHA, NUNCA REMOVER PARA NUNCA ESQUECER O QUAO RETARDADO EU SOU */
+		indexes.add((int) b);
 		
 		for(long j=0; j<d; j++){
 			b = (b+a) % W;
@@ -1703,7 +1808,11 @@ public class Encoder {
 
 	public static long ceilPrime(long p){
 
-		while(!isPrime(p)) p++;
+		if(p == 1)
+			p++;
+		
+		while(!isPrime(p)) 
+			p++;
 
 		return p;
 	}
@@ -1711,13 +1820,12 @@ public class Encoder {
 	public static boolean isPrime(long n){
 		
 		//check if n is a multiple of 2
-		if (n%2==0) return false;
+		if (n % 2 == 0) return false;
 		
 		//if not, then just check the odds
-		for(long i=3;i*i<=n;i+=2) {
-			if(n%i==0)
+		for(long i = 3; i * i <= n; i += 2)
+			if(n % i == 0)
 				return false;
-		}
 		
 		return true;
 	}

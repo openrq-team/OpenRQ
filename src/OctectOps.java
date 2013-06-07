@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 
 public abstract class OctectOps {
 	
@@ -34,7 +36,11 @@ public abstract class OctectOps {
 		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
 		
-		if(u == 0) return 0;
+		if(v == 1) 
+			return u;
+		
+		if(u == 0) 
+			return 0;
 		else{
 			
 			byte quotient = getExp(UNSIGN(getLog(u-1)) - UNSIGN(getLog(v-1)) + 255);
@@ -45,14 +51,20 @@ public abstract class OctectOps {
 	
 	public static final byte product(byte u, byte v){
 		
-		if(u == 0 || v == 0) return 0;
+		if(u == 0 || v == 0) 
+			return 0;
+		
+		if(u == 1)
+			return v;
+		
+		if(v == 1)
+			return u;
 		else{
 			
 			byte product = getExp(UNSIGN(getLog(u-1)) + UNSIGN(getLog(v-1)));
 			
 			return product;
 		}
-		
 	}
 	
 	public static final byte alphaPower(int i){
@@ -65,7 +77,13 @@ public abstract class OctectOps {
 		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
 		
+		if(beta == 1)
+			return Arrays.copyOf(U, U.length);
+		
 		byte[] betaProduct = new byte[U.length];
+		
+		if(beta == 0) 
+			return(betaProduct);
 		
 		for(int i=0; i<U.length; i++)
 			betaProduct[i] = product(beta, U[i]);
@@ -77,6 +95,9 @@ public abstract class OctectOps {
 		
 		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+		
+		if(beta == 1)
+			return Arrays.copyOf(U, U.length);
 		
 		byte[] betaProduct = new byte[U.length];
 		
@@ -94,6 +115,9 @@ public abstract class OctectOps {
 		
 		byte[] betaProduct = new byte[length];
 		
+		if(beta == 0) 
+			return(betaProduct);
+		
 		for(int i=0; i<length; i++)
 			betaProduct[i] = product(beta, U[i+pos]);
 		
@@ -104,7 +128,7 @@ public abstract class OctectOps {
 
 		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
 		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
+		
 		byte[] betaProduct = new byte[length];
 
 		for(int i=0; i<length; i++)
