@@ -51,10 +51,12 @@ public class testFailureProbability {
 			bw.write(" ---- TEST RESULTS: \n\n - Total runs: " + N + "\n - K: " + K + "\n - Loss: " 
 					+ LOSS + "\n - Overhead: " + OVERHEAD + "\n ");
 			bw.flush();
+	
+			Encoder.INIT_REPAIR_SYMBOL = 0;
 			
 			int failed_runs = 0;
 			int run;
-			for(run = 0; run < N; run++){
+			for(run = 0; run < N; run++, Encoder.INIT_REPAIR_SYMBOL += 6){
 
 				rand.nextBytes(data);
 
@@ -73,6 +75,7 @@ public class testFailureProbability {
 					enc.unPartition(enc.decode(encoded_symbols));
 				} catch (SingularMatrixException e) {
 					failed_runs++;
+					System.out.println("EUREKA");
 				}
 				
 				if(run % 100000 == 0){
