@@ -56,7 +56,7 @@ public class testFailureProbability {
 			
 			int failed_runs = 0;
 			int run;
-			for(run = 0; run < N; run++, Encoder.INIT_REPAIR_SYMBOL += 6){
+			for(run = 0; run < N; run++){
 
 				rand.nextBytes(data);
 

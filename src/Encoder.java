@@ -294,7 +294,7 @@ public class Encoder {
 			byte[] decoded_data = new byte[K*T];
 			
 			// All source symbols received :D
-			if(num_source_symbols == K){
+/*			if(num_source_symbols == K){
 				
 				// Collect all payloads from the source symbols				
 				for(EncodingSymbol enc_symbol : source_symbols){
@@ -307,11 +307,33 @@ public class Encoder {
 			
 			// Not so lucky
 			else{
-			
+			*/
 				byte[][] constraint_matrix = new byte[M][];
 
 				// Generate original constraint matrix
 				byte[][] lConstraint = generateConstraintMatrix(kLinha, T);
+				/*//FIXME ATTACK */
+/*				boolean independent = true;
+				for(int esi = 115; independent; esi++){
+					
+					Set<Integer> indexes = encIndexes(kLinha, new Tuple(kLinha, kLinha+esi));
+					
+					byte[] newLine = new byte[L];
+					for(Integer col : indexes)
+							newLine[col] = 1;
+					
+					lConstraint[L-1] = newLine;
+	
+					byte[][] A = (new Matrix(lConstraint)).getData();
+					
+					reduceToRowEchelonForm(A, 0, L, 0, L);
+					
+					(new Matrix(A)).show();
+					
+					if(!validateRank(A, 0, 0, L, L, L))
+						independent = false;
+				}
+*/
 				
 				for(int row = 0; row < L; row++)
 					constraint_matrix[row] = lConstraint[row];
@@ -365,10 +387,63 @@ public class Encoder {
 					// Fill in missing source symbols in D with the repair symbols
 					D[row] = repair.getData();
 				}
+
+				byte[][] B = {
+						
+						
+						// SISTEMA IMPOSSIVEL 
+						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+						{0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0},
+						{0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
+						{0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0},
+						{0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0},
+						{0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0}
+						
+						/*
+						{0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0},
+						{0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0},
+						{1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
+						{0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0},
+						{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0},
+						{0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}*/
+				};
 				
-				//swapRows(constraint_matrix, 26, 17);
+				constraint_matrix[20] = B[0];
+				constraint_matrix[21] = B[1];
+				constraint_matrix[23] = B[2];
+				constraint_matrix[24] = B[3];
+				constraint_matrix[25] = B[4];
+				constraint_matrix[26] = B[5];
+
+				/* // TESTE c(Ab)
+				 (new Matrix(constraint_matrix)).show();
+	 
+				 byte[][] Ab = new byte[L+1][L];
+				 
+				 for(int row = 0; row < L; row++){
+					 
+					 for(int col = 0; col < L; col++){
+						 
+						 Ab[row][col] = constraint_matrix[col][row];
+					 }
+					 
+					 Ab[L][row] = D[row][0];
+				 }
+
+				 (new Matrix(Ab)).show();
+				 
+				 reduceToRowEchelonForm(Ab, 0, L+1, 0, L);
+				 
+				 (new Matrix(Ab)).show();
+
+				 reduceToRowEchelonForm(constraint_matrix, 0, L, 0, L);
+				 
+				 (new Matrix(constraint_matrix)).show();
+				 
+				 System.out.println(validateRank(Ab, 0, 0, L+1, L, L));
+				 
+				 */
 				
-				(new Matrix(constraint_matrix)).show();
 				
 				// add values for overhead symbols					
 				for(int row = L; row < M; row++){
@@ -437,7 +512,7 @@ public class Encoder {
 				 */
 				
 				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
-			}			
+			//}			
 		}				
 
 		return recovered;
@@ -452,6 +527,8 @@ public class Encoder {
 		int num_cols = b[0].length;
 		//byte[][] x = new byte[b.length][b[0].length];
 		byte[] x = new byte[b.length * num_cols];
+		
+		(new Matrix(A)).show();
 		
 		int ROWS = b.length;
 		
@@ -476,6 +553,8 @@ public class Encoder {
 			// singular or nearly singular
             if (A[row][row] == 0) {
 				//System.err.println("LINHA QUE DEU SINGULAR: "+row);
+				(new Matrix(b)).show();
+				(new Matrix(A)).show();
             	throw new SingularMatrixException("LINHA QUE DEU SINGULAR: "+row);
             }
  
@@ -541,7 +620,7 @@ public class Encoder {
 			int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
 //			System.out.println("To lose: "+num_to_lose_symbols +"\nRepair: "+num_repair_symbols);
 			
-			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols +20000]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
+			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 			
 			// First encoding step
 			byte[] intermediate_symbols = generateIntermediateSymbols(sb);
@@ -555,13 +634,6 @@ public class Encoder {
 			Random lost = new Random(System.currentTimeMillis() + System.nanoTime());
 			// Select indexes to be lost.
 			Set<Integer> oopsi_daisy = new TreeSet<Integer>();
-			oopsi_daisy.add(3);
-			oopsi_daisy.add(4);
-			oopsi_daisy.add(6);
-			oopsi_daisy.add(7);
-			oopsi_daisy.add(8);
-			oopsi_daisy.add(9);
-			num_repair_symbols = 6 + INIT_REPAIR_SYMBOL;
 	
 			while(num_to_lose_symbols > 0){
 				
@@ -575,81 +647,95 @@ public class Encoder {
 					continue;
 			}
 			
-			//System.err.println(Arrays.toString(oopsi_daisy.toArray(new Integer[0])));
-			
-			/*//FIXME ATTACK */
-			Set<Integer> targetInter = new HashSet<Integer>();
-/*			targetInter.add(0);
-			targetInter.add(3);
-			targetInter.add(5);
-			targetInter.add(12);
-			targetInter.add(17);
-			targetInter.add(19);
-			targetInter.add(26);
-			targetInter.add(17);
-*/			Set<Integer> targetISIs  = getAttackTargets(targetInter, kLinha, 0);
-			
 			for(source_symbol = 0, source_symbol_index = 0; source_symbol<K; source_symbol++, source_symbol_index+=sb.getT()){
 
 				/*//FIXME SIMULATION */
 				if(oopsi_daisy.contains(source_symbol)) continue;
-				/*//FIXME ATTACK */
-				if(targetISIs.contains(source_symbol)){
-					num_repair_symbols++;
-					continue;
-				}
 				
 				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}
 			
+			/*//FIXME ATTACK */
+/*			boolean independent = true;
+			byte[] enc_data2 = null;
+			int ki = SystematicIndices.getKIndex(kLinha);
+			int S = SystematicIndices.S(ki);
+			int H = SystematicIndices.H(ki);
+			byte[][] constraint_matrix = generateConstraintMatrix(kLinha, sb.getT());
+			dependence:
+			for(int esi=0; independent; esi++){
+				
+				for(int row = 0; row < S+H; row++){
+
+					enc_data2 = enc(kLinha, intermediate_symbols, new Tuple(kLinha, kLinha+esi));
+					byte[] auxRow = constraint_matrix[row];
+	
+					byte[][] A = new byte[2][enc_data2.length];
+					A[0] = enc_data2;
+					A[1] = auxRow;
+					byte[][] D = {{0}, {0}};
+					byte[] result = supahGauss(A,D);
+					
+					if(result[0] != 0 || result[1] != 0){ // TEMOS DEPENDENCIA
+						
+						independent = false;
+						break dependence;
+					}
+				}
+				
+				for(int row = S+H; row < K-1; row++){
+
+					enc_data2 = enc(kLinha, intermediate_symbols, new Tuple(kLinha, kLinha+esi));
+					byte[] auxRow = new byte[enc_data2.length];
+					
+					Tuple tuple = new Tuple(kLinha, row);
+					Set<Integer> indexes = encIndexes(K, tuple);
+					for(Integer j : indexes)
+						auxRow[j] = 1;	
+					
+					byte[][] A = new byte[2][enc_data2.length];
+					A[0] = enc_data2;
+					A[1] = auxRow;
+					byte[][] D = {{0}, {0}};
+					byte[] result = supahGauss(A,D);
+					
+					if(result[0] != 0 || result[1] != 0){ // TEMOS DEPENDENCIA
+						
+						independent = false;
+						break dependence;
+					}
+				}
+			}
+
+			encoded_symbols[K] = new EncodingSymbol(SBN,kLinha, enc_data2);
+			*/
 			// Generating/sending repair symbols
-			for(int repair_symbol = INIT_REPAIR_SYMBOL; repair_symbol<num_repair_symbols; repair_symbol++){
+			for(int repair_symbol = INIT_REPAIR_SYMBOL; repair_symbol<num_repair_symbols + INIT_REPAIR_SYMBOL; repair_symbol++){
 				
 				int	isi = kLinha + repair_symbol;
 				int esi = K + repair_symbol;
-				/*//FIXME ATTACK */
-				if(targetISIs.contains(isi)){
-					num_repair_symbols++;
-					continue;
-				}
-				
-				/*//FIXME FUCKING TEST */
-/*				byte[] linha = new byte[27];
-				Set<Integer> sumed = encIndexes(kLinha, new Tuple(kLinha, isi));
-				for(Integer s : sumed)
-					linha[s] = 1;
-				
-				int rL = 0, rR = 0;
-				for(byte index = 0; index < 17; index++)
-					if(linha[index] != 0)
-						rL++;
-				for(byte index = 17; index < 27; index++)
-					if(linha[index] != 0)
-						rR++;
-				
-				if(rL != 3|| rR != 3){
-					num_repair_symbols++;
-					continue;
-				}
-*/
+
 				byte[] enc_data = enc(kLinha, intermediate_symbols, new Tuple(kLinha, isi));
 				
 				encoded_symbols[source_symbol + repair_symbol] = new EncodingSymbol(SBN,esi, enc_data);
 			}
 			
 			/*//FIXME ATTACK */
-			EncodingSymbol[] aux = new EncodingSymbol[K + num_repair_symbols];
+/*			EncodingSymbol[] aux = new EncodingSymbol[K + num_repair_symbols];
 			for(int i = 0; i < K + num_repair_symbols; i++)
-				aux[i] = encoded_symbols[i];
+				if(i<K)
+					aux[i] = encoded_symbols[i];
+				else
+					aux[i] = encoded_symbols[i+INIT_REPAIR_SYMBOL];
 			encoded_symbols = aux;
-			
+	*/		
 			encoded_blocks[source_block_index] = new EncodingPacket(SBN, encoded_symbols, K, sb.getT());
 		}
 
 		return encoded_blocks;
 	}
 	
-	private void initializeG_LPDC2(byte[][] constraint_matrix, int S, int P, int W){
+	private static void initializeG_LPDC2(byte[][] constraint_matrix, int S, int P, int W){
 		
 		for(int row=0; row<S; row++){
 
@@ -659,7 +745,7 @@ public class Encoder {
 		}
 	}
 	
-	private void initializeG_LPDC1(byte[][] constraint_matrix, int B, int S){
+	private static void initializeG_LPDC1(byte[][] constraint_matrix, int B, int S){
 		
 		int circulant_matrix = -1;
 		
@@ -694,7 +780,7 @@ public class Encoder {
 		}
 	}
 	
-	private void initializeIs(byte[][] constraint_matrix, int S, int B){
+	private static void initializeIs(byte[][] constraint_matrix, int S, int B){
 	
 		for(int row=0; row<S; row++){
 			for(int col=0; col<S; col++){
@@ -707,7 +793,7 @@ public class Encoder {
 		}
 	}
 	
-	private void initializeIh(byte[][] constraint_matrix, int W, int U, int H, int S){
+	private static void initializeIh(byte[][] constraint_matrix, int W, int U, int H, int S){
 		
 		int lower_limit_col = W + U;
 
@@ -722,7 +808,7 @@ public class Encoder {
 		}
 	}
 	
-	private byte[][] generateMT(int H, int K, int S){
+	private static byte[][] generateMT(int H, int K, int S){
 		
 		byte[][] MT = new byte[H][K+S];
 
@@ -742,7 +828,7 @@ public class Encoder {
 		return(MT);
 	}
 	
-	private byte[][] generateGAMMA(int K, int S){
+	private static byte[][] generateGAMMA(int K, int S){
 		
 		byte[][] GAMMA = new byte[K+S][K+S];
 
@@ -884,7 +970,7 @@ public class Encoder {
 		return result;
 	}
 	
-	private void initializeG_ENC(byte[][] constraint_matrix, int S, int H, int L, int K){
+	private static void initializeG_ENC(byte[][] constraint_matrix, int S, int H, int L, int K){
 		
 		for(int row=S+H; row<L; row++){
 
@@ -899,7 +985,7 @@ public class Encoder {
 		}
 	}
 	
-	private byte[][] generateConstraintMatrix(int K, int T){
+	public static byte[][] generateConstraintMatrix(int K, int T){
 		
 		int Ki = SystematicIndices.getKIndex(K);
 		int S = SystematicIndices.S(Ki);
@@ -949,10 +1035,10 @@ public class Encoder {
 	
 	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size, int K) throws SingularMatrixException{
 		
-		//byte[] C = supahGauss(A, D);
+		byte[] C = supahGauss(A, D);
 		
 		// PInactivation Decoding
-		byte[] C = PInactivationDecoding(A, D, symbol_size, K);
+		//byte[] C = PInactivationDecoding(A, D, symbol_size, K);
 		
 		return C;
 	}
@@ -1009,7 +1095,7 @@ public class Encoder {
 		int i = 0, u = P;
 		
 		/* PRINTING BLOCK */
-/*		System.out.println("--------- A ---------");
+		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
 		System.out.println("---------------------");
 		/* END OF PRINTING */
@@ -1030,7 +1116,7 @@ public class Encoder {
 		while(i + u != L){
 			
 			/* PRINTING BLOCK */
-/*			System.out.println("STEP: "+i);
+			System.out.println("STEP: "+i);
 			/* END OF PRINTING */
 			
 			int r = L+1, rLinha = 0	;			
@@ -1097,7 +1183,7 @@ public class Encoder {
 			}
 			
 			/* PRINTING BLOCK */
-/*			System.out.println("r: "+r);
+			System.out.println("r: "+r);
 			/* END OF PRINTING */
 
 			if(r == L+1) // DECODING FAILURE
@@ -1287,9 +1373,9 @@ public class Encoder {
 			// 'rLinha' is the chosen row
 			Row chosenRow = rows.get(rLinha);
 			/* PRINTING BLOCK */
-/*			System.out.println("----- CHOSEN ROW -----");
-*/			System.out.println("id : "+chosenRow.id);
-	/*		System.out.println("nZ : "+chosenRow.nonZeros);
+			System.out.println("----- CHOSEN ROW -----");
+			System.out.println("id : "+chosenRow.id);
+			System.out.println("nZ : "+chosenRow.nonZeros);
 			System.out.println("deg: "+chosenRow.degree);
 			System.out.println("----------------------");
 			/* END OF PRINTING */		
@@ -1312,7 +1398,7 @@ public class Encoder {
 				d[rLinha] = auxIndex;
 				
 				/* PRINTING BLOCK */
-/*				System.out.println("TROCA DE LINHA");
+				System.out.println("TROCA DE LINHA: "+i+" by "+ rLinha);
 				System.out.println("--------- A ---------");
 				(new Matrix(A)).show();
 				System.out.println("---------------------");
@@ -1346,7 +1432,7 @@ public class Encoder {
 					c[coluna] = auxIndex;
 				
 					/* PRINTING BLOCK */
-/*					System.out.println("TROCA DE COLUNA");
+					System.out.println("TROCA DE COLUNA: "+i+" by "+ coluna);
 					System.out.println("--------- A ---------");
 					(new Matrix(A)).show();
 					System.out.println("---------------------");
@@ -1369,7 +1455,7 @@ public class Encoder {
 					c[coluna] = auxIndex;
 					
 					/* PRINTING BLOCK */
-/*					System.out.println("TROCA DE COLUNA");
+					System.out.println("TROCA DE COLUNA: "+(L-u-remainingNZ)+" by "+ coluna);
 					System.out.println("--------- A ---------");
 					(new Matrix(A)).show();
 					System.out.println("---------------------");
@@ -1603,6 +1689,45 @@ public class Encoder {
 			return true;
 	}
 
+	public static void rowEchelonForm(byte[][] A) throws SingularMatrixException{
+		
+		int ROWS = A.length;
+		
+		for(int row=0; row<ROWS; row++){
+			
+			int max = row;
+			
+			// find pivot row and swap
+			for (int i = row + 1; i < ROWS; i++)
+				if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row]))
+					max = i;
+
+			// this destroys the original matrixes... dont really need a fix, but should be kept in mind
+			byte[] temp = A[row];
+			A[row] = A[max];
+			A[max] = temp;
+			
+			// singular or nearly singular
+            if (A[row][row] == 0) {
+				System.err.println("LINHA QUE DEU SINGULAR: "+row);
+            	throw new SingularMatrixException("LINHA QUE DEU SINGULAR: "+row);
+            }
+ 
+            // pivot within A
+            for(int i=row+1; i<ROWS; i++) {
+            	
+            	byte alpha = OctectOps.division(A[i][row], A[row][row]);
+            	
+            	for(int j=row; j<ROWS; j++) {
+            	
+            		byte aux = OctectOps.product(alpha, A[row][j]);
+            		
+            		A[i][j] = OctectOps.subtraction(A[i][j], aux);
+            	}
+            }
+		}
+	}
+	
 	private static void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col, int[] d, byte[][] D){
 		
 		int lead = 0;
