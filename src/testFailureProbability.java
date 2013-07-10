@@ -39,19 +39,6 @@ public class testFailureProbability {
 		byte[] data = new byte[K];
 
 		try{
-			File file = new File("results/" + K + "_" + LOSS + "_" + OVERHEAD + ".txt");
-
-			if (file.exists()) {
-				file.createNewFile();
-			}
-
-			FileWriter fw = new FileWriter(file.getAbsoluteFile());
-			BufferedWriter bw = new BufferedWriter(fw);
-			
-			bw.write(" ---- TEST RESULTS: \n\n - Total runs: " + N + "\n - K: " + K + "\n - Loss: " 
-					+ LOSS + "\n - Overhead: " + OVERHEAD + "\n ");
-			bw.flush();
-	
 			Encoder.INIT_REPAIR_SYMBOL = 0;
 			
 			int failed_runs = 0;
@@ -75,20 +62,47 @@ public class testFailureProbability {
 					enc.unPartition(enc.decode(encoded_symbols));
 				} catch (SingularMatrixException e) {
 					failed_runs++;
-					System.out.println("EUREKA");
+					//System.out.println("EUREKA");
 				}
 				
-				if(run % 100000 == 0){
+				if(run % 10000 == 0){
+					File file = new File("results/" + K + "_" + LOSS + "_" + OVERHEAD + ".txt");
+
+					if (file.exists()) {
+						file.createNewFile();
+					}
+
+					FileWriter fw = new FileWriter(file.getAbsoluteFile());
+					BufferedWriter bw = new BufferedWriter(fw);
+					
+					bw.write(" - K: " + K + "\n - Loss: " 
+							+ LOSS + "\n - Overhead: " + OVERHEAD + "\n ");
+					bw.flush();
+					
 					bw.write("\n LATEST RUN : " + run + 
 							 "\n FAILED RUNS: " + failed_runs);
 					bw.flush();
+					bw.close();
 				}
 			}
+
+			File file = new File("results/" + K + "_" + LOSS + "_" + OVERHEAD + ".txt");
+			if (file.exists()) {
+				file.createNewFile();
+			}
+
+			FileWriter fw = new FileWriter(file.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			
+			bw.write(" - K: " + K + "\n - Loss: " 
+					+ LOSS + "\n - Overhead: " + OVERHEAD + "\n ");
+			bw.flush();
 			
 			bw.write("\n LATEST RUN : " + run + 
 					 "\n FAILED RUNS: " + failed_runs);
 			bw.flush();
 			bw.close();
+			
 			return failed_runs;
 		}catch(IOException e){
 			e.printStackTrace();

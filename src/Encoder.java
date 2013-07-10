@@ -294,7 +294,7 @@ public class Encoder {
 			byte[] decoded_data = new byte[K*T];
 			
 			// All source symbols received :D
-/*			if(num_source_symbols == K){
+			if(num_source_symbols == K){
 				
 				// Collect all payloads from the source symbols				
 				for(EncodingSymbol enc_symbol : source_symbols){
@@ -307,7 +307,7 @@ public class Encoder {
 			
 			// Not so lucky
 			else{
-			*/
+
 				byte[][] constraint_matrix = new byte[M][];
 
 				// Generate original constraint matrix
@@ -382,7 +382,7 @@ public class Encoder {
 					esiToLTCode.put(missing_ESI, constraint_matrix[row]);
 					constraint_matrix[row] = newLine;
 					
-					System.out.println("ISI: "+repair.getISI(K)+" | "+row+") "+Arrays.toString(newLine));
+					//System.out.println("ISI: "+repair.getISI(K)+" | "+row+") "+Arrays.toString(newLine));
 					
 					// Fill in missing source symbols in D with the repair symbols
 					D[row] = repair.getData();
@@ -415,34 +415,35 @@ public class Encoder {
 				constraint_matrix[25] = B[4];
 				constraint_matrix[26] = B[5];
 
-				/* // TESTE c(Ab)
-				 (new Matrix(constraint_matrix)).show();
+				 // TESTE c(Ab)
+				 //(new Matrix(constraint_matrix)).show();
 	 
-				 byte[][] Ab = new byte[L+1][L];
+				 byte[][] Ab = new byte[L][L+1];
 				 
 				 for(int row = 0; row < L; row++){
 					 
 					 for(int col = 0; col < L; col++){
 						 
-						 Ab[row][col] = constraint_matrix[col][row];
+						 Ab[row][col] = constraint_matrix[row][col];
 					 }
 					 
-					 Ab[L][row] = D[row][0];
+					 Ab[row][L] = D[row][0];
 				 }
 
-				 (new Matrix(Ab)).show();
-				 
-				 reduceToRowEchelonForm(Ab, 0, L+1, 0, L);
-				 
-				 (new Matrix(Ab)).show();
-
-				 reduceToRowEchelonForm(constraint_matrix, 0, L, 0, L);
-				 
 				 (new Matrix(constraint_matrix)).show();
 				 
-				 System.out.println(validateRank(Ab, 0, 0, L+1, L, L));
+				 //reduceToRowEchelonForm(Ab, 0, L, 0, L+1);
+				 rowEchelonForm(constraint_matrix);
 				 
-				 */
+				 (new Matrix(constraint_matrix)).show();
+
+				 //reduceToRowEchelonForm(constraint_matrix, 0, L, 0, L);
+				 
+				 //(new Matrix(constraint_matrix)).show();
+				 
+				 System.out.println(validateRank(Ab, 0, 0, L, L+1, L));
+				 
+				 System.exit(1);
 				
 				
 				// add values for overhead symbols					
@@ -512,7 +513,7 @@ public class Encoder {
 				 */
 				
 				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
-			//}			
+			}			
 		}				
 
 		return recovered;
@@ -1035,10 +1036,10 @@ public class Encoder {
 	
 	private byte[] generateIntermediateSymbols(byte[][] A, byte[][] D, int symbol_size, int K) throws SingularMatrixException{
 		
-		byte[] C = supahGauss(A, D);
+		//byte[] C = supahGauss(A, D);
 		
 		// PInactivation Decoding
-		//byte[] C = PInactivationDecoding(A, D, symbol_size, K);
+		byte[] C = PInactivationDecoding(A, D, symbol_size, K);
 		
 		return C;
 	}
@@ -1095,7 +1096,7 @@ public class Encoder {
 		int i = 0, u = P;
 		
 		/* PRINTING BLOCK */
-		System.out.println("--------- A ---------");
+/*		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
 		System.out.println("---------------------");
 		/* END OF PRINTING */
@@ -1116,7 +1117,7 @@ public class Encoder {
 		while(i + u != L){
 			
 			/* PRINTING BLOCK */
-			System.out.println("STEP: "+i);
+//			System.out.println("STEP: "+i);
 			/* END OF PRINTING */
 			
 			int r = L+1, rLinha = 0	;			
@@ -1183,7 +1184,7 @@ public class Encoder {
 			}
 			
 			/* PRINTING BLOCK */
-			System.out.println("r: "+r);
+/**			System.out.println("r: "+r);
 			/* END OF PRINTING */
 
 			if(r == L+1) // DECODING FAILURE
@@ -1373,7 +1374,7 @@ public class Encoder {
 			// 'rLinha' is the chosen row
 			Row chosenRow = rows.get(rLinha);
 			/* PRINTING BLOCK */
-			System.out.println("----- CHOSEN ROW -----");
+/*			System.out.println("----- CHOSEN ROW -----");
 			System.out.println("id : "+chosenRow.id);
 			System.out.println("nZ : "+chosenRow.nonZeros);
 			System.out.println("deg: "+chosenRow.degree);
@@ -1398,7 +1399,7 @@ public class Encoder {
 				d[rLinha] = auxIndex;
 				
 				/* PRINTING BLOCK */
-				System.out.println("TROCA DE LINHA: "+i+" by "+ rLinha);
+/*				System.out.println("TROCA DE LINHA: "+i+" by "+ rLinha);
 				System.out.println("--------- A ---------");
 				(new Matrix(A)).show();
 				System.out.println("---------------------");
@@ -1432,7 +1433,7 @@ public class Encoder {
 					c[coluna] = auxIndex;
 				
 					/* PRINTING BLOCK */
-					System.out.println("TROCA DE COLUNA: "+i+" by "+ coluna);
+/*					System.out.println("TROCA DE COLUNA: "+i+" by "+ coluna);
 					System.out.println("--------- A ---------");
 					(new Matrix(A)).show();
 					System.out.println("---------------------");
@@ -1455,7 +1456,7 @@ public class Encoder {
 					c[coluna] = auxIndex;
 					
 					/* PRINTING BLOCK */
-					System.out.println("TROCA DE COLUNA: "+(L-u-remainingNZ)+" by "+ coluna);
+/*					System.out.println("TROCA DE COLUNA: "+(L-u-remainingNZ)+" by "+ coluna);
 					System.out.println("--------- A ---------");
 					(new Matrix(A)).show();
 					System.out.println("---------------------");
@@ -1497,7 +1498,7 @@ public class Encoder {
 			}
 			
 			/* PRINTING BLOCK */
-			System.out.println("END OF STEP "+i);
+/*			System.out.println("END OF STEP "+i);
 			System.out.println("--------- A ---------");
 			(new Matrix(A)).show();
 			System.out.println("---------------------");
@@ -1517,7 +1518,7 @@ public class Encoder {
 		reduceToRowEchelonForm(A, i, M, L-u, L, d, D);
 
 		/* PRINTING BLOCK */
-		System.out.println("GAUSSIAN U_lower");
+/*		System.out.println("GAUSSIAN U_lower");
 		System.out.println("M: "+M+"\nL: "+L+"\ni: "+i+"\nu: "+u);
 		System.out.println("--------- A ---------");
 		(new Matrix(A)).show();
@@ -1689,7 +1690,7 @@ public class Encoder {
 			return true;
 	}
 
-	public static void rowEchelonForm(byte[][] A) throws SingularMatrixException{
+	public static void rowEchelonForm(byte[][] A){
 		
 		int ROWS = A.length;
 		
@@ -1709,8 +1710,7 @@ public class Encoder {
 			
 			// singular or nearly singular
             if (A[row][row] == 0) {
-				System.err.println("LINHA QUE DEU SINGULAR: "+row);
-            	throw new SingularMatrixException("LINHA QUE DEU SINGULAR: "+row);
+				return;
             }
  
             // pivot within A

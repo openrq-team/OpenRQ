@@ -44,6 +44,14 @@ public class countKilledEncodingSymbols {
 		
 	}
 	
+	public boolean success(byte[][] matrix){
+		
+		if(matrix[matrix.length-1][matrix[0].length-2] == 0)
+			return true;
+		else
+			return false;
+	}
+	
 	public static int[] targetK = {
 		10,
 		26,
