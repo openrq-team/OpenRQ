@@ -2,6 +2,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,34 +20,36 @@ public class trimmedAttack {
 		if(args.length != 4){
 			StringBuilder s = new StringBuilder();
 			s.append("Usage: \n");
-			s.append("    java -jar raptorTrimer K initialLossLimit Epsilon\n");
+			s.append("    java -jar raptorTrimer.jar K initialLossLimit Epsilon overhead\n");
 			System.out.println(s.toString());
 		}
 		else{
 			
-			int K       = Integer.valueOf(args[0]);
-			int limit   = Integer.valueOf(args[1]);
-			int epsilon = Integer.valueOf(args[2]);
+			int K         = Integer.valueOf(args[0]);
+			int limit     = Integer.valueOf(args[1]);
+			float epsilon = Float.valueOf(  args[2]);
+			int overhead  = Integer.valueOf(args[3]);
 			
-			int bodycount = trim(K, limit, epsilon);
+			int bodycount = trim(K, limit, epsilon, overhead);
 			
 			System.out.println("Total sniped symbols: "+bodycount);
 		}
 	}
 	
-	private static int trim(int K, int upperLimit, int Epsilon){
-		
+	private static int trim(int K, int upperLimit, float Epsilon, int OVERHEAD){ // FIXME for now overhead is 0
+
 		// INITIALIZATION
 		int Ki = SystematicIndices.getKIndex(K);
 		int S = SystematicIndices.S(Ki);
 		int H = SystematicIndices.H(Ki);
+		int LT_start = S + H;
 		int L = K + S + H;
 		
 		// repair lines
 		byte[][] repairs = new byte[upperLimit][L];
 		for(int repair = 0; repair < upperLimit; repair++){
 			
-			Tuple tuple = new Tuple(K, K + repair);
+			Tuple tuple = new Tuple(K, K + OVERHEAD + repair);
 			Set<Integer> indexes = Encoder.encIndexes(K, tuple);
 
 			for(Integer col : indexes)
@@ -54,25 +57,50 @@ public class trimmedAttack {
 		}
 
 		// constraint matrix
-		byte[][] constraint_matrix = Encoder.generateConstraintMatrix(K, 1);
-		
+		byte[][] lConstraint = Encoder.generateConstraintMatrix(K, 1);
+
+		byte[][] constraint_matrix;
+		if (OVERHEAD == 0) {
+			
+			constraint_matrix = lConstraint;
+		} 
+		else {
+
+			constraint_matrix = new byte[L + OVERHEAD][L];
+			
+			for(int row = 0; row < L; row++)
+				constraint_matrix[row] = lConstraint[row];
+			
+			for(int row = L; row < L + OVERHEAD; row++){
+				
+				Tuple tuple = new Tuple(K, row - L + K);
+				Set<Integer> indexes = Encoder.encIndexes(K, tuple);
+
+				for(Integer col : indexes)
+					constraint_matrix[row][col] = 1;
+			}
+		}
+
 		// set of lines that can be targeted
-		Integer[] lineNumbers = new Integer[K];
-		for(int row = 0; row < K; row++)
+		Integer[] lineNumbers = new Integer[K+OVERHEAD];
+		for(int row = 0; row < K+OVERHEAD; row++)
 			lineNumbers[row] = S+H+row;
 		
 		// set of ISIs that can be used as payload
 		Integer[] ISIs = new Integer[upperLimit];
 		for(int isi = 0; isi < upperLimit; isi++)
-			ISIs[isi] = K + isi;
+			ISIs[isi] = K + OVERHEAD + isi;
 			
+		// number of symbols killed
+		int bodycount = 99999999;
+		
 		// ALGORITHM
-		for(int lines = K; lines > 0 && (upperLimit/K) > Epsilon; lines--){ // lets start with a big set of targetable lines, to try to reduce the upperlimit ASAP
+		for(int lines = 0; lines < K && ((bodycount*1.0) / (K+OVERHEAD)) > Epsilon; lines++){
 			
 			// combinations for lines
 			ICombinatoricsVector<Integer> initialVector = Factory.createVector(lineNumbers);
 			Generator<Integer> combLines = Factory.createSimpleCombinationGenerator(initialVector, lines);
-
+			
 			for(ICombinatoricsVector<Integer> combination : combLines) { // for each combination of lines
 				
 				// lines to be replaced
@@ -80,8 +108,8 @@ public class trimmedAttack {
 				
 				// combinations for ISIs
 				initialVector = Factory.createVector(ISIs);
-				Generator<Integer> combISIs = Factory.createSimpleCombinationGenerator(initialVector, lines);
-
+				Generator<Integer> combISIs = Factory.createSimpleCombinationGenerator(initialVector, lines);				
+				
 				for(ICombinatoricsVector<Integer> combination2 : combISIs) { // test all combinations of payloads in those lines
 					
 					// set of repair symbols to be replace the target lines 
@@ -92,16 +120,16 @@ public class trimmedAttack {
 						continue;
 					
 					// build the decoding matrix (A), replacing the target lines with the payload
-					byte[][] A = new byte[L][];
+					byte[][] A = new byte[L+OVERHEAD][];
 					Iterator<Integer> it = ISIpayload.iterator();
 					
-					for(int row = 0; row < L; row++){
+					for(int row = 0; row < L+OVERHEAD; row++){
 					
 						if(!targetLines.contains(row))
 							A[row] = Arrays.copyOf(constraint_matrix[row], L);
 						else{
 							int repair = it.next();
-							A[row] = Arrays.copyOf(repairs[repair - K], L);
+							A[row] = Arrays.copyOf(repairs[repair - K - OVERHEAD], L);
 						}
 					}
 					
@@ -113,25 +141,45 @@ public class trimmedAttack {
 						
 						// update the value of the body count
 						upperLimit = Collections.max(ISIpayload);
-					
+
+						// target ISIs (corresponding  to the target lines)
+						List<Integer> targetISIs = new ArrayList<Integer>(lines+1);
+						for(int line : targetLines)
+							targetISIs.add(line - LT_start);
+						
+						// number of symbols killed in this attack
+						bodycount = upperLimit - K - OVERHEAD + 1;
+						
 						// persist trimmed attack
 						try {
-
-							File file = new File("results/attack_" + K + "_" + 0 + ".txt"); // FIXME for now overhead is 0
+							
+							File file = new File("results/attack_" + K + "_" + OVERHEAD + ".txt");
 
 							if (file.exists())
 								file.createNewFile();
 
 							FileWriter fw = new FileWriter(file.getAbsoluteFile());
 							BufferedWriter bw = new BufferedWriter(fw);
+							
+							bw.write(" - K: " + K + "\n - Overhead: " + OVERHEAD + "\n - Epsilon: " + Epsilon + "\n");
+							bw.write("\n Target lines: " + Arrays.toString(targetLines.toArray(new Integer[lines])) +
+									 "\n Target  ISIs: " + Arrays.toString(targetISIs.toArray(new Integer[lines])) +
+									 "\n Payload ISIs: " + Arrays.toString(ISIpayload.toArray(new Integer[lines])) +
+									 "\n Body count  : " + bodycount + " (" + ((bodycount*1.0) / (K+OVERHEAD))*100 + "%)");
 
-							bw.write(" - K: " + K + "\n - Overhead: " + 0 + "\n"); // FIXME for now overhead is 0
-							bw.write("\n Target lines: " + Arrays.toString(targetLines.toArray(new Integer[targetLines.size()])) + 
-									 "\n Payload ISIs: " + Arrays.toString(ISIpayload.toArray(new Integer[ISIpayload.size()])) +
-									 "\n Body count  : " + upperLimit);
-
+							bw.write("\n\n\n------ PAYLOAD LINES ------\n\n");
+							
+							Iterator<Integer> isi = ISIpayload.iterator();
+							while(isi.hasNext()){
+								
+								int repair = isi.next();
+								bw.write(Arrays.toString(repairs[repair - K - OVERHEAD])+"\n");
+							}
+							bw.write("\n---------------------------\n\n");
+							
 							bw.flush();
 							bw.close();
+							
 						} catch (IOException e) {
 							System.err.println(e.getMessage());
 							e.printStackTrace();
@@ -143,7 +191,7 @@ public class trimmedAttack {
 			}
 		}
 		
-		return upperLimit;
+		return bodycount;
 	}
 	
 	// collection.contains(>= X)

@@ -382,13 +382,34 @@ public class Encoder {
 					esiToLTCode.put(missing_ESI, constraint_matrix[row]);
 					constraint_matrix[row] = newLine;
 					
-					//System.out.println("ISI: "+repair.getISI(K)+" | "+row+") "+Arrays.toString(newLine));
+					System.out.println("ISI: "+repair.getISI(K)+" | "+row+") "+Arrays.toString(newLine));
 					
 					// Fill in missing source symbols in D with the repair symbols
 					D[row] = repair.getData();
-				}
+				}				
+				
+				// add values for overhead symbols					
+				for(int row = L; row < M; row++){
 
-				byte[][] B = {
+					EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
+
+					// Generate the overhead lines
+					Tuple tuple = new Tuple(K, repair.getISI(K));
+
+					Set<Integer> indexes = encIndexes(K, tuple);
+
+					byte[] newLine = new byte[L];
+					for(Integer col : indexes)
+						newLine[col] = 1;
+					
+					constraint_matrix[row] = newLine;
+					
+					// update D with the data for that symbol
+					D[row] = repair.getData();
+				}
+				
+				
+/*				byte[][] B = {
 						
 						
 						// SISTEMA IMPOSSIVEL 
@@ -406,7 +427,7 @@ public class Encoder {
 						{0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0},
 						{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0},
 						{0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}*/
-				};
+/*				};
 				
 				constraint_matrix[20] = B[0];
 				constraint_matrix[21] = B[1];
@@ -444,27 +465,7 @@ public class Encoder {
 				 System.out.println(validateRank(Ab, 0, 0, L, L+1, L));
 				 
 				 System.exit(1);
-				
-				
-				// add values for overhead symbols					
-				for(int row = L; row < M; row++){
-
-					EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
-
-					// Generate the overhead lines
-					Tuple tuple = new Tuple(K, repair.getISI(K));
-
-					Set<Integer> indexes = encIndexes(K, tuple);
-
-					byte[] newLine = new byte[L];
-					for(Integer col : indexes)
-						newLine[col] = 1;
-					
-					constraint_matrix[row] = newLine;
-					
-					// update D with the data for that symbol
-					D[row] = repair.getData();
-				}
+*/				
 				
 				/*
 				System.out.println("---- A ---- (recovered)");
@@ -475,7 +476,7 @@ public class Encoder {
 				(new Matrix(D)).show();
 				System.out.println("---------------------");
 				*/
-				
+				(new Matrix(constraint_matrix)).show();
 				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, kLinha);
 				
 				/*
@@ -619,6 +620,8 @@ public class Encoder {
 			/*//FIXME SIMULATION */
 			int num_to_lose_symbols = ceil(0.01*LOSS*K);
 			int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
+			num_repair_symbols = 3;
+
 //			System.out.println("To lose: "+num_to_lose_symbols +"\nRepair: "+num_repair_symbols);
 			
 			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
@@ -647,6 +650,10 @@ public class Encoder {
 				else
 					continue;
 			}
+			
+			oopsi_daisy.add(16);
+			oopsi_daisy.add(15);
+//			oopsi_daisy.add(20);
 			
 			for(source_symbol = 0, source_symbol_index = 0; source_symbol<K; source_symbol++, source_symbol_index+=sb.getT()){
 
@@ -715,7 +722,17 @@ public class Encoder {
 				
 				int	isi = kLinha + repair_symbol;
 				int esi = K + repair_symbol;
+				
+				if(isi == 27){
+					isi = 31;
+					esi = 31;
+				}
 
+				if(isi == 28){
+					isi = 47;
+					esi = 47;
+				}
+				
 				byte[] enc_data = enc(kLinha, intermediate_symbols, new Tuple(kLinha, isi));
 				
 				encoded_symbols[source_symbol + repair_symbol] = new EncodingSymbol(SBN,esi, enc_data);
@@ -1693,8 +1710,9 @@ public class Encoder {
 	public static void rowEchelonForm(byte[][] A){
 		
 		int ROWS = A.length;
+		int COLS = A[0].length;
 		
-		for(int row=0; row<ROWS; row++){
+		for(int row=0; row<COLS; row++){
 			
 			int max = row;
 			
@@ -1708,17 +1726,16 @@ public class Encoder {
 			A[row] = A[max];
 			A[max] = temp;
 			
-			// singular or nearly singular
-            if (A[row][row] == 0) {
+			// singular
+            if (A[row][row] == 0)
 				return;
-            }
  
             // pivot within A
             for(int i=row+1; i<ROWS; i++) {
             	
             	byte alpha = OctectOps.division(A[i][row], A[row][row]);
             	
-            	for(int j=row; j<ROWS; j++) {
+            	for(int j=row; j<COLS; j++) {
             	
             		byte aux = OctectOps.product(alpha, A[row][j]);
             		
