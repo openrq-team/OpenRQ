@@ -1,7 +1,0 @@
- ---- TEST RESULTS: 
-
- - Total runs: 20000000
- - K: 10
- - Loss: 0
- - Overhead: 0
- 

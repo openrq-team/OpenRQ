@@ -5,6 +5,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
+import RQLibrary.Encoder;
+import RQLibrary.EncodingPacket;
+import RQLibrary.OctectOps;
+import RQLibrary.SingularMatrixException;
+
 
 public class Main {
 
@@ -208,13 +213,13 @@ public class Main {
 		byte[][] m23 = Encoder.multiplyMatrices(m2,m3);
 		
 		System.out.println("\n\nM2");
-		(new Matrix(m2)).show();
+		(new Utilities(m2)).show();
 		
 		System.out.println("\nM3");
-		(new Matrix(m3)).show();
+		(new Utilities(m3)).show();
 			
 		System.out.println("\nM2 x M3 - (multiplyMatrixes)");
-		(new Matrix(m23)).show();
+		(new Utilities(m23)).show();
 	
 		System.out.println("\n---- Individual octets");				
 		System.out.println("\nSum - (M2[0][0] + M3[1][1])");
@@ -370,13 +375,13 @@ public class Main {
 			// Print if not
 			if(!passed){
 				System.out.println("\nBOOM!\n\n Matrix 1");
-				(new Matrix(randomBytes1)).show();
+				(new Utilities(randomBytes1)).show();
 				
 				System.out.println("\nMatrix 2");
-				(new Matrix(randomBytes2)).show();
+				(new Utilities(randomBytes2)).show();
 
 				System.out.println("\nProduct");
-				(new Matrix(product)).show();
+				(new Utilities(product)).show();
 				
 				System.out.println("\nGaussian");
 				for(int bite=0; bite<dimension*dimension; bite++){
