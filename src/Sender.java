@@ -54,17 +54,18 @@ public class Sender {
 			System.exit(1);
 		}
 
+		try {
+			System.in.read();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
 		Encoder enc = new Encoder(data, 0, overhead);
 		EncodingPacket[] encoded_symbols = null;
-		try {
-			SourceBlock[] aux = enc.partition();
-			encoded_symbols = enc.encode(aux);
-		} catch (SingularMatrixException e) {
-			e.printStackTrace();
-			System.err.println(e.getMessage());
-			System.err.println("\nBOOM @ Encoding !?!??! \n\n ABORT \n");
-			System.exit(-113);
-		}
+		SourceBlock[] aux = null;
+		int no_blocks = 0;
+		
 
 		// Serialize and send EncodingPacket[]
 		DatagramSocket clientSocket = null;
@@ -76,32 +77,59 @@ public class Sender {
 			System.exit(1);
 		}
 		
-		ObjectOutput out = null;
-		byte[] serialized_data = null;
+		
 		try {
+			aux = enc.partition();
+			no_blocks = aux.length;
+			System.out.println("Number of blocks: "+no_blocks);
 			
-			for(int i = 0; i < encoded_symbols[0].getEncoding_symbols().length; i++){
-				Thread.sleep(250);
-				
-				ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				out = new ObjectOutputStream(bos);
-				out.writeObject(encoded_symbols[0].getEncoding_symbols()[i]);
-				serialized_data = bos.toByteArray();
-				out.close();
-				bos.close();
+			encoded_symbols = new EncodingPacket[no_blocks];
 			
-				DatagramPacket sendPacket = new DatagramPacket(serialized_data,
-										serialized_data.length, destIP, destPort);
-				clientSocket.send(sendPacket);
+			for(int block = 0; block < no_blocks; block++){
+			
+				SourceBlock sb = aux[block];
+				encoded_symbols[block] = enc.encode(sb);
 				
-			}
-		} catch (IOException e) {
+				ObjectOutput out = null;
+				byte[] serialized_data = null;
+				try {
+
+
+					System.out.println("Sending block: "+ block+" K: "+sb.getK());
+
+					for (int i = 0; i < encoded_symbols[block]
+							.getEncoding_symbols().length; i++) {
+
+						ByteArrayOutputStream bos = new ByteArrayOutputStream();
+						out = new ObjectOutputStream(bos);
+						out.writeObject(encoded_symbols[block]
+								.getEncoding_symbols()[i]);
+						serialized_data = bos.toByteArray();
+						out.close();
+						bos.close();
+
+						DatagramPacket sendPacket = new DatagramPacket(
+								serialized_data, serialized_data.length,
+								destIP, destPort);
+						
+						clientSocket.send(sendPacket);
+					}
+					
+					clientSocket.send(new DatagramPacket(new byte[1024], 1024, destIP, destPort));					
+					if(block == 1)
+						System.exit(1);
+					
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.err.println("IO Exception");
+					System.exit(1);
+				}	
+			}	
+		} catch (SingularMatrixException e) {
 			e.printStackTrace();
-			System.err.println("IO Exception");
-			System.exit(1);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println(e.getMessage());
+			System.err.println("\nBOOM @ Encoding !?!??! \n\n ABORT \n");
+			System.exit(-113);
 		}
 
 		clientSocket.close();

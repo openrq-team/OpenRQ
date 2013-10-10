@@ -64,7 +64,7 @@ public class testFailureProbability {
 				}
 
 				try {
-					enc.unPartition(enc.decode(encoded_symbols));
+					enc.unPartition(Encoder.decode(encoded_symbols));
 				} catch (SingularMatrixException e) {
 					failed_runs++;
 					//System.out.println("EUREKA");

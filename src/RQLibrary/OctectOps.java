@@ -1,15 +1,15 @@
 package RQLibrary;
+
 import java.util.Arrays;
 
-
-public abstract class OctectOps {
+abstract class OctectOps {
 	
-	public static final short UNSIGN(byte b){
+	protected static final short UNSIGN(byte b){
 		
 		return((short) (b & 0xFF));
 	}
 
-	public static final byte getExp(int i){
+	protected static final byte getExp(int i){
 		
 		if(i >= 0)
 			return (byte)OCT_EXP[i];
@@ -17,25 +17,24 @@ public abstract class OctectOps {
 			return (byte)OCT_EXP[UNSIGN((byte)i)];
 	}		
 	
-	public static final byte getLog(int i){
+	protected static final byte getLog(int i){
 
 		return ((byte)OCT_LOG[UNSIGN((byte)i)]);		
 	}
 
-	public static final byte addition(byte u, byte v){
+	protected static final byte addition(byte u, byte v){
 
 		return (byte) (u ^ v);
 	}
 	
-	public static final byte subtraction(byte u, byte v){
+	protected static final byte subtraction(byte u, byte v){
 
 		return addition(u,v);
 	}
 	
-	public static final byte division(byte u, byte v){
+	protected static final byte division(byte u, byte v){
 		
-		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
-		if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
+//		if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
 		
 		if(v == 1) 
 			return u;
@@ -50,7 +49,7 @@ public abstract class OctectOps {
 		}
 	}
 	
-	public static final byte product(byte u, byte v){
+	protected static final byte product(byte u, byte v){
 		
 		if(u == 0 || v == 0) 
 			return 0;
@@ -68,15 +67,14 @@ public abstract class OctectOps {
 		}
 	}
 	
-	public static final byte alphaPower(int i){
+	protected static final byte alphaPower(int i){
 
 		return getExp(i);
 	}
 	
-	public static final byte[] betaProduct(byte beta, byte[] U){
+	protected static final byte[] betaProduct(byte beta, byte[] U){
 		
-		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
-		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+//		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
 		
 		if(beta == 1)
 			return Arrays.copyOf(U, U.length);
@@ -92,10 +90,9 @@ public abstract class OctectOps {
 		return betaProduct;
 	}
 	
-	public static final byte[] betaDivision(byte[] U, byte beta){
+	protected static final byte[] betaDivision(byte[] U, byte beta){
 		
-		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
-		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+//		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
 		
 		if(beta == 1)
 			return Arrays.copyOf(U, U.length);
@@ -109,10 +106,9 @@ public abstract class OctectOps {
 	}
 	
 	// betas com posiçoes
-	public static final byte[] betaProduct(byte beta, byte[] U, int pos, int length){
+	protected static final byte[] betaProduct(byte beta, byte[] U, int pos, int length){
 
-		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
-		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+//		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
 		
 		byte[] betaProduct = new byte[length];
 		
@@ -125,10 +121,9 @@ public abstract class OctectOps {
 		return betaProduct;
 	}
 	
-	public static final byte[] betaDivision(byte[] U, int pos, int length, byte beta){
+	protected static final byte[] betaDivision(byte[] U, int pos, int length, byte beta){
 
-		// FIXME this verifications are unecessary because this is only used internally, drawbacks performance
-		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+//		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
 		
 		byte[] betaProduct = new byte[length];
 
@@ -138,7 +133,7 @@ public abstract class OctectOps {
 		return betaProduct;
 	}
 	
-	public static final char[] OCT_EXP = 
+	private static final char[] OCT_EXP = 
 		{
 			1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76,
 			152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192, 157,

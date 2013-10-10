@@ -11,13 +11,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.Generator;
 import org.paukov.combinatorics.ICombinatoricsVector;
 
 import RQLibrary.Encoder;
+import RQLibrary.SingularMatrixException;
 import RQLibrary.SystematicIndices;
 import RQLibrary.Tuple;
+import RQLibrary.Utilities;
 
 public class conceptAttack {
 
@@ -147,7 +150,12 @@ public class conceptAttack {
 					}
 					
 					// reduce A to row echelon form
-					Encoder.rowEchelonForm(A);
+					try {
+						Utilities.rowEchelonForm(A);
+					} catch (SingularMatrixException e1) {
+						// TODO Auto-generated catch block
+						//e1.printStackTrace();
+					}
 					
 					// rank < L?
 					if(A[L-1][L-1] == 0){

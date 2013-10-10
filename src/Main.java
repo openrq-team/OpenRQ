@@ -2,12 +2,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.Random;
 
 import RQLibrary.Encoder;
 import RQLibrary.EncodingPacket;
-import RQLibrary.OctectOps;
 import RQLibrary.SingularMatrixException;
 
 
@@ -65,7 +63,7 @@ public class Main {
 		EncodingPacket[] encoded_symbols;
 		try {
 			encoded_symbols = enc.encode(enc.partition());
-			byte[] rec = enc.unPartition(enc.decode(encoded_symbols));
+			byte[] rec = enc.unPartition(Encoder.decode(encoded_symbols));
 			System.out.println(new String(rec));
 		} catch (SingularMatrixException e) {
 			// TODO Auto-generated catch block
@@ -162,7 +160,7 @@ public class Main {
 				}
 
 				try {
-					enc.unPartition(enc.decode(encoded_symbols));
+					enc.unPartition(Encoder.decode(encoded_symbols));
 				} catch (SingularMatrixException e) {
 					failed_runs++;
 				}
@@ -185,9 +183,10 @@ public class Main {
 		return -1;
 	}
 
+	/*
 	public static void testOctectAndMatricOps(){
 		
-		/* TEST VECTORS */
+		// TEST VECTORS
 		System.out.println("\n\nTABELA\n");
 		for(int i=0; i<510; i++)
 			System.out.println(i + ": " + (int)OctectOps.OCT_EXP[i]);
@@ -449,5 +448,5 @@ public class Main {
 		System.exit(2);
 		
 	}
-
+	*/
 }

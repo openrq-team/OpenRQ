@@ -75,7 +75,7 @@ public class testHashAndMeasureTime {
 
 			byte[] newdata = null;
 			try {
-				blocks = enc.decode(encoded_symbols);
+				blocks = Encoder.decode(encoded_symbols);
 			} catch (SingularMatrixException e) {
 				run--;
 				failed_runs++;

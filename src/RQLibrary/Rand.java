@@ -1,13 +1,14 @@
 package RQLibrary;
 
-
-private abstract class Rand {
+abstract class Rand {
 		
-	public static long rand(long y, int i, long m){
+	protected static long rand(long y, int i, long m){
 		
+		/*
 		if(y < 0)   throw new IllegalArgumentException("y must be non-negative.");
 		if(i < 0 || i > 255) throw new IllegalArgumentException("i must be non-negative and less than 256.");
 		if(m < 1)   throw new IllegalArgumentException("m must be positive.");
+		*/
 		
 		int x0, x1, x2, x3;
 		

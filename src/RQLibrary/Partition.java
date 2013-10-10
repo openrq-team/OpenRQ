@@ -1,15 +1,15 @@
 package RQLibrary;
 
-private class Partition {
+class Partition {
 
 	private int Is;
 	private int Il;
 	private int Js;
 	private int Jl;
 	
-	public Partition(int I, int J) {
+	protected Partition(int I, int J) {
 		
-		if(I < 0 || J < 1) throw new IllegalArgumentException("All arguments must be positive.");
+		//if(I < 0 || J < 1) throw new IllegalArgumentException("All arguments must be positive.");
 		
 		Il = Encoder.ceil((double)I/J);
 		Is = Encoder.floor((double)I/J);
@@ -17,7 +17,7 @@ private class Partition {
 		Js = J - Jl;
 	}
 	
-	public int get(int i){
+	protected int get(int i){
 		
 		switch(i){
 			case 1:

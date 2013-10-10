@@ -1,4 +1,5 @@
 package testing;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -10,15 +11,19 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.Generator;
 import org.paukov.combinatorics.ICombinatoricsVector;
 
 import RQLibrary.Encoder;
+import RQLibrary.SingularMatrixException;
 import RQLibrary.SystematicIndices;
 import RQLibrary.Tuple;
+import RQLibrary.Utilities;
 
-public class trimmedAttack {
+
+public class trimmedAttack2 {
 
 	public static void main(String[] args) {
 
@@ -99,23 +104,26 @@ public class trimmedAttack {
 		// number of symbols killed
 		int bodycount = 99999999;
 		
+
+		ICombinatoricsVector<Integer> initialVector = Factory.createVector(lineNumbers);
+		ICombinatoricsVector<Integer> initialVector2 = Factory.createVector(ISIs);
+		int maxISI = 99999;
+		
 		// ALGORITHM
-		for(int lines = 1; lines <= K && ((bodycount*1.0) / (K+OVERHEAD)) > Epsilon && bodycount != lines; lines++){
+		for(int lines = 1; (lines <= K) && (((bodycount*1.0) / (K+OVERHEAD)) > Epsilon) && (bodycount > lines); lines++){
 			
 			System.out.println("Testing attack on " + lines + " lines.");
 			
 			// combinations for lines
-			ICombinatoricsVector<Integer> initialVector = Factory.createVector(lineNumbers);
 			Generator<Integer> combLines = Factory.createSimpleCombinationGenerator(initialVector, lines);
+			
+			// combinations for ISIs
+			Generator<Integer> combISIs = Factory.createSimpleCombinationGenerator(initialVector2, lines);
 			
 			for(ICombinatoricsVector<Integer> combination : combLines) { // for each combination of lines
 				
 				// lines to be replaced
-				List<Integer> targetLines = combination.getVector();
-				
-				// combinations for ISIs
-				initialVector = Factory.createVector(ISIs);
-				Generator<Integer> combISIs = Factory.createSimpleCombinationGenerator(initialVector, lines);				
+				List<Integer> targetLines = combination.getVector();				
 				
 				for(ICombinatoricsVector<Integer> combination2 : combISIs) { // test all combinations of payloads in those lines
 					
@@ -126,7 +134,7 @@ public class trimmedAttack {
 						//				+ " with ISIs " + Arrays.toString(ISIpayload.toArray(new Integer[lines])));
 					
 					// the upperlimit might have changed, we dont want to waste time with useless gaussian eliminations
-					if(containsBiggerOrEqual(ISIpayload, upperLimit + K))
+					if(containsBiggerOrEqual(ISIpayload, maxISI))
 						continue;
 					
 					// build the decoding matrix (A), replacing the target lines with the payload
@@ -144,21 +152,32 @@ public class trimmedAttack {
 					}
 					
 					// reduce A to row echelon form
-					Encoder.rowEchelonForm(A);
+					try {
+						Utilities.rowEchelonForm(A);
+					} catch (SingularMatrixException e1) {
+						// TODO Auto-generated catch block
+						//e1.printStackTrace();
+					}
 					
 					// rank < L?
 					if(A[L-1][L-1] == 0){
 						
 						// update the value of the body count
-						upperLimit = Collections.max(ISIpayload);
-
+						int max = Collections.max(ISIpayload);
+						if(max >= maxISI)
+							continue;
+						else
+							maxISI = max;
+						
+						System.out.println("new maxISI: " + maxISI);
+						
 						// target ISIs (corresponding  to the target lines)
 						List<Integer> targetISIs = new ArrayList<Integer>(lines+1);
 						for(int line : targetLines)
 							targetISIs.add(line - LT_start);
 						
 						// number of symbols killed in this attack
-						bodycount = upperLimit - K - OVERHEAD + 1;
+						bodycount = maxISI - K - OVERHEAD + 1;
 						
 						// persist trimmed attack
 						try {
