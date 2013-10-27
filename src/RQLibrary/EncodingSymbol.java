@@ -22,7 +22,7 @@ public final class EncodingSymbol implements Comparable<EncodingSymbol>, Seriali
 		this.data = data;
 	}
 	
-	protected int getSBN() {
+	public int getSBN() {
 		
 		return SBN;
 	}

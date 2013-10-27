@@ -1,13 +1,13 @@
 package RQLibrary;
 
-class Partition {
+public class Partition {
 
 	private int Is;
 	private int Il;
 	private int Js;
 	private int Jl;
 	
-	protected Partition(int I, int J) {
+	public Partition(int I, int J) {
 		
 		//if(I < 0 || J < 1) throw new IllegalArgumentException("All arguments must be positive.");
 		
@@ -17,7 +17,7 @@ class Partition {
 		Js = J - Jl;
 	}
 	
-	protected int get(int i){
+	public int get(int i){
 		
 		switch(i){
 			case 1:

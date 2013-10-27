@@ -1,6 +1,6 @@
  - K: 26
  - Overhead: 0
- - Epsilon: 0.1
+ - Epsilon: 0.001
 
  Target lines: [22, 28, 41]
  Target  ISIs: [1, 7, 20]

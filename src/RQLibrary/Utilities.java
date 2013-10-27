@@ -1,5 +1,15 @@
 package RQLibrary;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+
 public final class Utilities {
 
 	public static final void printMatrix(byte[][] matrix) {
@@ -32,7 +42,7 @@ public final class Utilities {
 	 * @param A Matrix A
 	 * @param B Matrix B
 	 *
-	 * @return A·B
+	 * @return AÔøΩB
 	 */
 	public static final byte[][] multiplyMatrices(byte[][] A, byte[][] B){
 		
@@ -61,7 +71,7 @@ public final class Utilities {
 	 * @param A Matrix A
 	 * @param B Matrix B
 	 *
-	 * @return A·B
+	 * @return AÔøΩB
 	 */
 	public static byte[][] multiplyMatrices(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA, 
 											byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB){
@@ -468,4 +478,418 @@ public final class Utilities {
 
 			return true;
 		}
+		
+		/*
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 */
+		
+		 public static void PInactivationDecoding(byte[][] A, int K) throws SingularMatrixException {
+
+             int Ki = SystematicIndices.getKIndex(K);
+             int S = SystematicIndices.S(Ki);
+             int H = SystematicIndices.H(Ki);
+             int W = SystematicIndices.W(Ki);
+             int L = K + S + H;
+             int P = L - W;
+             int M = A.length;
+             
+            
+             
+             // Allocate X and copy A into X
+             byte[][] X = new byte[M][L];
+             for(int row = 0; row < M; row++)
+                     System.arraycopy(A[row], 0, X[row], 0, L);
+
+             int i = 0, u = P;
+             
+             /* 
+              * First phase 
+              * */
+             int chosenRowsCounter = 0;
+             int nonHDPCRows = S + H;
+
+             Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
+
+             /*
+              *  TODO Optimiza¬ç¬ão: ao inves de percorrer isto todas as vezes, ver s¬ó as linhas quer perderam
+              *  um non-zero, e subtrair ao 'r' original. Como lidar com as novas dimensoes de V? 
+              */
+             
+             while(i + u != L){
+                     
+                     /* PRINTING BLOCK */
+//                     System.out.println("STEP: "+i);
+                     /* END OF PRINTING */
+                     
+                     int r = L+1, rLinha = 0        ;                        
+                     Map<Integer, Row> rows = new HashMap<Integer, Row>();
+                     int minDegree = 256*L;
+                     
+                     // find r
+                     for(int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0){
+
+                             Set<Integer> edges = new HashSet<Integer>();
+                             
+                             for(int col = i; col < L-u; col++){
+                                     if(A[row][col] == 0) // branch prediction
+                                             continue;
+                                     else{
+                                             nonZeros++;
+                                             degree += OctectOps.UNSIGN(A[row][col]);
+                                             edges.add(col);
+                                     }
+                             }
+                             
+                             
+                             if(nonZeros == 2 && (row < S || row >= S+H))
+                                     rows.put(row, new Row(row, nonZeros, degree, edges));
+                             else
+                                     rows.put(row, new Row(row, nonZeros, degree));        
+
+                             
+                             if(nonZeros > r || nonZeros == 0 || degree == 0) // branch prediction
+                                     continue;
+                             else{
+                                     if(nonZeros == r){
+                                             if(degree < minDegree){
+                                                     rLinha = row;
+                                                     minDegree = degree;
+                                             }
+                                     }
+                                     else{
+                                             r = nonZeros;
+                                             rLinha = row;
+                                             minDegree = degree;                                                        
+                                     }
+                             }
+                             
+                     }
+                     
+                     if(r == L+1) // DECODING FAILURE
+                             throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 1: All entries in V are zero.");
+                     
+                     // choose the row
+                     if(r != 2){
+                             // check if rLinha is OK
+                             if(rLinha >= S && rLinha < S+H && chosenRowsCounter != nonHDPCRows){ // choose another line
+                                     
+                                     int newDegree = 256*L;
+                                     int newR = L+1;
+                                     
+                                     for(Row row : rows.values()){
+                                             
+                                             if((row.id < S || row.id >= S+H) && row.degree != 0){
+                                                     if(row.nonZeros <= newR){
+                                                             if(row.nonZeros == newR){
+                                                                     if(row.degree < newDegree){
+                                                                             rLinha = row.id;
+                                                                             newDegree = row.degree;
+                                                                     }
+                                                             }
+                                                             else{
+                                                                     newR = row.nonZeros;
+                                                                     rLinha = row.id;
+                                                                     newDegree = row.degree;
+                                                             }
+                                                     }
+                                             }
+                                             else
+                                                     continue;
+                                     }
+                             }
+                             // choose rLinha
+                             chosenRowsCounter++;
+                     }
+                     else{
+
+                             if(minDegree == 2){
+                                     
+                                     // create graph
+                                     Map<Integer, Set<Integer>> graph = new HashMap<Integer,Set<Integer>>();
+
+                                     for(Row row : rows.values()){
+                                             
+                                             //edge?
+                                             if(row.edges != null){
+                                                     
+                                                     Integer[] edge = row.edges.toArray(new Integer[2]);
+                                                     int node1 = edge[0];
+                                                     int node2 = edge[1];
+                                                     
+                                                     // node1 already in graph?
+                                                     if(graph.keySet().contains(node1)){
+                                                             
+                                                             graph.get(node1).add(node2);
+                                                     }
+                                                     else{
+                                                             Set<Integer> edges = new HashSet<Integer>();
+                                                             
+                                                             edges.add(node2);
+                                                             graph.put(node1, edges);
+                                                     }
+                                                     
+                                                     // node2 already in graph?
+                                                     if(graph.keySet().contains(node2)){
+                                                             
+                                                             graph.get(node2).add(node1);
+                                                     }
+                                                     else{
+                                                             Set<Integer> edges = new HashSet<Integer>();
+                                                             
+                                                             edges.add(node1);
+                                                             graph.put(node2, edges);
+                                                     }
+                                             }
+                                             else
+                                                     continue;
+                                     } // graph'd
+                                     
+                                     // find largest component 
+                                     //int maximumSize = graph.size();
+                                     boolean found = false;
+                                     Set<Integer> visited = null;
+                   
+                                             int maximumSize = 0;
+                                             Set<Integer> greatestComponent = null; // TODO testar tempos com isto o.O
+                                             
+                                             Set<Integer> used = new HashSet<Integer>();
+                                             Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
+                                             
+                                             while(it.hasNext() && !found){ // going breadth first, TODO optimize this with a better algorithm
+
+                                                     Map.Entry<Integer, Set<Integer>> node = it.next();
+                                                     int initialNode = node.getKey();
+                                                     
+                                                     if(used.contains(initialNode))
+                                                             continue;
+                                                     
+                                                     Integer[] edges = (Integer[]) node.getValue().toArray(new Integer[1]);
+                                                     visited = new HashSet<Integer>();
+                                                     List<Integer> toVisit = new LinkedList<Integer>();
+                                                     
+                                                     // add self
+                                                     visited.add(initialNode);
+                                                     used.add(initialNode);
+                                                     
+                                                     // add my edges
+                                                     for(Integer edge : edges){
+                                                             toVisit.add(edge);
+                                                             used.add(edge);
+                                                     }
+                                                     
+                                                     // start visiting
+                                                     while(toVisit.size() != 0){
+                                                             
+                                                             int no = toVisit.remove(0);
+                                                             
+                                                             // add node to visited set
+                                                             visited.add(no);
+                                                             
+                                                             // queue edges
+                                                             for(Integer edge : graph.get(no))
+                                                                     if(!visited.contains(edge))
+                                                                                     toVisit.add(edge);
+                                                     }
+                                             
+                                                             
+                                                     if(visited.size() > maximumSize){
+                                                             
+                                                             maximumSize           = visited.size();
+                                                             greatestComponent = visited;
+                                                     }
+                                                     
+                                           
+                                             }
+                                     
+                                     // 'visited' is now our connected component
+                                     for(Row row : rows.values()){
+                                             
+                                             if(row.edges != null){
+                                             
+                                                     Integer[] edge = row.edges.toArray(new Integer[2]);
+                                                     int node1 = edge[0];
+                                                     int node2 = edge[1];
+
+                                                     if(visited.contains(node1) && visited.contains(node2)){ // found 2 ones (edge) in component
+                                                             rLinha = row.id;
+                                                             break;
+                                                     }
+                                                     else
+                                                             continue;
+                                             }
+                                             else 
+                                                     continue;
+                                     }
+                                     
+                                     chosenRowsCounter++;
+                             }
+                             else{ // no rows with 2 ones
+                                     chosenRowsCounter++;
+                             }
+                     }
+                     
+                   
+                     // 'rLinha' is the chosen row
+                     Row chosenRow = rows.get(rLinha);
+                    
+                     if(rLinha != i){
+                              
+                             // swap i with rLinha in A
+                             byte[] auxRow = A[i];
+                             A[i] = A[rLinha];
+                             A[rLinha] = auxRow;
+
+                             // swap i with rLinha in X
+                             auxRow = X[i];
+                             X[i] = X[rLinha];
+                             X[rLinha] = auxRow;
+          
+                     }
+                     
+                     
+                     // re-order columns
+                     if(chosenRow.degree > 0){
+                             Stack<Integer> nonZeros = new Stack<Integer>();
+                             for(int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++){
+
+                                     if(A[i][col] == 0)
+                                             continue;
+                                     else{
+                                             nZ++;
+                                             nonZeros.push(col);
+                                     }
+                             }
+
+                             int coluna;
+                             if(A[i][i] == 0){
+                                     
+                                     coluna = nonZeros.pop();
+                                     swapColumns(A, coluna, i);
+                                     swapColumns(X, coluna, i);
+                             
+                                   
+                             }
+                             else
+                                     nonZeros.remove((Integer)i);
+                             
+                             for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--){                
+
+                                     coluna = nonZeros.pop();
+                                     
+                                     // swap
+                                     swapColumns(A, coluna, L-u-remainingNZ);
+                                     swapColumns(X, coluna, L-u-remainingNZ);
+
+                                     
+                             }
+                     
+                             // beta/alpha gewdness
+                             byte alpha = A[i][i];
+                             
+                             for(int row = i+1; row < M; row++){
+                                     
+                                     if(A[row][i] == 0)
+                                             continue;
+                                     else{                                 // TODO Queue these row operations for when (if) the row is chosen - RFC 6330 @ Page 35 1st Par.
+                                             
+                                             // beta/alpha
+                                             byte beta   = A[row][i];
+                                             byte balpha = OctectOps.division(beta, alpha);
+                                             
+                                             // multiplication 
+                                             byte[] product = OctectOps.betaProduct(balpha, A[i]);
+                                             
+                                             // addition 
+                                             A[row] = xorSymbol(A[row], product);
+
+                                     }
+                             }
+                     }
+                     
+                     // update 'i' and 'u'
+                     i++;
+                     u += r-1;
+             }
+             // END OF FIRST PHASE
+             
+             /* 
+              * Second phase 
+              * */
+             // X is now ixi
+
+             reduceToRowEchelonForm(A, i, M, L-u, L);
+
+             if(!validateRank(A, i, i, M, L, u)) // DECODING FAILURE
+                     throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 2: U_lower's rank is less than u.");
+             
+             // A is now LxL
+             
+             // END OF SECOND PHASE
+             
+             /* 
+              * Third phase 
+              * */
+             
+             // multiply X by A submatrix
+             byte[][] XA = multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
+             for(int row = 0; row < i; row++)
+                     A[row] = XA[row];
+             
+             /* 
+              * Fourth phase 
+              * */
+
+             for(int row=0; row < i; row++){                                                                                                                
+                     for(int j = i; j < L; j++){                                                                                                                
+                             if(A[row][j] != 0){                                                                                                                        
+
+                                     byte b    = A[row][j];
+                                     A[row][j] = 0;
+                             }
+                     }
+             }
+            
+             /* 
+              * Fifth phase 
+              * */
+             
+             /*
+              * TODO Optimizacao: acho que da para zerar directamente o A, e deixar apenas as operacoes em D...
+              */
+             
+             for(int j = 0; j < i; j++){
+                     
+                     if(A[j][j] != 1){ //A[j][j] != 0
+                             
+                             byte beta = A[j][j];
+                             A[j] = OctectOps.betaDivision(A[j], beta);
+                             
+                     }
+                     
+                     for(int l = 0; l < j; l++){
+                             
+                             if(A[j][l] != 0){
+                                     
+                                     byte beta = A[j][l];
+                                     byte[] product = OctectOps.betaProduct(beta, A[l]);
+                                     
+                                     A[j] = xorSymbol(A[j], product);
+
+                             }
+                     }
+             }
+     }
+		
+		
 }

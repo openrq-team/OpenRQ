@@ -54,6 +54,16 @@ public class Sender {
 			System.exit(1);
 		}
 
+		Encoder enc = new Encoder(data, 0, overhead);
+		EncodingPacket[] encoded_symbols = null;
+		SourceBlock[] aux = null;
+		int no_blocks = 0;
+		int Kt = enc.getKt();
+		System.out.println("# packets: "+Kt);
+		aux = enc.partition();
+		no_blocks = aux.length;
+		System.out.println("Number of blocks: "+no_blocks);
+
 		try {
 			System.in.read();
 		} catch (IOException e2) {
@@ -61,12 +71,7 @@ public class Sender {
 			e2.printStackTrace();
 		}
 		
-		Encoder enc = new Encoder(data, 0, overhead);
-		EncodingPacket[] encoded_symbols = null;
-		SourceBlock[] aux = null;
-		int no_blocks = 0;
 		
-
 		// Serialize and send EncodingPacket[]
 		DatagramSocket clientSocket = null;
 		try {
@@ -79,9 +84,6 @@ public class Sender {
 		
 		
 		try {
-			aux = enc.partition();
-			no_blocks = aux.length;
-			System.out.println("Number of blocks: "+no_blocks);
 			
 			encoded_symbols = new EncodingPacket[no_blocks];
 			
@@ -113,16 +115,21 @@ public class Sender {
 								destIP, destPort);
 						
 						clientSocket.send(sendPacket);
+						
+						Thread.sleep(1);
 					}
 					
 					clientSocket.send(new DatagramPacket(new byte[1024], 1024, destIP, destPort));					
-					if(block == 1)
-						System.exit(1);
+					
+					Thread.sleep(100);
 					
 				} catch (IOException e) {
 					e.printStackTrace();
 					System.err.println("IO Exception");
 					System.exit(1);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}	
 			}	
 		} catch (SingularMatrixException e) {

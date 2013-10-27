@@ -3,9 +3,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.StreamCorruptedException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -13,6 +15,7 @@ import java.util.Set;
 import RQLibrary.Encoder;
 import RQLibrary.EncodingPacket;
 import RQLibrary.EncodingSymbol;
+import RQLibrary.Partition;
 import RQLibrary.SingularMatrixException;
 import RQLibrary.SourceBlock;
 
@@ -37,6 +40,12 @@ public class Receiver {
 
 		Encoder encoder = new Encoder(fileSize);
 		int Kt = encoder.getKt();
+		int no_blocks = encoder.Z;
+		Partition KZ = new Partition(Kt, no_blocks);
+		int KL = KZ.get(1);
+		int KS = KZ.get(2);
+		int ZL = KZ.get(3);
+		System.out.println("# packets: "+Kt);
 		
 		// create socket and wait for packets
 		DatagramSocket serverSocket = null;
@@ -63,7 +72,8 @@ public class Receiver {
 				System.out.println("Received packet "+recv);
 				
 				byte[] packetData = receivePacket.getData();
-
+				//System.out.println(Arrays.toString(packetData));
+				
 				// deserialize
 				ByteArrayInputStream bis = new ByteArrayInputStream(packetData);
 				ObjectInput in = null;
@@ -74,6 +84,10 @@ public class Receiver {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				catch (StreamCorruptedException sda){
+					recv --;
+					continue;
+				}
 			
 			}
 		} catch (IOException e) {
@@ -82,26 +96,63 @@ public class Receiver {
 			System.exit(1);
 		}
 
+		// split into source blocks
 		// order received packets
+		int maxESI = -1;
+		
+		for(EncodingSymbol es : received_packets)
+			if(es.getESI() > maxESI)
+				maxESI = es.getESI();
+		
 		Iterator<EncodingSymbol> it = received_packets.iterator();
-		EncodingSymbol[] aux = new EncodingSymbol[received_packets.size() + overhead];
+		EncodingSymbol[][] aux = new EncodingSymbol[no_blocks][maxESI+1];
 		while(it.hasNext()){
 			EncodingSymbol pack = it.next();
-			aux[pack.getESI()] = pack;
+			aux[pack.getSBN()][pack.getESI()] = pack;
 		}
 		
-		encoded_symbols[0] = new EncodingPacket(0, aux, Kt, Encoder.MAX_PAYLOAD_SIZE);
+		//encoded_symbols[0] = new EncodingPacket(0, aux, Kt, Encoder.MAX_PAYLOAD_SIZE);
 		
 		// decode
 		byte[] decoded_data = null;
-		try {
-			SourceBlock[] aux1 = Encoder.decode(encoded_symbols);
-			decoded_data = encoder.unPartition(aux1);
-		} catch (SingularMatrixException e) {
-			System.out.println("DECODING FALHOU!");
-			System.exit(1);
+		SourceBlock[] blocks = new SourceBlock[no_blocks];
+
+		boolean successfulDecoding = true;
+		
+		for (int sblock = 0; sblock < no_blocks; sblock++) {
+		
+			System.out.println("Decoding block: "+sblock);
+			try {
+
+				if(sblock < ZL)
+					blocks[sblock] = Encoder.decode(new EncodingPacket(0, aux[sblock], KL, Encoder.MAX_PAYLOAD_SIZE));
+				else
+					blocks[sblock] = Encoder.decode(new EncodingPacket(0, aux[sblock], KS, Encoder.MAX_PAYLOAD_SIZE));
+				
+				System.out.println("Successfully decoded block: "+sblock);
+				
+			} catch (SingularMatrixException e) {
+				System.out.println("DECODING FALHOU!");
+				successfulDecoding = false;
+			}
+			catch (RuntimeException e) {
+				if(e.getMessage().equals("Not enough repair symbols received.")){
+					System.out.println(e.getMessage());
+					successfulDecoding = false;
+					continue;
+				}
+				else{
+					e.printStackTrace();
+					System.exit(1);
+				}
+			}
 		}
 
+		if(successfulDecoding)
+			decoded_data = encoder.unPartition(blocks);
+		else
+			System.exit(-1);
+		
 		File file = new File(fileName);
 		try {
 			if (file.exists())
