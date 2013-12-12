@@ -57,7 +57,7 @@ public class Receiver {
 			System.exit(1);
 		}
 		
-		EncodingPacket[] encoded_symbols = new EncodingPacket[1];
+		//EncodingPacket[] encoded_symbols = new EncodingPacket[1];
 		Set<EncodingSymbol> received_packets = new HashSet<EncodingSymbol>();
 		
 		try {
@@ -70,6 +70,7 @@ public class Receiver {
 				
 				serverSocket.receive(receivePacket);
 				System.out.println("Received packet "+recv);
+				//System.out.println(Arrays.toString(receivePacket.getData()));
 				
 				byte[] packetData = receivePacket.getData();
 				//System.out.println(Arrays.toString(packetData));
@@ -121,7 +122,7 @@ public class Receiver {
 		
 		for (int sblock = 0; sblock < no_blocks; sblock++) {
 		
-			System.out.println("Decoding block: "+sblock);
+			System.out.println("\nDecoding block: "+sblock);
 			try {
 
 				if(sblock < ZL)
@@ -129,10 +130,10 @@ public class Receiver {
 				else
 					blocks[sblock] = Encoder.decode(new EncodingPacket(0, aux[sblock], KS, Encoder.MAX_PAYLOAD_SIZE));
 				
-				System.out.println("Successfully decoded block: "+sblock);
+				System.out.println("\nSuccessfully decoded block: "+sblock);
 				
 			} catch (SingularMatrixException e) {
-				System.out.println("DECODING FALHOU!");
+				System.out.println("\nDECODING FAILED!\n");
 				successfulDecoding = false;
 			}
 			catch (RuntimeException e) {

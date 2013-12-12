@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 
 import RQLibrary.Encoder;
 import RQLibrary.EncodingPacket;
+import RQLibrary.EncodingSymbol;
 import RQLibrary.SingularMatrixException;
 import RQLibrary.SourceBlock;
 
@@ -98,7 +99,7 @@ public class Sender {
 
 
 					System.out.println("Sending block: "+ block+" K: "+sb.getK());
-
+					
 					for (int i = 0; i < encoded_symbols[block]
 							.getEncoding_symbols().length; i++) {
 
@@ -119,7 +120,7 @@ public class Sender {
 						Thread.sleep(1);
 					}
 					
-					clientSocket.send(new DatagramPacket(new byte[1024], 1024, destIP, destPort));					
+					//clientSocket.send(new DatagramPacket(new byte[1024], 1024, destIP, destPort));					
 					
 					Thread.sleep(100);
 					

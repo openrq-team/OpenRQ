@@ -16,10 +16,10 @@ import java.util.TreeSet;
 public class Encoder {
 
 	// TODO check patents for better default values
-	public static final int MAX_PAYLOAD_SIZE = 192;//1392; //1; //512 // P'
-	public static final int ALIGN_PARAM = 4;//1;  // Al // 4
+	public static final int MAX_PAYLOAD_SIZE = 192;//1392; // P'
+	public static final int ALIGN_PARAM = 4;  // Al 
 	public static final int MAX_SIZE_BLOCK = 76800; // WS // B
-	public static final int SSYMBOL_LOWER_BOUND = 8;//1; // SS // 8
+	public static final int SSYMBOL_LOWER_BOUND = 8; // SS // 8
 	public static final int KMAX = 56403;
 	public static final byte ALPHA = 2;
 
@@ -36,280 +36,441 @@ public class Encoder {
 	
 	public static int INIT_REPAIR_SYMBOL = 0;
 	
-	public Encoder(byte[] file, int overhead){
-
+	public Encoder(byte[] file, int overhead)
+	{
 		LOSS = 0;
 		OVERHEAD = overhead;
 		
 		F = file.length;
 
-		T = derivateT(MAX_PAYLOAD_SIZE);
-		Kt = ceil((double)F/T);
+		T = derivateT(MAX_PAYLOAD_SIZE); // T = P'
+		Kt = ceil((double) F/T);
 		
-		int N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
+		int N_max = floor((double) T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
 
-		Z = derivateZ(N_max);
-		/* FIXME SIMULATION for tests*/
-		//Z = 1;
+		Z = derivateZ(N_max); //Z = ceil(Kt/KL(N_max))
 		
-		N = derivateN(N_max);
+		N = derivateN(N_max); // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
 
-		if(F>Kt*T)
-			data = new byte[F];
+		/*
+		 * If Kt*T > F, then, for encoding and decoding purposes, the last symbol of
+		 *  the last source block MUST be padded at the end with Kt*T-F zero octets.
+		 */
+		
+		// FIXME is this copy really necessary?
+		if(F >= Kt*T)
+		{
+			data = Arrays.copyOf(file, F);
+		}
 		else
-			data = new byte[Kt*T];	
-
-		// TODO check if this copy is really necessary, maybe it will be performance drawback
-		for(int i=0; i<F; i++)
-			data[i] = file[i];
+		{
+			data = Arrays.copyOf(file, Kt*T);
+		}
 	}
 	
-	public Encoder(byte[] file, int loss, int overhead){
-
+	public Encoder(byte[] file, int loss, int overhead)
+	{
 		LOSS = loss;
 		OVERHEAD = overhead;
 		
 		F = file.length;
 
-		T = derivateT(MAX_PAYLOAD_SIZE);
-		Kt = ceil((double)F/T);
+		T = derivateT(MAX_PAYLOAD_SIZE); // T = P'
+		Kt = ceil((double) F/T);
 		
-		int N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
+		int N_max = floor((double) T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
 
-		Z = derivateZ(N_max);
-		/* FIXME SIMULATION for tests*/
-		//Z = 1;
+		Z = derivateZ(N_max); //Z = ceil(Kt/KL(N_max))
 		
-		N = derivateN(N_max);
+		N = derivateN(N_max); // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
 
-		if(F>Kt*T)
-			data = new byte[F];
+		/*
+		 * If Kt*T > F, then, for encoding and decoding purposes, the last symbol of
+		 *  the last source block MUST be padded at the end with Kt*T-F zero octets.
+		 */
+		
+		// FIXME is this copy really necessary?
+		if(F >= Kt*T)
+		{
+			data = Arrays.copyOf(file, F);
+		}
 		else
-			data = new byte[Kt*T];	
-
-		// TODO check if this copy is really necessary, maybe it will be performance drawback
-		for(int i=0; i<F; i++)
-			data[i] = file[i];
+		{
+			data = Arrays.copyOf(file, Kt*T);
+		}
 	}
 	
-	public Encoder(int fileSize){
-		
+	public Encoder(int fileSize)
+	{
 		F = fileSize;
 
-		T = derivateT(MAX_PAYLOAD_SIZE);
-		Kt = ceil((double)F/T);
+		T = derivateT(MAX_PAYLOAD_SIZE); // T = P'
+		Kt = ceil((double) F/T);
 		
-		int N_max = floor((double)T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
+		int N_max = floor((double) T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
 
-		Z = derivateZ(N_max);
-		/* FIXME SIMULATION for tests*/
-		//Z = 1;
+		Z = derivateZ(N_max); //Z = ceil(Kt/KL(N_max))
 		
-		N = derivateN(N_max);
+		N = derivateN(N_max); // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
 	}
 
-	public int getKt(){
+	public int getKt()
+	{
 		return Kt;
 	}
 	
-	private int derivateT(int pLinha){
-		return pLinha;		
+	private int derivateT(int pLinha)
+	{
+		return pLinha; // T = P'
 	}
 
-	private int derivateZ(int N_max){
-
-		return(ceil((double)Kt/SystematicIndices.KL(N_max, MAX_SIZE_BLOCK, ALIGN_PARAM, T)));
+	private int derivateZ(int N_max)
+	{
+		// Z = ceil(Kt/KL(N_max))
+		return(ceil((double) Kt/SystematicIndices.KL(N_max, MAX_SIZE_BLOCK, ALIGN_PARAM, T)));
 	}
 
-	private int derivateN(int N_max){
-
-		int n = 1;
+	private int derivateN(int N_max)
+	{
+		int n;
 		
-		for(; n<=N_max && ceil((double)Kt/Z)>SystematicIndices.KL(n, MAX_SIZE_BLOCK, ALIGN_PARAM, T); n++);
+		// N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
+		for(n = 1; n <= N_max && ceil((double) Kt/Z) > SystematicIndices.KL(n, MAX_SIZE_BLOCK, ALIGN_PARAM, T); n++);
 
 		return n;
 	}
 
-	public static final int ceil(double x){
-		return((int)Math.ceil(x));
+	public static final int ceil(double x)
+	{
+		return((int) Math.ceil(x));
 	}
 
-	public static final int floor(double x){		
-		return((int)Math.floor(x));
+	public static final int floor(double x)
+	{		
+		return((int) Math.floor(x));
 	}
 
-	public SourceBlock[] partition(){
+	public SourceBlock[] partition()
+	{
+		/*
+		 *  TODO is sub-blocking really necessary for regular use cases?
+		 *  	  (if it isn't, many mem copies could be avoided)
+		 *  
+		 *  TODO give the user the option to use sub-blocking or not
+		 */
+		
+		// Partitioning parameters
 
+		// (KL, KS, ZL, ZS) = Partition[Kt, Z]
 		Partition KZ = new Partition(Kt, Z);
 		int KL = KZ.get(1);
 		int KS = KZ.get(2);
 		int ZL = KZ.get(3);
-		//int ZS = KZ.get(4);
 
+		// (TL, TS, NL, NS) = Partition[T/Al, N]
 		Partition TN = new Partition(T/ALIGN_PARAM, N);
 		int TL = TN.get(1);
 		int TS = TN.get(2);
 		int NL = TN.get(3);
-		//int NS = TN.get(4);
 
+		// partitioned source blocks
 		SourceBlock[] object = new SourceBlock[Z];
-
+		
+		// source block index
 		int i;
+		
+		// original data buffer index
 		int index_master = 0;
-		for(i=0; i<ZL; i++){
-			// Source block i
+		
+		/*
+		 *  the object MUST be partitioned into Z = ZL + ZS contiguous source blocks
+		 */
+		for(i = 0; i < ZL; i++) // first ZL
+		{	// Source block i
 
-			byte[] aux2 = new byte[KL*T];
-
+			// alocate memory for source block i
+			byte[] aux2 = new byte[KL*T]; // source blocks each having KL*T octets
+			
+			// buffer index for source block i
 			int index_aux2 = 0;
-			for(int k=0; k<KL; k++){
-
+			
+			/*
+			 * each source block with K source symbols MUST be divided into
+			 *  N = NL + NS contiguous sub-blocks
+			 */
+			for(int k = 0; k < KL; k++)
+			{
+				// sub-block index
 				int j = 0;
+				
+				// where we will get the data from
 				int index_data  = index_master;
 
-				for(; j<NL; j++, index_data+=KL*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
+				/*
+				 * the first NL sub-blocks each consisting of K contiguous 
+				 *  sub-symbols of size of TL*Al octets
+				 */
+				for(; j < NL; j++, index_data += KL*TL*ALIGN_PARAM, index_aux2 += TL*ALIGN_PARAM)
+				{					
 					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
 				}
 
-				for(; j<N; j++, index_data+=KL*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
+				/* 
+				 * the remaining NS sub-blocks each consisting of K contiguous sub-
+				 *   symbols of size of TS*Al octets
+				 */
+				for(; j < N; j++, index_data += KL*TS*ALIGN_PARAM, index_aux2 += TS*ALIGN_PARAM)
+				{					
 					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
 				}
 				
+				/*
+				 * The symbol alignment parameter Al ensures that sub-symbols are
+				 *  always a multiple of Al octets.
+				 */
 				index_master += TL*ALIGN_PARAM;
 			}
 
+			// partitioned source block i
 			object[i] = new SourceBlock(i, aux2, T, KL);
 		}
 
-		for(; i < Z; i++){
-			// Source block i
+		for(; i < Z; i++) // last ZS
+		{	// Source block i
 
-			byte[] aux2 = new byte[KS*T];
+			byte[] aux2 = new byte[KS*T]; // source blocks each having KS*T octets
 
 			int index_aux2 = 0;
-			for(int k=0; k<KS; k++){
-
+			for(int k = 0; k < KS; k++)
+			{
+				/*
+				 * each source block with K source symbols MUST be divided into
+				 *  N = NL + NS contiguous sub-blocks
+				 */
+				
 				int j = 0;
 				int index_data  = index_master;
 
-				for(; j<NL; j++, index_data+=KS*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
+				for(; j < NL; j++, index_data += KS*TL*ALIGN_PARAM, index_aux2 += TL*ALIGN_PARAM)
+				{
+					/*
+					 * the first NL sub-blocks each consisting of K contiguous 
+					 *  sub-symbols of size of TL*Al octets
+					 */
+					
 					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
 				}
 
-				for(; j<N; j++, index_data+=KS*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
+				for(; j < N; j++, index_data += KS*TS*ALIGN_PARAM, index_aux2 += TS*ALIGN_PARAM)
+				{
+					/* 
+					 * the remaining NS sub-blocks each consisting of K contiguous sub-
+					 *   symbols of size of TS*Al octets
+					 */
+					
 					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
 				}
 
-				index_master += TL*ALIGN_PARAM;
+				/*
+				 * The symbol alignment parameter Al ensures that sub-symbols are
+				 *  always a multiple of Al octets.
+				 */
+				
+				index_master += TL*ALIGN_PARAM; // TODO shouldn't it be 'TS*ALIGN_PARAM' ?
 			}
-
+			// partitioned source block i
 			object[i] = new SourceBlock(i, aux2, T, KS);
 		}
 
+		// return partitioned source blocks
 		return object;
 	}
 
-	public byte[] unPartition(SourceBlock[] object){
-
+	public byte[] unPartition(SourceBlock[] object)
+	{
+		// original data buffer
 		byte[] data;
 
-		if(F>Kt*T)
+		// original data buffer's index
+		int index_master = 0;
+		
+		// allocate memory for original data's buffer
+		if(F >= Kt*T)
 			data = new byte[(int) F];
 		else
 			data = new byte[(int) Kt*T];
 
-
-		int index_master = 0;
-		for(int i=0; i<object.length; i++){
+		// for every source block
+		for(int i = 0; i < object.length; i++)
+		{	
 			// Source block i
-
 			SourceBlock sb = object[i];
-			int Kappa   = sb.getK();
-			int t_      = sb.getT();
-			byte[] aux2 = sb.getSymbols();
+			
+			// K for source block i
+			int Kappa      = sb.getK();
+			
+			// Symbol size for source block i
+			int ssize      = sb.getT();
+			
+			// Symbols in source block i
+			byte[] symbols = sb.getSymbols();
 
-			Partition TN = new Partition(t_/ALIGN_PARAM, N);
+			// Partitioning parameters
+			Partition TN = new Partition(ssize/ALIGN_PARAM, N);
 			int TL = TN.get(1);
 			int TS = TN.get(2);
 			int NL = TN.get(3);
 			int NS = TN.get(4);
-
-			for(int k=0; k<Kappa; k++){
-
+			
+			// for every symbol in source block i
+			for(int k = 0; k < Kappa; k++)
+			{
+				/*
+				 * each source block with K source symbols MUST be divided into
+				 *  N = NL + NS contiguous sub-blocks
+				 */
+				
+				// sub-block index
 				int j = 0;
-				//int index_data  = (i*Kappa*T) + k*TL*ALIGN_PARAM; // always TL because you always start by the sub-block
-				int index_data  = index_master + k*TL*ALIGN_PARAM; // always TL because you always start by the sub-block
-				int index_aux2 = k*t_;
+				
+				// where we will put the data in
+				int index_data = index_master + k*TL*ALIGN_PARAM;	// always TL because you always start by the sub-block
+				
+				// where we will get the data from
+				int index_symbols = k*ssize;
 
-				for(; j<NL; j++, index_data+=Kappa*TL*ALIGN_PARAM, index_aux2+=TL*ALIGN_PARAM){
-					System.arraycopy(aux2, index_aux2, data, index_data, TL*ALIGN_PARAM);
+				/*
+				 * the first NL sub-blocks each consisting of K contiguous 
+				 *  sub-symbols of size of TL*Al octets
+				 */
+				for(; j < NL; j++, index_data += Kappa*TL*ALIGN_PARAM, index_symbols += TL*ALIGN_PARAM)
+				{					
+					System.arraycopy(symbols, index_symbols, data, index_data, TL*ALIGN_PARAM);
 				}
 
-				for(; j<NS; j++, index_data+=Kappa*TS*ALIGN_PARAM, index_aux2+=TS*ALIGN_PARAM){
-					System.arraycopy(aux2, index_aux2, data, index_data, TS*ALIGN_PARAM);
+				/* 
+				 * the remaining NS sub-blocks each consisting of K contiguous sub-
+				 *   symbols of size of TS*Al octets
+				 */
+				for(; j < NS; j++, index_data += Kappa*TS*ALIGN_PARAM, index_symbols += TS*ALIGN_PARAM)
+				{			
+					System.arraycopy(symbols, index_symbols, data, index_data, TS*ALIGN_PARAM);
 				}
 			}
-		
+			
+			// move index to the next symbol
 			index_master += Kappa * T;
 		}
+		
+		// remove padding if it exists		
+		if(F < Kt*T)
+			data = Arrays.copyOf(data, F);
 
+		// return unpartitioned data
 		return data;		
 	}
 	
-	public static SourceBlock decode(EncodingPacket eb) throws SingularMatrixException{
+	/**
+	 * Decodes one encoded source block.
+	 * 
+	 * @param eb Encoded source block.
+	 * @return Decoded source block.
+	 * @throws SingularMatrixException
+	 */
+	public static SourceBlock decode(EncodingPacket eb) throws SingularMatrixException
+	{
+		// encoding symbols in the encoded source block
+		EncodingSymbol[] enc_symbols = eb.getEncoding_symbols();	// TODO these MUST be ordered, would be nice if it wasn't needed
 		
-		EncodingSymbol[] enc_symbols = eb.getEncoding_symbols();
+		// number of encoding symbols in the encoded source block
 		int num_symbols = enc_symbols.length;
+		
+		// number of source symbols in the source block
 		int K = eb.getK();
+		
+		// size of each symbol the block
 		int T = eb.getT();
+		
+		// number of symbols in the corresponding extended source block
 		int kLinha = SystematicIndices.ceil(K);
+		
+		// constraint matrix parameters
 		int Ki = SystematicIndices.getKIndex(K);
 		int S = SystematicIndices.S(Ki);
 		int H = SystematicIndices.H(Ki);
 		int L = kLinha + S + H;
 		
-		// Analyze received symbols "topology"
-		Set<Integer> missing_symbols = new TreeSet<Integer>();
-		Set<EncodingSymbol> source_symbols = new TreeSet<EncodingSymbol>();
-		Set<EncodingSymbol> repair_symbols = new TreeSet<EncodingSymbol>();
-		int num_source_symbols = 0;
-		int num_repair_symbols = 0;
-		int missing_delta_index = 0;
+		/*
+		 *  Analyze received symbols "topology"
+		 */
 		
-		for(int symbol=0; symbol<num_symbols; symbol++){
-			
+		// indexes of the missing source symbols
+		Set<Integer> missing_symbols = new TreeSet<Integer>();
+		
+		// the received source symbols
+		Set<EncodingSymbol> source_symbols = new TreeSet<EncodingSymbol>();
+		
+		// the received repair symbols
+		Set<EncodingSymbol> repair_symbols = new TreeSet<EncodingSymbol>();
+		
+		// number of received source symbols
+		int num_source_symbols  = 0;
+		
+		// number of received repair symbols
+		int num_repair_symbols  = 0;
+		
+		// number of missing symbols
+		int num_missing_symbols = 0;
+		
+		// for every encoding symbol received
+		for(int symbol=0; symbol<num_symbols; symbol++)
+		{
+			// encoding symbol
 			EncodingSymbol enc_symbol = enc_symbols[symbol];
 			
-			if(enc_symbol == null){
-				
-				if(symbol < K){
+			// this shouldn't happen (depends on the ordering methodology.
+			//	should be removed when unordered encoding symbols are tolerated
+			if(enc_symbol == null)
+			{				
+				if(symbol < K)
+				{
 					missing_symbols.add(symbol);
-					missing_delta_index++;
+					num_missing_symbols++;
 				}
 
 				continue;
 			}
-							
-			if(enc_symbol.getESI() < K){
-				
-				if(enc_symbol.getESI() != symbol){
-					
-					missing_symbols.add(symbol + missing_delta_index);						
-					missing_delta_index++;
+			
+			// source or repair symbol?
+			if(enc_symbol.getESI() < K) // is a source symbol
+			{
+				// if this isn't the symbol we were expecting,		// TODO re-write this code when unordered
+				//  add the expected symbol to the missing set		//		 enconding symbols are tolerated
+				if(enc_symbol.getESI() != symbol)
+				{					
+					missing_symbols.add(symbol + num_missing_symbols);
+					num_missing_symbols++;
 				}
 				
+				// add to the set of source symbols
 				source_symbols.add(enc_symbol);
+				
+				// increment the total number of source symbols
 				num_source_symbols++;
 			}
-			else{
-				
+			else // is a repair symbol
+			{
+				// add to the set of repair symbols
 				repair_symbols.add(enc_symbol);
+				
+				// increment the total number of repair symbols
 				num_repair_symbols++;
 			}
 		}
-
 		
-		// Print topology
+		/*
+		 * print topology of the received encoding symbols
+		 */
 		StringBuilder st = new StringBuilder();
 		st.append("Symbols topology: \n");
 		st.append("# Source: ");
@@ -320,35 +481,47 @@ public class Encoder {
 		for (EncodingSymbol i : repair_symbols)
 			st.append(i.getESI() + ", ");
 		st.append("\n# Missing: ");
-		st.append(missing_delta_index);
+		st.append(num_missing_symbols);
 		st.append("\n Missing indexes:\n");
 		for (Integer i : missing_symbols)
 			st.append(i + ", ");
 		System.out.println(st.toString());
+		/*
+		 * end print
+		 */
 		
+		// are there enough repair symbols to compensate the missing source symbols?
+		if(num_repair_symbols < num_missing_symbols)
+		{
+			throw new RuntimeException("Not enough repair symbols received."); // TODO shouldn't be runtime exception (too generic)
+		}
 		
-		if(num_repair_symbols < missing_delta_index) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
-		
+		// number of extra repair symbols to be used for the decoding process
 		int overhead = num_repair_symbols - missing_symbols.size();
+		
+		// number of rows in the decoding matrix
 		int M = L + overhead;
 		
+		// maps the ESI of a symbol to its line in the decoding matrix
 		Map<Integer, byte[]> esiToLTCode = new TreeMap<Integer, byte[]>();
 		
+		// allocate buffer for the decoded data
 		byte[] decoded_data = new byte[K*T];
 		
-		// All source symbols received :D
-		if(num_source_symbols == K){
-			
-			// Collect all payloads from the source symbols				
-			for(EncodingSymbol enc_symbol : source_symbols){
-				
+		// all source symbols received! :D
+		if(num_source_symbols == K)
+		{			
+			// collect all payloads from the source symbols				
+			for(EncodingSymbol enc_symbol : source_symbols)
+			{
 				System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 			}
 			
+			// return the "decoded" source block
 			return new SourceBlock(eb.getSBN(), decoded_data, T, K);
 		}	
 		
-		// Not so lucky
+		// not so lucky...
 		else{
 
 			byte[][] constraint_matrix = new byte[M][];

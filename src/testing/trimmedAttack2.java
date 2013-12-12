@@ -109,8 +109,8 @@ public class trimmedAttack2 {
 		ICombinatoricsVector<Integer> initialVector2 = Factory.createVector(ISIs);
 		int maxISI = 99999;
 		
-		// ALGORITHM
-		for(int lines = 1; (lines <= K) && (((bodycount*1.0) / (K+OVERHEAD)) > Epsilon) && (bodycount > lines); lines++){
+		// ALGORITHM 
+		for(int lines = 1; (lines <= K) && (((bodycount*1.0) / (K+OVERHEAD)) > Epsilon) && (bodycount > lines); lines++){ //should be <= K + OVERHEAD
 			
 			System.out.println("Testing attack on " + lines + " lines.");
 			

@@ -9,7 +9,7 @@ public final class EncodingSymbol implements Comparable<EncodingSymbol>, Seriali
 	private int ESI;
 	private byte[] data;
 	
-	protected EncodingSymbol(int sBN, int eSI, byte[] data) {
+	public EncodingSymbol(int sBN, int eSI, byte[] data) {
 		
 		/*
 		if(sBN < 0) throw new IllegalArgumentException("Source Block Number must be non-negative.");
@@ -32,12 +32,12 @@ public final class EncodingSymbol implements Comparable<EncodingSymbol>, Seriali
 		return ESI;
 	}
 	
-	protected byte[] getData() {
+	public byte[] getData() {
 		
 		return data;
 	}
 	
-	protected int getISI(int K){
+	public int getISI(int K){
 		
 		int kLinha = SystematicIndices.ceil(K);
 		
