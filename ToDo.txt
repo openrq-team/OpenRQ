@@ -1,0 +1,5 @@
+ToDo list:
+	- Solve incorrect decoding when using more than one source block
+	- Re-write the decoding code to tolerate unordered encoding symbols
+	- Look at optimizations for the Permanent Inactivation Decoding 
+		(there's some algorithmic problem causing too much complexity -- namely in the first phase)

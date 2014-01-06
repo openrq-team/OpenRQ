@@ -522,20 +522,25 @@ public class Encoder {
 		}	
 		
 		// not so lucky...
-		else{
+		else
+		{
 
+			// allocate memory for the decoding matrix
 			byte[][] constraint_matrix = new byte[M][];
 
-			// Generate original constraint matrix
+			// generate the original constraint matrix
 			byte[][] lConstraint = generateConstraintMatrix(kLinha, T);
 			
+			// copy to our decoding matrix
 			for(int row = 0; row < L; row++)
 				constraint_matrix[row] = lConstraint[row];
 			
 			// initialize D
 			byte[][] D = new byte[M][T];
 			
-			if(num_source_symbols != 0){
+			// populate D with the received source symbols
+			if(num_source_symbols != 0)
+			{
 
 				Iterator<EncodingSymbol> it = source_symbols.iterator();
 
@@ -547,15 +552,22 @@ public class Encoder {
 				}while(it.hasNext());
 			}
 
+			/*
+			 * for every repair symbol received
+			 *  - replace a missing source symbol's decoding matrix line for its corresponding line
+			 *  - populate D accordingly
+			 */
+			
 			Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
 			
-			// Identify missing source symbols and replace their lines with "repair lines"
-			for(Integer missing_ESI : missing_symbols){
+			// identify missing source symbols and replace their lines with "repair lines"
+			for(Integer missing_ESI : missing_symbols)
+			{
 				
 				EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
-				int row = S+H+missing_ESI;
+				int row = S + H + missing_ESI;
 				
-				// Substituir S + H + missing_ESI pela linha equivalente ao encIndexes do repair simbolo
+				// replace line S + H + missing_ESI with the line for encIndexes
 				Set<Integer> indexes = encIndexes(kLinha, new Tuple(kLinha, repair.getISI(K)));
 				
 				byte[] newLine = new byte[L];
@@ -566,23 +578,22 @@ public class Encoder {
 				esiToLTCode.put(missing_ESI, constraint_matrix[row]);
 				constraint_matrix[row] = newLine;
 				
-				//System.out.println("ISI: "+repair.getISI(K)+" | "+row+") "+Arrays.toString(newLine));
-				
-				// Fill in missing source symbols in D with the repair symbols
+				// fill in missing source symbols in D with the repair symbols
 				D[row] = repair.getData();
 			}				
 			
-			// add values for overhead symbols					
-			for(int row = L; row < M; row++){
-
+			// insert the values for overhead (repair) symbols					
+			for(int row = L; row < M; row++)
+			{
 				EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
 
-				// Generate the overhead lines
+				// generate the overhead lines
 				Tuple tuple = new Tuple(K, repair.getISI(K));
 
 				Set<Integer> indexes = encIndexes(K, tuple);
 
 				byte[] newLine = new byte[L];
+				
 				for(Integer col : indexes)
 					newLine[col] = 1;
 				
@@ -592,38 +603,61 @@ public class Encoder {
 				D[row] = repair.getData();
 			}
 			
-			//Utilities.printMatrix(constraint_matrix);
-			byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, kLinha);
-
+			/*
+			 * with the decoding matrix created and vector D populated,
+			 *  we have the system of linear equations ready to be solved 
+			 */
 			
-			// Recover missing source symbols
-			for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
-				
+			byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, kLinha);
+			
+			/*
+			 * with the intermediate symbols calculated, one can recover
+			 *  every missing source symbol
+			 */
+			
+			// recover missing source symbols
+			for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet())
+			{
+				// multiply the constraint matrix line relative to the missing source symbol
+				//  by the vector of intermediate symbols to recover the missing source symbol
 				byte[] original_symbol = Utilities.multiplyByteLineBySymbolVector(missing.getValue(), intermediate_symbols, T);
 				
+				// write to the decoded data buffer
 				System.arraycopy(original_symbol, 0, decoded_data, missing.getKey() * T, T);
 			}
 		
-			// Merge with received source symbols
-			for(EncodingSymbol enc_symbol : source_symbols){
-				
+			//  write the received source symbols to the decoded data buffer
+			for(EncodingSymbol enc_symbol : source_symbols)
+			{
 				System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 			}
-			
 		}			
 		
 		return new SourceBlock(eb.getSBN(), decoded_data, T, K);
 	}
 	
-	public static SourceBlock[] decode(EncodingPacket[] encoded_blocks) throws SingularMatrixException {
-
+	/**
+	 * Decodes an array of encoded blocks
+	 * @param encoded_blocks
+	 * @return Array of source blocks.
+	 * @throws SingularMatrixException
+	 */
+	public static SourceBlock[] decode(EncodingPacket[] encoded_blocks) throws SingularMatrixException
+	{
+		/*
+		 * this is pretty much the code for decoding a source block inside a 'for' statement
+		 *  so refer to the original method for comments, as this one won't be fully commented
+		 */
+		
+		// number of encoded blocks
 		int num_blocks = encoded_blocks.length;
 		
+		// array of decoded source blocks
 		SourceBlock[] recovered = new SourceBlock[num_blocks];
 		
-		// Decode each block
-		for(int source_block_index = 0; source_block_index<encoded_blocks.length; source_block_index++){
-			
+		// decode each block
+		for(int source_block_index = 0; source_block_index < encoded_blocks.length; source_block_index++)
+		{	
 			EncodingPacket eb = encoded_blocks[source_block_index];
 			EncodingSymbol[] enc_symbols = eb.getEncoding_symbols();
 			int num_symbols = enc_symbols.length;
@@ -643,13 +677,14 @@ public class Encoder {
 			int num_repair_symbols = 0;
 			int missing_delta_index = 0;
 			
-			for(int symbol=0; symbol<num_symbols; symbol++){
-				
+			for(int symbol = 0; symbol < num_symbols; symbol++)
+			{
 				EncodingSymbol enc_symbol = enc_symbols[symbol];
 				
-				if(enc_symbol == null){ // TODO think about this
-					
-					if(symbol < K){
+				if(enc_symbol == null) // TODO think about this
+				{
+					if(symbol < K)
+					{
 						missing_symbols.add(symbol);
 						missing_delta_index++;
 					}
@@ -657,10 +692,10 @@ public class Encoder {
 					continue;
 				}
 								
-				if(enc_symbol.getESI() < K){ // acho que afinal nao //isto aqui falha se tiver a faltar o ultimo source symbol
-					
-					if(enc_symbol.getESI() != symbol){ //+ missing_delta_index){
-						
+				if(enc_symbol.getESI() < K)
+				{
+					if(enc_symbol.getESI() != symbol)
+					{	
 						missing_symbols.add(symbol + missing_delta_index);						
 						missing_delta_index++;
 					}
@@ -668,30 +703,15 @@ public class Encoder {
 					source_symbols.add(enc_symbol);
 					num_source_symbols++;
 				}
-				else{
-					
+				else
+				{
 					repair_symbols.add(enc_symbol);
 					num_repair_symbols++;
 				}
 			}
 			
-			/*
-			// Print topology
-			StringBuilder st = new StringBuilder();
-			st.append("Symbols topology: \n");
-			st.append("# Source: ");
-			st.append(num_source_symbols);
-			st.append("\n# Repair: ");
-			st.append(num_repair_symbols);
-			st.append("\n# Missing: ");
-			st.append(missing_delta_index);
-			st.append("\n Missing indexes:\n");
-			for(Integer i : missing_symbols)
-				st.append(i + ", ");
-			System.out.println(st.toString());
-			*/
-			
-			if(num_repair_symbols < missing_delta_index) throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
+			if(num_repair_symbols < missing_delta_index)
+				throw new RuntimeException("Not enough repair symbols received."); // TODO shouldnt be runtime exception, too generic
 			
 			int overhead = num_repair_symbols - missing_symbols.size();
 			int M = L + overhead;
@@ -701,11 +721,11 @@ public class Encoder {
 			byte[] decoded_data = new byte[K*T];
 			
 			// All source symbols received :D
-			if(num_source_symbols == K){
-				
+			if(num_source_symbols == K)
+			{
 				// Collect all payloads from the source symbols				
-				for(EncodingSymbol enc_symbol : source_symbols){
-					
+				for(EncodingSymbol enc_symbol : source_symbols)
+				{
 					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 				}
 				
@@ -713,34 +733,12 @@ public class Encoder {
 			}	
 			
 			// Not so lucky
-			else{
-
+			else
+			{
 				byte[][] constraint_matrix = new byte[M][];
 
 				// Generate original constraint matrix
 				byte[][] lConstraint = generateConstraintMatrix(kLinha, T);
-				/*//FIXME ATTACK */
-/*				boolean independent = true;
-				for(int esi = 115; independent; esi++){
-					
-					Set<Integer> indexes = encIndexes(kLinha, new Tuple(kLinha, kLinha+esi));
-					
-					byte[] newLine = new byte[L];
-					for(Integer col : indexes)
-							newLine[col] = 1;
-					
-					lConstraint[L-1] = newLine;
-	
-					byte[][] A = (new Matrix(lConstraint)).getData();
-					
-					reduceToRowEchelonForm(A, 0, L, 0, L);
-					
-					(new Matrix(A)).show();
-					
-					if(!validateRank(A, 0, 0, L, L, L))
-						independent = false;
-				}
-*/
 				
 				for(int row = 0; row < L; row++)
 					constraint_matrix[row] = lConstraint[row];
@@ -748,8 +746,8 @@ public class Encoder {
 				// initialize D
 				byte[][] D = new byte[M][T];
 				
-				if(num_source_symbols != 0){
-
+				if(num_source_symbols != 0)
+				{
 					Iterator<EncodingSymbol> it = source_symbols.iterator();
 
 					do{
@@ -760,21 +758,11 @@ public class Encoder {
 					}while(it.hasNext());
 				}
 
-				/*
-				System.out.println("---- A ---- (initial)");
-				(new Matrix(constraint_matrix)).show();
-				System.out.println("---------------------");
-				
-				System.out.println("---- D ---- (initial)");
-				(new Matrix(D)).show();
-				System.out.println("---------------------");				
-				*/
-
 				Iterator<EncodingSymbol> repair_symbol = repair_symbols.iterator();
 				
 				// Identify missing source symbols and replace their lines with "repair lines"
-				for(Integer missing_ESI : missing_symbols){
-					
+				for(Integer missing_ESI : missing_symbols)
+				{	
 					EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
 					int row = S+H+missing_ESI;
 					
@@ -796,8 +784,8 @@ public class Encoder {
 				}				
 				
 				// add values for overhead symbols					
-				for(int row = L; row < M; row++){
-
+				for(int row = L; row < M; row++)
+				{
 					EncodingSymbol repair = (EncodingSymbol) repair_symbol.next();
 
 					// Generate the overhead lines
@@ -815,111 +803,22 @@ public class Encoder {
 					D[row] = repair.getData();
 				}
 				
-				
-/*				byte[][] B = {
-						
-						
-						// SISTEMA IMPOSSIVEL 
-						{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
-						{0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0},
-						{0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
-						{0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0},
-						{0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0},
-						{0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0}
-						
-						/*
-						{0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0},
-						{0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0},
-						{1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
-						{0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0},
-						{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0},
-						{0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}*/
-/*				};
-				
-				constraint_matrix[20] = B[0];
-				constraint_matrix[21] = B[1];
-				constraint_matrix[23] = B[2];
-				constraint_matrix[24] = B[3];
-				constraint_matrix[25] = B[4];
-				constraint_matrix[26] = B[5];
-
-				 // TESTE c(Ab)
-				 //(new Matrix(constraint_matrix)).show();
-	 
-				 byte[][] Ab = new byte[L][L+1];
-				 
-				 for(int row = 0; row < L; row++){
-					 
-					 for(int col = 0; col < L; col++){
-						 
-						 Ab[row][col] = constraint_matrix[row][col];
-					 }
-					 
-					 Ab[row][L] = D[row][0];
-				 }
-
-				 (new Matrix(constraint_matrix)).show();
-				 
-				 //reduceToRowEchelonForm(Ab, 0, L, 0, L+1);
-				 rowEchelonForm(constraint_matrix);
-				 
-				 (new Matrix(constraint_matrix)).show();
-
-				 //reduceToRowEchelonForm(constraint_matrix, 0, L, 0, L);
-				 
-				 //(new Matrix(constraint_matrix)).show();
-				 
-				 System.out.println(validateRank(Ab, 0, 0, L, L+1, L));
-				 
-				 System.exit(1);
-*/				
-				
-				/*
-				System.out.println("---- A ---- (recovered)");
-				(new Matrix(constraint_matrix)).show();
-				System.out.println("---------------------");
-				
-				System.out.println("---- D ---- (recovered)");
-				(new Matrix(D)).show();
-				System.out.println("---------------------");
-				*/
-				//(new Matrix(constraint_matrix)).show();
 				byte[] intermediate_symbols = generateIntermediateSymbols(constraint_matrix, D, T, kLinha);
 				
-				/*
-				System.out.println("---- C ----");
-				for(int bite=0; bite<intermediate_symbols.length; bite++){
-					if(bite % T == 0) System.out.println("");
-					System.out.printf("| %02X |", intermediate_symbols[bite]);
-				}
-				System.out.println("---------------------");
-				*/
-				
 				// Recover missing source symbols
-				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet()){
-					
+				for(Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet())
+				{	
 					byte[] original_symbol = Utilities.multiplyByteLineBySymbolVector(missing.getValue(), intermediate_symbols, T);
-					//byte[] original_symbol = multiplyByteLineBySymbolVector(missing.getValue(), D, T);
 					
 					System.arraycopy(original_symbol, 0, decoded_data, missing.getKey() * T, T);
 				}
 			
 				// Merge with received source symbols
-				for(EncodingSymbol enc_symbol : source_symbols){
-					
+				for(EncodingSymbol enc_symbol : source_symbols)
+				{	
 					System.arraycopy(enc_symbol.getData(), 0, decoded_data, enc_symbol.getESI() * T, T);
 				}
-				
-				/*
-				System.out.println("\n\n RECOVERED");
-
-				for(int g=0; g<decoded_data.length; g++){
-					if(g % T == 0) System.out.println("");
-					System.out.printf("| %02X |", decoded_data[g]);
-				}
-				System.out.println("");
-				 */
-				
+								
 				recovered[source_block_index] = new SourceBlock(eb.getSBN(), decoded_data, T, K);
 			}			
 		}				
@@ -927,14 +826,16 @@ public class Encoder {
 		return recovered;
 	}
 	
+	
+	
 	// A * x = b
-	public static byte[] supahGauss(byte[][] A, byte[][] b) throws SingularMatrixException{
-		
+	public static byte[] supahGauss(byte[][] A, byte[][] b) throws SingularMatrixException
+	{
 		if (A.length != A[0].length || b.length != A.length)
 			throw new RuntimeException("Illegal matrix dimensions.");
 		
 		int num_cols = b[0].length;
-		//byte[][] x = new byte[b.length][b[0].length];
+	
 		byte[] x = new byte[b.length * num_cols];
 		
 		Utilities.printMatrix(A);
@@ -1387,27 +1288,6 @@ public class Encoder {
          int P = L - W;
          int M = A.length;
          
-         
-         /* SIMULATION */
-/*                K = 3;        S = 1;        H = 1;        W = 4;        L = 5;        P = 1;        M = 5; T = 3;
-         
-         byte[][] zzz = {
-                         {1, 0, 1, 1, 1},
-                         {0, 1, 0, 1, 1},
-                         {1, 1, 1, 0, 1},
-                         {1, 0, 1, 0, 0},
-                         {1, 1, 0, 0, 1}
-         };         A = zzz;
-         
-         byte[][] sss = {
-                         {1, 0, 0},
-                         {1, 0, 1},
-                         {1, 1, 0},
-                         {1, 1, 1},
-                         {0, 1, 1}        
-         }; D = sss;                
-         /* END */
-         
          // initialize c and d
          int[] c = new int[L];
          int[] d = new int[M];
@@ -1428,12 +1308,6 @@ public class Encoder {
 
          int i = 0, u = P;
          
-         /* PRINTING BLOCK */
-/*                System.out.println("--------- A ---------");
-         (new Matrix(A)).show();
-         System.out.println("---------------------");
-         /* END OF PRINTING */
-         
          /* 
           * First phase 
           * */
@@ -1443,15 +1317,11 @@ public class Encoder {
          Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
 
          /*
-          *  TODO Optimizao: ao inves de percorrer isto todas as vezes, ver s as linhas quer perderam
+          *  TODO Optimizacao: ao inves de percorrer isto todas as vezes, ver so as linhas quer perderam
           *  um non-zero, e subtrair ao 'r' original. Como lidar com as novas dimensoes de V? 
           */
          
          while(i + u != L){
-                 
-                 /* PRINTING BLOCK */
-//                 System.out.println("STEP: "+i);
-                 /* END OF PRINTING */
                  
                  int r = L+1, rLinha = 0        ;                        
                  Map<Integer, Row> rows = new HashMap<Integer, Row>();

@@ -41,7 +41,7 @@ public final class EncodingSymbol implements Comparable<EncodingSymbol>, Seriali
 		
 		int kLinha = SystematicIndices.ceil(K);
 		
-		return ESI + (kLinha - K); // yes, i know its comutative: it's just for a better code reading experience.
+		return ESI + (kLinha - K); // yes, I know its comutative: it's just for a better code reading experience.
 	}
 
 	@Override
