@@ -479,6 +479,109 @@ public final class Utilities {
 			return true;
 		}
 		
+		/**
+		 * Solves a 'A.x = b' system using regular Gauss elimination.
+		 * @param A
+		 * @param b
+		 * @return Array of symbols 'x'
+		 * @throws SingularMatrixException
+		 */
+		public static byte[] gaussElimination(byte[][] A, byte[][] b) throws SingularMatrixException
+		{
+			if (A.length != A[0].length || b.length != A.length)
+				throw new RuntimeException("Illegal matrix dimensions.");
+			
+			int num_cols = b[0].length;
+		
+			byte[] x = new byte[b.length * num_cols];
+			
+			Utilities.printMatrix(A);
+			
+			int ROWS = b.length;
+			
+			for(int row=0; row<ROWS; row++){
+				
+				int max = row;
+				
+				// find pivot row and swap
+				for (int i = row + 1; i < ROWS; i++)
+					if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row]))
+						max = i;
+
+				// this destroys the original matrixes... dont really need a fix, but should be kept in mind
+				byte[] temp = A[row];
+				A[row] = A[max];
+				A[max] = temp;
+				
+				temp = b[row];
+				b[row] = b[max];
+				b[max] = temp;
+
+				// singular or nearly singular
+	            if (A[row][row] == 0) {
+					//System.err.println("LINHA QUE DEU SINGULAR: "+row);
+					Utilities.printMatrix(b);
+					Utilities.printMatrix(A);
+	            	throw new SingularMatrixException("LINHA QUE DEU SINGULAR: "+row);
+	            }
+	 
+	            // pivot within A and b
+	            for(int i=row+1; i<ROWS; i++) {
+	            	
+	            	byte alpha = OctectOps.division(A[i][row], A[row][row]);
+	            	
+	            	temp = OctectOps.betaProduct(alpha, b[row]);
+	            	
+	            	b[i] = Utilities.xorSymbol(b[i], temp);
+	            	
+	            	
+	            	for(int j=row; j<ROWS; j++) {
+	            	
+	            		byte aux = OctectOps.product(alpha, A[row][j]);
+	            		
+	            		A[i][j] = OctectOps.subtraction(A[i][j], aux);
+	            	}
+	            }
+			}
+			
+			// back substitution
+	        for(int i = ROWS-1; i >= 0; i--) {
+	        	
+	            byte[] sum = new byte[num_cols];
+	            
+	            for(int j=i+1; j<ROWS; j++) {
+
+	            													// i*num_cols+j
+	            	byte[] temp = OctectOps.betaProduct(A[i][j], x, j*num_cols, num_cols);
+	            	
+	            	sum = Utilities.xorSymbol(sum, temp);
+	            }
+	            
+	            byte[] temp = Utilities.xorSymbol(b[i], sum);
+	            
+	            //x[i] = OctectOps.betaDivision(temp, A[i][i]);
+	            for(int bite = 0; bite < num_cols; bite++){
+	            	
+	            	x[(i*num_cols) + bite] = OctectOps.division(temp[bite], A[i][i]);
+	            }
+	        }
+			
+			return x;
+		}
+		
+		
+		/*
+		 * can't remember why I made this. it's not used.
+		 *  looks like a endian converter
+		 */
+		public static final byte convert(byte in){
+
+			byte hex1 = (byte) (in << 4);
+			byte hex2 = (byte) ((in >>> 4) & 0xF);
+
+			return (byte) (hex2 | hex1);
+		}
+		
 		/*
 		 * 
 		 * 
@@ -504,8 +607,6 @@ public final class Utilities {
              int P = L - W;
              int M = A.length;
              
-            
-             
              // Allocate X and copy A into X
              byte[][] X = new byte[M][L];
              for(int row = 0; row < M; row++)
@@ -522,15 +623,11 @@ public final class Utilities {
              Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
 
              /*
-              *  TODO Optimizao: ao inves de percorrer isto todas as vezes, ver s as linhas quer perderam
+              *  TODO Optimizacao: ao inves de percorrer isto todas as vezes, ver so as linhas quer perderam
               *  um non-zero, e subtrair ao 'r' original. Como lidar com as novas dimensoes de V? 
               */
              
              while(i + u != L){
-                     
-                     /* PRINTING BLOCK */
-//                     System.out.println("STEP: "+i);
-                     /* END OF PRINTING */
                      
                      int r = L+1, rLinha = 0        ;                        
                      Map<Integer, Row> rows = new HashMap<Integer, Row>();
