@@ -188,11 +188,14 @@ public class Encoder {
 		for(i = 0; i < ZL; i++) // first ZL
 		{	// Source block i
 
-			// alocate memory for source block i
-			byte[] aux2 = new byte[KL*T]; // source blocks each having KL*T octets
+			// allocate memory for source block i
+			byte[] symbols = new byte[KL*T]; // a source block has KL*T octets
 			
 			// buffer index for source block i
-			int index_aux2 = 0;
+			int index_symbols = 0;
+			
+			// we need this so we don't lose the point in index_master
+			int aux_master = index_master;
 			
 			/*
 			 * each source block with K source symbols MUST be divided into
@@ -204,43 +207,59 @@ public class Encoder {
 				int j = 0;
 				
 				// where we will get the data from
-				int index_data  = index_master;
+				int index_data  = aux_master;
 
 				/*
 				 * the first NL sub-blocks each consisting of K contiguous 
 				 *  sub-symbols of size of TL*Al octets
 				 */
-				for(; j < NL; j++, index_data += KL*TL*ALIGN_PARAM, index_aux2 += TL*ALIGN_PARAM)
+				for(; j < NL; j++, index_data += KL*TL*ALIGN_PARAM, index_symbols += TL*ALIGN_PARAM)
 				{					
-					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
+					System.arraycopy(data, index_data, symbols, index_symbols, TL*ALIGN_PARAM);
 				}
 
 				/* 
 				 * the remaining NS sub-blocks each consisting of K contiguous sub-
 				 *   symbols of size of TS*Al octets
 				 */
-				for(; j < N; j++, index_data += KL*TS*ALIGN_PARAM, index_aux2 += TS*ALIGN_PARAM)
+				for(; j < N; j++, index_data += KL*TS*ALIGN_PARAM, index_symbols += TS*ALIGN_PARAM)
 				{					
-					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
+					System.arraycopy(data, index_data, symbols, index_symbols, TS*ALIGN_PARAM);
 				}
-				
-				/*
-				 * The symbol alignment parameter Al ensures that sub-symbols are
-				 *  always a multiple of Al octets.
-				 */
-				index_master += TL*ALIGN_PARAM;
+								
+				if(NL>0)
+				{
+					aux_master += TL*ALIGN_PARAM;	// we always start at a sub-block of size TL*Al
+				}
+				else
+				{
+					aux_master += TS*ALIGN_PARAM;	// we always start at a sub-block of size TS*Al
+				}
 			}
 
 			// partitioned source block i
-			object[i] = new SourceBlock(i, aux2, T, KL);
+			object[i] = new SourceBlock(i, symbols, T, KL);
+			
+			// update index_master position to point to the next source block
+ 			index_master += (KL * T);
 		}
 
 		for(; i < Z; i++) // last ZS
 		{	// Source block i
 
-			byte[] aux2 = new byte[KS*T]; // source blocks each having KS*T octets
+			// allocate memory for source block i
+			byte[] symbols = new byte[KS*T]; // source blocks each having KS*T octets
 
-			int index_aux2 = 0;
+			// buffer index for source block i
+			int index_symbols = 0;
+			
+			// we need this so we don't lose the point in index_master
+			int aux_master = index_master;
+			
+			/*
+			 * each source block with K source symbols MUST be divided into
+			 *  N = NL + NS contiguous sub-blocks
+			 */
 			for(int k = 0; k < KS; k++)
 			{
 				/*
@@ -249,38 +268,45 @@ public class Encoder {
 				 */
 				
 				int j = 0;
-				int index_data  = index_master;
+				
+				int index_data  = aux_master;
 
-				for(; j < NL; j++, index_data += KS*TL*ALIGN_PARAM, index_aux2 += TL*ALIGN_PARAM)
+				for(; j < NL; j++, index_data += KS*TL*ALIGN_PARAM, index_symbols += TL*ALIGN_PARAM)
 				{
 					/*
 					 * the first NL sub-blocks each consisting of K contiguous 
 					 *  sub-symbols of size of TL*Al octets
 					 */
 					
-					System.arraycopy(data, index_data, aux2, index_aux2, TL*ALIGN_PARAM);
+					System.arraycopy(data, index_data, symbols, index_symbols, TL*ALIGN_PARAM);
 				}
 
-				for(; j < N; j++, index_data += KS*TS*ALIGN_PARAM, index_aux2 += TS*ALIGN_PARAM)
+				for(; j < N; j++, index_data += KS*TS*ALIGN_PARAM, index_symbols += TS*ALIGN_PARAM)
 				{
 					/* 
 					 * the remaining NS sub-blocks each consisting of K contiguous sub-
 					 *   symbols of size of TS*Al octets
 					 */
 					
-					System.arraycopy(data, index_data, aux2, index_aux2, TS*ALIGN_PARAM);
+					System.arraycopy(data, index_data, symbols, index_symbols, TS*ALIGN_PARAM);
 				}
 
-				/*
-				 * The symbol alignment parameter Al ensures that sub-symbols are
-				 *  always a multiple of Al octets.
-				 */
-				
-				index_master += TL*ALIGN_PARAM; // TODO shouldn't it be 'TS*ALIGN_PARAM' ?
+				// where we will be getting our data from next?
+				if(NL>0)
+				{
+					aux_master += TL*ALIGN_PARAM;	// we always start at a sub-block of size TL*Al
+				}
+				else
+				{
+					aux_master += TS*ALIGN_PARAM;	// we always start at a sub-block of size TS*Al
+				}
 			}
 			// partitioned source block i
-			object[i] = new SourceBlock(i, aux2, T, KS);
-		}
+			object[i] = new SourceBlock(i, symbols, T, KS);
+			
+			// update index_master position to point to the next source block
+ 			index_master += (KS * T);
+ 		}
 
 		// return partitioned source blocks
 		return object;
@@ -303,26 +329,25 @@ public class Encoder {
 		// for every source block
 		for(int i = 0; i < object.length; i++)
 		{	
-			// Source block i
+			// source block i
 			SourceBlock sb = object[i];
 			
 			// K for source block i
 			int Kappa      = sb.getK();
 			
-			// Symbol size for source block i
+			// symbol size for source block i
 			int ssize      = sb.getT();
 			
-			// Symbols in source block i
+			// symbols in source block i
 			byte[] symbols = sb.getSymbols();
 
-			// Partitioning parameters
+			// partitioning parameters
 			Partition TN = new Partition(ssize/ALIGN_PARAM, N);
 			int TL = TN.get(1);
 			int TS = TN.get(2);
 			int NL = TN.get(3);
-			int NS = TN.get(4);
 			
-			// for every symbol in source block i
+			// for every source symbol in source block i
 			for(int k = 0; k < Kappa; k++)
 			{
 				/*
@@ -334,7 +359,7 @@ public class Encoder {
 				int j = 0;
 				
 				// where we will put the data in
-				int index_data = index_master + k*TL*ALIGN_PARAM;	// always TL because you always start by the sub-block
+				int index_data = index_master + k*TL*ALIGN_PARAM; // we always start at a sub-block of size TL*Al
 				
 				// where we will get the data from
 				int index_symbols = k*ssize;
@@ -352,14 +377,14 @@ public class Encoder {
 				 * the remaining NS sub-blocks each consisting of K contiguous sub-
 				 *   symbols of size of TS*Al octets
 				 */
-				for(; j < NS; j++, index_data += Kappa*TS*ALIGN_PARAM, index_symbols += TS*ALIGN_PARAM)
+				for(; j < N; j++, index_data += Kappa*TS*ALIGN_PARAM, index_symbols += TS*ALIGN_PARAM)
 				{			
 					System.arraycopy(symbols, index_symbols, data, index_data, TS*ALIGN_PARAM);
 				}
 			}
 			
 			// move index to the next symbol
-			index_master += Kappa * T;
+			index_master += Kappa * ssize;
 		}
 		
 		// remove padding if it exists		
@@ -844,7 +869,7 @@ public class Encoder {
 		/*//FIXME SIMULATION */
 		int num_to_lose_symbols = ceil(0.01 * LOSS * K);
 		int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
-		
+
 		// allocate memory for the generated encoding symbols
 		EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 		

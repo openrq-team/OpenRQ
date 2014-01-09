@@ -2,10 +2,10 @@ package RQLibrary;
 
 public class Partition {
 
-	private int Is;
 	private int Il;
-	private int Js;
+	private int Is;
 	private int Jl;
+	private int Js;
 	
 	public Partition(int I, int J) {
 		
@@ -13,21 +13,21 @@ public class Partition {
 		
 		Il = Encoder.ceil((double)I/J);
 		Is = Encoder.floor((double)I/J);
-		Jl = I - (Is*J);
+		Jl = I - (Is * J);
 		Js = J - Jl;
 	}
-	
+
 	public int get(int i){
 		
 		switch(i){
 			case 1:
-				return Is;
-			case 2:
 				return Il;
+			case 2:
+				return Is;
 			case 3:
-				return Js;
-			case 4:
 				return Jl;
+			case 4:
+				return Js;
 			default:
 				throw new IllegalArgumentException("Argument must be from 1 to 4.");
 		}
