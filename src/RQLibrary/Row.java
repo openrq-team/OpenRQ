@@ -8,20 +8,23 @@ class Row{
 	public int nonZeros;
 	public int degree;
 	public Set<Integer> edges = null;
+	public boolean isHDPC;
 	
-	protected Row(int i, int r, int d){
+	protected Row(int i, int r, int d, boolean hdpc){
 		
 		id = i;
 		nonZeros = r;
 		degree = d;
+		isHDPC = hdpc;
 	}
 	
-	protected Row(int i, int r, int d, Set<Integer> e){
+	protected Row(int i, int r, int d, boolean hdpc, Set<Integer> e){
 	
 		id = i;
 		nonZeros = r;
 		degree = d;
 		edges = e;
+		isHDPC = hdpc;
 	}
 	
 	@Override

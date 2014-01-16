@@ -99,7 +99,7 @@ public class Sender {
 
 				for (int i = 0; i < encoded_symbols[block]
 						.getEncoding_symbols().length; i++) {
-
+if(i == 93) continue;
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					out = new ObjectOutputStream(bos);
 					out.writeObject(encoded_symbols[block]

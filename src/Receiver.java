@@ -125,12 +125,19 @@ public class Receiver {
 			System.out.println("\nDecoding block: "+sblock);
 			try {
 
+				long antes = System.currentTimeMillis();
+				
 				if(sblock < ZL)
 					blocks[sblock] = Encoder.decode(new EncodingPacket(0, aux[sblock], KL, Encoder.MAX_PAYLOAD_SIZE));
 				else
 					blocks[sblock] = Encoder.decode(new EncodingPacket(0, aux[sblock], KS, Encoder.MAX_PAYLOAD_SIZE));
 				
+				long depois = System.currentTimeMillis();
+				
 				System.out.println("\nSuccessfully decoded block: "+sblock);
+				
+				long diff = (long) (depois-antes); // 1000;
+				System.out.println("Time elapsed: " + diff + " (micro-seconds)");
 				
 			} catch (SingularMatrixException e) {
 				System.out.println("\nDECODING FAILED!\n");

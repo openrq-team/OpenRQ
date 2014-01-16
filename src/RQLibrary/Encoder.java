@@ -869,7 +869,7 @@ public class Encoder {
 		/*//FIXME SIMULATION */
 		int num_to_lose_symbols = ceil(0.01 * LOSS * K);
 		int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
-
+		num_repair_symbols = 1;
 		// allocate memory for the generated encoding symbols
 		EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 		
@@ -1311,22 +1311,31 @@ public class Encoder {
          // the number of rows that are not HDPC
          //   (these should be chosen first)
          int nonHDPCRows = S + H;
-
-         // stores the original degrees for each row
-         Map<Integer, Integer> originalDegrees = new HashMap<Integer, Integer>();
-
+         
          /*
-          *  TODO Optimizacao: ao inves de percorrer isto todas as vezes, ver so as linhas quer perderam
-          *  um non-zero, e subtrair ao 'r' original. Como lidar com as novas dimensoes de V? 
+          *  TODO Optimizacao: ao inves de percorrer isto todas as vezes, ver so as linhas que perderam
+          *   um non-zero, e subtrair ao 'r' original (e ao grau). Como lidar com as novas dimensoes de V? 
           */
          
+         // at most L steps
          while(i + u != L)
          {        
         	 
-        	 int r = L + 1, rLinha = 0        ;                        
-             Map<Integer, Row> rows = new HashMap<Integer, Row>();
+        	 // number of non-zeros in the 'currently chosen' row
+        	 int r = L + 1;
+        	 
+        	 // the index of the 'currently chosen' row
+        	 int rLinha = 0;
+
+             // the degree of the 'currently chosen' row
              int minDegree = 256*L;
                  
+        	 // maps the index of a row to an object Row (which stores that row's characteristics)
+             Map<Integer, Row> rows = new HashMap<Integer, Row>();
+             
+             // is the row HDPC or not?
+             boolean isHDPC, isHDPC2 = false;
+             
              /*
               *  find r
               */
@@ -1352,31 +1361,22 @@ public class Encoder {
             			 edges.add(col);
             		 }
             	 }
-                 
-                 if(nonZeros == 2 && (row < S || row >= S+H)) // 
-                	 rows.put(row, new Row(row, nonZeros, degree, edges));
+            	 
+            	 // is this a HDPC row? this is not 100% accurate (false negatives) but is accurate enough)
+            	 if(degree <= nonZeros)
+            	 {
+            		 isHDPC = false;
+            	 }
+            	 else
+            	 {
+            		 isHDPC = true;
+            	 }
+      
+                 if(nonZeros == 2 && !isHDPC)
+                	 rows.put(row, new Row(row, nonZeros, degree, isHDPC, edges));
                  else
-                	 rows.put(row, new Row(row, nonZeros, degree));        
-                 
-                 /*
-                 // TODO testar tempos com isto
-                 if(i != 0)
-                 {
-                 	if(nonZeros == 2 && (row < S || row >= S+H)) // TODO do some branch prediction
-                    	rows.put(row, new Row(row, nonZeros, originalDegrees.get(d[row]), edges));
-                    else
-                        rows.put(row, new Row(row, nonZeros, originalDegrees.get(d[row])));        
-                 }
-                 else
-                 {
-                    if(nonZeros == 2 && (row < S || row >= S+H))
-                        rows.put(row, new Row(row, nonZeros, degree, edges));
-                    else
-                        rows.put(row, new Row(row, nonZeros, degree));        
-                        originalDegrees.put(row, degree);
-                 }
-                 */
-                         
+                	 rows.put(row, new Row(row, nonZeros, degree, isHDPC));        
+                  
                  if(nonZeros > r || nonZeros == 0 || degree == 0) // branch prediction
                 	 continue;
                  else
@@ -1387,6 +1387,7 @@ public class Encoder {
                 		 {
                 			 rLinha = row;
                 			 minDegree = degree;
+                			 isHDPC2 = isHDPC;
                 		 }
                 		 else
                 			 continue;
@@ -1395,7 +1396,8 @@ public class Encoder {
                 	 {
                 		 r = nonZeros;
                 		 rLinha = row;
-                		 minDegree = degree;                                                        
+                		 minDegree = degree;  
+            			 isHDPC2 = isHDPC;
                 	 }
                  }
              }
@@ -1409,33 +1411,27 @@ public class Encoder {
              
              if(r != 2)
              {
-               	 // check if rLinha is 
-            	 if(rLinha >= S && rLinha < S+H && chosenRowsCounter != nonHDPCRows)
-            	 { // choose another line
+               	 // "HDPC rows should not be chosen untill all non-HDPC rows have been processed"
+            	 if(isHDPC2 && chosenRowsCounter < nonHDPCRows)
+            	 { // if it is, then we must choose another line
                                  
             		 int newDegree = 256*L;
             		 int newR = L+1;
-                                 
+                                
+            		 // lets go search all the rows
             		 for(Row row : rows.values())
             		 {	 
-            			 if((row.id < S || row.id >= S+H) && row.degree != 0)
-            			 {
-            				 if(row.nonZeros <= newR)
-            				 {
-            					 if(row.nonZeros == newR)
-            					 {
-            						 if(row.degree < newDegree)
-            						 {
-            							 rLinha = row.id;
-            							 newDegree = row.degree;
-            						 }
-            					 }
-            					 else
-            					 {
-            						 newR = row.nonZeros;
-            						 rLinha = row.id;
-            						 newDegree = row.degree;
-            					 }
+            			 // if they're not HDPC rows
+            			if(!row.isHDPC && row.degree != 0)
+            			{
+            				 // does it have less non-zeros than our 'currently chosen' one?
+            				 if(row.nonZeros < newR)
+            				 {// if it does, since it's non-HDPC it'll also have a lower degree
+            					 
+            					 //  so lets update our 'currently chosen' row
+            					 newR = row.nonZeros;
+            					 rLinha = row.id;
+            					 newDegree = row.degree;
             				 }
             			 }
             			 else
@@ -1446,296 +1442,352 @@ public class Encoder {
             	 // choose rLinha
             	 chosenRowsCounter++;        
              }
-             else
+             else 
+             { // r = 2
+            	 
+            	 // do we have a row with exactly two 1's? (remember we already know that there are rows with only 2 non-zeros)
+            	 if(minDegree == 2)
+            	 {
+            		 /*
+            		  *  create graph
+            		  */
+            		 
+            		 // allocate memory
+            		 Map<Integer, Set<Integer>> graph = new HashMap<Integer,Set<Integer>>();
+
+            		 // lets go through all the rows... (yet again!)
+            		 for(Row row : rows.values())
+            		 {
+            			 // is this row an edge?
+            			 if(row.edges != null)
+            			 {                        
+            				 // get the nodes connected through this edge
+            				 Integer[] edge = row.edges.toArray(new Integer[2]);
+            				 int node1 = edge[0];
+            				 int node2 = edge[1];
+
+            				 // node1 already in graph?
+            				 if(graph.keySet().contains(node1))
+            				 { // it is
+            					 
+            					 // then lets add node 2 to its neighbours
+            					 graph.get(node1).add(node2);
+            				 }
+            				 else
+            				 { // it isn't
+            					 
+            					 // allocate memory for its neighbours
+            					 Set<Integer> edges = new HashSet<Integer>();
+
+            					 // add node 2 to its neighbours
+            					 edges.add(node2);
+            					 
+            					 // finally, add node 1 to the graph along with its neighbours
+            					 graph.put(node1, edges);
+            				 }
+
+            				 // node2 already in graph?
+            				 if(graph.keySet().contains(node2))
+            				 { // it is
+            					 
+            					 // then lets add node 1 to its neighbours
+            					 graph.get(node2).add(node1);
+            				 }
+            				 else
+            				 { // it isn't
+            					 
+            					 // allocate memory for its neighbours
+            					 Set<Integer> edges = new HashSet<Integer>();
+
+            					 // add node 1 to its neighbours
+            					 edges.add(node1);
+            					 
+            					 // finally, add node 2 to the graph along with its neighbours
+            					 graph.put(node2, edges);
+            				 }
+            			 }
+            			 else
+            				 continue;
+            		 }
+            		 
+            		 /*
+            		  * the graph is complete, now we must
+            		  *  find the maximum size component
+            		  */
+
+            		 // have we found the maximum size component yet?
+            		 boolean found = false;
+            		 
+            		 // set of visited nodes
+            		 Set<Integer> visited = null;
+
+            		 /* 
+            		  * TODO Optimizacao: - ja procurei, e ha algoritmos optimizados para achar connected components
+            		  *                      e so depois ver qual o maior...
+            		  */
+            		 
+            		 // what is the size of the largest component we've already found
+            		 int maximumSize = 0;
+            		 
+            		 // the maximum size component
+            		 Set<Integer> greatestComponent = null; // TODO testar tempos com isto
+
+            		 // which nodes have already been used (either in visited or in toVisit)
+            		 Set<Integer> used = new HashSet<Integer>();
+            		 
+            		 // iterates the nodes in the graph
+            		 Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
+
+            		 // let's iterate through the nodes in the graph, looking for the maximum
+            		 //  size component. we will be doing a breadth first seach // TODO optimize this with a better algorithm?
+            		 while(it.hasNext() && !found)
+            		 { 
+            			 // get our initial node
+            			 Map.Entry<Integer, Set<Integer>> node = it.next();
+            			 int initialNode = node.getKey();
+
+            			 // we can't have used it before!
+            			 if(used.contains(initialNode))
+            				 continue;
+
+            			 // what are the edges of our initial node?
+            			 Integer[] edges = (Integer[]) node.getValue().toArray(new Integer[1]);
+            			 
+            			 // allocate memory for the set of visited nodes
+            			 visited = new HashSet<Integer>();
+            			 
+            			 // the set of nodes we must still visit
+            			 List<Integer> toVisit = new LinkedList<Integer>();
+
+            			 // add the initial node to the set of used and visited nodes
+            			 visited.add(initialNode);
+            			 used.add(initialNode);
+
+            			 // add my edges to the set of nodes we must visit
+            			 //  and also put them in the used set
+            			 for(Integer edge : edges)
+            			 {
+            				 toVisit.add(edge);
+            				 used.add(edge);
+            			 }
+
+            			 // start the search!
+            			 while(toVisit.size() != 0)
+            			 {
+            				 // the node we are visiting
+            				 int no = toVisit.remove(0);
+
+            				 // add node to visited set
+            				 visited.add(no);
+
+            				 // queue edges to be visited (if they haven't been already
+            				 for(Integer edge : graph.get(no))
+            					 if(!visited.contains(edge))
+            						 toVisit.add(edge);
+            			 }
+
+            			 // is the number of visited nodes, greater than the 'currently' largest component?
+            			 if(visited.size() > maximumSize)
+            			 { // it is! we've found a greater component then...
+            				 
+            				 // update the maximum size
+            				 maximumSize = visited.size();
+            				 
+            				 // update our greatest component
+            				 greatestComponent = visited;
+            			 }
+            			 else
+            				 continue;
+            		 }
+            		 
+            		 /*
+            		  *  we've found the maximum size connected component -- 'greatestComponent'
+            		  */
+            		 
+            		 // let's choose the row 
+            		 for(Row row : rows.values())
+            		 { 
+            			 // is it a node in the graph?
+            			 if(row.edges != null)
+            			 { // it is
+
+            				 // get the nodes connected through this edge
+            				 Integer[] edge = row.edges.toArray(new Integer[2]);
+            				 int node1 = edge[0];
+            				 int node2 = edge[1];
+
+            				 // is this row an edge in the maximum size component?
+            				 if(greatestComponent.contains(node1) && greatestComponent.contains(node2))
+            				 { 
+            					 rLinha = row.id;
+            					 break;
+            				 }
+            				 else
+            					 continue;
+            			 }
+            			 else 
+            				 continue;
+            		 }
+
+            		 chosenRowsCounter++;
+            	 }
+            	 else
+            	 { // no rows with 2 ones
+            		 chosenRowsCounter++;
+            	 }
+             }
+
+             /*
+              *   a row has been chosen! -- 'rLinha'
+              */
+             
+             // get the chosen row
+             Row chosenRow = rows.get(rLinha);            
+
+             /* 
+              * "After the row is chosen in this step, the first row of A that intersects V is exchanged
+              *   with the chosen row so that the chosen row is the first row that intersects V."
+              */
+             
+             // if the chosen row is not 'i' already
+             if(rLinha != i)
              {
-             	 if(minDegree == 2)
-             	 {
-             		 // create graph
-             		 Map<Integer, Set<Integer>> graph = new HashMap<Integer,Set<Integer>>();
-             		 
-             		 for(Row row : rows.values())
-             		 {
-                                	 
-             			 //edge?
-             			 if(row.edges != null)
-             			 {                        
-             				 Integer[] edge = row.edges.toArray(new Integer[2]);
-             				 int node1 = edge[0];
-             				 int node2 = edge[1];
-             				 
-             				 // node1 already in graph?
-             				 if(graph.keySet().contains(node1))
-             				 {	 
-             					 graph.get(node1).add(node2);
-             				 }
-             				 else
-             				 {
-             					 Set<Integer> edges = new HashSet<Integer>();
-             					 
-             					 edges.add(node2);
-             					 graph.put(node1, edges);
-             				 }
-             				 
-             				 // node2 already in graph?
-             				 if(graph.keySet().contains(node2))
-             				 {	 
-             					 graph.get(node2).add(node1);
-             				 }
-             				 else
-             				 {
-             					 Set<Integer> edges = new HashSet<Integer>();
-             					 
-             					 edges.add(node1);
-             					 graph.put(node2, edges);
-             				 }
-             			 }
-             			 else
-             				 continue;
-             		 } // graph'd
-             		 
-             		 // find largest component 
-             		 //int maximumSize = graph.size();
-             		 boolean found = false;
-             		 Set<Integer> visited = null;
-             		 
-             		 /* 
-             		  * TODO Optimizacao: - ja procurei, e ha algoritmos optimizados para achar connected components
-             		  *                      e so depois ver qual o maior...
-             		  */
-             		 int maximumSize = 0;
-             		 Set<Integer> greatestComponent = null; // TODO testar tempos com isto
+            	 // swap i with rLinha in A
+            	 byte[] auxRow = A[i];
+            	 A[i] = A[rLinha];
+            	 A[rLinha] = auxRow;
 
-             		 Set<Integer> used = new HashSet<Integer>();
-             		 Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
+            	 // swap i with rLinha in X
+            	 auxRow = X[i];
+            	 X[i] = X[rLinha];
+            	 X[rLinha] = auxRow;
 
-             		 while(it.hasNext() && !found){ // going breadth first, TODO optimize this with a better algorithm
-
-             			 Map.Entry<Integer, Set<Integer>> node = it.next();
-             			 int initialNode = node.getKey();
-
-             			 if(used.contains(initialNode))
-             				 continue;
-
-             			 Integer[] edges = (Integer[]) node.getValue().toArray(new Integer[1]);
-             			 visited = new HashSet<Integer>();
-             			 List<Integer> toVisit = new LinkedList<Integer>();
-
-             			 // add self
-             			 visited.add(initialNode);
-             			 used.add(initialNode);
-
-             			 // add my edges
-             			 for(Integer edge : edges){
-             				 toVisit.add(edge);
-             				 used.add(edge);
-             			 }
-
-             			 // start visiting
-             			 while(toVisit.size() != 0){
-
-             				 int no = toVisit.remove(0);
-
-             				 // add node to visited set
-             				 visited.add(no);
-
-             				 // queue edges
-             				 for(Integer edge : graph.get(no))
-             					 if(!visited.contains(edge))
-             						 toVisit.add(edge);
-             			 }
+            	 // decoding process - swap i with rLinha in d
+            	 int auxIndex = d[i];
+            	 d[i] = d[rLinha];
+            	 d[rLinha] = auxIndex;                     
+             }
 
 
-             			 if(visited.size() > maximumSize){
+             /*
+              * "The columns of A among those that intersect V are reordered so that one of the r nonzeros 
+              *   in the chosen row appears in the first column of V and so that the remaining r-1 nonzeros
+              *   appear in the last columns of V."
+              */
+             
+             // if there are non-zeros
+             if(chosenRow.degree > 0)
+             {
+            	 // stack of non-zeros in the chosen row
+            	 Stack<Integer> nonZeros = new Stack();
+            	 
+            	 // search the chosen row for the positions of the non-zeros
+            	 for(int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++) 		// TODO the positions of the non-zeros could be stored as a Row attribute
+            	 {																//       this would spare wasting time in this for (little optimization)
+            		 if(A[i][col] == 0) // a zero
+            			 continue;
+            		 else
+            		 { // a non-zero
+            			 nZ++;
+            			 
+            			 // add this non-zero's position to the stack
+            			 nonZeros.push(col);
+            		 }
+            	 }
 
-             				 maximumSize           = visited.size();
-             				 greatestComponent = visited;
-             			 }
-                                                 
-                                         /*        
-                                                 // is it big?
-                                                 if(visited.size() >= maximumSize) // yes it is
-                                                         found = true;
-                                                 */
-                                         }/*
-                                         
-                                         maximumSize--;
-                                 }*/
-                                 
-                                 // 'visited' is now our connected component
-                                 for(Row row : rows.values()){
-                                         
-                                         if(row.edges != null){
-                                         
-                                                 Integer[] edge = row.edges.toArray(new Integer[2]);
-                                                 int node1 = edge[0];
-                                                 int node2 = edge[1];
+            	 /*
+            	  *  lets start swapping columns!
+            	  */
+            	 
+            	 // swap a non-zero's column to the first column in V
+            	 int column;
+            	 if(A[i][i] == 0) // is the first column in V already the place of a non-zero?
+            	 {
+            		 // column to be swapped
+            		 column = nonZeros.pop();
+            		 
+            		 // swap columns
+            		 Utilities.swapColumns(A, column, i);
+            		 Utilities.swapColumns(X, column, i);
 
-                                                 if(visited.contains(node1) && visited.contains(node2)){ // found 2 ones (edge) in component
-                                                         rLinha = row.id;
-                                                         break;
-                                                 }
-                                                 else
-                                                         continue;
-                                         }
-                                         else 
-                                                 continue;
-                                 }
-                                 
-                                 chosenRowsCounter++;
-                         }
-                         else{ // no rows with 2 ones
-                                 chosenRowsCounter++;
-                         }
-                 }
-                 
-                 /*  PRINT ROWS  */
-/*                        for(Row row : rows.values()){
-                         System.out.println("id: "+row.id+"  nZ: "+row.nonZeros+"  deg: "+row.degree);                                
-                 }
-                 /* END OF PRINT */
-                 
-                 // 'rLinha' is the chosen row
-                 Row chosenRow = rows.get(rLinha);
-                 /* PRINTING BLOCK */
-/*                        System.out.println("----- CHOSEN ROW -----");
-                 System.out.println("id : "+chosenRow.id);
-                 System.out.println("nZ : "+chosenRow.nonZeros);
-                 System.out.println("deg: "+chosenRow.degree);
-                 System.out.println("----------------------");
-                 /* END OF PRINTING */                
-                 
-                 if(rLinha != i){
-                          
-                         // swap i with rLinha in A
-                         byte[] auxRow = A[i];
-                         A[i] = A[rLinha];
-                         A[rLinha] = auxRow;
+            		 // decoding process - swap i and column in c
+            		 int auxIndex = c[i];
+            		 c[i] = c[column];
+            		 c[column] = auxIndex;
+            	 }
+            	 else // it is, so let's remove 'i' from the stack
+            		 nonZeros.remove((Integer)i);
 
-                         // swap i with rLinha in X
-                         auxRow = X[i];
-                         X[i] = X[rLinha];
-                         X[rLinha] = auxRow;
+            	 // swap the remaining non-zeros' columns so that they're the last columns in V 
+            	 for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--)
+            	 {                
+            		 // column to be swapped
+            		 column = nonZeros.pop();
 
-                         // decoding process - swap i with rLinha in d
-                         int auxIndex = d[i];
-                         d[i] = d[rLinha];
-                         d[rLinha] = auxIndex;
-                         
-                         /* PRINTING BLOCK */
-/*                                System.out.println("TROCA DE LINHA: "+i+" by "+ rLinha);
-                         System.out.println("--------- A ---------");
-                         (new Matrix(A)).show();
-                         System.out.println("---------------------");
-                         /* END OF PRINTING */                        
-                 }
-                 
-                 
-                 // re-order columns
-                 if(chosenRow.degree > 0){
-                         Stack<Integer> nonZeros = new Stack();
-                         for(int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++){
+            		 // swap columns
+            		 Utilities.swapColumns(A, column, L-u-remainingNZ);
+            		 Utilities.swapColumns(X, column, L-u-remainingNZ);
 
-                                 if(A[i][col] == 0)
-                                         continue;
-                                 else{
-                                         nZ++;
-                                         nonZeros.push(col);
-                                 }
-                         }
+            		 // decoding process - swap column with L-u-remainingNZ in c
+            		 int auxIndex = c[L-u-remainingNZ];
+            		 c[L-u-remainingNZ] = c[column];
+            		 c[column] = auxIndex;
+            	 }
 
-                         int coluna;
-                         if(A[i][i] == 0){
-                                 
-                                 coluna = nonZeros.pop();
-                                 Utilities.swapColumns(A, coluna, i);
-                                 Utilities.swapColumns(X, coluna, i);
-                         
-                                 // decoding process - swap i and coluna in c
-                                 int auxIndex = c[i];
-                                 c[i] = c[coluna];
-                                 c[coluna] = auxIndex;
-                         
-                                 /* PRINTING BLOCK */
-/*                                        System.out.println("TROCA DE COLUNA: "+i+" by "+ coluna);
-                                 System.out.println("--------- A ---------");
-                                 (new Matrix(A)).show();
-                                 System.out.println("---------------------");
-                                 /* END OF PRINTING */
-                         }
-                         else
-                                 nonZeros.remove((Integer)i);
-                         
-                         for(int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--){                
+            	 /*
+            	  * "... if a row below the chosen row has entry beta in the first column of V, and the chosen
+            	  *   row has entry alpha in the first column of V, then beta/alpha multiplied by the chosen 
+            	  *   row is added to this row to leave a zero value in the first column of V."
+            	  */
+            	 
+            	 // "the chosen row has entry alpha in the first column of V"
+            	 byte alpha = A[i][i];
 
-                                 coluna = nonZeros.pop();
-                                 
-                                 // swap
-                                 Utilities.swapColumns(A, coluna, L-u-remainingNZ);
-                                 Utilities.swapColumns(X, coluna, L-u-remainingNZ);
+            	 // let's look at all rows below the chosen one
+            	 for(int row = i+1; row < M; row++)				// TODO queue these row operations for when/if the row is chosen - Page35@RFC6330 1st Par.
+            	 {
+            		 // if it's already 0, no problem
+            		 if(A[row][i] == 0)
+            			 continue;
+            		 
+            		 // if it's a non-zero we've got to "zerofy" it
+            		 else
+            		 {                                 
+            			 // "if a row below the chosen row has entry beta in the first column of V"
+            			 byte beta   = A[row][i];
+            			 
+            			 /*
+            			  *  "then beta/alpha multiplied by the chosen row is added to this row"
+            			  */
+            			 
+            			 // division
+            			 byte balpha = OctectOps.division(beta, alpha);
 
-                                 // decoding process - swap coluna with L-u-remainingNZ in c
-                                 int auxIndex = c[L-u-remainingNZ];
-                                 c[L-u-remainingNZ] = c[coluna];
-                                 c[coluna] = auxIndex;
-                                 
-                                 /* PRINTING BLOCK */
-/*                                        System.out.println("TROCA DE COLUNA: "+(L-u-remainingNZ)+" by "+ coluna);
-                                 System.out.println("--------- A ---------");
-                                 (new Matrix(A)).show();
-                                 System.out.println("---------------------");
-                                 /* END OF PRINTING */
-                                 
-                         }
-                 
-                         // beta/alpha gewdness
-                         byte alpha = A[i][i];
-                         
-                         for(int row = i+1; row < M; row++){
-                                 
-                                 if(A[row][i] == 0)
-                                         continue;
-                                 else{                                 // TODO Queue these row operations for when (if) the row is chosen - RFC 6330 @ Page 35 1st Par.
-                                         
-                                         // beta/alpha
-                                         byte beta   = A[row][i];
-                                         byte balpha = OctectOps.division(beta, alpha);
-                                         
-                                         // multiplication 
-                                         byte[] product = OctectOps.betaProduct(balpha, A[i]);
-                                         
-                                         // addition 
-                                         A[row] = Utilities.xorSymbol(A[row], product);
+            			 // multiplication 
+            			 byte[] product = OctectOps.betaProduct(balpha, A[i]);
 
-                                         // decoding process - (beta * D[d[i]]) + D[d[row]]
-                                         product = OctectOps.betaProduct(balpha, D[d[i]]);
-                                         D[d[row]] = Utilities.xorSymbol(D[d[row]], product);
-                                         
-                                         /* PRINTING BLOCK */
-/*                                                System.out.println("ELIMINATING");
-                                         System.out.println("--------- A ---------");
-                                         (new Matrix(A)).show();
-                                         System.out.println("---------------------");
-                                         /* END OF PRINTING */
-                                 }
-                         }
-                 }
-                 
-                 /* PRINTING BLOCK */
-/*                        System.out.println("END OF STEP "+i);
-                 System.out.println("--------- A ---------");
-                 (new Matrix(A)).show();
-                 System.out.println("---------------------");
-                 /* END OF PRINTING */
+            			 // addition 
+            			 A[row] = Utilities.xorSymbol(A[row], product);
 
-                 // update 'i' and 'u'
-                 i++;
-                 u += r-1;
+            			 // decoding process - (beta * D[d[i]]) + D[d[row]]
+            			 product = OctectOps.betaProduct(balpha, D[d[i]]);
+            			 D[d[row]] = Utilities.xorSymbol(D[d[row]], product);
+            		 }
+            	 }
+             }
+
+             /*
+              * "Finally, i is incremented by 1 and u is incremented by r-1, which completes the step."
+              */
+             i++;
+             u += r-1;
          }
          // END OF FIRST PHASE
          
          /* 
           * Second phase 
           * */
+         
          // X is now ixi
 
          Utilities.reduceToRowEchelonForm(A, i, M, L-u, L, d, D);
@@ -2363,10 +2415,10 @@ public class Encoder {
 				}
 				
 				
-				if(nonZeros == 2 && (row < S || row >= S+H))
-					rows.put(row, new Row(row, nonZeros, degree, edges));
-				else
-					rows.put(row, new Row(row, nonZeros, degree));	
+		//		if(nonZeros == 2 && (row < S || row >= S+H))
+			//		rows.put(row, new Row(row, nonZeros, degree, edges));
+		//		else
+		//			rows.put(row, new Row(row, nonZeros, degree));	
 
 				/* // TODO testar tempos com isto o.O
 				if(i != 0){
