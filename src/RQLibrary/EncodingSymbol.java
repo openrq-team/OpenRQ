@@ -50,18 +50,18 @@ public final class EncodingSymbol implements Comparable<EncodingSymbol>, Seriali
 		EncodingSymbol s1 = (EncodingSymbol) this;
 		EncodingSymbol s2 = (EncodingSymbol) arg0;
 		
-		if(s1.getESI()<s2.getESI()){
-			
+		if(s1.getESI() < s2.getESI())
+		{	
 			return -1;
 		}
 		else{
 			
-			if(s1.getESI()>s2.getESI()){
-				
+			if(s1.getESI() > s2.getESI())
+			{	
 				return 1;
 			}
-			else{
-				
+			else
+			{	
 				return 0;
 			}
 		}
