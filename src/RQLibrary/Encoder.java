@@ -801,9 +801,7 @@ public class Encoder {
 					
 					esiToLTCode.put(missing_ESI, constraint_matrix[row]);
 					constraint_matrix[row] = newLine;
-					
-					//System.out.println("ISI: "+repair.getISI(K)+" | "+row+") "+Arrays.toString(newLine));
-					
+										
 					// Fill in missing source symbols in D with the repair symbols
 					D[row] = repair.getData();
 				}				
@@ -869,7 +867,8 @@ public class Encoder {
 		/*//FIXME SIMULATION */
 		int num_to_lose_symbols = ceil(0.01 * LOSS * K);
 		int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
-		num_repair_symbols = 1;
+//		num_repair_symbols = 1;
+
 		// allocate memory for the generated encoding symbols
 		EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 		
@@ -1783,152 +1782,145 @@ public class Encoder {
              u += r-1;
          }
          // END OF FIRST PHASE
-         
+
          /* 
           * Second phase 
           * */
-         
-         // X is now ixi
 
+         /*
+          * "At this point, all the entries of X outside the first i rows and i columns are discarded, so that X
+          *   has lower triangular form.  The last i rows and columns of X are discarded, so that X now has i
+          *    rows and i columns."
+          */
+
+         /*
+          * "Gaussian elimination is performed in the second phase on U_lower either to determine that its rank is
+          *   less than u (decoding failure) or to convert it into a matrix where the first u rows is the identity
+          *	  matrix (success of the second phase)."
+          */
+
+         // reduce U_lower to row echelon form
          Utilities.reduceToRowEchelonForm(A, i, M, L-u, L, d, D);
 
-         /* PRINTING BLOCK */
-/*                System.out.println("GAUSSIAN U_lower");
-         System.out.println("M: "+M+"\nL: "+L+"\ni: "+i+"\nu: "+u);
-         System.out.println("--------- A ---------");
-         (new Matrix(A)).show();
-         System.out.println("---------------------");
-         /* END OF PRINTING */
-         
-         if(!Utilities.validateRank(A, i, i, M, L, u)) // DECODING FAILURE
-                 throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 2: U_lower's rank is less than u.");
-         
-         // A is now LxL
-         
+         // check U_lower's rank, if it's less than 'u' we've got a decoding failure
+         if(!Utilities.validateRank(A, i, i, M, L, u))
+        	 throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 2: U_lower's rank is less than u.");
+
+         /*
+          * "After this phase, A has L rows and L columns."
+          */
+
          // END OF SECOND PHASE
-         
+
          /* 
           * Third phase 
           * */
-         
-         // multiply X by A submatrix
+
+         /*
+          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
+          */
          byte[][] XA = Utilities.multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
+
+         // copy the product (XA) to A
          for(int row = 0; row < i; row++)
-                 A[row] = XA[row];
-         
+        	 A[row] = XA[row];
+
          // decoding process
-         byte[][] reordereD = new byte[L][];
-         
+         byte[][] reorderD = new byte[L][];
+
+         // create a copy of D
          for(int index = 0; index < L; index++) 
-                 reordereD[index] = D[d[index]]; // reorder D
-         
+        	 reorderD[index] = D[d[index]]; 
+
+         // multiply D by X
          for(int row = 0; row < i; row++) // multiply X by D
-                 D[d[row]] = Utilities.multiplyByteLineBySymbolVector(X[row], i, reordereD, T);
-         
-         /*  TEST BLOCK  */
-/*                for(int row = 0; row < i; row++){
-                 for(int col = 0; col < i; col++){
-                         if(X[row][col] != A[row][col]){
-                                 System.out.println("ERRO NA FASE 3 (row: "+row+" ; col: "+col+" )");
-                                 System.out.println("--------- X ---------");
-                                 (new Matrix(X)).show();
-                                 System.out.println("---------------------");
-                                 System.out.println("--------- A ---------");
-                                 (new Matrix(A)).show();
-                                 System.out.println("---------------------");
-                                 System.exit(-543534);
-                         }
-                 }
-         }
-         /* END OF BLOCK */
-         
-         /* PRINTING BLOCK */
-/*                System.out.println("SPARSED U_upper");
-         System.out.println("--------- A ---------");
-         (new Matrix(A)).show();
-         System.out.println("---------------------");
-/*                System.out.println("--------- X ---------");
-         (new Matrix(X)).show();
-         System.out.println("---------------------");
-         /* END OF PRINTING */
-         
+        	 D[d[row]] = Utilities.multiplyByteLineBySymbolVector(X[row], i, reorderD, T);
+
          /* 
           * Fourth phase 
           * */
 
-         for(int row=0; row < i; row++){                                                                                                                
-                 for(int j = i; j < L; j++){                                                                                                                
-                         if(A[row][j] != 0){                                                                                                                        
+         /*
+          * "For each of the first i rows of U_upper, do the following: if the row has a nonzero entry at position j,
+          *   and if the value of that nonzero entry is b, then add to this row b times row j of I_u."
+          */
+         
+         // "For each of the first i rows of U_upper"
+         for(int row = 0; row < i; row++)
+         {                                                                                                                
+        	 for(int j = i; j < L; j++)
+        	 {       
+        		 // "if the row has a nonzero entry at position j"
+        		 if(A[row][j] != 0)
+        		 {                                                                                                          
+        			 // "if the value of that nonzero entry is b"
+        			 byte b = A[row][j];
+        			 
+        			 // "add to this row b times row j" -- this would "zerofy" that position, thus we can save the complexity
+        			 A[row][j] = 0;
 
-                                 byte b    = A[row][j];
-                                 A[row][j] = 0;
-
-                                 // decoding process - (beta * D[d[j]]) + D[d[row]]
-                                 byte[] product = OctectOps.betaProduct(b, D[d[j]]);
-                                 D[d[row]] = Utilities.xorSymbol(D[d[row]], product);
-                         }
-                 }
+        			 // decoding process - (beta * D[d[j]]) + D[d[row]]
+        			 byte[] product = OctectOps.betaProduct(b, D[d[j]]);
+        			 D[d[row]] = Utilities.xorSymbol(D[d[row]], product);
+        		 }
+        	 }
          }
 
-         /* PRINTING BLOCK */
-/*                System.out.println("ZEROED U_upper");
-         System.out.println("--------- A ---------");
-         (new Matrix(A)).show();
-         System.out.println("---------------------");
-         /* END OF PRINTING */
-         
          /* 
           * Fifth phase 
           * */
          
-         /*
-          * TODO Optimizacao: acho que da para zerar directamente o A, e deixar apenas as operacoes em D...
-          */
-         
-         for(int j = 0; j < i; j++){
-                 
-                 if(A[j][j] != 1){ //A[j][j] != 0
-                         
-                         byte beta = A[j][j];
-                         A[j] = OctectOps.betaDivision(A[j], beta);
-                         
-                         // decoding process - D[d[j]] / beta
-                         D[d[j]] = OctectOps.betaDivision(D[d[j]], beta);
-                 }
-                 
-                 for(int l = 0; l < j; l++){
-                         
-                         if(A[j][l] != 0){
-                                 
-                                 byte beta = A[j][l];
-                                 byte[] product = OctectOps.betaProduct(beta, A[l]);
-                                 
-                                 A[j] = Utilities.xorSymbol(A[j], product);
+         // TODO Optimizacao: acho que da para zerar directamente o A, e deixar apenas as operacoes em D...          
 
-                                 // decoding process - D[d[j]] + (A[j][l] * D[d[l]])
-                                 product = OctectOps.betaProduct(beta, D[d[l]]);
-                                 D[d[j]] = Utilities.xorSymbol(D[d[j]], product);
-                                 
-                         }
-                 }
+         
+         // "For j from 1 to i, perform the following operations:"
+         for(int j = 0; j < i; j++)
+         {
+        	 // "If A[j,j] is not one" 
+        	 if(A[j][j] != 1)
+        	 {
+        		 byte beta = A[j][j];
+        		 
+        		 // "then divide row j of A by A[j,j]."
+        		 A[j] = OctectOps.betaDivision(A[j], beta);
+
+        		 // decoding process - D[d[j]] / beta
+        		 D[d[j]] = OctectOps.betaDivision(D[d[j]], beta);
+        	 }
+
+        	 // "For l from 1 to j-1"
+        	 for(int l = 0; l < j; l++){
+
+        		 // "if A[j,l] is nonzero"
+        		 if(A[j][l] != 0)
+        		 { // "then add A[j,l] multiplied with row l of A to row j of A."
+        			          			 
+        			 byte beta = A[j][l];
+        			 
+        			 // multiply A[j][l] by row 'l' of A
+        			 byte[] product = OctectOps.betaProduct(beta, A[l]);
+
+        			 // add the product to row 'j' of A
+        			 A[j] = Utilities.xorSymbol(A[j], product);
+
+        			 // decoding process - D[d[j]] + (A[j][l] * D[d[l]])
+        			 product = OctectOps.betaProduct(beta, D[d[l]]);
+        			 D[d[j]] = Utilities.xorSymbol(D[d[j]], product);
+        		 }
+        	 }
          }
-         
-         /* PRINTING BLOCK */
-/*                System.out.println("IDENTITY");
-         System.out.println("--------- A ---------");
-         (new Matrix(A)).show();
-         System.out.println("---------------------");
-         
-         if(!checkIdentity(A,L)) System.exit(231);
-         /* END OF PRINTING */
-         
+
+         // allocate memory for the decoded symbols
          byte[] C = new byte[L*T];
+         
+         // copy the decoded source symbols from D to C
          for(int symbol = 0; symbol < L; symbol++)
-                 System.arraycopy(D[d[symbol]], 0, C, c[symbol]*T, T);
-                 
+        	 System.arraycopy(D[d[symbol]], 0, C, c[symbol]*T, T);
+
+         // return the decoded source symbols
          return C;
 	 }
-	
+
 	 /**
 	  * Generates intermediate symbols for a given source block.
 	  * @param sb
@@ -2027,7 +2019,7 @@ public class Encoder {
 		 byte[] result = Arrays.copyOfRange(C, (int)(b*T), (int)((b+1)*T));
 
 		 /*
-		  * encoding
+		  * encoding -- refer to section 5.3.3.3 of RFC 6330
 		  */
 		 
 		 for(long j = 0; j < d; j++)
@@ -2083,7 +2075,7 @@ public class Encoder {
 		 long b1 = tuple.getB1();
 
 		 /*
-		  * simulated encoding
+		  * simulated encoding -- refer to section 5.3.3.3 of RFC 6330
 		  */
 		 
 		 indexes.add((int) b);
