@@ -8,14 +8,11 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 
 import RQLibrary.Encoder;
 import RQLibrary.EncodingPacket;
-import RQLibrary.EncodingSymbol;
-import RQLibrary.SingularMatrixException;
 import RQLibrary.SourceBlock;
-
-import com.google.common.io.Files;
 
 public class Sender {
 
@@ -48,7 +45,7 @@ public class Sender {
 		File file = new File(fileName);
 		byte[] data = null;
 		try {
-			data = Files.toByteArray(file);
+			data = Files.readAllBytes(file.toPath());
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

@@ -7,7 +7,7 @@ import java.io.StreamCorruptedException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.util.Arrays;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -18,8 +18,6 @@ import RQLibrary.EncodingSymbol;
 import RQLibrary.Partition;
 import RQLibrary.SingularMatrixException;
 import RQLibrary.SourceBlock;
-
-import com.google.common.io.Files;
 
 public class Receiver {
 
@@ -165,7 +163,7 @@ public class Receiver {
 		try {
 			if (file.exists())
 				file.createNewFile();
-			Files.write(decoded_data, file);
+			Files.write(file.toPath(), decoded_data);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
