@@ -567,12 +567,34 @@ public final class Utilities {
 	        }
 			
 			return x;
+		}		
+		
+		/**
+		 * Calculates how many repair symbols are necessary for a given network loss rate. 
+		 * 
+		 * @param K Number of source symbols.
+		 * @param overhead Number of overhead repair symbols necessary for decoding.
+		 * @param loss The expected network loss rate (in %).
+		 * @return The minimum number of repair symbols that should be sent.
+		 */
+		public static final int necessaryRepairSymbols(int K, int overhead, float loss)
+		{
+			// convert loss percentage to decimal 
+			float decimal_loss = loss / 100;
+			float temp_var = decimal_loss;
+			
+			// calculate
+			temp_var *= K;			
+			temp_var += overhead;
+			temp_var /= (1 - decimal_loss);
+			
+			// ceil to an integer and return			
+			return (int) Math.ceil(temp_var);
 		}
 		
-		
 		/*
-		 * can't remember why I made this. it's not used.
-		 *  looks like a endian converter
+		 * can't remember why I made this. it's not currently used.
+		 *  looks like an endian converter
 		 */
 		public static final byte convert(byte in){
 
