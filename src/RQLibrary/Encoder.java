@@ -28,30 +28,26 @@ public class Encoder {
 	private int N; // number of sub-blocks in each source block
 	private int F; // transfer length
 	private int Kt; // total number of symbols required to represent the source data of the object
-	private byte[] data;
-	
-	/* Simulation variables */
-	private int LOSS;
-	private int OVERHEAD;
-	
-	public static int INIT_REPAIR_SYMBOL = 0;
-	
-	public Encoder(byte[] file, int overhead)
-	{
-		LOSS = 0;
-		OVERHEAD = overhead;
-		
+	private byte[] data; // the data that will be sent
+	private int numRepairSymbols = -1; // the number of repair symbols that should be sent (including the overhead symbols)
+
+	public Encoder(byte[] file, float loss, int overhead)
+	{	
 		F = file.length;
 
 		T = derivateT(MAX_PAYLOAD_SIZE); // T = P'
-		Kt = ceil((double) F/T);
+		Kt = ceil((double) F / T);
 		
-		int N_max = floor((double) T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
+		int N_max = floor((double) T / (SSYMBOL_LOWER_BOUND * ALIGN_PARAM));
 
 		Z = derivateZ(N_max); //Z = ceil(Kt/KL(N_max))
 		
+		// how many repair symbols should be sent?
+		int KL = Encoder.ceil((double) Kt / Z);
+		numRepairSymbols = Utilities.necessaryRepairSymbols(KL, overhead, loss);
+		
 		N = derivateN(N_max); // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
-
+		
 		/*
 		 * If Kt*T > F, then, for encoding and decoding purposes, the last symbol of
 		 *  the last source block MUST be padded at the end with Kt*T-F zero octets.
@@ -68,38 +64,11 @@ public class Encoder {
 		}
 	}
 	
-	public Encoder(byte[] file, int loss, int overhead)
-	{
-		LOSS = loss;
-		OVERHEAD = overhead;
-		
-		F = file.length;
-
-		T = derivateT(MAX_PAYLOAD_SIZE); // T = P'
-		Kt = ceil((double) F/T);
-		
-		int N_max = floor((double) T/(SSYMBOL_LOWER_BOUND*ALIGN_PARAM));
-
-		Z = derivateZ(N_max); //Z = ceil(Kt/KL(N_max))
-		
-		N = derivateN(N_max); // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
-
-		/*
-		 * If Kt*T > F, then, for encoding and decoding purposes, the last symbol of
-		 *  the last source block MUST be padded at the end with Kt*T-F zero octets.
-		 */
-		
-		// FIXME is this copy really necessary?
-		if(F >= Kt*T)
-		{
-			data = Arrays.copyOf(file, F);
-		}
-		else
-		{
-			data = Arrays.copyOf(file, Kt*T);
-		}
-	}
-	
+	/**
+	 * Normally used by the receiver.
+	 * 
+	 * @param fileSize
+	 */
 	public Encoder(int fileSize)
 	{
 		F = fileSize;
@@ -117,6 +86,16 @@ public class Encoder {
 	public int getKt()
 	{
 		return Kt;
+	}
+	
+	public int getNumRepairSymbols()
+	{
+		return numRepairSymbols;
+	}
+
+	public void setNumRepairSymbols(int numRepairSymbols) 
+	{
+		this.numRepairSymbols = numRepairSymbols;
 	}
 	
 	private int derivateT(int pLinha)
@@ -862,21 +841,18 @@ public class Encoder {
 		byte[] ssymbols = sb.getSymbols();
 		int K = sb.getK();
 		int kLinha = SystematicIndices.ceil(K);
-		
-		// we need to know how many repair symbols to generate, but this should go away
-		/*//FIXME SIMULATION */
-		int num_to_lose_symbols = ceil(0.01 * LOSS * K);
-		int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
-//		num_repair_symbols = 1;
 
 		// allocate memory for the generated encoding symbols
-		EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
+		EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + numRepairSymbols]; // FIXME arbitrary size ASAP
 		
 		// generate intermediate symbols
 		byte[] intermediate_symbols = null;
-		try {
+		try
+		{
 			intermediate_symbols = generateIntermediateSymbols(sb);
-		} catch (SingularMatrixException e) {
+		}
+		catch (SingularMatrixException e)
+		{
 			// this never happens here
 			System.exit(-42437);
 		}
@@ -891,7 +867,7 @@ public class Encoder {
 		}
 		
 		// generate repair symbols
-		for(int repair_symbol = INIT_REPAIR_SYMBOL; repair_symbol < num_repair_symbols + INIT_REPAIR_SYMBOL; repair_symbol++)
+		for(int repair_symbol = 0; repair_symbol < numRepairSymbols; repair_symbol++)
 		{
 			int	isi = kLinha + repair_symbol;
 			int esi = K + repair_symbol;
@@ -928,54 +904,39 @@ public class Encoder {
 			byte[] ssymbols = sb.getSymbols();
 			int K = sb.getK();
 			int kLinha = SystematicIndices.ceil(K);
+
+			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + numRepairSymbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
 			
-			/*//FIXME SIMULATION */
-			int num_to_lose_symbols = ceil(0.01*LOSS*K);
-			int num_repair_symbols = OVERHEAD + num_to_lose_symbols;
+			/*
+			 *  First encoding step
+			 */
 			
-			EncodingSymbol[] encoded_symbols = new EncodingSymbol[K + num_repair_symbols]; // FIXME arbitrary size ASAP /*//FIXME SIMULATION */
-			
-			// first encoding step
 			byte[] intermediate_symbols = null;
-			try {
+			try
+			{
 				intermediate_symbols = generateIntermediateSymbols(sb);
-			} catch (SingularMatrixException e) {
+			}
+			catch (SingularMatrixException e)
+			{
 				// this never happens here
 				System.exit(-42437);
 			}
 			
-			// Second encoding step
-			// Sending original source symbols
+			/*
+			 *  Second encoding step
+			 */
+			
+			// sending original source symbols
 			int source_symbol;
 			int source_symbol_index;
-
-			/*//FIXME SIMULATION */
-			Random lost = new Random(System.currentTimeMillis() + System.nanoTime());
-			// Select indexes to be lost.
-			Set<Integer> oopsi_daisy = new TreeSet<Integer>();
-	
-			while(num_to_lose_symbols > 0){
-				
-				int selected_index = lost.nextInt(K);
-				
-				if(!oopsi_daisy.contains(selected_index)){
-					oopsi_daisy.add(selected_index);
-					num_to_lose_symbols--;
-				}
-				else
-					continue;
-			}
 			
 			for(source_symbol = 0, source_symbol_index = 0; source_symbol < K; source_symbol++, source_symbol_index+=sb.getT())
 			{
-				/*//FIXME SIMULATION */
-				if(oopsi_daisy.contains(source_symbol)) continue;
-				
 				encoded_symbols[source_symbol] = new EncodingSymbol(SBN,source_symbol, Arrays.copyOfRange(ssymbols, source_symbol_index, (int) (source_symbol_index+sb.getT())));
 			}
 			
-			// Generating/sending repair symbols
-			for(int repair_symbol = INIT_REPAIR_SYMBOL; repair_symbol < num_repair_symbols + INIT_REPAIR_SYMBOL; repair_symbol++)
+			// generating/sending repair symbols
+			for(int repair_symbol = 0; repair_symbol < numRepairSymbols; repair_symbol++)
 			{
 				int	isi = kLinha + repair_symbol;
 				int esi = K + repair_symbol;
@@ -2777,6 +2738,8 @@ public class Encoder {
 			u += r-1;
 		}
 	}
+
+
 	
 	/*
 	private static int[] findR() {
