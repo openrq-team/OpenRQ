@@ -1,4 +1,4 @@
-package net.fec.raptor.openrq;
+package net.fec.openrq;
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
