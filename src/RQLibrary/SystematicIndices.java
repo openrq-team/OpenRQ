@@ -1,76 +1,89 @@
 package RQLibrary;
 
+final class SystematicIndices {
 
-public abstract class SystematicIndices {
-
-	public static final int getKIndex(int K){
+	static int getKIndex(int K) {
 
 		/*
-		if(K < 1)     throw new IllegalArgumentException("K must be positive.");
-		if(K > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
-	*/
-		
-		for(int i=0; i<table2.length; i++)
-			if(table2[i][0] >= K)
+		 * if(K < 1) throw new IllegalArgumentException("K must be positive.");
+		 * if(K > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
+		 */
+
+		for (int i = 0; i < table2.length; i++) {
+			if (K(i) >= K) {
 				return i;
-		
-		throw new RuntimeException("Not sure what just happened...");	
-	}
-	
-	protected static final int J(int K){
-		
-	 	return table2[K][1];
-	}
-	
-	public static final int S(int K){
-		
-	 	return table2[K][2];
-	}
-	
-	public static final int H(int K){
-		
-	 	return table2[K][3];
-	}
-	
-	protected static final int W(int K){
-		
-	 	return table2[K][4];
-	}
-	
-	protected static final int KL(int n, int WS, int Al, int T){
-		
-//		if(n < 1 || WS < 1 || Al < 1 || T < 1) throw new IllegalArgumentException("All arguments must be positive.");
-		
-		int upper_bound = WS / (Al * (Encoder.ceil((double)T / (Al*n))));
-		int K=-1, i=1;
-		
-		while(i<Encoder.KMAX && K<=upper_bound){
-			K = getKIndex(i);
-			i++;
-		}
-		
-		if(i<Encoder.KMAX)
-			return getKIndex(i-2);
-		else
-			return getKIndex(Encoder.KMAX);
-	}
-	
-	public static final int ceil(int k){
-		
-/*
- 		if(k < 1)     throw new IllegalArgumentException("K must be positive.");
-		if(k > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
-		*/
-		
-		for(int i=0; i<table2.length; i++){
-			if(table2[i][0]>=k){
-				return(table2[i][0]);
 			}
 		}
-		
-		throw new RuntimeException("Not sure what just happened...");
+
+		throw new RuntimeException("Invalid table state");
 	}
-	
+
+	static int K(int K_index) {
+
+		return table2[K_index][0];
+	}
+
+	static int J(int K_index) {
+
+		return table2[K_index][1];
+	}
+
+	static int S(int K_index) {
+
+		return table2[K_index][2];
+	}
+
+	static int H(int K_index) {
+
+		return table2[K_index][3];
+	}
+
+	static int W(int K_index) {
+
+		return table2[K_index][4];
+	}
+
+	static int KL(int n, int WS, int Al, int T) {
+
+		// if(n < 1 || WS < 1 || Al < 1 || T < 1) throw new IllegalArgumentException("All arguments must be positive.");
+
+		final int upper_bound = WS / (Al * (Encoder.ceil((double)T / (Al * n))));
+		return floor(upper_bound);
+	}
+
+	static int ceil(int k) {
+
+		/*
+		 * if(k < 1) throw new IllegalArgumentException("K must be positive.");
+		 * if(k > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
+		 */
+
+		for (int i = 0; i < table2.length; i++) {
+			if (K(i) >= k) {
+				return (K(i));
+			}
+		}
+
+		throw new RuntimeException("Invalid table state");
+	}
+
+	static int floor(int k) {
+
+		/*
+		 * if(k < 1) throw new IllegalArgumentException("K must be positive.");
+		 * if(k > 56403) throw new IllegalArgumentException("K must be smaller than 56403.");
+		 */
+
+		for (int i = table2.length - 1; i >= 0; i--) {
+			if (K(i) <= k) {
+				return (K(i));
+			}
+		}
+
+		throw new RuntimeException("Invalid table state");
+	}
+
+
 	private static final int table2[][] = {
 		{10,254,7,10,17},
 		{12,630,7,10,19},
@@ -549,5 +562,10 @@ public abstract class SystematicIndices {
 		{55289,362,883,16,55817},
 		{55843,963,907,16,56393},
 		{56403,471,907,16,56951}
-	};	
+	};
+
+	private SystematicIndices() {
+
+		// not instantiable
+	}
 }
