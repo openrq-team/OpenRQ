@@ -33,7 +33,7 @@ public interface RQEncoder {
 	 * buffer will have advanced by 12 bytes.
 	 * 
 	 * @param buffer
-	 *            a buffer on which the object header is written
+	 *            A buffer on which the object header is written
 	 * @exception NullPointerException
 	 *                If the provided buffer is {@code null}
 	 * @exception ReadOnlyBufferException
