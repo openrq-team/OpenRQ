@@ -6,4 +6,10 @@ package net.fec.openrq;
  */
 public interface RQDecoder {
 
+	/**
+	 * Returns the common properties associated to this decoder.
+	 * 
+	 * @return the common properties associated to this decoder
+	 */
+	public RQCommonProperties getProperties();
 }

@@ -114,7 +114,7 @@ public class Encoder {
 		int n;
 		
 		// N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
-		for(n = 1; n <= N_max && ceil((double) Kt/Z) > SystematicIndices.KL(n, MAX_SIZE_BLOCK, ALIGN_PARAM, T); n++);
+		for(n = 1; n <= N_max && ceil((double) Kt/Z) > SystematicIndices.KL(n, MAX_SIZE_BLOCK, ALIGN_PARAM, T); n++){}
 
 		return n;
 	}

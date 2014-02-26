@@ -1,9 +1,6 @@
 package net.fec.openrq;
 
 
-import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
-import java.nio.ReadOnlyBufferException;
 import java.util.List;
 
 
@@ -24,31 +21,9 @@ public interface RQEncoder {
 	public List<SourceBlock> getSourceBlocks();
 
 	/**
-	 * Writes the header of the object in a buffer. The header contains the <i>encoded FEC Object Transmission
-	 * Information</i>
-	 * associated to this encoder's object.
-	 * <p>
-	 * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least 12 bytes
-	 * {@linkplain ByteBuffer#remaining() remaining}. If this method returns normally, the position of the provided
-	 * buffer will have advanced by 12 bytes.
+	 * Returns the common properties associated to this encoder.
 	 * 
-	 * @param buffer
-	 *            A buffer on which the object header is written
-	 * @exception NullPointerException
-	 *                If the provided buffer is {@code null}
-	 * @exception ReadOnlyBufferException
-	 *                If the provided buffer is read-only
-	 * @exception BufferOverflowException
-	 *                If the provided buffer has less than 12 bytes remaining
+	 * @return the common properties associated to this encoder
 	 */
-	public void writeObjectHeader(ByteBuffer buffer);
-
-	/**
-	 * Returns the header of the object as an array of bytes. The header contains the <i>encoded FEC Object Transmission
-	 * Information</i>
-	 * associated to this encoder's object.
-	 * 
-	 * @return an array of bytes containing the header of the object
-	 */
-	public byte[] getObjectHeader();
+	public RQCommonProperties getProperties();
 }
