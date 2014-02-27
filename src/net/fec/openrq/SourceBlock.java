@@ -6,10 +6,10 @@ package net.fec.openrq;
  */
 public interface SourceBlock {
 
-	/**
-	 * Returns the Source Block Number (SBN) of this source block.
-	 * 
-	 * @return the Source Block Number (SBN) of this source block
-	 */
-	public int getSBN();
+    /**
+     * Returns the Source Block Number (SBN) of this source block.
+     * 
+     * @return the Source Block Number (SBN) of this source block
+     */
+    public int getSBN();
 }
