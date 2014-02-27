@@ -1,8 +1,6 @@
 package net.fec.openrq;
 
 
-import java.util.List;
-
 import net.fec.openrq.parameters.TransportParams;
 
 
@@ -13,19 +11,19 @@ import net.fec.openrq.parameters.TransportParams;
 public interface RQEncoder {
 
     /**
-     * Returns an immutable list with the source blocks of this encoder.
+     * Returns a stream of source blocks.
      * <p>
-     * Each source block is capable of producing encoding symbols independently from other source blocks. It is possible
-     * to encode symbols from different source blocks in parallel.
+     * Each source block is capable of producing encoding symbols independently from other source blocks. Once the
+     * stream is fully iterated, that is, no more source blocks are returned.
      * 
-     * @return an immutable list with the source blocks of this encoder
+     * @return a stream of source blocks
      */
-    public List<SourceBlock> getSourceBlocks();
+    public SourceBlockStream getSourceBlocks();
 
     /**
      * Returns the transport parameters associated to this encoder.
      * 
      * @return the transport parameters associated to this encoder
      */
-    public TransportParams getTransportParameterss();
+    public TransportParams getTransportParameters();
 }
