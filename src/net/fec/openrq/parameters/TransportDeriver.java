@@ -71,7 +71,10 @@ public final class TransportDeriver {
      */
     public TransportDeriver(long objectSize) {
 
-        if (!ParameterChecks.isValidObjectSize(objectSize)) throw new IllegalArgumentException("illegal object size");
+        if (!ParameterChecks.isValidObjectSize(objectSize)) {
+            throw new IllegalArgumentException("illegal object size");
+        }
+
         this.objectSize = objectSize;
 
         this.maxPayload = DEF_MAX_PAYLOAD_SIZE;

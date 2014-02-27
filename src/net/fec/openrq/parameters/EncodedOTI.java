@@ -6,8 +6,6 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 
-import net.fec.openrq.util.numericaltype.UnsignedTypes;
-
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
@@ -50,15 +48,15 @@ public final class EncodedOTI {
     public void writeEncodedOTI(TransportParams params, ByteBuffer buffer) {
 
         // write F, reserved, T
-        UnsignedTypes.writeUnsignedBytes(params.getObjectSize(), buffer, 5);            // 5 bytes
-        buffer.put((byte)0);                                                            // 1 byte
-        UnsignedTypes.writeUnsignedShort(params.getSymbolSize(), buffer);               // 2 bytes
+        ParameterChecks.writeObjectSize(params.getObjectSize(), buffer); // 5 bytes
+        buffer.put((byte)0);                                             // 1 byte
+        ParameterChecks.writeSymbolSize(params.getSymbolSize(), buffer); // 2 bytes
 
         // write Z, N, Al
-        UnsignedTypes.writeUnsignedByte(params.getNumberOfSourceBlocks(), buffer);      // 1 byte
-        UnsignedTypes.writeUnsignedShort(params.getNumberOfSubBlocks(), buffer);        // 2 bytes
+        ParameterChecks.writeNumSourceBlocks(params.getNumberOfSourceBlocks(), buffer);      // 1 byte
+        ParameterChecks.writeNumSubBlocks(params.getNumberOfSubBlocks(), buffer);            // 2 bytes
         // TODO replace default value with a proper symbol alignment value
-        UnsignedTypes.writeUnsignedByte(TransportDeriver.DEF_SYMBOL_ALIGNMENT, buffer); // 1 byte
+        ParameterChecks.writeSymbolAlignment(TransportDeriver.DEF_SYMBOL_ALIGNMENT, buffer); // 1 byte
     }
 
     /**
@@ -83,15 +81,15 @@ public final class EncodedOTI {
     public EncodedOTI readEncodedOTI(ByteBuffer buffer) {
 
         // read F, reserved, T
-        final long objectSize = UnsignedTypes.readUnsignedBytes(buffer, 5); // 5 bytes
-        buffer.get();                                                       // 1 byte
-        final int symbolSize = UnsignedTypes.readUnsignedShort(buffer);     // 2 bytes
+        final long objectSize = ParameterChecks.readObjectSize(buffer); // 5 bytes
+        buffer.get();                                                   // 1 byte
+        final int symbolSize = ParameterChecks.readSymbolSize(buffer);  // 2 bytes
 
         // read Z, N, Al
-        final int numSourceBlocks = UnsignedTypes.readUnsignedByte(buffer); // 1 byte
-        final int numSubBlocks = UnsignedTypes.readUnsignedByte(buffer);    // 2 bytes
+        final int numSourceBlocks = ParameterChecks.readNumSourceBlocks(buffer); // 1 byte
+        final int numSubBlocks = ParameterChecks.readNumSubBlocks(buffer);       // 2 bytes
         // TODO store and check the read symbol alignment value
-        UnsignedTypes.readUnsignedByte(buffer);                             // 1 byte
+        ParameterChecks.readSymbolAlignment(buffer);                             // 1 byte
 
         if (!ParameterChecks.isValidObjectSize(objectSize)) {
             return new EncodedOTI(OTIState.INVALID_OBJECT_SIZE, null);

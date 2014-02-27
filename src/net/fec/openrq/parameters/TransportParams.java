@@ -36,17 +36,25 @@ public final class TransportParams {
      * @exception IllegalArgumentException
      *                If some parameter value is invalid
      */
-    public static TransportParams makeTransportParameters(long objectSize,
-            int symbolSize,
-            int numSourceBlocks,
-            int numSubBlocks) {
+    public static TransportParams makeTransportParameters(
+        long objectSize,
+        int symbolSize,
+        int numSourceBlocks,
+        int numSubBlocks)
+    {
 
-        if (!ParameterChecks.isValidObjectSize(objectSize)) throw new IllegalArgumentException("invalid object size");
-        if (!ParameterChecks.isValidSymbolSize(symbolSize)) throw new IllegalArgumentException("invalid symbol size");
-        if (!ParameterChecks.isValidNumSourceBlocks(numSourceBlocks))
+        if (!ParameterChecks.isValidObjectSize(objectSize)) {
+            throw new IllegalArgumentException("invalid object size");
+        }
+        if (!ParameterChecks.isValidSymbolSize(symbolSize)) {
+            throw new IllegalArgumentException("invalid symbol size");
+        }
+        if (!ParameterChecks.isValidNumSourceBlocks(numSourceBlocks)) {
             throw new IllegalArgumentException("invalid number of source blocks");
-        if (!ParameterChecks.isValidNumSubBlocks(numSubBlocks))
+        }
+        if (!ParameterChecks.isValidNumSubBlocks(numSubBlocks)) {
             throw new IllegalArgumentException("invalid number of sub-blocks");
+        }
 
         return new TransportParams(objectSize, symbolSize, numSourceBlocks, numSubBlocks);
     }
