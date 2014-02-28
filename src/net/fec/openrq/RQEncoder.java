@@ -3,7 +3,7 @@ package net.fec.openrq;
 
 import java.util.List;
 
-import net.fec.openrq.parameters.TransportParams;
+import net.fec.openrq.parameters.DataParameters;
 import net.fec.openrq.stream.SourceBlockStream;
 
 
@@ -49,5 +49,5 @@ public interface RQEncoder {
      * 
      * @return the transport parameters associated to this encoder
      */
-    public TransportParams getTransportParameters();
+    public DataParameters getTransportParameters();
 }

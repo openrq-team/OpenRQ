@@ -10,7 +10,7 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class ParameterChecks {
+public final class DataParameters {
 
     private static final long MAX_DATA_LENGTH = 946270874880L;
     private static final int MAX_SYMBOL_SIZE = (1 << 16) - 1;
@@ -140,8 +140,111 @@ public final class ParameterChecks {
         return UnsignedTypes.readUnsignedByte(buffer);
     }
 
-    private ParameterChecks() {
+    /**
+     * Returns an instance of {@code DataParameters} with the provided values.
+     * <p>
+     * The following expressions must all be true so that a correct instance can be returned:
+     * <ul>
+     * <li>{@code DataParameters.isValidDataLength(dataLen)}</li>
+     * <li>{@code DataParameters.isValidSymbolSize(symbolSize)}</li>
+     * <li>{@code DataParameters.isValidNumSourceBlocks(numSourceBlocks)}</li>
+     * <li>{@code DataParameters.isValidNumSubBlocks(numSubBlocks)}</li>
+     * </ul>
+     * otherwise, an {@code IllegalArgumentException} is thrown.
+     * <p>
+     * 
+     * @param dataLen
+     *            The length of the encodable data in number of bytes
+     * @param symbolSize
+     *            The symbol size in number of bytes
+     * @param numSourceBlocks
+     *            The number of blocks into which the encodable data is partitioned
+     * @param numSubBlocks
+     *            The number of sub-blocks per source block into which the encodable data is partitioned
+     * @return a new {@code DataParameters} instance
+     * @exception IllegalArgumentException
+     *                If some parameter value is invalid
+     */
+    public static DataParameters makeDataParameters(
+        long dataLen,
+        int symbolSize,
+        int numSourceBlocks,
+        int numSubBlocks)
+    {
 
-        // not instantiable
+        if (!isValidDataLength(dataLen)) {
+            throw new IllegalArgumentException("invalid data length");
+        }
+        if (!isValidSymbolSize(symbolSize)) {
+            throw new IllegalArgumentException("invalid symbol size");
+        }
+        if (!isValidNumSourceBlocks(numSourceBlocks)) {
+            throw new IllegalArgumentException("invalid number of source blocks");
+        }
+        if (!isValidNumSubBlocks(numSubBlocks)) {
+            throw new IllegalArgumentException("invalid number of sub-blocks");
+        }
+
+        return new DataParameters(dataLen, symbolSize, numSourceBlocks, numSubBlocks);
+    }
+
+
+    // minimal sized fields for space efficiency
+    private final long dataLen;
+    private final short symbolSize;
+    private final byte numSourceBlocks;
+    private final short numSubBlocks;
+
+
+    /*
+     * Package-private constructor. No checks are done to the arguments, since those are the responsibility of the
+     * public factory methods.
+     */
+    DataParameters(long dataLen, int symbolSize, int numSourceBlocks, int numSubBlocks) {
+
+        this.dataLen = dataLen;
+        this.symbolSize = (short)symbolSize;
+        this.numSourceBlocks = (byte)numSourceBlocks;
+        this.numSubBlocks = (short)numSubBlocks;
+    }
+
+    /**
+     * Returns the length of the encodable data in number of bytes.
+     * 
+     * @return the length of the encodable data in number of bytes
+     */
+    public long getDataLength() {
+
+        return dataLen;
+    }
+
+    /**
+     * Returns the symbol size in number of bytes.
+     * 
+     * @return the symbol size in number of bytes
+     */
+    public int getSymbolSize() {
+
+        return UnsignedTypes.getUnsignedShort(symbolSize);
+    }
+
+    /**
+     * Returns the number of blocks into which the encodable data is partitioned.
+     * 
+     * @return the number of blocks into which the encodable data is partitioned
+     */
+    public int getNumberOfSourceBlocks() {
+
+        return UnsignedTypes.getUnsignedByte(numSourceBlocks);
+    }
+
+    /**
+     * Returns the number of sub-blocks per source block into which the encodable data is partitioned.
+     * 
+     * @return the number of sub-blocks per source block into which the encodable data is partitioned
+     */
+    public int getNumberOfSubBlocks() {
+
+        return UnsignedTypes.getUnsignedShort(numSubBlocks);
     }
 }

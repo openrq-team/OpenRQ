@@ -1,11 +1,10 @@
 package net.fec.openrq.parameters;
 
 /**
- * Deriver class for transport parameters. This class follows the "Builder" design pattern, where multiple properties
- * may be configured and a final result {@code TransportParams} instance is returned upon calling the method
- * {@link #derive()}.
+ * Deriver class for data parameters. This class follows the "Builder" design pattern, where multiple properties may be
+ * configured and a final result {@code DataParameters} instance is returned upon calling the method {@link #derive()}.
  * <p>
- * Transport parameters can be built from the following assignable properties:
+ * Data parameters can be built from the following assignable properties:
  * <ul>
  * <li>maximum payload length</li>
  * <li>maximum block size in working memory</li>
@@ -15,19 +14,19 @@ package net.fec.openrq.parameters;
  * If some property is not assigned, a default value is automatically assigned to it. Default values for each property
  * are defined as static fields.
  * <p>
- * All property assigning methods return the instance of {@code TransportDeriver} to allow chained invocation:
+ * All property assigning methods return the {@code this} instance in order to allow chained invocation:
  * 
  * <pre>
- * TransportParams params = new TransportDeriver(dataLen)
- *                              .maxPayload(maxPay)
- *                              .maxBlockInMemory(maxBlock)
- *                              .derive();
+ * DataParameters params = new ParametersDeriver(dataLen)
+ *                             .maxPayload(maxPay)
+ *                             .maxBlockInMemory(maxBlock)
+ *                             .derive();
  * </pre>
  * 
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class TransportDeriver {
+public final class ParametersDeriver {
 
     /**
      * Default value of 4 for the symbol alignment.
@@ -59,16 +58,16 @@ public final class TransportDeriver {
     // TODO add alignment parameter
 
     /**
-     * Constructs a new {@code TransportDeriver} instance with the provided data length.
+     * Constructs a new {@code ParametersDeriver} instance with the provided data length.
      * 
      * @param dataLen
      *            The length of the encodable data in number of bytes
      * @exception IllegalArgumentException
      *                If {@code ParameterChecks.isValidDataLength(dataLen) == false}
      */
-    public TransportDeriver(long dataLen) {
+    public ParametersDeriver(long dataLen) {
 
-        if (!ParameterChecks.isValidDataLength(dataLen)) {
+        if (!DataParameters.isValidDataLength(dataLen)) {
             throw new IllegalArgumentException("invalid data length");
         }
 
@@ -91,7 +90,7 @@ public final class TransportDeriver {
      * @exception IllegalArgumentException
      *                If {@code maxPayloadLen} is non-positive
      */
-    public TransportDeriver maxPayload(int maxPayloadLen) {
+    public ParametersDeriver maxPayload(int maxPayloadLen) {
 
         if (maxPayloadLen <= 0) throw new IllegalArgumentException("non-positive value");
         // TODO replace default symbol alignment value with field value if we'll have one sometime
@@ -105,7 +104,7 @@ public final class TransportDeriver {
      * @return this builder
      * @see #maxPayload(int)
      */
-    public TransportDeriver defaultMaxPayload() {
+    public ParametersDeriver defaultMaxPayload() {
 
         this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
@@ -123,7 +122,7 @@ public final class TransportDeriver {
      * @exception IllegalArgumentException
      *                If {@code maxBlock} is non-positive
      */
-    public TransportDeriver maxBlockInMemory(int maxBlock) {
+    public ParametersDeriver maxBlockInMemory(int maxBlock) {
 
         if (maxBlock <= 0) throw new IllegalArgumentException("non-positive value");
         this.maxBlock = maxBlock;
@@ -137,7 +136,7 @@ public final class TransportDeriver {
      * @return this builder
      * @see #maxBlockInMemory(int)
      */
-    public TransportDeriver defaultMaxBlockInMemory() {
+    public ParametersDeriver defaultMaxBlockInMemory() {
 
         this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
@@ -156,7 +155,7 @@ public final class TransportDeriver {
      * @exception IllegalArgumentException
      *                If {@code minSubSymbol} is non-positive
      */
-    public TransportDeriver minSubSymbol(int minSubSymbol) {
+    public ParametersDeriver minSubSymbol(int minSubSymbol) {
 
         if (minSubSymbol <= 0) throw new IllegalArgumentException("non-positive value");
         this.minSubSymbol = minSubSymbol;
@@ -170,18 +169,18 @@ public final class TransportDeriver {
      * @return this builder
      * @see #minSubSymbol(int)
      */
-    public TransportDeriver defaultMinSubSymbol() {
+    public ParametersDeriver defaultMinSubSymbol() {
 
         this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
     }
 
     /**
-     * Returns transport parameters derived from the currently assigned properties.
+     * Returns data parameters derived from the currently assigned properties.
      * 
-     * @return transport parameters derived from the currently assigned properties
+     * @return data parameters derived from the currently assigned properties
      */
-    public TransportParams derive() {
+    public DataParameters derive() {
 
         // TODO derive F, T, Z, N and return the parameters
         return null;

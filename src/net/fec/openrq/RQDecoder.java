@@ -1,7 +1,7 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.parameters.TransportParams;
+import net.fec.openrq.parameters.DataParameters;
 
 
 /**
@@ -15,5 +15,5 @@ public interface RQDecoder {
      * 
      * @return the transport parameters associated to this decoder
      */
-    public TransportParams getTransportParameterss();
+    public DataParameters getTransportParameterss();
 }

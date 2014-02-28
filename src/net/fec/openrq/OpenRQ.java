@@ -1,7 +1,7 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.parameters.TransportParams;
+import net.fec.openrq.parameters.DataParameters;
 
 
 /**
@@ -14,7 +14,7 @@ public final class OpenRQ {
      * @param params
      * @return
      */
-    public static RQDecoder newEncoder(byte[] data, TransportParams params) {
+    public static RQDecoder newEncoder(byte[] data, DataParameters params) {
 
         // TODO return a encoder from the object and provided properties
         return null;
@@ -24,7 +24,7 @@ public final class OpenRQ {
      * @param params
      * @return
      */
-    public static RQDecoder newDecoder(TransportParams params) {
+    public static RQDecoder newDecoder(DataParameters params) {
 
         // TODO return a decoder from the provided properties
         return null;
