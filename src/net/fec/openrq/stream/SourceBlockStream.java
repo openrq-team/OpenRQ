@@ -1,7 +1,9 @@
-package net.fec.openrq;
+package net.fec.openrq.stream;
 
 
 import java.util.Iterator;
+
+import net.fec.openrq.SourceBlock;
 
 
 /**
