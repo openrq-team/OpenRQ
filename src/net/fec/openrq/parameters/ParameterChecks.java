@@ -12,33 +12,33 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
  */
 public final class ParameterChecks {
 
-    private static final long MAX_OBJECT_SIZE = 946270874880L;
+    private static final long MAX_DATA_LENGTH = 946270874880L;
     private static final int MAX_SYMBOL_SIZE = (1 << 16) - 1;
     private static final int MAX_NUM_SOURCE_BLOCKS = 1 << 8;
     private static final int MAX_NUM_SUB_BLOCKS = 56403;
 
 
-    // =========== object size - F ========== //
+    // =========== data length - F ========== //
 
     /**
-     * @param objectSize
+     * @param dataLen
      * @return
      */
-    public static boolean isValidObjectSize(long objectSize) {
+    public static boolean isValidDataLength(long dataLen) {
 
         // the RFC specifies a non-negative value, but we force a positive value here
-        return objectSize > 0 && objectSize <= MAX_OBJECT_SIZE;
+        return dataLen > 0 && dataLen <= MAX_DATA_LENGTH;
     }
 
     /*
-     * Requires isValidObjectSize(objectSize)
+     * Requires isValidDataLength(dataLen)
      */
-    static void writeObjectSize(long objectSize, ByteBuffer buffer) {
+    static void writeDataLength(long dataLen, ByteBuffer buffer) {
 
-        UnsignedTypes.writeUnsignedBytes(objectSize, buffer, 5);
+        UnsignedTypes.writeUnsignedBytes(dataLen, buffer, 5);
     }
 
-    static long readObjectSize(ByteBuffer buffer) {
+    static long readDataLength(ByteBuffer buffer) {
 
         return UnsignedTypes.readUnsignedBytes(buffer, 5);
     }

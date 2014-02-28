@@ -7,7 +7,7 @@ package net.fec.openrq.parameters;
  * <p>
  * Transport parameters can be built from the following assignable properties:
  * <ul>
- * <li>maximum payload size</li>
+ * <li>maximum payload length</li>
  * <li>maximum block size in working memory</li>
  * <li>minimum sub-symbol size</li>
  * </ul>
@@ -18,7 +18,7 @@ package net.fec.openrq.parameters;
  * All property assigning methods return the instance of {@code TransportDeriver} to allow chained invocation:
  * 
  * <pre>
- * TransportParams params = new TransportDeriver(objSize)
+ * TransportParams params = new TransportDeriver(dataLen)
  *                              .maxPayload(maxPay)
  *                              .maxBlockInMemory(maxBlock)
  *                              .derive();
@@ -32,85 +32,82 @@ public final class TransportDeriver {
     /**
      * Default value of 4 for the symbol alignment.
      */
-    public static final int DEF_SYMBOL_ALIGNMENT = 4;    // Al
+    public static final int DEF_SYMBOL_ALIGNMENT = 4;      // Al
 
     /**
-     * Default value of 1392 for the maximum payload size.
+     * Default value of 1392 for the maximum payload length.
      */
-    public static final int DEF_MAX_PAYLOAD_SIZE = 1392; // P'
+    public static final int DEF_MAX_PAYLOAD_LENGTH = 1392; // P'
 
     /**
      * Default value of 76800 for the maximum block size.
      */
-    public static final int DEF_MAX_BLOCK_SIZE = 76800;  // WS // B
+    public static final int DEF_MAX_BLOCK_SIZE = 76800;    // WS // B
 
     /**
      * Default value of 8 for the minimum sub-symbol size.
      */
-    public static final int DEF_MIN_SUB_SYMBOL = 8;      // SS
+    public static final int DEF_MIN_SUB_SYMBOL = 8;        // SS
 
-    private final long objectSize;
+    private final long dataLen;
 
-    private int maxPayload;			// P'
-    private int maxBlock;			// WS
-    private int minSubSymbol;		// SS
+    private int maxPayloadLen; // P'
+    private int maxBlock;      // WS
+    private int minSubSymbol;  // SS
 
 
     // TODO add alignment parameter
 
     /**
-     * Constructs a new {@code TransportDeriver} instance with the provided object size.
-     * <p>
-     * The provided object size is checked using the class {@link ParameterChecks}. If the following expression is
-     * false, an {@code IllegalArgumentException} is thrown: {@code ParameterChecks.isValidObjectSize(objectSize)}
+     * Constructs a new {@code TransportDeriver} instance with the provided data length.
      * 
-     * @param objectSize
-     *            The size of the encodable object
+     * @param dataLen
+     *            The length of the encodable data in number of bytes
      * @exception IllegalArgumentException
-     *                If the provided object size is invalid
+     *                If {@code ParameterChecks.isValidDataLength(dataLen) == false}
      */
-    public TransportDeriver(long objectSize) {
+    public TransportDeriver(long dataLen) {
 
-        if (!ParameterChecks.isValidObjectSize(objectSize)) {
-            throw new IllegalArgumentException("illegal object size");
+        if (!ParameterChecks.isValidDataLength(dataLen)) {
+            throw new IllegalArgumentException("invalid data length");
         }
 
-        this.objectSize = objectSize;
+        this.dataLen = dataLen;
 
-        this.maxPayload = DEF_MAX_PAYLOAD_SIZE;
+        this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         this.maxBlock = DEF_MAX_BLOCK_SIZE;
         this.minSubSymbol = DEF_MIN_SUB_SYMBOL;
     }
 
     /**
-     * Assigns the provided value to the property of <i>maximum payload size in number of bytes</i>.
+     * Assigns the provided value to the property of <i>maximum payload length in number of bytes</i>.
      * <p>
-     * This property affects the maximum size of an encoding symbol, which will be equal to the provided size rounded
-     * down to the closest multiple of {@code Al}, where {@code Al} is the symbol alignment parameter.
+     * This property affects the maximum size of an encoding symbol, which will be equal to the provided payload length
+     * rounded down to the closest multiple of {@code Al}, where {@code Al} is the symbol alignment parameter.
      * 
-     * @param maxPayload
-     *            A number of bytes indicating the maximum payload size
+     * @param maxPayloadLen
+     *            The maximum payload length in number of bytes
      * @return this builder
      * @exception IllegalArgumentException
-     *                If {@code maxPayload} is non-positive
+     *                If {@code maxPayloadLen} is non-positive
      */
-    public TransportDeriver maxPayload(int maxPayload) {
+    public TransportDeriver maxPayload(int maxPayloadLen) {
 
-        if (maxPayload <= 0) throw new IllegalArgumentException("non-positive value");
+        if (maxPayloadLen <= 0) throw new IllegalArgumentException("non-positive value");
         // TODO replace default symbol alignment value with field value if we'll have one sometime
-        this.maxPayload = (maxPayload / DEF_SYMBOL_ALIGNMENT) * DEF_SYMBOL_ALIGNMENT;
+        this.maxPayloadLen = (maxPayloadLen / DEF_SYMBOL_ALIGNMENT) * DEF_SYMBOL_ALIGNMENT;
         return this;
     }
 
     /**
-     * Assigns the default value to the property of <i>maximum payload size in number of bytes</i>.
+     * Assigns the default value to the property of <i>maximum payload length in number of bytes</i>.
      * 
      * @return this builder
      * @see #maxPayload(int)
      */
     public TransportDeriver defaultMaxPayload() {
 
-        this.maxPayload = DEF_MAX_PAYLOAD_SIZE;
+        this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
     }
 
@@ -142,7 +139,7 @@ public final class TransportDeriver {
      */
     public TransportDeriver defaultMaxBlockInMemory() {
 
-        this.maxPayload = DEF_MAX_PAYLOAD_SIZE;
+        this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
     }
 
@@ -175,7 +172,7 @@ public final class TransportDeriver {
      */
     public TransportDeriver defaultMinSubSymbol() {
 
-        this.maxPayload = DEF_MAX_PAYLOAD_SIZE;
+        this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
     }
 

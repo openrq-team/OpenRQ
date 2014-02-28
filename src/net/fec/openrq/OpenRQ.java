@@ -14,7 +14,7 @@ public final class OpenRQ {
      * @param params
      * @return
      */
-    public static RQDecoder newEncoder(byte[] object, TransportParams params) {
+    public static RQDecoder newEncoder(byte[] data, TransportParams params) {
 
         // TODO return a encoder from the object and provided properties
         return null;

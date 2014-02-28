@@ -17,7 +17,7 @@ public final class EncodedOTI {
     public static enum OTIState {
 
         VALID,
-        INVALID_OBJECT_SIZE,
+        INVALID_DATA_LENGTH,
         INVALID_SYMBOL_SIZE,
         INVALID_NUM_SOURCE_BLOCKS,
         INVALID_NUM_SUB_BLOCKS;
@@ -48,7 +48,7 @@ public final class EncodedOTI {
     public void writeEncodedOTI(TransportParams params, ByteBuffer buffer) {
 
         // write F, reserved, T
-        ParameterChecks.writeObjectSize(params.getObjectSize(), buffer); // 5 bytes
+        ParameterChecks.writeDataLength(params.getDataLength(), buffer); // 5 bytes
         buffer.put((byte)0);                                             // 1 byte
         ParameterChecks.writeSymbolSize(params.getSymbolSize(), buffer); // 2 bytes
 
@@ -81,7 +81,7 @@ public final class EncodedOTI {
     public EncodedOTI readEncodedOTI(ByteBuffer buffer) {
 
         // read F, reserved, T
-        final long objectSize = ParameterChecks.readObjectSize(buffer); // 5 bytes
+        final long dataLen = ParameterChecks.readDataLength(buffer); // 5 bytes
         buffer.get();                                                   // 1 byte
         final int symbolSize = ParameterChecks.readSymbolSize(buffer);  // 2 bytes
 
@@ -91,8 +91,8 @@ public final class EncodedOTI {
         // TODO store and check the read symbol alignment value
         ParameterChecks.readSymbolAlignment(buffer);                             // 1 byte
 
-        if (!ParameterChecks.isValidObjectSize(objectSize)) {
-            return new EncodedOTI(OTIState.INVALID_OBJECT_SIZE, null);
+        if (!ParameterChecks.isValidDataLength(dataLen)) {
+            return new EncodedOTI(OTIState.INVALID_DATA_LENGTH, null);
         }
         else if (!ParameterChecks.isValidSymbolSize(symbolSize)) {
             return new EncodedOTI(OTIState.INVALID_SYMBOL_SIZE, null);
@@ -106,7 +106,7 @@ public final class EncodedOTI {
         else {
             return new EncodedOTI(
                 OTIState.VALID,
-                TransportParams.makeTransportParameters(objectSize, symbolSize, numSourceBlocks, numSubBlocks));
+                TransportParams.makeTransportParameters(dataLen, symbolSize, numSourceBlocks, numSubBlocks));
         }
     }
 
@@ -142,8 +142,8 @@ public final class EncodedOTI {
         if (!isValid()) {
             final String errorMsg;
             switch (state) {
-                case INVALID_OBJECT_SIZE:
-                    errorMsg = "invalid object size";
+                case INVALID_DATA_LENGTH:
+                    errorMsg = "invalid data length";
                 break;
                 case INVALID_SYMBOL_SIZE:
                     errorMsg = "invalid symbol size";

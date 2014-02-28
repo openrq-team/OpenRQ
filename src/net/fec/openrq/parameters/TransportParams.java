@@ -16,7 +16,7 @@ public final class TransportParams {
      * The class {@link ParameterChecks} is used to validate the provided values. The following expressions must all be
      * true so that a correct instance can be returned:
      * <ul>
-     * <li>{@code ParameterChecks.isValidObjectSize(objectSize)}</li>
+     * <li>{@code ParameterChecks.isValidDataLength(dataLen)}</li>
      * <li>{@code ParameterChecks.isValidSymbolSize(symbolSize)}</li>
      * <li>{@code ParameterChecks.isValidNumSourceBlocks(numSourceBlocks)}</li>
      * <li>{@code ParameterChecks.isValidNumSubBlocks(numSubBlocks)}</li>
@@ -24,27 +24,27 @@ public final class TransportParams {
      * otherwise, an {@code IllegalArgumentException} is thrown.
      * <p>
      * 
-     * @param objectSize
-     *            The size in bytes of the encodable object
+     * @param dataLen
+     *            The length of the encodable data in number of bytes
      * @param symbolSize
-     *            The size in bytes of a symbol
+     *            The symbol size in number of bytes
      * @param numSourceBlocks
-     *            The number of blocks into which the encodable object is partitioned
+     *            The number of blocks into which the encodable data is partitioned
      * @param numSubBlocks
-     *            The number of sub-blocks per source block into which the encodable object is partitioned
+     *            The number of sub-blocks per source block into which the encodable data is partitioned
      * @return a new {@code TransportParams} instance
      * @exception IllegalArgumentException
      *                If some parameter value is invalid
      */
     public static TransportParams makeTransportParameters(
-        long objectSize,
+        long dataLen,
         int symbolSize,
         int numSourceBlocks,
         int numSubBlocks)
     {
 
-        if (!ParameterChecks.isValidObjectSize(objectSize)) {
-            throw new IllegalArgumentException("invalid object size");
+        if (!ParameterChecks.isValidDataLength(dataLen)) {
+            throw new IllegalArgumentException("invalid data length");
         }
         if (!ParameterChecks.isValidSymbolSize(symbolSize)) {
             throw new IllegalArgumentException("invalid symbol size");
@@ -56,12 +56,12 @@ public final class TransportParams {
             throw new IllegalArgumentException("invalid number of sub-blocks");
         }
 
-        return new TransportParams(objectSize, symbolSize, numSourceBlocks, numSubBlocks);
+        return new TransportParams(dataLen, symbolSize, numSourceBlocks, numSubBlocks);
     }
 
 
     // minimal sized fields for space efficiency
-    private final long objectSize;
+    private final long dataLen;
     private final short symbolSize;
     private final byte numSourceBlocks;
     private final short numSubBlocks;
@@ -71,28 +71,28 @@ public final class TransportParams {
      * Package-private constructor. No checks are done to the arguments, since those are the responsibility of the
      * public factory methods.
      */
-    TransportParams(long objectSize, int symbolSize, int numSourceBlocks, int numSubBlocks) {
+    TransportParams(long dataLen, int symbolSize, int numSourceBlocks, int numSubBlocks) {
 
-        this.objectSize = objectSize;
+        this.dataLen = dataLen;
         this.symbolSize = (short)symbolSize;
         this.numSourceBlocks = (byte)numSourceBlocks;
         this.numSubBlocks = (short)numSubBlocks;
     }
 
     /**
-     * Returns the size in bytes of the encodable object.
+     * Returns the length of the encodable data in number of bytes.
      * 
-     * @return the size in bytes of the encodable object
+     * @return the length of the encodable data in number of bytes
      */
-    public long getObjectSize() {
+    public long getDataLength() {
 
-        return objectSize;
+        return dataLen;
     }
 
     /**
-     * Returns the size in bytes of a symbol.
+     * Returns the symbol size in number of bytes.
      * 
-     * @return the size in bytes of a symbol
+     * @return the symbol size in number of bytes
      */
     public int getSymbolSize() {
 
@@ -100,9 +100,9 @@ public final class TransportParams {
     }
 
     /**
-     * Returns the number of blocks into which the encodable object is partitioned.
+     * Returns the number of blocks into which the encodable data is partitioned.
      * 
-     * @return the number of blocks into which the encodable object is partitioned
+     * @return the number of blocks into which the encodable data is partitioned
      */
     public int getNumberOfSourceBlocks() {
 
@@ -110,9 +110,9 @@ public final class TransportParams {
     }
 
     /**
-     * Returns the number of sub-blocks per source block into which the encodable object is partitioned.
+     * Returns the number of sub-blocks per source block into which the encodable data is partitioned.
      * 
-     * @return the number of sub-blocks per source block into which the encodable object is partitioned
+     * @return the number of sub-blocks per source block into which the encodable data is partitioned
      */
     public int getNumberOfSubBlocks() {
 
