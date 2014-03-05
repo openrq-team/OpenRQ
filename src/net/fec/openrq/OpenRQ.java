@@ -1,7 +1,6 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.parameters.DataParameters;
 
 
 /**

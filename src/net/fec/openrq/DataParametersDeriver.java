@@ -1,4 +1,4 @@
-package net.fec.openrq.parameters;
+package net.fec.openrq;
 
 /**
  * Deriver class for data parameters. This class follows the "Builder" design pattern, where multiple properties may be
@@ -26,7 +26,7 @@ package net.fec.openrq.parameters;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class ParametersDeriver {
+public final class DataParametersDeriver {
 
     /**
      * Default value of 4 for the symbol alignment.
@@ -58,16 +58,16 @@ public final class ParametersDeriver {
     // TODO add alignment parameter
 
     /**
-     * Constructs a new {@code ParametersDeriver} instance with the provided data length.
+     * Constructs a new {@code DataParametersDeriver} instance with the provided data length.
      * 
      * @param dataLen
      *            The length of the encodable data in number of bytes
      * @exception IllegalArgumentException
-     *                If {@code ParameterChecks.isValidDataLength(dataLen) == false}
+     *                If {@code ValueChecker.isValidDataLength(dataLen) == false}
      */
-    public ParametersDeriver(long dataLen) {
+    public DataParametersDeriver(long dataLen) {
 
-        if (!DataParameters.isValidDataLength(dataLen)) {
+        if (!ValueChecker.isValidDataLength(dataLen)) {
             throw new IllegalArgumentException("invalid data length");
         }
 
@@ -86,11 +86,11 @@ public final class ParametersDeriver {
      * 
      * @param maxPayloadLen
      *            The maximum payload length in number of bytes
-     * @return this builder
+     * @return this deriver
      * @exception IllegalArgumentException
      *                If {@code maxPayloadLen} is non-positive
      */
-    public ParametersDeriver maxPayload(int maxPayloadLen) {
+    public DataParametersDeriver maxPayload(int maxPayloadLen) {
 
         if (maxPayloadLen <= 0) throw new IllegalArgumentException("non-positive value");
         // TODO replace default symbol alignment value with field value if we'll have one sometime
@@ -101,10 +101,10 @@ public final class ParametersDeriver {
     /**
      * Assigns the default value to the property of <i>maximum payload length in number of bytes</i>.
      * 
-     * @return this builder
+     * @return this deriver
      * @see #maxPayload(int)
      */
-    public ParametersDeriver defaultMaxPayload() {
+    public DataParametersDeriver defaultMaxPayload() {
 
         this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
@@ -118,11 +118,11 @@ public final class ParametersDeriver {
      * 
      * @param maxBlock
      *            A number of bytes indicating the maximum block size that is decodable in working memory
-     * @return this builder
+     * @return this deriver
      * @exception IllegalArgumentException
      *                If {@code maxBlock} is non-positive
      */
-    public ParametersDeriver maxBlockInMemory(int maxBlock) {
+    public DataParametersDeriver maxBlockInMemory(int maxBlock) {
 
         if (maxBlock <= 0) throw new IllegalArgumentException("non-positive value");
         this.maxBlock = maxBlock;
@@ -133,10 +133,10 @@ public final class ParametersDeriver {
      * Assigns the default value to the property of <i>maximum block size in number of bytes that is decodable in
      * working memory</i>.
      * 
-     * @return this builder
+     * @return this deriver
      * @see #maxBlockInMemory(int)
      */
-    public ParametersDeriver defaultMaxBlockInMemory() {
+    public DataParametersDeriver defaultMaxBlockInMemory() {
 
         this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;
@@ -151,11 +151,11 @@ public final class ParametersDeriver {
      * 
      * @param minSubSymbol
      *            The lower bound on the sub-symbol size in units of {@code Al}
-     * @return this builder
+     * @return this deriver
      * @exception IllegalArgumentException
      *                If {@code minSubSymbol} is non-positive
      */
-    public ParametersDeriver minSubSymbol(int minSubSymbol) {
+    public DataParametersDeriver minSubSymbol(int minSubSymbol) {
 
         if (minSubSymbol <= 0) throw new IllegalArgumentException("non-positive value");
         this.minSubSymbol = minSubSymbol;
@@ -166,10 +166,10 @@ public final class ParametersDeriver {
      * Assigns the default value to the property of <i>the lower bound on the sub-symbol size in units of {@code Al},
      * where {@code Al} is the symbol alignment parameter</i>.
      * 
-     * @return this builder
+     * @return this deriver
      * @see #minSubSymbol(int)
      */
-    public ParametersDeriver defaultMinSubSymbol() {
+    public DataParametersDeriver defaultMinSubSymbol() {
 
         this.maxPayloadLen = DEF_MAX_PAYLOAD_LENGTH;
         return this;

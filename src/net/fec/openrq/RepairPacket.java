@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-final class SourcePacket implements EncodingPacket {
+final class RepairPacket implements EncodingPacket {
 
     @Override
     public PacketParameters getPacketParameters() {
@@ -27,6 +27,7 @@ final class SourcePacket implements EncodingPacket {
     @Override
     public SymbolType getSymbolType() {
 
-        return SymbolType.SOURCE;
+        return SymbolType.REPAIR;
     }
+
 }

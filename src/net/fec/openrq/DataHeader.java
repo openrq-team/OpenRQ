@@ -1,4 +1,4 @@
-package net.fec.openrq.parameters;
+package net.fec.openrq;
 
 
 import java.nio.BufferOverflowException;
@@ -8,8 +8,8 @@ import java.nio.ReadOnlyBufferException;
 
 
 /**
- * This class facilitates a way to represent {@link DataParameter} instances as sequences of bytes, and provides methods
- * to read from and write to byte arrays and {@link ByteBuffer} objects.
+ * This class facilitates a way to represent {@link DataParameters} instances as sequences of bytes, and provides
+ * methods to read from and write to byte arrays and {@link ByteBuffer} objects.
  * <p>
  * The format of such a sequence of bytes is defined in RFC 6330 as the <i>encoded FEC Object Transmission
  * Information</i>.
@@ -17,7 +17,7 @@ import java.nio.ReadOnlyBufferException;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class DataParametersHeader {
+public final class DataHeader {
 
     // Enum state to avoid throwing exceptions when the user parses an illegal header.
     public static enum HeaderState {
@@ -54,88 +54,97 @@ public final class DataParametersHeader {
     public static void writeHeader(DataParameters params, ByteBuffer buffer) {
 
         // write F, reserved, T
-        DataParameters.writeDataLength(params.getDataLength(), buffer); // 5 bytes
+        ValueChecker.writeDataLength(params.getDataLength(), buffer); // 5 bytes
         buffer.put((byte)0);                                            // 1 byte
-        DataParameters.writeSymbolSize(params.getSymbolSize(), buffer); // 2 bytes
+        ValueChecker.writeSymbolSize(params.getSymbolSize(), buffer); // 2 bytes
 
         // write Z, N, Al
-        DataParameters.writeNumSourceBlocks(params.getNumberOfSourceBlocks(), buffer);       // 1 byte
-        DataParameters.writeNumSubBlocks(params.getNumberOfSubBlocks(), buffer);             // 2 bytes
+        ValueChecker.writeNumSourceBlocks(params.getNumberOfSourceBlocks(), buffer);       // 1 byte
+        ValueChecker.writeNumSubBlocks(params.getNumberOfSubBlocks(), buffer);             // 2 bytes
         // TODO replace default value with a proper symbol alignment value
-        DataParameters.writeSymbolAlignment(ParametersDeriver.DEF_SYMBOL_ALIGNMENT, buffer); // 1 byte
+        ValueChecker.writeSymbolAlignment(DataParametersDeriver.DEF_SYMBOL_ALIGNMENT, buffer); // 1 byte
     }
 
     /**
-     * Reads from the provided buffer a {@code DataParametersHeader} instance.
+     * Reads from the provided buffer a {@code DataHeader} instance.
      * <p>
      * The provided buffer must have at least 12 bytes {@linkplain ByteBuffer#remaining() remaining}. If this method
      * returns normally, the position of the provided buffer will have advanced by 12 bytes.
      * <p>
      * The returned {@code DataParametersHeader} instance is only {@linkplain #isValid() valid} if the data parameters
      * contained inside the buffer have valid values. If some parameter value is invalid, the method
-     * {@link DataParametersHeader#getState()} can be used to infer which parameter value is invalid.
+     * {@link DataHeader#getState()} can be used to infer which parameter value is invalid.
      * 
      * @param buffer
      *            A buffer from which a {@code DataParametersHeader} instance is read
-     * @return an encoded OTI
+     * @return a {@code DataHeader} instance
      * @exception NullPointerException
      *                If the provided buffer is {@code null}
      * @exception BufferUnderflowException
      *                If the provided buffer has less than 12 bytes remaining
      */
-    public static DataParametersHeader readEncodedOTI(ByteBuffer buffer) {
+    public static DataHeader readHeader(ByteBuffer buffer) {
 
         // read F, reserved, T
-        final long dataLen = DataParameters.readDataLength(buffer); // 5 bytes
-        buffer.get();                                                   // 1 byte
-        final int symbolSize = DataParameters.readSymbolSize(buffer);  // 2 bytes
+        final long dataLen = ValueChecker.readDataLength(buffer);   // 5 bytes
+        buffer.get();                                               // 1 byte
+        final int symbolSize = ValueChecker.readSymbolSize(buffer); // 2 bytes
 
         // read Z, N, Al
-        final int numSourceBlocks = DataParameters.readNumSourceBlocks(buffer); // 1 byte
-        final int numSubBlocks = DataParameters.readNumSubBlocks(buffer);       // 2 bytes
+        final int numSourceBlocks = ValueChecker.readNumSourceBlocks(buffer); // 1 byte
+        final int numSubBlocks = ValueChecker.readNumSubBlocks(buffer);       // 2 bytes
         // TODO store and check the read symbol alignment value
-        DataParameters.readSymbolAlignment(buffer);                             // 1 byte
+        ValueChecker.readSymbolAlignment(buffer);                             // 1 byte
 
-        if (!DataParameters.isValidDataLength(dataLen)) {
-            return new DataParametersHeader(HeaderState.INVALID_DATA_LENGTH, null);
+        if (!ValueChecker.isValidDataLength(dataLen)) {
+            return new DataHeader(DataHeader.HeaderState.INVALID_DATA_LENGTH, null);
         }
-        else if (!DataParameters.isValidSymbolSize(symbolSize)) {
-            return new DataParametersHeader(HeaderState.INVALID_SYMBOL_SIZE, null);
+        else if (!ValueChecker.isValidSymbolSize(symbolSize)) {
+            return new DataHeader(DataHeader.HeaderState.INVALID_SYMBOL_SIZE, null);
         }
-        else if (!DataParameters.isValidNumSourceBlocks(numSourceBlocks)) {
-            return new DataParametersHeader(HeaderState.INVALID_NUM_SOURCE_BLOCKS, null);
+        else if (!ValueChecker.isValidNumSourceBlocks(numSourceBlocks)) {
+            return new DataHeader(DataHeader.HeaderState.INVALID_NUM_SOURCE_BLOCKS, null);
         }
-        else if (!DataParameters.isValidNumSubBlocks(numSubBlocks)) {
-            return new DataParametersHeader(HeaderState.INVALID_NUM_SUB_BLOCKS, null);
+        else if (!ValueChecker.isValidNumSubBlocks(numSubBlocks)) {
+            return new DataHeader(DataHeader.HeaderState.INVALID_NUM_SUB_BLOCKS, null);
         }
         else {
-            return new DataParametersHeader(
-                HeaderState.VALID,
-                DataParameters.makeDataParameters(dataLen, symbolSize, numSourceBlocks, numSubBlocks));
+            return new DataHeader(
+                DataHeader.HeaderState.VALID,
+                new DataParameters(dataLen, symbolSize, numSourceBlocks, numSubBlocks));
         }
     }
 
 
-    private final HeaderState state;
+    private final DataHeader.HeaderState state;
     private final DataParameters dataParams;
 
 
-    DataParametersHeader(HeaderState state, DataParameters dataParams) {
+    DataHeader(DataHeader.HeaderState state, DataParameters dataParams) {
 
         this.state = state;
         this.dataParams = dataParams;
     }
 
+    /**
+     * @return
+     */
     public boolean isValid() {
 
-        return state == HeaderState.VALID;
+        return state == DataHeader.HeaderState.VALID;
     }
 
-    public HeaderState getState() {
+    /**
+     * @return
+     */
+    public DataHeader.HeaderState getState() {
 
         return state;
     }
 
+    /**
+     * @return
+     */
     public DataParameters getDataParameters() {
 
         checkValid();
