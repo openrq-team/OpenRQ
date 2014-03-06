@@ -59,6 +59,7 @@ public final class ValueChecker {
      */
     static long maskDataLength(long dataLen) {
 
+        // 40-bit value
         return UnsignedTypes.getLongUnsignedBytes(dataLen, numBytesOfDataLen());
     }
 
@@ -138,8 +139,8 @@ public final class ValueChecker {
      */
     static int maskNumSourceBlocks(byte numSourceBlocks) {
 
-        // 8-bit value
-        return UnsignedTypes.getUnsignedByte(numSourceBlocks);
+        // positive 8-bit value
+        return UnsignedTypes.getPositiveUnsignedByte(numSourceBlocks);
     }
 
     /*
@@ -151,20 +152,14 @@ public final class ValueChecker {
         // An unsigned byte only fits values from [0, (2^8)-1].
         // So, consider value 0 as 2^8 (unsignedByte(2^8) == 0)
 
-        // 8-bit value
+        // positive 8-bit value
         UnsignedTypes.writeUnsignedByte(numSourceBlocks, buffer);
     }
 
     static int readNumSourceBlocks(ByteBuffer buffer) {
 
-        // The RFC specifies a minimum of 1 and a maximum of 2^8 for the number of source blocks.
-        // An unsigned byte only fits values from [0, (2^8)-1].
-        // Accept the value 0 and convert it to 2^8
-
-        // 8-bit value
-        int numSourceBlocks = UnsignedTypes.readUnsignedByte(buffer);
-        if (numSourceBlocks == 0) numSourceBlocks = MAX_Z;
-        return numSourceBlocks;
+        // positive 8-bit value
+        return UnsignedTypes.readPositiveUnsignedByte(buffer);
     }
 
     // =========== number of sub-blocks - N ========== //
@@ -331,8 +326,8 @@ public final class ValueChecker {
      */
     static int maskNumSymbols(short numSymbols) {
 
-        // 16-bit value
-        return UnsignedTypes.getUnsignedShort(numSymbols);
+        // positive 16-bit value
+        return UnsignedTypes.getPositiveUnsignedShort(numSymbols);
     }
 
     /*
@@ -344,19 +339,13 @@ public final class ValueChecker {
         // An unsigned short only fits values from [0, (2^16)-1].
         // So, consider value 0 as 2^16 (unsignedShort(2^16) == 0)
 
-        // 16-bit value
+        // positive 16-bit value
         UnsignedTypes.writeUnsignedShort(numSymbols, buffer);
     }
 
     static int readNumSymbols(ByteBuffer buffer) {
 
-        // We specify a minimum of 1 and a maximum of 2^16 for the number of symbols.
-        // An unsigned short only fits values from [0, (2^16)-1].
-        // Accept the value 0 and convert it to 2^16
-
-        // 16-bit value
-        int numSymbols = UnsignedTypes.readUnsignedShort(buffer);
-        if (numSymbols == 0) numSymbols = MAX_NUM_SYMBOLS;
-        return numSymbols;
+        // positive 16-bit value
+        return UnsignedTypes.readPositiveUnsignedShort(buffer);
     }
 }
