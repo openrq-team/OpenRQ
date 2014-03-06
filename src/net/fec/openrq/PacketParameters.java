@@ -14,7 +14,6 @@ public final class PacketParameters {
      * <li>{@code ValueChecker.isValidSourceBlockNumber(sourceBlockNum)}</li>
      * <li>{@code ValueChecker.isValidEncodingSymbolID(encSymbolID)}</li>
      * <li>{@code ValueChecker.isValidNumSymbols(numSymbols)}</li>
-     * <li>{@code ValueChecker.isValidSymbolSize(symbolSize)}</li>
      * </ul>
      * otherwise, an {@code IllegalArgumentException} is thrown.
      * <p>
@@ -25,8 +24,6 @@ public final class PacketParameters {
      *            The encoding symbol identifier associated to the first symbol in an encoding packet
      * @param numSymbols
      *            The number of symbols in an encoding packet
-     * @param symbolSize
-     *            The size, in number of bytes, of one symbol in an encoding packet
      * @return a new {@code PacketParameters} instance
      * @exception IllegalArgumentException
      *                If some parameter value is invalid
@@ -34,8 +31,7 @@ public final class PacketParameters {
     public static PacketParameters makePacketParameters(
         int sourceBlockNum,
         int encSymbolID,
-        int numSymbols,
-        int symbolSize)
+        int numSymbols)
     {
 
         if (!ValueChecker.isValidSourceBlockNumber(sourceBlockNum)) {
@@ -47,29 +43,24 @@ public final class PacketParameters {
         if (!ValueChecker.isValidNumSymbols(numSymbols)) {
             throw new IllegalArgumentException("invalid number of symbols");
         }
-        if (!ValueChecker.isValidSymbolSize(symbolSize)) {
-            throw new IllegalArgumentException("invalid symbol size");
-        }
 
-        return new PacketParameters(sourceBlockNum, encSymbolID, numSymbols, symbolSize);
+        return new PacketParameters(sourceBlockNum, encSymbolID, numSymbols);
     }
 
 
     // minimal sized fields for space efficiency
     private final int sbn_esi;
     private final short numSymbols;
-    private final short symbolSize;
 
 
     /*
      * Package-private constructor. No checks are done to the arguments, since those are the responsibility of the
      * public factory methods.
      */
-    PacketParameters(int sourceBlockNum, int encSymbolID, int numSymbols, int symbolSize) {
+    PacketParameters(int sourceBlockNum, int encSymbolID, int numSymbols) {
 
         this.sbn_esi = buildSBN_ESI((byte)sourceBlockNum, encSymbolID);
         this.numSymbols = (short)numSymbols;
-        this.symbolSize = (short)symbolSize;
     }
 
     private static int buildSBN_ESI(byte sourceBlockNum, int encSymbolID) {
@@ -118,15 +109,5 @@ public final class PacketParameters {
     public int getNumberOfSymbols() {
 
         return ValueChecker.maskNumSymbols(numSymbols);
-    }
-
-    /**
-     * Returns the size, in number of bytes, of one symbol in an encoding packet.
-     * 
-     * @return the size, in number of bytes, of one symbol in an encoding packet
-     */
-    public int getSymbolSize() {
-
-        return ValueChecker.maskSymbolSize(symbolSize);
     }
 }

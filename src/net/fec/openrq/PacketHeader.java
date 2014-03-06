@@ -60,8 +60,6 @@ public final class PacketHeader {
      * contained inside the buffer have valid values. If some parameter value is invalid, the method
      * {@link DataHeader#getState()} can be used to infer which parameter value is invalid.
      * 
-     * @param symbolSize
-     *            The size, in number of bytes, of one symbol in an encoding packet
      * @param buffer
      *            A buffer from which a {@code PacketHeader} instance is read
      * @return a {@code PacketHeader} instance
@@ -72,14 +70,12 @@ public final class PacketHeader {
      * @exception BufferUnderflowException
      *                If the provided buffer has less than 6 bytes remaining
      */
-    public static PacketHeader readHeader(int symbolSize, ByteBuffer buffer) {
-
-        if (!ValueChecker.isValidSymbolSize(symbolSize)) throw new IllegalArgumentException("invalid symbol size");
+    public static PacketHeader readHeader(ByteBuffer buffer) {
 
         // read SBN, ESI, NUM_SYMBOLS
         final int sourceBlockNum = ValueChecker.readSourceBlockNumber(buffer); // 1 byte
         final int encSymbolID = ValueChecker.readEncodingSymbolID(buffer);     // 3 bytes
-        final int numSymbols = ValueChecker.readSymbolSize(buffer);            // 2 bytes
+        final int numSymbols = ValueChecker.readNumSymbols(buffer);            // 2 bytes
 
         if (!ValueChecker.isValidSourceBlockNumber(sourceBlockNum)) {
             return new PacketHeader(PacketHeader.HeaderState.INVALID_SOURCE_BLOCK_NUMBER, null);
@@ -93,7 +89,7 @@ public final class PacketHeader {
         else {
             return new PacketHeader(
                 PacketHeader.HeaderState.VALID,
-                new PacketParameters(sourceBlockNum, encSymbolID, numSymbols, symbolSize));
+                new PacketParameters(sourceBlockNum, encSymbolID, numSymbols));
         }
     }
 
