@@ -33,13 +33,18 @@ public interface RQEncoder {
      */
     public List<SourceBlock> getAllSourceBlocks();
 
-    /**
+    /*
      * Returns a stream of source blocks.
      * <p>
      * Each source block is capable of producing encoding symbols independently from other source blocks. Once the
      * stream is fully iterated, that is, no more source blocks are returned.
      * 
      * @return a stream of source blocks
+     */
+    /**
+     * @return
+     * @exception UnsupportedOperationException
+     *                Always
      */
     public SourceBlockStream getSourceBlocksStream();
 
