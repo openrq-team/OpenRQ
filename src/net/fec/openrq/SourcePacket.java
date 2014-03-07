@@ -3,6 +3,8 @@ package net.fec.openrq;
 
 import java.nio.ByteBuffer;
 
+import net.fec.openrq.parameters.PacketParameters;
+
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;

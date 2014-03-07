@@ -1,4 +1,4 @@
-package net.fec.openrq;
+package net.fec.openrq.parameters;
 
 /**
  * Deriver class for data parameters. This class follows the "Builder" design pattern, where multiple properties may be
@@ -63,11 +63,11 @@ public final class DataParametersDeriver {
      * @param dataLen
      *            The length of the encodable data in number of bytes
      * @exception IllegalArgumentException
-     *                If {@code ValueChecker.isValidDataLength(dataLen) == false}
+     *                If {@code ParameterChecker.isValidDataLength(dataLen) == false}
      */
     public DataParametersDeriver(long dataLen) {
 
-        if (!ValueChecker.isValidDataLength(dataLen)) {
+        if (!ParameterChecker.isValidDataLength(dataLen)) {
             throw new IllegalArgumentException("invalid data length");
         }
 

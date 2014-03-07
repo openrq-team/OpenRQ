@@ -3,6 +3,7 @@ package net.fec.openrq;
 
 import java.util.List;
 
+import net.fec.openrq.parameters.DataParameters;
 import net.fec.openrq.stream.SourceBlockStream;
 
 

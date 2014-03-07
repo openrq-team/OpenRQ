@@ -1,10 +1,15 @@
-package net.fec.openrq;
+package net.fec.openrq.parameters.header;
 
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
+
+import net.fec.openrq.parameters.DataParameters;
+import net.fec.openrq.parameters.DataParametersDeriver;
+import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.parameters.ParameterIO;
 
 
 /**
@@ -54,15 +59,15 @@ public final class DataHeader {
     public static void writeHeader(DataParameters params, ByteBuffer buffer) {
 
         // write F, reserved, T
-        ValueChecker.writeDataLength(params.getDataLength(), buffer); // 5 bytes
-        buffer.put((byte)0);                                            // 1 byte
-        ValueChecker.writeSymbolSize(params.getSymbolSize(), buffer); // 2 bytes
+        ParameterIO.writeDataLength(params.getDataLength(), buffer); // 5 bytes
+        buffer.put((byte)0);                                         // 1 byte
+        ParameterIO.writeSymbolSize(params.getSymbolSize(), buffer); // 2 bytes
 
         // write Z, N, Al
-        ValueChecker.writeNumSourceBlocks(params.getNumberOfSourceBlocks(), buffer);       // 1 byte
-        ValueChecker.writeNumSubBlocks(params.getNumberOfSubBlocks(), buffer);             // 2 bytes
+        ParameterIO.writeNumSourceBlocks(params.getNumberOfSourceBlocks(), buffer);           // 1 byte
+        ParameterIO.writeNumSubBlocks(params.getNumberOfSubBlocks(), buffer);                 // 2 bytes
         // TODO replace default value with a proper symbol alignment value
-        ValueChecker.writeSymbolAlignment(DataParametersDeriver.DEF_SYMBOL_ALIGNMENT, buffer); // 1 byte
+        ParameterIO.writeSymbolAlignment(DataParametersDeriver.DEF_SYMBOL_ALIGNMENT, buffer); // 1 byte
     }
 
     /**
@@ -86,26 +91,26 @@ public final class DataHeader {
     public static DataHeader readHeader(ByteBuffer buffer) {
 
         // read F, reserved, T
-        final long dataLen = ValueChecker.readDataLength(buffer);   // 5 bytes
-        buffer.get();                                               // 1 byte
-        final int symbolSize = ValueChecker.readSymbolSize(buffer); // 2 bytes
+        final long dataLen = ParameterIO.readDataLength(buffer);   // 5 bytes
+        buffer.get();                                              // 1 byte
+        final int symbolSize = ParameterIO.readSymbolSize(buffer); // 2 bytes
 
         // read Z, N, Al
-        final int numSourceBlocks = ValueChecker.readNumSourceBlocks(buffer); // 1 byte
-        final int numSubBlocks = ValueChecker.readNumSubBlocks(buffer);       // 2 bytes
+        final int numSourceBlocks = ParameterIO.readNumSourceBlocks(buffer); // 1 byte
+        final int numSubBlocks = ParameterIO.readNumSubBlocks(buffer);       // 2 bytes
         // TODO store and check the read symbol alignment value
-        ValueChecker.readSymbolAlignment(buffer);                             // 1 byte
+        ParameterIO.readSymbolAlignment(buffer);                             // 1 byte
 
-        if (!ValueChecker.isValidDataLength(dataLen)) {
+        if (!ParameterChecker.isValidDataLength(dataLen)) {
             return new DataHeader(DataHeader.HeaderState.INVALID_DATA_LENGTH, null);
         }
-        else if (!ValueChecker.isValidSymbolSize(symbolSize)) {
+        else if (!ParameterChecker.isValidSymbolSize(symbolSize)) {
             return new DataHeader(DataHeader.HeaderState.INVALID_SYMBOL_SIZE, null);
         }
-        else if (!ValueChecker.isValidNumSourceBlocks(numSourceBlocks)) {
+        else if (!ParameterChecker.isValidNumSourceBlocks(numSourceBlocks)) {
             return new DataHeader(DataHeader.HeaderState.INVALID_NUM_SOURCE_BLOCKS, null);
         }
-        else if (!ValueChecker.isValidNumSubBlocks(numSubBlocks)) {
+        else if (!ParameterChecker.isValidNumSubBlocks(numSubBlocks)) {
             return new DataHeader(DataHeader.HeaderState.INVALID_NUM_SUB_BLOCKS, null);
         }
         else {

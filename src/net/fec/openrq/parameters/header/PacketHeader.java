@@ -1,10 +1,14 @@
-package net.fec.openrq;
+package net.fec.openrq.parameters.header;
 
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
+
+import net.fec.openrq.parameters.PacketParameters;
+import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.parameters.ParameterIO;
 
 
 /**
@@ -45,9 +49,8 @@ public final class PacketHeader {
     public static void writeHeader(PacketParameters params, ByteBuffer buffer) {
 
         // write SBN, ESI, NUM_SYMBOLS
-        ValueChecker.writeSourceBlockNumber(params.getSourceBlockNumber(), buffer); // 1 bytes
-        ValueChecker.writeEncodingSymbolID(params.getEncodingSymbolID(), buffer);   // 3 bytes
-        ValueChecker.writeNumSymbols(params.getNumberOfSymbols(), buffer);          // 2 bytes
+        ParameterIO.writeFECpayloadID(params.getFECpayloadID(), buffer);  // 4 bytes
+        ParameterIO.writeNumSymbols(params.getNumberOfSymbols(), buffer); // 2 bytes
     }
 
     /**
@@ -63,8 +66,6 @@ public final class PacketHeader {
      * @param buffer
      *            A buffer from which a {@code PacketHeader} instance is read
      * @return a {@code PacketHeader} instance
-     * @exception IllegalArgumentException
-     *                If {@code ValueChecker.isValidSymbolSize(symbolSize) == false}
      * @exception NullPointerException
      *                If the provided buffer is {@code null}
      * @exception BufferUnderflowException
@@ -73,23 +74,25 @@ public final class PacketHeader {
     public static PacketHeader readHeader(ByteBuffer buffer) {
 
         // read SBN, ESI, NUM_SYMBOLS
-        final int sourceBlockNum = ValueChecker.readSourceBlockNumber(buffer); // 1 byte
-        final int encSymbolID = ValueChecker.readEncodingSymbolID(buffer);     // 3 bytes
-        final int numSymbols = ValueChecker.readNumSymbols(buffer);            // 2 bytes
+        final int fecPayloadID = ParameterIO.readFECpayloadID(buffer); // 4 bytes
+        final int numSymbols = ParameterIO.readNumSymbols(buffer);     // 2 bytes
 
-        if (!ValueChecker.isValidSourceBlockNumber(sourceBlockNum)) {
+        final int sbn = ParameterIO.extractSourceBlockNumber(fecPayloadID);
+        final int esi = ParameterIO.extractEncodingSymbolID(fecPayloadID);
+
+        if (!ParameterChecker.isValidSourceBlockNumber(sbn)) {
             return new PacketHeader(PacketHeader.HeaderState.INVALID_SOURCE_BLOCK_NUMBER, null);
         }
-        else if (!ValueChecker.isValidEncodingSymbolID(encSymbolID)) {
+        else if (!ParameterChecker.isValidEncodingSymbolID(esi)) {
             return new PacketHeader(PacketHeader.HeaderState.INVALID_ENCODING_SYMBOL_ID, null);
         }
-        else if (!ValueChecker.isValidNumSymbols(numSymbols)) {
+        else if (!ParameterChecker.isValidNumSymbols(numSymbols)) {
             return new PacketHeader(PacketHeader.HeaderState.INVALID_NUM_SYMBOLS, null);
         }
         else {
             return new PacketHeader(
                 PacketHeader.HeaderState.VALID,
-                new PacketParameters(sourceBlockNum, encSymbolID, numSymbols));
+                new PacketParameters(sbn, esi, numSymbols));
         }
     }
 
