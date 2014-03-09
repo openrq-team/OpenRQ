@@ -1,8 +1,9 @@
-package net.fec.openrq;
+package net.fec.openrq.encoder;
 
 
 import java.nio.ByteBuffer;
 
+import net.fec.openrq.SymbolType;
 import net.fec.openrq.parameters.PacketParameters;
 
 

@@ -1,6 +1,7 @@
 package net.fec.openrq;
 
 
+import net.fec.openrq.decoder.RQDecoder;
 import net.fec.openrq.parameters.DataParameters;
 
 

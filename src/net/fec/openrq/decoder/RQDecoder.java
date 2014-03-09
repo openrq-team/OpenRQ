@@ -1,4 +1,4 @@
-package net.fec.openrq;
+package net.fec.openrq.decoder;
 
 
 import net.fec.openrq.parameters.DataParameters;
@@ -15,5 +15,12 @@ public interface RQDecoder {
      * 
      * @return the data parameters associated to this decoder
      */
-    public DataParameters getDataParameterss();
+    public DataParameters getDataParameters();
+
+    /**
+     * Returns {@code true} if, and only if, the original data is fully decoded.
+     * 
+     * @return {@code true} if, and only if, the original data is fully decoded
+     */
+    public boolean isDecoded();
 }

@@ -3,7 +3,7 @@ package net.fec.openrq.stream;
 
 import java.util.Iterator;
 
-import net.fec.openrq.SourceBlock;
+import net.fec.openrq.encoder.SourceBlock;
 
 
 /**
