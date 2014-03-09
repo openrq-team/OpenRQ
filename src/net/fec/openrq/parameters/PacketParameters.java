@@ -6,9 +6,8 @@ package net.fec.openrq.parameters;
  */
 public final class PacketParameters {
 
-    // minimal sized fields for space efficiency
+    // minimal sized field for space efficiency
     private final int fecPayloadID;
-    private final short numSymbols;
 
 
     /**
@@ -18,7 +17,6 @@ public final class PacketParameters {
      * <ul>
      * <li>{@code ParameterChecker.isValidSourceBlockNumber(sourceBlockNum)}</li>
      * <li>{@code ParameterChecker.isValidEncodingSymbolID(encSymbolID)}</li>
-     * <li>{@code ParameterChecker.isValidNumSymbols(numSymbols)}</li>
      * </ul>
      * otherwise, an {@code IllegalArgumentException} is thrown.
      * <p>
@@ -27,12 +25,10 @@ public final class PacketParameters {
      *            The source block number associated to some source block
      * @param encSymbolID
      *            The encoding symbol identifier associated to the first symbol in an encoding packet
-     * @param numSymbols
-     *            The number of symbols in an encoding packet
      * @exception IllegalArgumentException
      *                If some parameter value is invalid
      */
-    public PacketParameters(int sourceBlockNum, int encSymbolID, int numSymbols) {
+    public PacketParameters(int sourceBlockNum, int encSymbolID) {
 
         if (!ParameterChecker.isValidSourceBlockNumber(sourceBlockNum)) {
             throw new IllegalArgumentException("invalid source block number");
@@ -40,43 +36,36 @@ public final class PacketParameters {
         if (!ParameterChecker.isValidEncodingSymbolID(encSymbolID)) {
             throw new IllegalArgumentException("invalid encoding symbol identifier");
         }
-        if (!ParameterChecker.isValidNumSymbols(numSymbols)) {
-            throw new IllegalArgumentException("invalid number of symbols");
-        }
 
         this.fecPayloadID = ParameterIO.buildFECpayloadID(sourceBlockNum, encSymbolID);
-        this.numSymbols = (short)numSymbols;
     }
 
     /**
-     * Constructs an instance of {@code PacketParameters} with the provided values.
+     * Constructs an instance of {@code PacketParameters} with the provided value.
      * <p>
      * The following expressions must all be true so that a correct instance can be constructed:
      * <ul>
-     * <li>{@code ParameterChecker.isValidFECpayloadID(fecPayloadID)}</li>
-     * <li>{@code ParameterChecker.isValidNumSymbols(numSymbols)}</li>
+     * <li>{@code ParameterChecker.isValidSourceBlockNumber(ParameterIO.extractSourceBlockNumber(fecPayloadID))}</li>
+     * <li>{@code ParameterChecker.isValidEncodingSymbolID(ParameterIO.extractEncodingSymbolID(fecPayloadID))}</li>
      * </ul>
      * otherwise, an {@code IllegalArgumentException} is thrown.
      * <p>
      * 
      * @param fecPayloadID
      *            A concatenation of a source block number and an encoding symbol identifier
-     * @param numSymbols
-     *            The number of symbols in an encoding packet
      * @exception IllegalArgumentException
-     *                If some parameter value is invalid
+     *                If the parameter value is invalid
      */
-    public PacketParameters(int fecPayloadID, int numSymbols) {
+    public PacketParameters(int fecPayloadID) {
 
-        if (!ParameterChecker.isValidFECpayloadID(fecPayloadID)) {
-            throw new IllegalArgumentException("invalid FEC payload ID");
+        if (!ParameterChecker.isValidSourceBlockNumber(ParameterIO.extractSourceBlockNumber(fecPayloadID))) {
+            throw new IllegalArgumentException("invalid FEC payload ID - invalid source block number");
         }
-        if (!ParameterChecker.isValidNumSymbols(numSymbols)) {
-            throw new IllegalArgumentException("invalid number of symbols");
+        if (!ParameterChecker.isValidEncodingSymbolID(ParameterIO.extractEncodingSymbolID(fecPayloadID))) {
+            throw new IllegalArgumentException("invalid FEC payload ID - invalid encoding symbol identifier");
         }
 
         this.fecPayloadID = fecPayloadID;
-        this.numSymbols = (short)numSymbols;
     }
 
     /**
@@ -108,15 +97,5 @@ public final class PacketParameters {
     public int getFECpayloadID() {
 
         return fecPayloadID;
-    }
-
-    /**
-     * Returns the number of symbols in an encoding packet. This value is always positive.
-     * 
-     * @return the number of symbols in an encoding packet
-     */
-    public int getNumberOfSymbols() {
-
-        return ParameterIO.unsignNumSymbols(numSymbols);
     }
 }

@@ -6,13 +6,49 @@ package net.fec.openrq.parameters;
  */
 public final class ParameterChecker {
 
+    // =========== data length - F ========== //
+
+    /**
+     * @return
+     */
+    public static long minDataLength() {
+
+        return Params.MIN_F;
+    }
+
+    /**
+     * @return
+     */
+    public static long maxDataLength() {
+
+        return Params.MAX_F;
+    }
+
     /**
      * @param dataLen
      * @return
      */
     public static boolean isValidDataLength(long dataLen) {
 
-        return Params.isValidDataLength(dataLen);
+        return dataLen >= minDataLength() && dataLen <= maxDataLength();
+    }
+
+    // =========== symbol size - T ========== //
+
+    /**
+     * @return
+     */
+    public static long minSymbolSize() {
+
+        return Params.MIN_T;
+    }
+
+    /**
+     * @return
+     */
+    public static long maxSymbolSize() {
+
+        return Params.MAX_T;
     }
 
     /**
@@ -21,7 +57,25 @@ public final class ParameterChecker {
      */
     public static boolean isValidSymbolSize(int symbolSize) {
 
-        return Params.isValidSymbolSize(symbolSize);
+        return symbolSize >= minSymbolSize() && symbolSize <= maxSymbolSize();
+    }
+
+    // =========== number of source blocks - Z ========== //
+
+    /**
+     * @return
+     */
+    public static long minNumSourceBlocks() {
+
+        return Params.MIN_Z;
+    }
+
+    /**
+     * @return
+     */
+    public static long maxNumSourceBlocks() {
+
+        return Params.MAX_Z;
     }
 
     /**
@@ -30,7 +84,25 @@ public final class ParameterChecker {
      */
     public static boolean isValidNumSourceBlocks(int numSourceBlocks) {
 
-        return Params.isValidNumSourceBlocks(numSourceBlocks);
+        return numSourceBlocks >= minNumSourceBlocks() && numSourceBlocks <= maxNumSourceBlocks();
+    }
+
+    // =========== number of sub-blocks - N ========== //
+
+    /**
+     * @return
+     */
+    public static long minNumSubBlocks() {
+
+        return Params.MIN_N;
+    }
+
+    /**
+     * @return
+     */
+    public static long maxNumSubBlocks() {
+
+        return Params.MAX_N;
     }
 
     /**
@@ -39,10 +111,30 @@ public final class ParameterChecker {
      */
     public static boolean isValidNumSubBlocks(int numSubBlocks) {
 
-        return Params.isValidNumSubBlocks(numSubBlocks);
+        return numSubBlocks >= minNumSubBlocks() && numSubBlocks <= maxNumSubBlocks();
     }
 
+    // =========== symbol alignment - Al ========== //
+
     // TODO add symbol alignment check
+
+    // =========== source block number - SBN ========== //
+
+    /**
+     * @return
+     */
+    public static int minSourceBlockNumber() {
+
+        return Params.MIN_SBN;
+    }
+
+    /**
+     * @return
+     */
+    public static int maxSourceBlockNumber() {
+
+        return Params.MAX_SBN;
+    }
 
     /**
      * @param sourceBlockNum
@@ -50,7 +142,25 @@ public final class ParameterChecker {
      */
     public static boolean isValidSourceBlockNumber(int sourceBlockNum) {
 
-        return Params.isValidSourceBlockNumber(sourceBlockNum);
+        return sourceBlockNum >= minSourceBlockNumber() && sourceBlockNum <= maxSourceBlockNumber();
+    }
+
+    // =========== encoding symbol identifier - ESI ========== //
+
+    /**
+     * @return
+     */
+    public static int minEncodingSymbolID() {
+
+        return Params.MIN_ESI;
+    }
+
+    /**
+     * @return
+     */
+    public static int maxEncodingSymbolID() {
+
+        return Params.MAX_ESI;
     }
 
     /**
@@ -59,25 +169,7 @@ public final class ParameterChecker {
      */
     public static boolean isValidEncodingSymbolID(int encSymbolID) {
 
-        return Params.isValidEncodingSymbolID(encSymbolID);
-    }
-
-    /**
-     * @param fecPayloadID
-     * @return
-     */
-    public static boolean isValidFECpayloadID(int fecPayloadID) {
-
-        return Params.isValidFECpayloadID(fecPayloadID);
-    }
-
-    /**
-     * @param numSymbols
-     * @return
-     */
-    public static boolean isValidNumSymbols(int numSymbols) {
-
-        return Params.isValidNumSymbols(numSymbols);
+        return encSymbolID >= minEncodingSymbolID() && encSymbolID <= maxEncodingSymbolID();
     }
 
     private ParameterChecker() {

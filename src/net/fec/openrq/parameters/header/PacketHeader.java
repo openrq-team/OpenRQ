@@ -22,8 +22,7 @@ public final class PacketHeader {
 
         VALID,
         INVALID_SOURCE_BLOCK_NUMBER,
-        INVALID_ENCODING_SYMBOL_ID,
-        INVALID_NUM_SYMBOLS;
+        INVALID_ENCODING_SYMBOL_ID;
     }
 
 
@@ -31,7 +30,7 @@ public final class PacketHeader {
      * Writes in the provided buffer a header containing a sequence of bytes that represent the provided packet
      * parameters.
      * <p>
-     * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least 6 bytes
+     * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least 4 bytes
      * {@linkplain ByteBuffer#remaining() remaining}. If this method returns normally, the position of the provided
      * buffer will have advanced by 6 bytes.
      * 
@@ -44,20 +43,19 @@ public final class PacketHeader {
      * @exception ReadOnlyBufferException
      *                If the provided buffer is read-only
      * @exception BufferOverflowException
-     *                If the provided buffer has less than 6 bytes remaining
+     *                If the provided buffer has less than 4 bytes remaining
      */
     public static void writeHeader(PacketParameters params, ByteBuffer buffer) {
 
-        // write SBN, ESI, NUM_SYMBOLS
+        // write SBN, ESI
         ParameterIO.writeFECpayloadID(params.getFECpayloadID(), buffer);  // 4 bytes
-        ParameterIO.writeNumSymbols(params.getNumberOfSymbols(), buffer); // 2 bytes
     }
 
     /**
      * Reads from the provided buffer a {@code PacketHeader} instance.
      * <p>
-     * The provided buffer must have at least 6 bytes {@linkplain ByteBuffer#remaining() remaining}. If this method
-     * returns normally, the position of the provided buffer will have advanced by 6 bytes.
+     * The provided buffer must have at least 4 bytes {@linkplain ByteBuffer#remaining() remaining}. If this method
+     * returns normally, the position of the provided buffer will have advanced by 4 bytes.
      * <p>
      * The returned {@code PacketHeader} instance is only {@linkplain #isValid() valid} if the packet parameters
      * contained inside the buffer have valid values. If some parameter value is invalid, the method
@@ -69,13 +67,12 @@ public final class PacketHeader {
      * @exception NullPointerException
      *                If the provided buffer is {@code null}
      * @exception BufferUnderflowException
-     *                If the provided buffer has less than 6 bytes remaining
+     *                If the provided buffer has less than 4 bytes remaining
      */
     public static PacketHeader readHeader(ByteBuffer buffer) {
 
-        // read SBN, ESI, NUM_SYMBOLS
+        // read SBN, ESI
         final int fecPayloadID = ParameterIO.readFECpayloadID(buffer); // 4 bytes
-        final int numSymbols = ParameterIO.readNumSymbols(buffer);     // 2 bytes
 
         final int sbn = ParameterIO.extractSourceBlockNumber(fecPayloadID);
         final int esi = ParameterIO.extractEncodingSymbolID(fecPayloadID);
@@ -86,13 +83,10 @@ public final class PacketHeader {
         else if (!ParameterChecker.isValidEncodingSymbolID(esi)) {
             return new PacketHeader(PacketHeader.HeaderState.INVALID_ENCODING_SYMBOL_ID, null);
         }
-        else if (!ParameterChecker.isValidNumSymbols(numSymbols)) {
-            return new PacketHeader(PacketHeader.HeaderState.INVALID_NUM_SYMBOLS, null);
-        }
         else {
             return new PacketHeader(
                 PacketHeader.HeaderState.VALID,
-                new PacketParameters(sbn, esi, numSymbols));
+                new PacketParameters(sbn, esi));
         }
     }
 
@@ -126,7 +120,7 @@ public final class PacketHeader {
     /**
      * @return
      */
-    public PacketParameters getDataParameters() {
+    public PacketParameters getPacketParameters() {
 
         checkValid();
         return packetParams;
@@ -142,9 +136,6 @@ public final class PacketHeader {
                 break;
                 case INVALID_ENCODING_SYMBOL_ID:
                     errorMsg = "invalid encoding symbol identifier";
-                break;
-                case INVALID_NUM_SYMBOLS:
-                    errorMsg = "invalid number symbols";
                 break;
                 default:
                     // should never happen

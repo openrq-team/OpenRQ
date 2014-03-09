@@ -3,6 +3,8 @@ package net.fec.openrq.parameters;
 
 import java.nio.ByteBuffer;
 
+import net.fec.openrq.util.numericaltype.UnsignedTypes;
+
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
@@ -10,13 +12,16 @@ import java.nio.ByteBuffer;
  */
 public class ParameterIO {
 
+    // =========== data length - F ========== //
+
     /**
      * @param dataLen
      * @param buffer
      */
     public static void writeDataLength(long dataLen, ByteBuffer buffer) {
 
-        Params.writeDataLength(dataLen, buffer);
+        // 40-bit value
+        UnsignedTypes.writeLongUnsignedBytes(dataLen, buffer, Params.NUM_BYTES_F);
     }
 
     /**
@@ -25,8 +30,11 @@ public class ParameterIO {
      */
     public static long readDataLength(ByteBuffer buffer) {
 
-        return Params.readDataLength(buffer);
+        // 40-bit value
+        return UnsignedTypes.readLongUnsignedBytes(buffer, Params.NUM_BYTES_F);
     }
+
+    // =========== symbol size - T ========== //
 
     /**
      * @param symbolSize
@@ -34,7 +42,8 @@ public class ParameterIO {
      */
     public static int unsignSymbolSize(int symbolSize) {
 
-        return Params.unsignSymbolSize(symbolSize);
+        // 16-bit value
+        return UnsignedTypes.getUnsignedShort(symbolSize);
     }
 
     /**
@@ -43,7 +52,8 @@ public class ParameterIO {
      */
     public static void writeSymbolSize(int symbolSize, ByteBuffer buffer) {
 
-        Params.writeSymbolSize(symbolSize, buffer);
+        // 16-bit value
+        UnsignedTypes.writeUnsignedShort(symbolSize, buffer);
     }
 
     /**
@@ -52,8 +62,17 @@ public class ParameterIO {
      */
     public static int readSymbolSize(ByteBuffer buffer) {
 
-        return Params.readSymbolSize(buffer);
+        // 16-bit value
+        return UnsignedTypes.readUnsignedShort(buffer);
     }
+
+    // =========== number of source blocks - Z ========== //
+
+    /*
+     * The RFC specifies a minimum of 1 and a maximum of 2^8 for the number of source blocks.
+     * An unsigned byte only fits values from [0, (2^8)-1].
+     * So, consider value 0 as 2^8 (unsignedByte(2^8) == 0)
+     */
 
     /**
      * @param numSourceBlocks
@@ -61,7 +80,8 @@ public class ParameterIO {
      */
     public static int unsignNumSourceBlocks(int numSourceBlocks) {
 
-        return Params.unsignNumSourceBlocks(numSourceBlocks);
+        // positive 8-bit value
+        return UnsignedTypes.getPositiveUnsignedByte(numSourceBlocks);
     }
 
     /**
@@ -70,7 +90,8 @@ public class ParameterIO {
      */
     public static void writeNumSourceBlocks(int numSourceBlocks, ByteBuffer buffer) {
 
-        Params.writeNumSourceBlocks(numSourceBlocks, buffer);
+        // positive 8-bit value
+        UnsignedTypes.writeUnsignedByte(numSourceBlocks, buffer);
     }
 
     /**
@@ -79,8 +100,11 @@ public class ParameterIO {
      */
     public static int readNumSourceBlocks(ByteBuffer buffer) {
 
-        return Params.readNumSourceBlocks(buffer);
+        // positive 8-bit value
+        return UnsignedTypes.readPositiveUnsignedByte(buffer);
     }
+
+    // =========== number of sub-blocks - N ========== //
 
     /**
      * @param numSubBlocks
@@ -88,7 +112,8 @@ public class ParameterIO {
      */
     public static int unsignNumSubBlocks(int numSubBlocks) {
 
-        return Params.unsignNumSubBlocks(numSubBlocks);
+        // 16-bit value
+        return UnsignedTypes.getUnsignedShort(numSubBlocks);
     }
 
     /**
@@ -97,7 +122,8 @@ public class ParameterIO {
      */
     public static void writeNumSubBlocks(int numSubBlocks, ByteBuffer buffer) {
 
-        Params.writeNumSubBlocks(numSubBlocks, buffer);
+        // 16-bit value
+        UnsignedTypes.writeUnsignedShort(numSubBlocks, buffer);
     }
 
     /**
@@ -106,8 +132,11 @@ public class ParameterIO {
      */
     public static int readNumSubBlocks(ByteBuffer buffer) {
 
-        return Params.readNumSubBlocks(buffer);
+        // 16-bit value
+        return UnsignedTypes.readUnsignedShort(buffer);
     }
+
+    // =========== symbol alignment - Al ========== //
 
     /**
      * @param symbolAlignment
@@ -115,7 +144,8 @@ public class ParameterIO {
      */
     public static int unsignSymbolAlignment(int symbolAlignment) {
 
-        return Params.unsignSymbolAlignment(symbolAlignment);
+        // 8-bit value
+        return UnsignedTypes.getUnsignedByte(symbolAlignment);
     }
 
     /**
@@ -124,7 +154,8 @@ public class ParameterIO {
      */
     public static void writeSymbolAlignment(int symbolAlignment, ByteBuffer buffer) {
 
-        Params.writeSymbolAlignment(symbolAlignment, buffer);
+        // 8-bit value
+        UnsignedTypes.writeUnsignedByte(symbolAlignment, buffer);
     }
 
     /**
@@ -133,8 +164,11 @@ public class ParameterIO {
      */
     public static int readSymbolAlignment(ByteBuffer buffer) {
 
-        return Params.readSymbolAlignment(buffer);
+        // 8-bit value
+        return UnsignedTypes.readUnsignedByte(buffer);
     }
+
+    // =========== source block number - SBN ========== //
 
     /**
      * @param sourceBlockNum
@@ -142,7 +176,8 @@ public class ParameterIO {
      */
     public static int unsignSourceBlockNumber(int sourceBlockNum) {
 
-        return Params.unsignSourceBlockNumber(sourceBlockNum);
+        // 8-bit value
+        return UnsignedTypes.getUnsignedByte(sourceBlockNum);
     }
 
     /**
@@ -151,8 +186,10 @@ public class ParameterIO {
      */
     public static int extractSourceBlockNumber(int fecPayloadID) {
 
-        return Params.extractSourceBlockNumber(fecPayloadID);
+        return unsignSourceBlockNumber(fecPayloadID >>> (Params.NUM_BYTES_ESI * Byte.SIZE));
     }
+
+    // =========== encoding symbol identifier - ESI ========== //
 
     /**
      * @param encSymbolID
@@ -160,7 +197,8 @@ public class ParameterIO {
      */
     public static int unsignEncodingSymbolID(int encSymbolID) {
 
-        return Params.unsignEncodingSymbolID(encSymbolID);
+        // 24-bit value
+        return UnsignedTypes.getUnsignedBytes(encSymbolID, Params.NUM_BYTES_ESI);
     }
 
     /**
@@ -169,8 +207,10 @@ public class ParameterIO {
      */
     public static int extractEncodingSymbolID(int fecPayloadID) {
 
-        return Params.extractEncodingSymbolID(fecPayloadID);
+        return unsignEncodingSymbolID(fecPayloadID);
     }
+
+    // =========== FEC payload ID - SBN|ESI ========== //
 
     /**
      * @param sourceBlockNum
@@ -179,7 +219,9 @@ public class ParameterIO {
      */
     public static int buildFECpayloadID(int sourceBlockNum, int encSymbolID) {
 
-        return Params.buildFECpayloadID(sourceBlockNum, encSymbolID);
+        final int unsignedSBN = unsignSourceBlockNumber(sourceBlockNum);
+        final int unsignedESI = unsignEncodingSymbolID(encSymbolID);
+        return (unsignedSBN << (Params.NUM_BYTES_ESI * Byte.SIZE)) | unsignedESI;
     }
 
     /**
@@ -188,7 +230,8 @@ public class ParameterIO {
      */
     public static void writeFECpayloadID(int fecPayloadID, ByteBuffer buffer) {
 
-        Params.writeFECpayloadID(fecPayloadID, buffer);
+        // 32-bit value
+        buffer.putInt(fecPayloadID);
     }
 
     /**
@@ -197,34 +240,8 @@ public class ParameterIO {
      */
     public static int readFECpayloadID(ByteBuffer buffer) {
 
-        return Params.readFECpayloadID(buffer);
-    }
-
-    /**
-     * @param numSymbols
-     * @return
-     */
-    public static int unsignNumSymbols(short numSymbols) {
-
-        return Params.unsignNumSymbols(numSymbols);
-    }
-
-    /**
-     * @param numSymbols
-     * @param buffer
-     */
-    public static void writeNumSymbols(int numSymbols, ByteBuffer buffer) {
-
-        Params.writeNumSymbols(numSymbols, buffer);
-    }
-
-    /**
-     * @param buffer
-     * @return
-     */
-    public static int readNumSymbols(ByteBuffer buffer) {
-
-        return Params.readNumSymbols(buffer);
+        // 32-bit value
+        return buffer.getInt();
     }
 
     private ParameterIO() {

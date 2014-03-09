@@ -25,12 +25,19 @@ public interface EncodingPacket {
      * symbol identifiers</i>.
      * <p>
      * The returned buffer is {@linkplain ByteBuffer#isReadOnly() read-only} and has a
-     * {@linkplain ByteBuffer#position() position} of 0 and a {@linkplain ByteBuffer#limit() limit} equal to the size of
-     * each symbol times the number of symbols in this packet.
+     * {@linkplain ByteBuffer#position() position} of 0 and a {@linkplain ByteBuffer#limit() limit} less than or equal
+     * to the size of each symbol times the number of symbols in this packet.
      * 
      * @return a read-only buffer with the data from the symbol(s) in this packet
      */
     public ByteBuffer getSymbolData();
+
+    /**
+     * Returns the number of symbols in this encoding packet. This value is always positive.
+     * 
+     * @return the number of symbols in this encoding packet
+     */
+    public int getNumSymbols();
 
     /**
      * Returns the type of all the symbols in this encoding packet.
