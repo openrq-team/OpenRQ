@@ -1,10 +1,8 @@
 package net.fec.openrq.encoder;
 
 
-import java.util.List;
-
 import net.fec.openrq.parameters.DataParameters;
-import net.fec.openrq.stream.SourceBlockStream;
+import net.fec.openrq.parameters.ParameterChecker;
 
 
 /**
@@ -14,52 +12,143 @@ import net.fec.openrq.stream.SourceBlockStream;
 public interface RQEncoder {
 
     /**
-     * Returns {@code true} if, and only if, all source blocks from this encoder are immediately available.
-     * 
-     * @return {@code true} if, and only if, all source blocks from this encoder are immediately available
-     */
-    public boolean allSourceBlocksAvailable();
-
-    /**
-     * Returns an immutable list containing all source blocks from this encoder, if they are
-     * {@linkplain #allSourceBlocksAvailable() available}.
+     * Sets the source block with the given source block number as the source block currently being encoded.
      * <p>
-     * Each source block is capable of producing encoding symbols independently from other source blocks. It is
-     * possible, for example, to encode symbols from different source blocks in parallel.
-     * <p>
-     * A specific source block with a given {@linkplain SourceBlock#getSourceBlockNumber() source block number}
-     * {@code SBN} can be retrieved from this list by passing {@code SBN} as an argument to the {@link List#get(int)}
-     * method.
+     * Note that {@code sourceBlockNum} must be valid according to
+     * {@link ParameterChecker#isValidSourceBlockNumber(int)}, and must also be between {@code 0} (inclusive) and
+     * {@code Z} (exclusive), where {@code Z} is the value returned by
+     * {@code this.dataParameters().getNumberOfSourceBlocks()}.
      * 
-     * @return an immutable list containing all source blocks from this encoder
-     * @exception UnsupportedOperationException
-     *                If not all source blocks are immediately available
-     * @see #allSourceBlocksAvailable()
+     * @param sourceBlockNum
+     *            A source block number
+     * @exception IllegalArgumentException
+     *                If the provided source block number is invalid
      */
-    public List<SourceBlock> getAllSourceBlocks();
-
-    /*
-     * Returns a stream of source blocks.
-     * <p>
-     * Each source block is capable of producing encoding symbols independently from other source blocks. Once the
-     * stream is fully iterated, no more source blocks are returned by the stream. The source blocks are returned by the
-     * stream in an ascending ordering by their {@linkplain SourceBlock#getSourceBlockNumber source block numbers}.
-     * 
-     * @return a stream of source blocks
-     */
-    /**
-     * This method is unsupported for now. An {@code UnsupportedOperationException} is thrown if this method is invoked.
-     * 
-     * @return nothing, since an exception is always thrown
-     * @exception UnsupportedOperationException
-     *                Always
-     */
-    public SourceBlockStream getSourceBlocksStream();
+    public void setCurrentSourceBlock(int sourceBlockNum);
 
     /**
      * Returns the data parameters associated to this encoder.
      * 
      * @return the data parameters associated to this encoder
      */
-    public DataParameters getDataParameters();
+    public DataParameters dataParameters();
+
+    /**
+     * Returns the source block number for the source block currently being encoded.
+     * 
+     * @return the source block number for the source block currently being encoded
+     */
+    public int sourceBlockNumber();
+
+    /**
+     * Returns the number of source symbols from the source block currently being encoded.
+     * 
+     * @return the number of source symbols from the source block currently being encoded
+     */
+    public int numberOfSourceSymbols();
+
+    /**
+     * Returns an encoding packet with a source symbol from the source block currently being encoded.
+     * <p>
+     * More specifically, if we assume that
+     * <ul>
+     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * </ul>
+     * then this method returns an encoding packet with a source symbol identified by {@code (SBN, ESI)}.
+     * <p>
+     * Note that the encoding symbol identifier must be valid according to
+     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be between {@code 0} (inclusive) and
+     * {@code K} (exclusive), where {@code K} is the number of source symbols from the source block currently being
+     * encoded.
+     * 
+     * @param encSymbolID
+     *            The encoding symbol identifier of the source symbol in the returned packet
+     * @return an encoding packet with a source symbol from the source block currently being encoded
+     * @exception IllegalArgumentException
+     *                If the provided encoding symbol identifier is invalid
+     * @see #sourceBlockNumber()
+     * @see #numberOfSourceSymbols()
+     */
+    public EncodingPacket getSourcePacket(int encSymbolID);
+
+    /**
+     * Returns an encoding packet with multiple source symbols from the source block currently being encoded.
+     * <p>
+     * More specifically, if we assume that
+     * <ul>
+     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * </ul>
+     * then this method returns an encoding packet with a first source symbol identified by {@code (SBN, ESI)}, a second
+     * symbol identified by {@code (SBN, ESI+1)}, a third symbol identified by {@code (SBN, ESI+2)}, etc.
+     * <p>
+     * Note that the encoding symbol identifier must be valid according to
+     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be between {@code 0} (inclusive) and
+     * {@code K} (exclusive), where {@code K} is the number of source symbols from the source block currently being
+     * encoded. Additionally, the number of symbols must be positive and no greater than ({@code K - ESI}).
+     * 
+     * @param encSymbolID
+     *            The encoding symbol identifier of the first source symbol in the returned packet
+     * @param numSymbols
+     *            The number of source symbols to be placed in the returned packet
+     * @return an encoding packet with multiple source symbols from the source block currently being encoded
+     * @exception IllegalArgumentException
+     *                If the provided encoding symbol identifier or the number of symbols are invalid
+     * @see #sourceBlockNumber()
+     * @see #numberOfSourceSymbols()
+     */
+    public EncodingPacket getSourcePacket(int encSymbolID, int numSymbols);
+
+    /**
+     * Returns an encoding packet with a repair symbol from the source block currently being encoded.
+     * <p>
+     * More specifically, if we assume that
+     * <ul>
+     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * </ul>
+     * then this method returns an encoding packet with a repair symbol identified by {@code (SBN, ESI)}.
+     * <p>
+     * Note that the encoding symbol identifier must be valid according to
+     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be greater than or equal to {@code K}, where
+     * {@code K} is the number of source symbols from the source block currently being encoded.
+     * 
+     * @param encSymbolID
+     *            The encoding symbol identifier of the repair symbol in the returned packet
+     * @return an encoding packet with a repair symbol from the source block currently being encoded
+     * @exception IllegalArgumentException
+     *                If the provided encoding symbol identifier is invalid
+     * @see #sourceBlockNumber()
+     */
+    public EncodingPacket getRepairPacket(int encSymbolID);
+
+    /**
+     * Returns an encoding packet with multiple repair symbols from the source block currently being encoded.
+     * <p>
+     * More specifically, if we assume that
+     * <ul>
+     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * </ul>
+     * then this method returns an encoding packet with a first repair symbol identified by {@code (SBN, ESI)}, a second
+     * symbol identified by {@code (SBN, ESI+1)}, a third symbol identified by {@code (SBN, ESI+2)}, etc.
+     * <p>
+     * Note that the encoding symbol identifier must be valid according to
+     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be greater than or equal to {@code K}, where
+     * {@code K} is the number of source symbols from the source block currently being encoded. Additionally, the number
+     * of symbols must be positive and no greater than ({@code MAX_ESI - ESI}), where {@code MAX_ESI} is the
+     * {@linkplain ParameterChecker#maxEncodingSymbolID() maximum value for the encoding symbol identifier}.
+     * 
+     * @param encSymbolID
+     *            The encoding symbol identifier of the first repair symbol in the returned packet
+     * @param numSymbols
+     *            The number of repair symbols to be placed in the returned packet
+     * @return an encoding packet with multiple repair symbols from the source block currently being encoded
+     * @exception IllegalArgumentException
+     *                If the provided encoding symbol identifier or the number of symbols are invalid
+     * @see #sourceBlockNumber()
+     * @see #numberOfSourceSymbols()
+     */
+    public EncodingPacket getRepairPacket(int encSymbolID, int numSymbols);
 }
