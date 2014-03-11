@@ -1,7 +1,6 @@
 package net.fec.openrq.encoder;
 
 
-import net.fec.openrq.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 
 
@@ -9,30 +8,7 @@ import net.fec.openrq.parameters.ParameterChecker;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public interface RQEncoder {
-
-    /**
-     * Sets the source block with the given source block number as the source block currently being encoded.
-     * <p>
-     * Note that {@code sourceBlockNum} must be valid according to
-     * {@link ParameterChecker#isValidSourceBlockNumber(int)}, and must also be between {@code 0} (inclusive) and
-     * {@code Z} (exclusive), where {@code Z} is the value returned by
-     * {@code this.fecParameters().getNumberOfSourceBlocks()}.
-     * 
-     * @param sourceBlockNum
-     *            A source block number
-     * @exception IllegalArgumentException
-     *                If the provided source block number is invalid
-     */
-    public void setCurrentSourceBlock(int sourceBlockNum);
-
-    /**
-     * Returns the FEC parameters associated to this encoder. The returned {@code FECParameters} instance is always
-     * valid.
-     * 
-     * @return the FEC parameters associated to this encoder
-     */
-    public FECParameters fecParameters();
+public interface SourceBlockEncoder {
 
     /**
      * Returns the source block number for the source block currently being encoded.

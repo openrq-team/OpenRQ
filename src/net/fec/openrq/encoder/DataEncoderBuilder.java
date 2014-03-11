@@ -1,10 +1,10 @@
 package net.fec.openrq.encoder;
 
 /**
- * Builder class for encoder instances. This class follows the "Builder" design pattern, where multiple properties may
- * be configured and a final {@code RQEncoder} instance is returned upon calling the method {@link #build()}.
+ * Builder class for data encoder instances. This class follows the "Builder" design pattern, where multiple properties
+ * may be configured and a final {@code DataEncoder} instance is returned upon calling the method {@link #build()}.
  * <p>
- * The following are some assignable properties that affect the final encoder instance:
+ * The following are some assignable properties that affect the final data encoder instance:
  * <ul>
  * <li>maximum payload length</li>
  * <li>maximum block size in working memory</li>
@@ -17,16 +17,16 @@ package net.fec.openrq.encoder;
  * All property assigning methods return the {@code this} instance in order to allow chained invocation:
  * 
  * <pre>
- * RQEncoder encoder = builder
- *                     .maxPayload(maxPay)
- *                     .maxBlockInMemory(maxBlock)
- *                     .build();
+ * DataEncoder encoder = builder
+ *                       .maxPayload(maxPay)
+ *                       .maxBlockInMemory(maxBlock)
+ *                       .build();
  * </pre>
  * 
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public interface EncoderBuilder {
+public interface DataEncoderBuilder {
 
     /**
      * Default value of 4 bytes for the symbol alignment.
@@ -61,7 +61,7 @@ public interface EncoderBuilder {
      * @exception IllegalArgumentException
      *                If {@code maxPayloadLen} is non-positive
      */
-    public EncoderBuilder maxPayload(int maxPayloadLen);
+    public DataEncoderBuilder maxPayload(int maxPayloadLen);
 
     /**
      * Assigns the {@linkplain #DEF_MAX_PAYLOAD_LENGTH default value} to the property of <i>maximum payload length in
@@ -70,7 +70,7 @@ public interface EncoderBuilder {
      * @return this builder
      * @see #maxPayload(int)
      */
-    public EncoderBuilder defaultMaxPayload();
+    public DataEncoderBuilder defaultMaxPayload();
 
     /**
      * Assigns the provided value to the property of <i>maximum block size in number of bytes that is decodable in
@@ -84,7 +84,7 @@ public interface EncoderBuilder {
      * @exception IllegalArgumentException
      *                If {@code maxBlock} is non-positive
      */
-    public EncoderBuilder maxDecoderBlock(int maxBlock);
+    public DataEncoderBuilder maxDecoderBlock(int maxBlock);
 
     /**
      * Assigns the {@linkplain #DEF_MAX_DEC_BLOCK_SIZE default value} to the property of <i>maximum block size in number
@@ -93,7 +93,7 @@ public interface EncoderBuilder {
      * @return this builder
      * @see #maxDecoderBlock(int)
      */
-    public EncoderBuilder defaultMaxDecoderBlock();
+    public DataEncoderBuilder defaultMaxDecoderBlock();
 
     /**
      * Assigns the provided value to the property of <i>lower bound on the sub-symbol size in units of {@code Al}, where
@@ -108,7 +108,7 @@ public interface EncoderBuilder {
      * @exception IllegalArgumentException
      *                If {@code minSubSymbol} is non-positive
      */
-    public EncoderBuilder minSubSymbol(int minSubSymbol);
+    public DataEncoderBuilder minSubSymbol(int minSubSymbol);
 
     /**
      * Assigns the {@linkplain #DEF_MIN_SUB_SYMBOL default value} to the property of <i>lower bound on the sub-symbol
@@ -117,12 +117,12 @@ public interface EncoderBuilder {
      * @return this builder
      * @see #minSubSymbol(int)
      */
-    public EncoderBuilder defaultMinSubSymbol();
+    public DataEncoderBuilder defaultMinSubSymbol();
 
     /**
-     * Returns a {@code RQEncoder} instance based on the assigned properties to this builder.
+     * Returns a {@code DataEncoder} instance based on the assigned properties to this builder.
      * 
-     * @return a {@code RQEncoder} instance
+     * @return a {@code DataEncoder} instance
      */
-    public RQEncoder build();
+    public DataEncoder build();
 }
