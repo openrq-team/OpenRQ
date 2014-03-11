@@ -1,7 +1,7 @@
 package net.fec.openrq.decoder;
 
 
-import net.fec.openrq.parameters.DataParameters;
+import net.fec.openrq.FECParameters;
 
 
 /**
@@ -11,11 +11,12 @@ import net.fec.openrq.parameters.DataParameters;
 public interface RQDecoder {
 
     /**
-     * Returns the data parameters associated to this decoder.
+     * Returns the FEC parameters associated to this decoder. The returned {@code FECParameters} instance is always
+     * valid.
      * 
-     * @return the data parameters associated to this decoder
+     * @return the FEC parameters associated to this decoder
      */
-    public DataParameters getDataParameters();
+    public FECParameters fecParameters();
 
     /**
      * Returns {@code true} if, and only if, the original data is fully decoded.

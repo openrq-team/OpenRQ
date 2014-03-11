@@ -41,7 +41,7 @@ public final class UnsignedTypes {
         return (int)(i & UNSIGNED_BYTE_MASK);
     }
 
-    public static int getPositiveUnsignedByte(int i) {
+    public static int getExtendedUnsignedByte(int i) {
 
         int intValue = getUnsignedByte(i);
         if (intValue == 0) intValue = MAX_UNSIGNED_BYTE_VALUE + 1;
@@ -53,9 +53,9 @@ public final class UnsignedTypes {
         return getUnsignedByte(buffer.get());
     }
 
-    public static int readPositiveUnsignedByte(ByteBuffer buffer) {
+    public static int readExtendedUnsignedByte(ByteBuffer buffer) {
 
-        return getPositiveUnsignedByte(buffer.get());
+        return getExtendedUnsignedByte(buffer.get());
     }
 
     public static void writeUnsignedByte(int ub, ByteBuffer buffer) {
@@ -70,7 +70,7 @@ public final class UnsignedTypes {
         return (int)(i & UNSIGNED_SHORT_MASK);
     }
 
-    public static int getPositiveUnsignedShort(int i) {
+    public static int getExtendedUnsignedShort(int i) {
 
         int intValue = getUnsignedShort(i);
         if (intValue == 0) intValue = MAX_UNSIGNED_SHORT_VALUE + 1;
@@ -82,9 +82,9 @@ public final class UnsignedTypes {
         return getUnsignedShort(buffer.getShort());
     }
 
-    public static int readPositiveUnsignedShort(ByteBuffer buffer) {
+    public static int readExtendedUnsignedShort(ByteBuffer buffer) {
 
-        return getPositiveUnsignedShort(buffer.getShort());
+        return getExtendedUnsignedShort(buffer.getShort());
     }
 
     public static void writeUnsignedShort(int us, ByteBuffer buffer) {
@@ -99,7 +99,7 @@ public final class UnsignedTypes {
         return el & UNSIGNED_INT_MASK;
     }
 
-    public static long getPositiveUnsignedInt(long el) {
+    public static long getExtendedUnsignedInt(long el) {
 
         long longValue = getUnsignedInt(el);
         if (longValue == 0) longValue = MAX_UNSIGNED_INT_VALUE + 1L;
@@ -111,9 +111,9 @@ public final class UnsignedTypes {
         return getUnsignedInt(buffer.getInt());
     }
 
-    public static long readPositiveUnsignedInt(ByteBuffer buffer) {
+    public static long readExtendedUnsignedInt(ByteBuffer buffer) {
 
-        return getPositiveUnsignedInt(buffer.getInt());
+        return getExtendedUnsignedInt(buffer.getInt());
     }
 
     public static void writeUnsignedInt(long ui, ByteBuffer buffer) {

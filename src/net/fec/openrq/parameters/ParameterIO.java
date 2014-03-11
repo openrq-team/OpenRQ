@@ -3,6 +3,7 @@ package net.fec.openrq.parameters;
 
 import java.nio.ByteBuffer;
 
+import net.fec.openrq.util.numericaltype.SizeOf;
 import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
 
@@ -14,56 +15,42 @@ public class ParameterIO {
 
     // =========== data length - F ========== //
 
-    /**
-     * @param dataLen
-     * @param buffer
-     */
-    public static void writeDataLength(long dataLen, ByteBuffer buffer) {
+    private static long unsignDataLength(long dataLen) {
 
         // 40-bit value
-        UnsignedTypes.writeLongUnsignedBytes(dataLen, buffer, Params.NUM_BYTES_F);
+        return UnsignedTypes.getLongUnsignedBytes(dataLen, InternalConstants.NUM_BYTES_F);
+    }
+
+    // For Common FEC OTI.
+    private static int dataLengthShift() {
+
+        return (1 + SizeOf.UNSIGNED_SHORT) * Byte.SIZE;
     }
 
     /**
-     * @param buffer
+     * @param commonFecOTI
      * @return
      */
-    public static long readDataLength(ByteBuffer buffer) {
+    public static long extractDataLength(long commonFecOTI) {
 
-        // 40-bit value
-        return UnsignedTypes.readLongUnsignedBytes(buffer, Params.NUM_BYTES_F);
+        return unsignDataLength(commonFecOTI >>> dataLengthShift());
     }
 
     // =========== symbol size - T ========== //
 
-    /**
-     * @param symbolSize
-     * @return
-     */
-    public static int unsignSymbolSize(int symbolSize) {
+    private static int unsignSymbolSize(int symbolSize) {
 
         // 16-bit value
         return UnsignedTypes.getUnsignedShort(symbolSize);
     }
 
     /**
-     * @param symbolSize
-     * @param buffer
-     */
-    public static void writeSymbolSize(int symbolSize, ByteBuffer buffer) {
-
-        // 16-bit value
-        UnsignedTypes.writeUnsignedShort(symbolSize, buffer);
-    }
-
-    /**
-     * @param buffer
+     * @param commonFecOTI
      * @return
      */
-    public static int readSymbolSize(ByteBuffer buffer) {
+    public static int extractSymbolSize(long commonFecOTI) {
 
-        // 16-bit value
-        return UnsignedTypes.readUnsignedShort(buffer);
+        return unsignSymbolSize((int)commonFecOTI);
     }
 
     // =========== number of source blocks - Z ========== //
@@ -74,110 +61,79 @@ public class ParameterIO {
      * So, consider value 0 as 2^8 (unsignedByte(2^8) == 0)
      */
 
-    /**
-     * @param numSourceBlocks
-     * @return
-     */
-    public static int unsignNumSourceBlocks(int numSourceBlocks) {
+    private static int unsignNumSourceBlocks(int numSourceBlocks) {
 
-        // positive 8-bit value
-        return UnsignedTypes.getPositiveUnsignedByte(numSourceBlocks);
+        // extended 8-bit value
+        return UnsignedTypes.getExtendedUnsignedByte(numSourceBlocks);
+    }
+
+    // For Scheme-specific FEC OTI.
+    private static int numSourceBlocksShift() {
+
+        return (SizeOf.UNSIGNED_SHORT + 1) * Byte.SIZE;
     }
 
     /**
-     * @param numSourceBlocks
-     * @param buffer
-     */
-    public static void writeNumSourceBlocks(int numSourceBlocks, ByteBuffer buffer) {
-
-        // positive 8-bit value
-        UnsignedTypes.writeUnsignedByte(numSourceBlocks, buffer);
-    }
-
-    /**
-     * @param buffer
+     * @param schemeSpecFecOTI
      * @return
      */
-    public static int readNumSourceBlocks(ByteBuffer buffer) {
+    public static int extractNumSourceBlocks(int schemeSpecFecOTI) {
 
-        // positive 8-bit value
-        return UnsignedTypes.readPositiveUnsignedByte(buffer);
+        return unsignNumSourceBlocks(schemeSpecFecOTI >>> numSourceBlocksShift());
     }
 
     // =========== number of sub-blocks - N ========== //
 
-    /**
-     * @param numSubBlocks
-     * @return
-     */
-    public static int unsignNumSubBlocks(int numSubBlocks) {
+    private static int unsignNumSubBlocks(int numSubBlocks) {
 
         // 16-bit value
         return UnsignedTypes.getUnsignedShort(numSubBlocks);
     }
 
-    /**
-     * @param numSubBlocks
-     * @param buffer
-     */
-    public static void writeNumSubBlocks(int numSubBlocks, ByteBuffer buffer) {
+    // For Scheme-specific FEC OTI.
+    private static int numSubBlocksShift() {
 
-        // 16-bit value
-        UnsignedTypes.writeUnsignedShort(numSubBlocks, buffer);
+        return 1 * Byte.SIZE;
     }
 
     /**
-     * @param buffer
+     * @param schemeSpecFecOTI
      * @return
      */
-    public static int readNumSubBlocks(ByteBuffer buffer) {
+    public static int extractNumSubBlocks(int schemeSpecFecOTI) {
 
-        // 16-bit value
-        return UnsignedTypes.readUnsignedShort(buffer);
+        return unsignNumSubBlocks(schemeSpecFecOTI >>> numSubBlocksShift());
     }
 
     // =========== symbol alignment - Al ========== //
 
-    /**
-     * @param symbolAlignment
-     * @return
-     */
-    public static int unsignSymbolAlignment(int symbolAlignment) {
+    private static int unsignSymbolAlignment(int symbolAlign) {
 
         // 8-bit value
-        return UnsignedTypes.getUnsignedByte(symbolAlignment);
+        return UnsignedTypes.getUnsignedByte(symbolAlign);
     }
 
     /**
-     * @param symbolAlignment
-     * @param buffer
-     */
-    public static void writeSymbolAlignment(int symbolAlignment, ByteBuffer buffer) {
-
-        // 8-bit value
-        UnsignedTypes.writeUnsignedByte(symbolAlignment, buffer);
-    }
-
-    /**
-     * @param buffer
+     * @param schemeSpecFecOTI
      * @return
      */
-    public static int readSymbolAlignment(ByteBuffer buffer) {
+    public static int extractSymbolAlignment(int schemeSpecFecOTI) {
 
-        // 8-bit value
-        return UnsignedTypes.readUnsignedByte(buffer);
+        return unsignSymbolAlignment(schemeSpecFecOTI);
     }
 
     // =========== source block number - SBN ========== //
 
-    /**
-     * @param sourceBlockNum
-     * @return
-     */
-    public static int unsignSourceBlockNumber(int sourceBlockNum) {
+    private static int unsignSourceBlockNumber(int sourceBlockNum) {
 
         // 8-bit value
         return UnsignedTypes.getUnsignedByte(sourceBlockNum);
+    }
+
+    // For FEC Payload ID.
+    private static int sourceBlockNumberShift() {
+
+        return InternalConstants.NUM_BYTES_ESI * Byte.SIZE;
     }
 
     /**
@@ -186,19 +142,15 @@ public class ParameterIO {
      */
     public static int extractSourceBlockNumber(int fecPayloadID) {
 
-        return unsignSourceBlockNumber(fecPayloadID >>> (Params.NUM_BYTES_ESI * Byte.SIZE));
+        return unsignSourceBlockNumber(fecPayloadID >>> sourceBlockNumberShift());
     }
 
     // =========== encoding symbol identifier - ESI ========== //
 
-    /**
-     * @param encSymbolID
-     * @return
-     */
-    public static int unsignEncodingSymbolID(int encSymbolID) {
+    private static int unsignEncodingSymbolID(int encSymbolID) {
 
         // 24-bit value
-        return UnsignedTypes.getUnsignedBytes(encSymbolID, Params.NUM_BYTES_ESI);
+        return UnsignedTypes.getUnsignedBytes(encSymbolID, InternalConstants.NUM_BYTES_ESI);
     }
 
     /**
@@ -210,6 +162,79 @@ public class ParameterIO {
         return unsignEncodingSymbolID(fecPayloadID);
     }
 
+    // =========== Encoded Common FEC OTI - F|reserved|T ========== //
+
+    /**
+     * @param dataLen
+     * @param symbolSize
+     * @return
+     */
+    public static long buildCommonFecOTI(long dataLen, int symbolSize) {
+
+        final long usF = unsignDataLength(dataLen);
+        final int usT = unsignSymbolSize(symbolSize);
+
+        return (usF << dataLengthShift()) | usT;
+    }
+
+    /**
+     * @param commonFecOTI
+     * @param buffer
+     */
+    public static void writeCommonFecOTI(long commonFecOTI, ByteBuffer buffer) {
+
+        // 64-bit value
+        buffer.putLong(commonFecOTI);
+    }
+
+    /**
+     * @param buffer
+     * @return
+     */
+    public static long readCommonFecOTI(ByteBuffer buffer) {
+
+        // 64-bit value
+        return buffer.getLong();
+    }
+
+    // =========== Encoded Scheme-specific FEC OTI - Z|N|Al ========== //
+
+    /**
+     * @param numSourceBlocks
+     * @param numSubBlocks
+     * @param symbolAlign
+     * @return
+     */
+    public static int buildSchemeSpecFecOTI(int numSourceBlocks, int numSubBlocks, int symbolAlign) {
+
+        final int usZ = unsignNumSourceBlocks(numSourceBlocks);
+        final int usN = unsignNumSubBlocks(numSubBlocks);
+        final int usAl = unsignSymbolAlignment(symbolAlign);
+
+        return (usZ << numSourceBlocksShift()) | (usN << numSubBlocksShift()) | usAl;
+
+    }
+
+    /**
+     * @param schemeSpecFecOTI
+     * @param buffer
+     */
+    public static void writeSchemeSpecFecOTI(int schemeSpecFecOTI, ByteBuffer buffer) {
+
+        // 32-bit value
+        buffer.putInt(schemeSpecFecOTI);
+    }
+
+    /**
+     * @param buffer
+     * @return
+     */
+    public static int readSchemeSpecFecOTI(ByteBuffer buffer) {
+
+        // 32-bit value
+        return buffer.getInt();
+    }
+
     // =========== FEC payload ID - SBN|ESI ========== //
 
     /**
@@ -219,9 +244,10 @@ public class ParameterIO {
      */
     public static int buildFECpayloadID(int sourceBlockNum, int encSymbolID) {
 
-        final int unsignedSBN = unsignSourceBlockNumber(sourceBlockNum);
-        final int unsignedESI = unsignEncodingSymbolID(encSymbolID);
-        return (unsignedSBN << (Params.NUM_BYTES_ESI * Byte.SIZE)) | unsignedESI;
+        final int usSBN = unsignSourceBlockNumber(sourceBlockNum);
+        final int usESI = unsignEncodingSymbolID(encSymbolID);
+
+        return (usSBN << sourceBlockNumberShift()) | usESI;
     }
 
     /**

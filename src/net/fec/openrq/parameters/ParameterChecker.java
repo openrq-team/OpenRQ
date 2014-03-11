@@ -13,7 +13,7 @@ public final class ParameterChecker {
      */
     public static long minDataLength() {
 
-        return Params.MIN_F;
+        return InternalConstants.MIN_F;
     }
 
     /**
@@ -21,7 +21,7 @@ public final class ParameterChecker {
      */
     public static long maxDataLength() {
 
-        return Params.MAX_F;
+        return InternalConstants.MAX_F;
     }
 
     /**
@@ -40,7 +40,7 @@ public final class ParameterChecker {
      */
     public static long minSymbolSize() {
 
-        return Params.MIN_T;
+        return InternalConstants.MIN_T;
     }
 
     /**
@@ -48,7 +48,7 @@ public final class ParameterChecker {
      */
     public static long maxSymbolSize() {
 
-        return Params.MAX_T;
+        return InternalConstants.MAX_T;
     }
 
     /**
@@ -67,7 +67,7 @@ public final class ParameterChecker {
      */
     public static long minNumSourceBlocks() {
 
-        return Params.MIN_Z;
+        return InternalConstants.MIN_Z;
     }
 
     /**
@@ -75,7 +75,7 @@ public final class ParameterChecker {
      */
     public static long maxNumSourceBlocks() {
 
-        return Params.MAX_Z;
+        return InternalConstants.MAX_Z;
     }
 
     /**
@@ -94,7 +94,7 @@ public final class ParameterChecker {
      */
     public static long minNumSubBlocks() {
 
-        return Params.MIN_N;
+        return InternalConstants.MIN_N;
     }
 
     /**
@@ -102,7 +102,7 @@ public final class ParameterChecker {
      */
     public static long maxNumSubBlocks() {
 
-        return Params.MAX_N;
+        return InternalConstants.MAX_N;
     }
 
     /**
@@ -125,7 +125,7 @@ public final class ParameterChecker {
      */
     public static int minSourceBlockNumber() {
 
-        return Params.MIN_SBN;
+        return InternalConstants.MIN_SBN;
     }
 
     /**
@@ -133,7 +133,7 @@ public final class ParameterChecker {
      */
     public static int maxSourceBlockNumber() {
 
-        return Params.MAX_SBN;
+        return InternalConstants.MAX_SBN;
     }
 
     /**
@@ -152,7 +152,7 @@ public final class ParameterChecker {
      */
     public static int minEncodingSymbolID() {
 
-        return Params.MIN_ESI;
+        return InternalConstants.MIN_ESI;
     }
 
     /**
@@ -160,7 +160,7 @@ public final class ParameterChecker {
      */
     public static int maxEncodingSymbolID() {
 
-        return Params.MAX_ESI;
+        return InternalConstants.MAX_ESI;
     }
 
     /**

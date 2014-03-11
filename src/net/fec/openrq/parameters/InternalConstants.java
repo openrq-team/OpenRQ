@@ -4,7 +4,7 @@ package net.fec.openrq.parameters;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-final class Params {
+final class InternalConstants {
 
     // == data length == //
     // the RFC specifies a non-negative value, but we force a positive value here

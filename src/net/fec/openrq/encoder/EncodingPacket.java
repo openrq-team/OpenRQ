@@ -3,8 +3,8 @@ package net.fec.openrq.encoder;
 
 import java.nio.ByteBuffer;
 
+import net.fec.openrq.FECPayloadID;
 import net.fec.openrq.SymbolType;
-import net.fec.openrq.parameters.PacketParameters;
 
 
 /**
@@ -14,11 +14,11 @@ import net.fec.openrq.parameters.PacketParameters;
 public interface EncodingPacket {
 
     /**
-     * Returns the parameters associated to this encoding packet.
+     * Returns the FEC payload identifier associated to this encoding packet.
      * 
-     * @return the parameters associated to this encoding packet
+     * @return the FEC payload identifier associated to this encoding packet
      */
-    public PacketParameters getPacketParameters();
+    public FECPayloadID fecPayloadID();
 
     /**
      * Returns the data from the symbol(s) in this encoding packet. The returned symbol(s) have contiguous <i>encoding
