@@ -86,7 +86,7 @@ public final class FECParameters {
      * 
      * @param array
      *            An array from which a {@code FECParameters} instance is read
-     * @param index
+     * @param offset
      *            The starting array index at which a {@code FECParameters} instance is read
      * @return a {@code FECParameters} instance
      * @exception NullPointerException
@@ -94,10 +94,10 @@ public final class FECParameters {
      * @exception IndexOutOfBoundsException
      *                If a {@code FECParameters} instance cannot be read at the given index
      */
-    public static FECParameters readFromArray(byte[] array, int index) {
+    public static FECParameters readFromArray(byte[] array, int offset) {
 
-        if (index < 0 || array.length - index < 12) throw new IndexOutOfBoundsException();
-        return readFromBuffer(ByteBuffer.wrap(array, index, 12));
+        if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
+        return readFromBuffer(ByteBuffer.wrap(array, offset, 12));
     }
 
     static FECParameters makeFECParameters(long F, int T, int Z, int N, int Al) {
@@ -158,7 +158,7 @@ public final class FECParameters {
      * 
      * @param array
      *            An array on which the FEC parameters are written
-     * @param index
+     * @param offset
      *            The starting array index at which the FEC parameters are written
      * @exception IllegalStateException
      *                If this is an invalid {@code FECParamaters} instance
@@ -167,11 +167,11 @@ public final class FECParameters {
      * @exception IndexOutOfBoundsException
      *                If the FEC parameters cannot be written at the given index
      */
-    public void writeToArray(byte[] array, int index) {
+    public void writeToArray(byte[] array, int offset) {
 
         checkValid();
-        if (index < 0 || array.length - index < 12) throw new IndexOutOfBoundsException();
-        writeToBuffer(ByteBuffer.wrap(array, index, 12));
+        if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
+        writeToBuffer(ByteBuffer.wrap(array, offset, 12));
     }
 
     /**
@@ -181,20 +181,20 @@ public final class FECParameters {
      * @exception IllegalStateException
      *                If this is an invalid {@code FECParamaters} instance
      */
-    public long getDataLength() {
+    public long dataLength() {
 
         checkValid();
         return ParameterIO.extractDataLength(commonFecOTI);
     }
 
     /**
-     * Returns the symbol size in number of bytes.
+     * Returns the size of a symbol in number of bytes.
      * 
-     * @return the symbol size in number of bytes
+     * @return the size of a symbol in number of bytes
      * @exception IllegalStateException
      *                If this is an invalid {@code FECParamaters} instance
      */
-    public int getSymbolSize() {
+    public int symbolSize() {
 
         checkValid();
         return ParameterIO.extractSymbolSize(commonFecOTI);
@@ -207,7 +207,7 @@ public final class FECParameters {
      * @exception IllegalStateException
      *                If this is an invalid {@code FECParamaters} instance
      */
-    public int getNumberOfSourceBlocks() {
+    public int numberOfSourceBlocks() {
 
         checkValid();
         return ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI);
@@ -220,7 +220,7 @@ public final class FECParameters {
      * @exception IllegalStateException
      *                If this is an invalid {@code FECParamaters} instance
      */
-    public int getNumberOfSubBlocks() {
+    public int numberOfSubBlocks() {
 
         checkValid();
         return ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
@@ -231,7 +231,7 @@ public final class FECParameters {
      * 
      * @return the symbol alignment value
      */
-    public int getSymbolAlignment() {
+    public int symbolAlignment() {
 
         checkValid();
         return ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);

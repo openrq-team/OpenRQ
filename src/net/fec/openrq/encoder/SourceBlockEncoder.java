@@ -34,8 +34,7 @@ public interface SourceBlockEncoder {
      * </ul>
      * then this method returns an encoding packet with a source symbol identified by {@code (SBN, ESI)}.
      * <p>
-     * Note that the encoding symbol identifier must be valid according to
-     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be between {@code 0} (inclusive) and
+     * Note that a valid encoding symbol identifier for a source symbol must be between {@code 0} (inclusive) and
      * {@code K} (exclusive), where {@code K} is the number of source symbols from the source block currently being
      * encoded.
      * 
@@ -60,8 +59,7 @@ public interface SourceBlockEncoder {
      * then this method returns an encoding packet with a first source symbol identified by {@code (SBN, ESI)}, a second
      * symbol identified by {@code (SBN, ESI+1)}, a third symbol identified by {@code (SBN, ESI+2)}, etc.
      * <p>
-     * Note that the encoding symbol identifier must be valid according to
-     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be between {@code 0} (inclusive) and
+     * Note that a valid encoding symbol identifier for a source symbol must be between {@code 0} (inclusive) and
      * {@code K} (exclusive), where {@code K} is the number of source symbols from the source block currently being
      * encoded. Additionally, the number of symbols must be positive and no greater than ({@code K - ESI}).
      * 

@@ -37,12 +37,12 @@ public interface EncodingPacket {
      * 
      * @return the number of symbols in this encoding packet
      */
-    public int getNumSymbols();
+    public int numberOfSymbols();
 
     /**
      * Returns the type of all the symbols in this encoding packet.
      * 
      * @return the type of all the symbols in this encoding packet
      */
-    public SymbolType getSymbolType();
+    public SymbolType symbolType();
 }

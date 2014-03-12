@@ -20,19 +20,27 @@ public interface DataEncoder {
 
     /**
      * Returns the length of the data in number of bytes. This value is the one returned by
-     * {@code this.fecParameters().getDataLength()}.
+     * {@code this.fecParameters().dataLength()}.
      * 
      * @return the length of the data in number of bytes
      */
-    public int dataLength();
+    public long dataLength();
+
+    /**
+     * Returns the size of a symbol in number of bytes. This value is the one returned by
+     * {@code this.fecParameters().symbolSize()}.
+     * 
+     * @return the size of a symbol in number of bytes
+     */
+    public int symbolSize();
 
     /**
      * Returns the number of source blocks. This value is the one returned by
-     * {@code this.fecParameters().getNumberOfSourceBlocks()}.
+     * {@code this.fecParameters().numberOfSourceBlocks()}.
      * 
      * @return the number of source blocks
      */
-    public int numSourceBlocks();
+    public int numberOfSourceBlocks();
 
     /**
      * Returns an encoder object for a specific source block.

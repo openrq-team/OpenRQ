@@ -75,7 +75,7 @@ public final class FECPayloadID {
      * 
      * @param array
      *            An array from which a {@code FECPayloadID} instance is read
-     * @param index
+     * @param offset
      *            The starting array index at which a {@code FECPayloadID} instance is read
      * @return a {@code FECPayloadID} instance
      * @exception NullPointerException
@@ -83,10 +83,10 @@ public final class FECPayloadID {
      * @exception IndexOutOfBoundsException
      *                If a {@code FECPayloadID} instance cannot be read at the given index
      */
-    public static FECPayloadID readFromArray(byte[] array, int index) {
+    public static FECPayloadID readFromArray(byte[] array, int offset) {
 
-        if (index < 0 || array.length - index < 4) throw new IndexOutOfBoundsException();
-        return readFromBuffer(ByteBuffer.wrap(array, index, 4));
+        if (offset < 0 || array.length - offset < 4) throw new IndexOutOfBoundsException();
+        return readFromBuffer(ByteBuffer.wrap(array, offset, 4));
     }
 
     static FECPayloadID makeFECPayloadID(int sbn, int esi) {
@@ -140,7 +140,7 @@ public final class FECPayloadID {
      * 
      * @param array
      *            An array on which the FEC payload ID is written
-     * @param index
+     * @param offset
      *            The starting array index at which the FEC payload ID is written
      * @exception IllegalStateException
      *                If this is an invalid {@code FECPayloadID} instance
@@ -149,11 +149,11 @@ public final class FECPayloadID {
      * @exception IndexOutOfBoundsException
      *                If the FEC payload ID cannot be written at the given index
      */
-    public void writeToArray(byte[] array, int index) {
+    public void writeToArray(byte[] array, int offset) {
 
         checkValid();
-        if (index < 0 || array.length - index < 4) throw new IndexOutOfBoundsException();
-        writeToBuffer(ByteBuffer.wrap(array, index, 4));
+        if (offset < 0 || array.length - offset < 4) throw new IndexOutOfBoundsException();
+        writeToBuffer(ByteBuffer.wrap(array, offset, 4));
     }
 
     /**
@@ -163,7 +163,7 @@ public final class FECPayloadID {
      * @exception IllegalStateException
      *                If this is an invalid {@code FECPayloadID} instance
      */
-    public int getSourceBlockNumber() {
+    public int sourceBlockNumber() {
 
         checkValid();
         return ParameterIO.extractSourceBlockNumber(fecPayloadID);
@@ -176,7 +176,7 @@ public final class FECPayloadID {
      * @exception IllegalStateException
      *                If this is an invalid {@code FECPayloadID} instance
      */
-    public int getEncodingSymbolID() {
+    public int encodingSymbolID() {
 
         checkValid();
         return ParameterIO.extractEncodingSymbolID(fecPayloadID);
