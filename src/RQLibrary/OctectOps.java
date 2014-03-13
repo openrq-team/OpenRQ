@@ -121,7 +121,7 @@ abstract class OctectOps {
 		return betaProduct;
 	}
 	
-	// betas com posi�oes
+	// betas com posicoes
 	protected static final byte[] betaProduct(byte beta, byte[] U, int pos, int length){
 
 //		if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
