@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,8 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.encoder.DataEncoderBuilder;
 import net.fec.openrq.encoder.DataEncoder;
+import net.fec.openrq.encoder.DataEncoderBuilder;
 
 
 /**
@@ -46,7 +46,7 @@ final class Builders {
         @Override
         public DataEncoder build() {
 
-            // TODO derive T, Z, N, Al and return encoder instance
+            // TODO derive T, Z, N and return encoder instance
             return null;
         }
 
@@ -56,14 +56,12 @@ final class Builders {
 
         protected int maxPayload;
         protected int maxDecBlock;
-        protected int minSubSymbol;
 
 
         protected AbstractEncBuilder() {
 
             defaultMaxPayload();
             defaultMaxDecoderBlock();
-            defaultMinSubSymbol();
         }
 
         @Override
@@ -93,21 +91,6 @@ final class Builders {
         public DataEncoderBuilder defaultMaxDecoderBlock() {
 
             this.maxDecBlock = DataEncoderBuilder.DEF_MAX_DEC_BLOCK_SIZE;
-            return this;
-        }
-
-        @Override
-        public DataEncoderBuilder minSubSymbol(int minSubSymbol) {
-
-            if (minSubSymbol <= 0) throw new IllegalArgumentException("non-positive minSubSymbol");
-            this.minSubSymbol = minSubSymbol;
-            return this;
-        }
-
-        @Override
-        public DataEncoderBuilder defaultMinSubSymbol() {
-
-            this.minSubSymbol = DataEncoderBuilder.DEF_MIN_SUB_SYMBOL;
             return this;
         }
 

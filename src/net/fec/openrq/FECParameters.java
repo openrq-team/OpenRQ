@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,7 +46,8 @@ public final class FECParameters {
         INVALID_DATA_LENGTH,
         INVALID_SYMBOL_SIZE,
         INVALID_NUM_SOURCE_BLOCKS,
-        INVALID_NUM_SUB_BLOCKS;
+        INVALID_NUM_SUB_BLOCKS,
+        INVALID_SYMBOL_ALIGNMENT;
     }
 
 
@@ -74,18 +75,20 @@ public final class FECParameters {
         final int schemeSpecFecOTI = ParameterIO.readSchemeSpecFecOTI(buffer); // 4 bytes
 
         if (!ParameterChecker.isValidDataLength(ParameterIO.extractDataLength(commonFecOTI))) {
-            return new FECParameters(0L, 0, FECParameters.Validity.INVALID_DATA_LENGTH);
+            return makeInvalidFECParameters(FECParameters.Validity.INVALID_DATA_LENGTH);
         }
         else if (!ParameterChecker.isValidSymbolSize(ParameterIO.extractSymbolSize(commonFecOTI))) {
-            return new FECParameters(0L, 0, FECParameters.Validity.INVALID_SYMBOL_SIZE);
+            return makeInvalidFECParameters(FECParameters.Validity.INVALID_SYMBOL_SIZE);
         }
         else if (!ParameterChecker.isValidNumSourceBlocks(ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI))) {
-            return new FECParameters(0L, 0, FECParameters.Validity.INVALID_NUM_SOURCE_BLOCKS);
+            return makeInvalidFECParameters(FECParameters.Validity.INVALID_NUM_SOURCE_BLOCKS);
         }
         else if (!ParameterChecker.isValidNumSubBlocks(ParameterIO.extractNumSubBlocks(schemeSpecFecOTI))) {
-            return new FECParameters(0L, 0, FECParameters.Validity.INVALID_NUM_SUB_BLOCKS);
+            return makeInvalidFECParameters(FECParameters.Validity.INVALID_NUM_SUB_BLOCKS);
         }
-        // TODO add symbol alignment check
+        else if (!ParameterChecker.isValidSymbolAlignment(ParameterIO.extractSymbolAlignment(schemeSpecFecOTI))) {
+            return makeInvalidFECParameters(FECParameters.Validity.INVALID_SYMBOL_ALIGNMENT);
+        }
         else {
             return new FECParameters(commonFecOTI, schemeSpecFecOTI, FECParameters.Validity.VALID);
         }
@@ -116,17 +119,21 @@ public final class FECParameters {
         return readFromBuffer(ByteBuffer.wrap(array, offset, 12));
     }
 
-    static FECParameters makeFECParameters(long F, int T, int Z, int N, int Al) {
+    static FECParameters makeFECParameters(long F, int T, int Z, int N) {
 
         if (!ParameterChecker.isValidDataLength(F)) throw new IllegalArgumentException("invalid F");
         if (!ParameterChecker.isValidSymbolSize(T)) throw new IllegalArgumentException("invalid T");
         if (!ParameterChecker.isValidNumSourceBlocks(Z)) throw new IllegalArgumentException("invalid Z");
         if (!ParameterChecker.isValidNumSourceBlocks(N)) throw new IllegalArgumentException("invalid N");
-        // TODO add symbol alignment check
 
         final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
-        final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N, Al);
+        final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N);
         return new FECParameters(commonFecOTI, schemeSpecFecOTI, FECParameters.Validity.VALID);
+    }
+
+    private static FECParameters makeInvalidFECParameters(FECParameters.Validity validity) {
+
+        return new FECParameters(0L, 0, validity);
     }
 
 
@@ -290,6 +297,9 @@ public final class FECParameters {
                 break;
                 case INVALID_NUM_SUB_BLOCKS:
                     errorMsg = "invalid number of sub-blocks";
+                break;
+                case INVALID_SYMBOL_ALIGNMENT:
+                    errorMsg = "invalid symbol alignment";
                 break;
                 default:
                     // should never happen

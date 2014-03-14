@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,11 +45,6 @@ package net.fec.openrq.encoder;
 public interface DataEncoderBuilder {
 
     /**
-     * Default value of 4 bytes for the symbol alignment.
-     */
-    public static final int DEF_SYMBOL_ALIGNMENT = 4;      // Al
-
-    /**
      * Default value of 1392 bytes for the maximum payload length.
      */
     public static final int DEF_MAX_PAYLOAD_LENGTH = 1392; // P'
@@ -59,11 +54,12 @@ public interface DataEncoderBuilder {
      */
     public static final int DEF_MAX_DEC_BLOCK_SIZE = 76800;    // WS // B
 
-    /**
-     * Default value of 8 bytes for the minimum sub-symbol size.
-     */
-    public static final int DEF_MIN_SUB_SYMBOL = 8;        // SS
 
+    // TODO enable interleaving level property
+    // /**
+    // * Default value of 8 bytes for the minimum sub-symbol size.
+    // */
+    // public static final int DEF_MIN_SUB_SYMBOL = 8; // SS
 
     /**
      * Assigns the provided value to the property of <i>maximum payload length in number of bytes</i>.
@@ -111,29 +107,31 @@ public interface DataEncoderBuilder {
      */
     public DataEncoderBuilder defaultMaxDecoderBlock();
 
-    /**
-     * Assigns the provided value to the property of <i>lower bound on the sub-symbol size in units of {@code Al}, where
-     * {@code Al} is the symbol alignment parameter</i>.
-     * <p>
-     * This property affects the amount of interleaving used by the partitioning of an object into source blocks and
-     * sub-blocks.
-     * 
-     * @param minSubSymbol
-     *            The lower bound on the sub-symbol size in units of {@code Al}
-     * @return this builder
-     * @exception IllegalArgumentException
-     *                If {@code minSubSymbol} is non-positive
-     */
-    public DataEncoderBuilder minSubSymbol(int minSubSymbol);
-
-    /**
-     * Assigns the {@linkplain #DEF_MIN_SUB_SYMBOL default value} to the property of <i>lower bound on the sub-symbol
-     * size in units of {@code Al}, where {@code Al} is the symbol alignment parameter</i>.
-     * 
-     * @return this builder
-     * @see #minSubSymbol(int)
-     */
-    public DataEncoderBuilder defaultMinSubSymbol();
+    // TODO enable interleaving level property
+    // /**
+    // * Assigns the provided value to the property of <i>lower bound on the sub-symbol size in units of {@code Al},
+    // where
+    // * {@code Al} is the symbol alignment parameter</i>.
+    // * <p>
+    // * This property affects the amount of interleaving used by the partitioning of an object into source blocks and
+    // * sub-blocks.
+    // *
+    // * @param minSubSymbol
+    // * The lower bound on the sub-symbol size in units of {@code Al}
+    // * @return this builder
+    // * @exception IllegalArgumentException
+    // * If {@code minSubSymbol} is non-positive
+    // */
+    // public DataEncoderBuilder minSubSymbol(int minSubSymbol);
+    //
+    // /**
+    // * Assigns the {@linkplain #DEF_MIN_SUB_SYMBOL default value} to the property of <i>lower bound on the sub-symbol
+    // * size in units of {@code Al}, where {@code Al} is the symbol alignment parameter</i>.
+    // *
+    // * @return this builder
+    // * @see #minSubSymbol(int)
+    // */
+    // public DataEncoderBuilder defaultMinSubSymbol();
 
     /**
      * Returns a {@code DataEncoder} instance based on the assigned properties to this builder.
