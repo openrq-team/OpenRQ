@@ -54,7 +54,7 @@ public final class ParameterChecker {
     /**
      * @return
      */
-    public static long minSymbolSize() {
+    public static int minSymbolSize() {
 
         return InternalConstants.MIN_T;
     }
@@ -62,7 +62,7 @@ public final class ParameterChecker {
     /**
      * @return
      */
-    public static long maxSymbolSize() {
+    public static int maxSymbolSize() {
 
         return InternalConstants.MAX_T;
     }
@@ -81,7 +81,7 @@ public final class ParameterChecker {
     /**
      * @return
      */
-    public static long minNumSourceBlocks() {
+    public static int minNumSourceBlocks() {
 
         return InternalConstants.MIN_Z;
     }
@@ -89,7 +89,7 @@ public final class ParameterChecker {
     /**
      * @return
      */
-    public static long maxNumSourceBlocks() {
+    public static int maxNumSourceBlocks() {
 
         return InternalConstants.MAX_Z;
     }
@@ -108,7 +108,7 @@ public final class ParameterChecker {
     /**
      * @return
      */
-    public static long minNumSubBlocks() {
+    public static int minNumSubBlocks() {
 
         return InternalConstants.MIN_N;
     }
@@ -116,7 +116,7 @@ public final class ParameterChecker {
     /**
      * @return
      */
-    public static long maxNumSubBlocks() {
+    public static int maxNumSubBlocks() {
 
         return InternalConstants.MAX_N;
     }

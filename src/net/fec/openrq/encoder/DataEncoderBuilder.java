@@ -16,6 +16,10 @@
 
 package net.fec.openrq.encoder;
 
+
+import net.fec.openrq.parameters.ParameterChecker;
+
+
 /**
  * Builder class for data encoder instances. This class follows the "Builder" design pattern, where multiple properties
  * may be configured and a final {@code DataEncoder} instance is returned upon calling the method {@link #build()}.
@@ -24,7 +28,6 @@ package net.fec.openrq.encoder;
  * <ul>
  * <li>maximum payload length</li>
  * <li>maximum block size in working memory</li>
- * <li>minimum sub-symbol size</li>
  * </ul>
  * <p>
  * If some property is not assigned, a default value is automatically assigned to it. Default values for each property
@@ -66,6 +69,19 @@ public interface DataEncoderBuilder {
      * <p>
      * This property affects the maximum size of an encoding symbol, which will be equal to the provided payload length
      * rounded down to the closest multiple of {@code Al}, where {@code Al} is the symbol alignment parameter.
+     * <p>
+     * Note that there are lower and upper bounds on the value of this property, and if the provided value is outside
+     * these bounds, then it will be converted up or down to the proper surpassed bound (before being rounded down to
+     * the closest multiple of {@code Al}). The lower bound and upper bound are defined in the following way:
+     * <ol>
+     * <li>{@code data_length} is the length of the data in number of bytes</li>
+     * <li>{@code max_num_sblock} is the {@linkplain ParameterChecker#maxNumSourceBlocks() maximum number of source
+     * blocks}</li>
+     * <li>{@code max_symbol_size} is the {@linkplain ParameterChecker#maxSymbolSize() maximum symbol size} in number of
+     * bytes</li>
+     * <li><b>lower_bound</b> is equal to <code>floor(data_length / (56403 &times; max_num_sblocks))</code>
+     * <li><b>upper_bound</b> is equal to {@code min(data_length, max_symbol_size})</li>
+     * </ol>
      * 
      * @param maxPayloadLen
      *            The maximum payload length in number of bytes
