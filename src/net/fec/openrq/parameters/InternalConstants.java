@@ -22,6 +22,9 @@ package net.fec.openrq.parameters;
  */
 final class InternalConstants {
 
+    // == K_max == //
+    static final int K_MAX = 56403;
+
     // == data length == //
     // the RFC specifies a non-negative value, but we force a positive value here
     static final long MIN_F = 1L;
@@ -38,7 +41,7 @@ final class InternalConstants {
 
     // == number of sub-blocks == //
     static final int MIN_N = 1;
-    static final int MAX_N = 56403;
+    static final int MAX_N = 1/* K_MAX */; // TODO enable interleaving
 
     // == symbol alignment == //
     static final int ALIGN_VALUE = 1;

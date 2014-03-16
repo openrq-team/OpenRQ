@@ -44,8 +44,10 @@ import net.fec.openrq.parameters.ParameterChecker;
  * 
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @param <T>
+ *            A sub-type of {@code DataEncoder}
  */
-public interface DataEncoderBuilder {
+public interface DataEncoderBuilder<T extends DataEncoder> {
 
     /**
      * Default value of 1392 bytes for the maximum payload length.
@@ -75,7 +77,7 @@ public interface DataEncoderBuilder {
      * the closest multiple of {@code Al}). The lower bound and upper bound are defined in the following way:
      * <ol>
      * <li>{@code data_length} is the length of the data in number of bytes</li>
-     * <li>{@code max_num_sblock} is the {@linkplain ParameterChecker#maxNumSourceBlocks() maximum number of source
+     * <li>{@code max_num_sblocks} is the {@linkplain ParameterChecker#maxNumSourceBlocks() maximum number of source
      * blocks}</li>
      * <li>{@code max_symbol_size} is the {@linkplain ParameterChecker#maxSymbolSize() maximum symbol size} in number of
      * bytes</li>
@@ -89,7 +91,7 @@ public interface DataEncoderBuilder {
      * @exception IllegalArgumentException
      *                If {@code maxPayloadLen} is non-positive
      */
-    public DataEncoderBuilder maxPayload(int maxPayloadLen);
+    public DataEncoderBuilder<T> maxPayload(int maxPayloadLen);
 
     /**
      * Assigns the {@linkplain #DEF_MAX_PAYLOAD_LENGTH default value} to the property of <i>maximum payload length in
@@ -98,7 +100,7 @@ public interface DataEncoderBuilder {
      * @return this builder
      * @see #maxPayload(int)
      */
-    public DataEncoderBuilder defaultMaxPayload();
+    public DataEncoderBuilder<T> defaultMaxPayload();
 
     /**
      * Assigns the provided value to the property of <i>maximum block size in number of bytes that is decodable in
@@ -112,7 +114,7 @@ public interface DataEncoderBuilder {
      * @exception IllegalArgumentException
      *                If {@code maxBlock} is non-positive
      */
-    public DataEncoderBuilder maxDecoderBlock(int maxBlock);
+    public DataEncoderBuilder<T> maxDecoderBlock(int maxBlock);
 
     /**
      * Assigns the {@linkplain #DEF_MAX_DEC_BLOCK_SIZE default value} to the property of <i>maximum block size in number
@@ -121,7 +123,7 @@ public interface DataEncoderBuilder {
      * @return this builder
      * @see #maxDecoderBlock(int)
      */
-    public DataEncoderBuilder defaultMaxDecoderBlock();
+    public DataEncoderBuilder<T> defaultMaxDecoderBlock();
 
     // TODO enable interleaving level property
     // /**
@@ -154,5 +156,5 @@ public interface DataEncoderBuilder {
      * 
      * @return a {@code DataEncoder} instance
      */
-    public DataEncoder build();
+    public T build();
 }

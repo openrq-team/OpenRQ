@@ -29,37 +29,40 @@ import net.fec.openrq.parameters.ParameterChecker;
  */
 final class Builders {
 
-    static DataEncoderBuilder newEncoderBuilder(byte[] data) {
+    static DataEncoderBuilder<ArrayDataEncoder> newEncoderBuilder(byte[] array, int offset, int length) {
 
-        return new ArrayEncBuilder(data);
+        return new ArrayEncBuilder(array, offset, length);
     }
 
 
-    private static final class ArrayEncBuilder extends AbstractEncBuilder {
+    private static final class ArrayEncBuilder extends AbstractEncBuilder<ArrayDataEncoder> {
 
-        private final byte[] data;
+        private final byte[] array;
+        private final int offset;
+        private final int length;
 
 
-        ArrayEncBuilder(byte[] data) {
+        ArrayEncBuilder(byte[] array, int offset, int length) {
 
-            super(data.length);
-            this.data = data;
+            super(length);
+            this.array = array;
+            this.offset = offset;
+            this.length = length;
         }
 
         @Override
-        public DataEncoder build() {
+        public ArrayDataEncoder build() {
 
-            final long F = data.length;
+            final long F = length;
             final int T = maxPayload; // T = P'
             final int WS = maxDecBlock;
             final FECParameters fecParams = deriveParameters(F, T, WS);
 
-            // TODO return encoder instance
-            return null;
+            return ArrayDataEncoder.newEncoder(array, offset, length, fecParams);
         }
     }
 
-    private static abstract class AbstractEncBuilder implements DataEncoderBuilder {
+    private static abstract class AbstractEncBuilder<T extends DataEncoder> implements DataEncoderBuilder<T> {
 
         protected final long dataLength;
         protected int maxPayload;
@@ -74,7 +77,7 @@ final class Builders {
         }
 
         @Override
-        public DataEncoderBuilder maxPayload(int maxPayloadLen) {
+        public DataEncoderBuilder<T> maxPayload(int maxPayloadLen) {
 
             if (maxPayloadLen <= 0) throw new IllegalArgumentException("non-positive maxPayloadLen");
             this.maxPayload = roundDownMaxPayload(boundMaxPayload(maxPayloadLen, dataLength));
@@ -99,14 +102,14 @@ final class Builders {
         }
 
         @Override
-        public DataEncoderBuilder defaultMaxPayload() {
+        public DataEncoderBuilder<T> defaultMaxPayload() {
 
             this.maxPayload = DataEncoderBuilder.DEF_MAX_PAYLOAD_LENGTH;
             return this;
         }
 
         @Override
-        public DataEncoderBuilder maxDecoderBlock(int maxBlock) {
+        public DataEncoderBuilder<T> maxDecoderBlock(int maxBlock) {
 
             if (maxBlock <= 0) throw new IllegalArgumentException("non-positive maxBlock");
             this.maxDecBlock = maxBlock;
@@ -114,14 +117,14 @@ final class Builders {
         }
 
         @Override
-        public DataEncoderBuilder defaultMaxDecoderBlock() {
+        public DataEncoderBuilder<T> defaultMaxDecoderBlock() {
 
             this.maxDecBlock = DataEncoderBuilder.DEF_MAX_DEC_BLOCK_SIZE;
             return this;
         }
 
         @Override
-        public abstract DataEncoder build();
+        public abstract T build();
     }
 
 

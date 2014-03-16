@@ -39,18 +39,6 @@ import net.fec.openrq.parameters.ParameterIO;
  */
 public final class FECParameters {
 
-    // Enum state to avoid throwing exceptions when the user parses illegal parameters.
-    public static enum Validity {
-
-        VALID,
-        INVALID_DATA_LENGTH,
-        INVALID_SYMBOL_SIZE,
-        INVALID_NUM_SOURCE_BLOCKS,
-        INVALID_NUM_SUB_BLOCKS,
-        INVALID_SYMBOL_ALIGNMENT;
-    }
-
-
     /**
      * Reads from the provided buffer a {@code FECParameters} instance.
      * <p>
@@ -58,8 +46,7 @@ public final class FECParameters {
      * returns normally, the position of the provided buffer will have advanced by 12 bytes.
      * <p>
      * The returned {@code FECParameters} instance is only {@linkplain #isValid() valid} if the FEC parameters contained
-     * inside the buffer have valid values. If some parameter value is invalid, the method {@link #getValidity()} can be
-     * used to infer which parameter value is invalid.
+     * inside the buffer have valid values.
      * 
      * @param buffer
      *            A buffer from which a {@code FECParameters} instance is read
@@ -74,23 +61,17 @@ public final class FECParameters {
         final long commonFecOTI = ParameterIO.readCommonFecOTI(buffer);        // 8 bytes
         final int schemeSpecFecOTI = ParameterIO.readSchemeSpecFecOTI(buffer); // 4 bytes
 
-        if (!ParameterChecker.isValidDataLength(ParameterIO.extractDataLength(commonFecOTI))) {
-            return makeInvalidFECParameters(FECParameters.Validity.INVALID_DATA_LENGTH);
-        }
-        else if (!ParameterChecker.isValidSymbolSize(ParameterIO.extractSymbolSize(commonFecOTI))) {
-            return makeInvalidFECParameters(FECParameters.Validity.INVALID_SYMBOL_SIZE);
-        }
-        else if (!ParameterChecker.isValidNumSourceBlocks(ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI))) {
-            return makeInvalidFECParameters(FECParameters.Validity.INVALID_NUM_SOURCE_BLOCKS);
-        }
-        else if (!ParameterChecker.isValidNumSubBlocks(ParameterIO.extractNumSubBlocks(schemeSpecFecOTI))) {
-            return makeInvalidFECParameters(FECParameters.Validity.INVALID_NUM_SUB_BLOCKS);
-        }
-        else if (!ParameterChecker.isValidSymbolAlignment(ParameterIO.extractSymbolAlignment(schemeSpecFecOTI))) {
-            return makeInvalidFECParameters(FECParameters.Validity.INVALID_SYMBOL_ALIGNMENT);
+        final long F = ParameterIO.extractDataLength(commonFecOTI);
+        final int T = ParameterIO.extractSymbolSize(commonFecOTI);
+        final int Z = ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI);
+        final int N = ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
+        final int Al = ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
+
+        if (!ParameterChecker.areValidFECParameters(F, T, Z, N) || ParameterChecker.isValidSymbolAlignment(Al)) {
+            return makeInvalidFECParameters();
         }
         else {
-            return new FECParameters(commonFecOTI, schemeSpecFecOTI, FECParameters.Validity.VALID);
+            return new FECParameters(commonFecOTI, schemeSpecFecOTI, true);
         }
     }
 
@@ -100,8 +81,7 @@ public final class FECParameters {
      * The provided array must have at least 12 bytes between the given index and its length.
      * <p>
      * The returned {@code FECParameters} instance is only {@linkplain #isValid() valid} if the FEC parameters contained
-     * inside the buffer have valid values. If some parameter value is invalid, the method {@link #getValidity()} can be
-     * used to infer which parameter value is invalid.
+     * inside the buffer have valid values.
      * 
      * @param array
      *            An array from which a {@code FECParameters} instance is read
@@ -121,32 +101,31 @@ public final class FECParameters {
 
     static FECParameters makeFECParameters(long F, int T, int Z, int N) {
 
-        if (!ParameterChecker.isValidDataLength(F)) throw new IllegalArgumentException("invalid F");
-        if (!ParameterChecker.isValidSymbolSize(T)) throw new IllegalArgumentException("invalid T");
-        if (!ParameterChecker.isValidNumSourceBlocks(Z)) throw new IllegalArgumentException("invalid Z");
-        if (!ParameterChecker.isValidNumSourceBlocks(N)) throw new IllegalArgumentException("invalid N");
+        if (!ParameterChecker.areValidFECParameters(F, T, Z, N)) {
+            throw new IllegalArgumentException("invalid FEC parameters");
+        }
 
         final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
         final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N);
-        return new FECParameters(commonFecOTI, schemeSpecFecOTI, FECParameters.Validity.VALID);
+        return new FECParameters(commonFecOTI, schemeSpecFecOTI, true);
     }
 
-    private static FECParameters makeInvalidFECParameters(FECParameters.Validity validity) {
+    private static FECParameters makeInvalidFECParameters() {
 
-        return new FECParameters(0L, 0, validity);
+        return new FECParameters(0L, 0, false);
     }
 
 
     private final long commonFecOTI;
     private final int schemeSpecFecOTI;
-    private final FECParameters.Validity validity;
+    private final boolean isValid;
 
 
-    private FECParameters(long commonFecOTI, int schemeSpecFecOTI, FECParameters.Validity validity) {
+    private FECParameters(long commonFecOTI, int schemeSpecFecOTI, boolean isValid) {
 
         this.commonFecOTI = commonFecOTI;
         this.schemeSpecFecOTI = schemeSpecFecOTI;
-        this.validity = validity;
+        this.isValid = isValid;
     }
 
     /**
@@ -268,44 +247,11 @@ public final class FECParameters {
      */
     public boolean isValid() {
 
-        return validity == FECParameters.Validity.VALID;
-    }
-
-    /**
-     * Returns an enum value indicating the (in)validity of this {@code FECParameters} instance.
-     * 
-     * @return an enum value indicating the (in)validity of this {@code FECParameters} instance
-     */
-    public FECParameters.Validity getValidity() {
-
-        return validity;
+        return isValid;
     }
 
     private void checkValid() {
 
-        if (!isValid()) {
-            final String errorMsg;
-            switch (validity) {
-                case INVALID_DATA_LENGTH:
-                    errorMsg = "invalid data length";
-                break;
-                case INVALID_SYMBOL_SIZE:
-                    errorMsg = "invalid symbol size";
-                break;
-                case INVALID_NUM_SOURCE_BLOCKS:
-                    errorMsg = "invalid number of source blocks";
-                break;
-                case INVALID_NUM_SUB_BLOCKS:
-                    errorMsg = "invalid number of sub-blocks";
-                break;
-                case INVALID_SYMBOL_ALIGNMENT:
-                    errorMsg = "invalid symbol alignment";
-                break;
-                default:
-                    // should never happen
-                    throw new AssertionError("unknown enum type");
-            }
-            throw new IllegalStateException(errorMsg);
-        }
+        if (!isValid()) throw new IllegalStateException("invalid FEC parameters");
     }
 }

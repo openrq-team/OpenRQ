@@ -16,6 +16,10 @@
 
 package net.fec.openrq.parameters;
 
+
+import net.fec.openrq.util.arithmetic.ExtraMath;
+
+
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
@@ -40,15 +44,6 @@ public final class ParameterChecker {
         return InternalConstants.MAX_F;
     }
 
-    /**
-     * @param dataLen
-     * @return
-     */
-    public static boolean isValidDataLength(long dataLen) {
-
-        return dataLen >= minDataLength() && dataLen <= maxDataLength();
-    }
-
     // =========== symbol size - T ========== //
 
     /**
@@ -65,15 +60,6 @@ public final class ParameterChecker {
     public static int maxSymbolSize() {
 
         return InternalConstants.MAX_T;
-    }
-
-    /**
-     * @param symbolSize
-     * @return
-     */
-    public static boolean isValidSymbolSize(int symbolSize) {
-
-        return symbolSize >= minSymbolSize() && symbolSize <= maxSymbolSize();
     }
 
     // =========== number of source blocks - Z ========== //
@@ -94,15 +80,6 @@ public final class ParameterChecker {
         return InternalConstants.MAX_Z;
     }
 
-    /**
-     * @param numSourceBlocks
-     * @return
-     */
-    public static boolean isValidNumSourceBlocks(int numSourceBlocks) {
-
-        return numSourceBlocks >= minNumSourceBlocks() && numSourceBlocks <= maxNumSourceBlocks();
-    }
-
     // =========== number of sub-blocks - N ========== //
 
     /**
@@ -121,13 +98,49 @@ public final class ParameterChecker {
         return InternalConstants.MAX_N;
     }
 
+    // =========== F, T, Z, N =========== //
+
     /**
+     * @param dataLength
+     * @param symbolSize
+     * @param numSourceBlocks
      * @param numSubBlocks
      * @return
      */
-    public static boolean isValidNumSubBlocks(int numSubBlocks) {
+    public static boolean areValidFECParameters(long dataLength, int symbolSize, int numSourceBlocks, int numSubBlocks) {
 
-        return numSubBlocks >= minNumSubBlocks() && numSubBlocks <= maxNumSubBlocks();
+        final long F = dataLength;
+        final int T = symbolSize;
+        final int Z = numSourceBlocks;
+        final int N = numSubBlocks;
+        final int Al = symbolAlignmentValue();
+
+        // check max-min bounds
+        if ((F < minDataLength()) | (maxDataLength() < F) |
+            (T < minSymbolSize()) | (maxSymbolSize() < T) |
+            (Z < minNumSourceBlocks()) | (maxSourceBlockNumber() < Z) |
+            (N < minNumSubBlocks()) | (maxNumSubBlocks() < N)) {
+            return false;
+        }
+
+        // check multiple of symbol alignment
+        if ((T % Al) != 0) {
+            return false;
+        }
+
+        final long Kt = ExtraMath.ceilDiv(F, T);
+
+        // check partitioning bounds
+        if (T > F || Kt > Z || N > (T / Al)) {
+            return false;
+        }
+
+        // check number of symbols
+        if (ExtraMath.ceilDiv(Kt, Z) > InternalConstants.K_MAX) {
+            return false;
+        }
+
+        return true;
     }
 
     // =========== symbol alignment - Al ========== //
