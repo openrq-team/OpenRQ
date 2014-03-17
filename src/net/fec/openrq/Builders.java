@@ -31,6 +31,10 @@ final class Builders {
 
     static DataEncoderBuilder<ArrayDataEncoder> newEncoderBuilder(byte[] array, int offset, int length) {
 
+        if (offset < 0 || length < 0 || (array.length - offset) > length) {
+            throw new IndexOutOfBoundsException();
+        }
+
         return new ArrayEncBuilder(array, offset, length);
     }
 
@@ -54,7 +58,7 @@ final class Builders {
         public ArrayDataEncoder build() {
 
             final long F = length;
-            final int T = maxPayload; // T = P'
+            final int T = symbolSize;
             final int WS = maxDecBlock;
             final FECParameters fecParams = deriveParameters(F, T, WS);
 
@@ -65,7 +69,7 @@ final class Builders {
     private static abstract class AbstractEncBuilder<T extends DataEncoder> implements DataEncoderBuilder<T> {
 
         protected final long dataLength;
-        protected int maxPayload;
+        protected int symbolSize;
         protected int maxDecBlock;
 
 
@@ -80,31 +84,25 @@ final class Builders {
         public DataEncoderBuilder<T> maxPayload(int maxPayloadLen) {
 
             if (maxPayloadLen <= 0) throw new IllegalArgumentException("non-positive maxPayloadLen");
-            this.maxPayload = roundDownMaxPayload(boundMaxPayload(maxPayloadLen, dataLength));
-            return this;
-        }
-
-        private static int boundMaxPayload(int maxPayload, long dataLength) {
-
-            // safe cast since dataLength is safely upper bounded
-            final int lowerBound = (int)(dataLength / (SystematicIndices.K_max * ParameterChecker.maxNumSourceBlocks()));
-            final int upperBound = (int)Math.min(dataLength, ParameterChecker.maxSymbolSize());
-
-            if (maxPayload < lowerBound) return lowerBound;
-            else if (maxPayload > upperBound) return upperBound;
-            else return maxPayload;
-        }
-
-        private static int roundDownMaxPayload(int maxPayload) {
 
             final int Al = ParameterChecker.symbolAlignmentValue();
-            return (maxPayload / Al) * Al;
+            final int T = (maxPayloadLen / Al) * Al; // T = P'
+
+            if (T < ParameterChecker.symbolSizeLowerBound(dataLength)) {
+                throw new IllegalArgumentException("derived symbol size is less than its lower bound");
+            }
+            if (T > ParameterChecker.symbolSizeUpperBound(dataLength)) {
+                throw new IllegalArgumentException("derived symbol size is less than its upper bound");
+            }
+
+            this.symbolSize = T;
+            return this;
         }
 
         @Override
         public DataEncoderBuilder<T> defaultMaxPayload() {
 
-            this.maxPayload = DataEncoderBuilder.DEF_MAX_PAYLOAD_LENGTH;
+            this.symbolSize = DataEncoderBuilder.DEF_MAX_PAYLOAD_LENGTH;
             return this;
         }
 

@@ -77,8 +77,8 @@ public final class OpenRQ {
         int numSubBlocks,
         byte[] data,
         int beginIndex,
-        int endIndex
-        ) {
+        int endIndex)
+    {
 
         checkIndexBounds(beginIndex, endIndex, data.length);
         final int len = endIndex - beginIndex;

@@ -62,6 +62,48 @@ public final class ParameterChecker {
         return InternalConstants.MAX_T;
     }
 
+    /**
+     * Returns a lower bound for the size of a symbol given the length of some data object.
+     * <p>
+     * The returned value is equal to
+     * <code>floor(dataLength / (56403 &times; {@linkplain #maxNumSourceBlocks() maxNumSrcBlocks}))</code>.
+     * 
+     * @param dataLength
+     *            The length of some data object in number of bytes
+     * @return a lower bound for the size of a symbol in number of bytes
+     * @exception IllegalArgumentException
+     *                If the data length is lower than its minimum value or greater than its maximum value
+     */
+    public static int symbolSizeLowerBound(long dataLength) {
+
+        if (dataLength < minDataLength() || dataLength > maxDataLength()) {
+            throw new IllegalArgumentException();
+        }
+
+        // safe cast since dataLength is safely upper bounded
+        return (int)(dataLength / ((long)InternalConstants.K_MAX * maxNumSourceBlocks()));
+    }
+
+    /**
+     * Returns an upper bound for the size of a symbol given the length of some data object.
+     * <p>
+     * The returned value is equal to <code>min(dataLength,  {@linkplain #maxSymbolSize() maxSymbolSize})</code>
+     * 
+     * @param dataLength
+     *            The length of some data object in number of bytes
+     * @return an upper bound for the size of a symbol in number of bytes
+     * @exception IllegalArgumentException
+     *                If the data length is lower than its minimum value or greater than its maximum value
+     */
+    public static int symbolSizeUpperBound(long dataLength) {
+
+        if (dataLength < minDataLength() || dataLength > maxDataLength()) {
+            throw new IllegalArgumentException();
+        }
+
+        return (int)Math.min(maxSymbolSize(), dataLength);
+    }
+
     // =========== number of source blocks - Z ========== //
 
     /**
