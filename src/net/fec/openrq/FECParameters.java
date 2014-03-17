@@ -67,11 +67,11 @@ public final class FECParameters {
         final int N = ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
         final int Al = ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
 
-        if (!ParameterChecker.areValidFECParameters(F, T, Z, N) || ParameterChecker.isValidSymbolAlignment(Al)) {
-            return makeInvalidFECParameters();
+        if (ParameterChecker.areValidFECParameters(F, T, Z, N) && ParameterChecker.isValidSymbolAlignment(Al)) {
+            return makeValidFECParameters(commonFecOTI, schemeSpecFecOTI);
         }
         else {
-            return new FECParameters(commonFecOTI, schemeSpecFecOTI, true);
+            return makeInvalidFECParameters();
         }
     }
 
@@ -101,12 +101,18 @@ public final class FECParameters {
 
     static FECParameters makeFECParameters(long F, int T, int Z, int N) {
 
-        if (!ParameterChecker.areValidFECParameters(F, T, Z, N)) {
+        if (ParameterChecker.areValidFECParameters(F, T, Z, N)) {
+            final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
+            final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N);
+            return makeValidFECParameters(commonFecOTI, schemeSpecFecOTI);
+        }
+        else {
             throw new IllegalArgumentException("invalid FEC parameters");
         }
+    }
 
-        final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
-        final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N);
+    private static FECParameters makeValidFECParameters(long commonFecOTI, int schemeSpecFecOTI) {
+
         return new FECParameters(commonFecOTI, schemeSpecFecOTI, true);
     }
 

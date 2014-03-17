@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,91 +38,105 @@ import net.fec.openrq.parameters.ParameterIO;
  */
 public final class FECPayloadID {
 
-    // Enum state to avoid throwing exceptions when the user parses illegal parameters.
-    public static enum Validity {
-
-        VALID,
-        INVALID_SOURCE_BLOCK_NUMBER,
-        INVALID_ENCODING_SYMBOL_ID;
-    }
-
-
     /**
-     * Reads from the provided buffer a {@code FECPayloadID} instance.
+     * Reads from the provided buffer a {@code FECPayloadID} instance given a valid {@code FECParameters} instance.
      * <p>
      * The provided buffer must have at least 4 bytes {@linkplain ByteBuffer#remaining() remaining}. If this method
      * returns normally, the position of the provided buffer will have advanced by 4 bytes.
      * <p>
      * The returned {@code FECPayloadID} instance is only {@linkplain #isValid() valid} if the payload identifier
-     * parameters contained inside the buffer have valid values. If some parameter value is invalid, the method
-     * {@link #getValidity()} can be used to infer which parameter value is invalid.
+     * parameters contained inside the buffer have valid values according to the provided {@code FECparameters}
+     * instance.
      * 
      * @param buffer
      *            A buffer from which a {@code FECPayloadID} instance is read
+     * @param fecParams
+     *            FEC parameters associated to some data object
      * @return a {@code FECPayloadID} instance
      * @exception NullPointerException
-     *                If the provided buffer is {@code null}
+     *                If any argument is {@code null}
+     * @exception IllegalArgumentException
+     *                If the provided {@code FECParameters} instance is {@linkplain FECParameters#isValid() invalid}
      * @exception BufferUnderflowException
      *                If the provided buffer has less than 4 bytes remaining
      */
-    public static FECPayloadID readFromBuffer(ByteBuffer buffer) {
+    public static FECPayloadID readFromBuffer(ByteBuffer buffer, FECParameters fecParams) {
+
+        if (!fecParams.isValid()) throw new IllegalArgumentException("invalid FEC parameters");
 
         final int fecPayloadID = ParameterIO.readFECpayloadID(buffer); // 4 bytes
 
-        if (!ParameterChecker.isValidSourceBlockNumber(ParameterIO.extractSourceBlockNumber(fecPayloadID))) {
-            return new FECPayloadID(0, FECPayloadID.Validity.INVALID_SOURCE_BLOCK_NUMBER);
-        }
-        else if (!ParameterChecker.isValidEncodingSymbolID(ParameterIO.extractEncodingSymbolID(fecPayloadID))) {
-            return new FECPayloadID(0, FECPayloadID.Validity.INVALID_ENCODING_SYMBOL_ID);
+        final int sbn = ParameterIO.extractSourceBlockNumber(fecPayloadID);
+        final int esi = ParameterIO.extractEncodingSymbolID(fecPayloadID);
+
+        if (ParameterChecker.isValidFECPayloadID(sbn, esi, fecParams.numberOfSourceBlocks())) {
+            return makeValidPayloadID(fecPayloadID);
         }
         else {
-            return new FECPayloadID(fecPayloadID, FECPayloadID.Validity.VALID);
+            return makeInvalidPayloadID();
         }
     }
 
     /**
-     * Reads from the provided array starting in a specific index a {@code FECPayloadID} instance.
+     * Reads from the provided array starting in a specific index a {@code FECPayloadID} instance given a valid
+     * {@code FECParameters} instance.
      * <p>
      * The provided array must have at least 4 bytes between the given index and its length.
      * <p>
      * The returned {@code FECPayloadID} instance is only {@linkplain #isValid() valid} if the payload identifier
-     * parameters contained inside the array have valid values. If some parameter value is invalid, the method
-     * {@link #getValidity()} can be used to infer which parameter value is invalid.
+     * parameters contained inside the array have valid values according to the provided {@code FECparameters} instance.
      * 
      * @param array
      *            An array from which a {@code FECPayloadID} instance is read
      * @param offset
      *            The starting array index at which a {@code FECPayloadID} instance is read
+     * @param fecParams
+     *            FEC parameters associated to some data object
      * @return a {@code FECPayloadID} instance
      * @exception NullPointerException
-     *                If the provided array is {@code null}
+     *                If any argument is {@code null}
      * @exception IndexOutOfBoundsException
      *                If a {@code FECPayloadID} instance cannot be read at the given index
+     * @exception IllegalArgumentException
+     *                If the provided {@code FECParameters} instance is {@linkplain FECParameters#isValid() invalid}
      */
-    public static FECPayloadID readFromArray(byte[] array, int offset) {
+    public static FECPayloadID readFromArray(byte[] array, int offset, FECParameters fecParams) {
 
         if (offset < 0 || array.length - offset < 4) throw new IndexOutOfBoundsException();
-        return readFromBuffer(ByteBuffer.wrap(array, offset, 4));
+        return readFromBuffer(ByteBuffer.wrap(array, offset, 4), fecParams);
     }
 
-    static FECPayloadID makeFECPayloadID(int sbn, int esi) {
+    // requires valid FECParameters instance
+    static FECPayloadID makeFECPayloadID(int sbn, int esi, FECParameters fecParams) {
 
-        if (!ParameterChecker.isValidSourceBlockNumber(sbn)) throw new IllegalArgumentException("invalid SBN");
-        if (!ParameterChecker.isValidEncodingSymbolID(esi)) throw new IllegalArgumentException("invalid ESI");
+        if (ParameterChecker.isValidFECPayloadID(sbn, esi, fecParams.numberOfSourceBlocks())) {
+            return makeValidPayloadID(ParameterIO.buildFECpayloadID(sbn, esi));
+        }
+        else {
+            throw new IllegalArgumentException("invalid FEC Payload ID");
+        }
 
-        final int fecPayloadID = ParameterIO.buildFECpayloadID(sbn, esi);
-        return new FECPayloadID(fecPayloadID, FECPayloadID.Validity.VALID);
+    }
+
+    private static FECPayloadID makeValidPayloadID(int fecPayloadID) {
+
+        return new FECPayloadID(fecPayloadID, true);
+    }
+
+    private static FECPayloadID makeInvalidPayloadID() {
+
+        return new FECPayloadID(0, false);
     }
 
 
     private final int fecPayloadID;
-    private final FECPayloadID.Validity validity;
+    private final boolean isValid;
 
 
-    private FECPayloadID(int fecPayloadID, FECPayloadID.Validity validity) {
+    private FECPayloadID(int fecPayloadID, boolean isValid) {
 
         this.fecPayloadID = fecPayloadID;
-        this.validity = validity;
+        this.isValid = isValid;
     }
 
     /**
@@ -206,35 +220,11 @@ public final class FECPayloadID {
      */
     public boolean isValid() {
 
-        return validity == FECPayloadID.Validity.VALID;
-    }
-
-    /**
-     * Returns an enum value indicating the (in)validity of this {@code FECPayloadID} instance.
-     * 
-     * @return an enum value indicating the (in)validity of this {@code FECPayloadID} instance
-     */
-    public FECPayloadID.Validity getValidity() {
-
-        return validity;
+        return isValid;
     }
 
     private void checkValid() {
 
-        if (!isValid()) {
-            final String errorMsg;
-            switch (validity) {
-                case INVALID_SOURCE_BLOCK_NUMBER:
-                    errorMsg = "invalid source block number";
-                break;
-                case INVALID_ENCODING_SYMBOL_ID:
-                    errorMsg = "invalid encoding symbol identifier";
-                break;
-                default:
-                    // should never happen
-                    throw new AssertionError("unknown enum type");
-            }
-            throw new IllegalStateException(errorMsg);
-        }
+        if (!isValid()) throw new IllegalStateException("invalid FEC Payload ID");
     }
 }

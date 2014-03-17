@@ -218,15 +218,6 @@ public final class ParameterChecker {
         return InternalConstants.MAX_SBN;
     }
 
-    /**
-     * @param sourceBlockNum
-     * @return
-     */
-    public static boolean isValidSourceBlockNumber(int sourceBlockNum) {
-
-        return sourceBlockNum >= minSourceBlockNumber() && sourceBlockNum <= maxSourceBlockNumber();
-    }
-
     // =========== encoding symbol identifier - ESI ========== //
 
     /**
@@ -245,13 +236,26 @@ public final class ParameterChecker {
         return InternalConstants.MAX_ESI;
     }
 
-    /**
-     * @param encSymbolID
-     * @return
-     */
-    public static boolean isValidEncodingSymbolID(int encSymbolID) {
+    // =========== SBN, ESI =========== //
 
-        return encSymbolID >= minEncodingSymbolID() && encSymbolID <= maxEncodingSymbolID();
+    /**
+     * @param sourceBlockNum
+     * @param encSymbolID
+     * @param numSourceBlocks
+     * @return
+     * @exception IllegalArgumentException
+     *                If {@code numSourceBlocks} is invalid
+     */
+    public static boolean isValidFECPayloadID(int sourceBlockNum, int encSymbolID, int numSourceBlocks) {
+
+        if (numSourceBlocks < minSourceBlockNumber() || numSourceBlocks > maxSourceBlockNumber()) {
+            throw new IllegalArgumentException("invalid numSourceBlocks");
+        }
+
+        return sourceBlockNum >= minSourceBlockNumber() &&
+               sourceBlockNum < numSourceBlocks &&
+               encSymbolID >= minEncodingSymbolID() &&
+               encSymbolID <= maxEncodingSymbolID();
     }
 
     private ParameterChecker() {
