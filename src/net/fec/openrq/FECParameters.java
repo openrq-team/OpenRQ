@@ -24,6 +24,7 @@ import java.nio.ReadOnlyBufferException;
 
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.parameters.ParameterIO;
+import net.fec.openrq.util.arithmetic.ExtraMath;
 
 
 /**
@@ -243,6 +244,18 @@ public final class FECParameters {
 
         checkValid();
         return ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
+    }
+
+    /**
+     * Returns the total number of source symbols in which the encodable data is divided.
+     * 
+     * @return the total number of source symbols in which the encodable data is divided
+     */
+    public int totalSymbols() {
+
+        checkValid();
+        // safe cast because F and T are valid, which prevents integer overflow
+        return (int)ExtraMath.ceilDiv(dataLength(), symbolSize());
     }
 
     /**

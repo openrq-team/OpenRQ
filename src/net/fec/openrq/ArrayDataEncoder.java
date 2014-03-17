@@ -16,10 +16,8 @@
 package net.fec.openrq;
 
 
-import java.nio.ByteBuffer;
-
 import net.fec.openrq.encoder.DataEncoder;
-import net.fec.openrq.encoder.SourceBlockEncoder;
+import RQLibrary.Partition;
 
 
 /**
@@ -28,42 +26,78 @@ import net.fec.openrq.encoder.SourceBlockEncoder;
  */
 public final class ArrayDataEncoder implements DataEncoder {
 
-    static ArrayDataEncoder newEncoder(byte[] array, int offset, int length, FECParameters fecParams) {
+    static ArrayDataEncoder newEncoder(byte[] array, int offset, FECParameters fecParams) {
 
-        if (!fecParams.isValid()) throw new IllegalArgumentException("invalid parameters");
-        final ByteBuffer data = ByteBuffer.wrap(array, offset, length);
-        return new ArrayDataEncoder(data, fecParams);
+        if (!fecParams.isValid()) {
+            throw new IllegalArgumentException("invalid parameters");
+        }
+        if (offset < 0 || (array.length - offset) < fecParams.dataLength()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new ArrayDataEncoder(array, offset, fecParams);
     }
 
 
-    private final ByteBuffer data;
+    private final byte[] array;
+    private final int offset;
+
     private final FECParameters fecParams;
 
+    private final ArraySourceBlockEncoder[] srcBlockEncoders;
 
-    private ArrayDataEncoder(ByteBuffer data, FECParameters fecParams) {
 
-        this.data = data;
+    private ArrayDataEncoder(byte[] array, int offset, FECParameters fecParams) {
+
+        this.array = array;
+        this.offset = offset;
+
         this.fecParams = fecParams;
+
+        this.srcBlockEncoders = partitionData(array, offset, fecParams);
     }
 
-    /**
-     * Returns an array of bytes containing the encodable data.
-     * 
-     * @return an array of bytes containing the encodable data
-     */
-    public byte[] dataArray() {
+    private static ArraySourceBlockEncoder[] partitionData(
+        byte[] array,
+        int offset,
+        FECParameters fecParams)
+    {
 
-        return data.array();
-    }
+        
+        // TODO
+        return null;
+        
+        /*final int Kt = fecParams.totalSymbols();
+        final int T = fecParams.symbolSize();
+        final int Z = fecParams.numberOfSourceBlocks();
+        final int N = fecParams.numberOfSubBlocks();
+        final int Al = fecParams.symbolAlignment();
 
-    /**
-     * Returns the index in the data array of the first encodable byte.
-     * 
-     * @return the index in the data array of the first encodable byte
-     */
-    public int dataOffset() {
+        // (KL, KS, ZL, ZS) = Partition[Kt, Z]
+        final Partition KZ = new Partition(Kt, Z);
+        final int KL = KZ.get(1);
+        final int KS = KZ.get(2);
+        final int ZL = KZ.get(3);
 
-        return data.arrayOffset();
+        // (TL, TS, NL, NS) = Partition[T/Al, N]
+        final Partition TN = new Partition(T / Al, N);
+        final int TL = TN.get(1);
+        final int TS = TN.get(2);
+        final int NL = TN.get(3);
+
+        // partitioned source blocks
+        final ArraySourceBlockEncoder[] srcBlockEncoders = new ArraySourceBlockEncoder[Z];
+
+        /*
+         * The object MUST be partitioned into Z = ZL + ZS contiguous source blocks.
+         * Each source block contains a region of the data array, except the last source block
+         * which may contain a newly allocated 
+
+        for (int i = 0; i < ZL; i++) { // first ZL
+            // source block i
+
+        }
+         */
     }
 
     @Override
@@ -91,9 +125,32 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public SourceBlockEncoder encoderForSourceBlock(int sourceBlockNum) {
+    public ArraySourceBlockEncoder encoderForSourceBlock(int sourceBlockNum) {
 
-        // TODO Auto-generated method stub
-        return null;
+        if (sourceBlockNum < 0 || sourceBlockNum >= srcBlockEncoders.length) {
+            throw new IllegalArgumentException("invalid source block number");
+        }
+
+        return srcBlockEncoders[sourceBlockNum];
+    }
+
+    /**
+     * Returns an array of bytes containing the encodable data.
+     * 
+     * @return an array of bytes containing the encodable data
+     */
+    public byte[] dataArray() {
+
+        return array;
+    }
+
+    /**
+     * Returns the index in the data array of the first encodable byte.
+     * 
+     * @return the index in the data array of the first encodable byte
+     */
+    public int dataOffset() {
+
+        return offset;
     }
 }

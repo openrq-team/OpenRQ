@@ -83,7 +83,7 @@ public final class OpenRQ {
         checkIndexBounds(beginIndex, endIndex, data.length);
         final int len = endIndex - beginIndex;
         final FECParameters fecParams = FECParameters.makeFECParameters(len, symbolSize, numSourceBlocks, numSubBlocks);
-        return ArrayDataEncoder.newEncoder(data, beginIndex, len, fecParams);
+        return null;// TODO ArrayDataEncoder.newEncoder(data, beginIndex, len, fecParams);
     }
 
     /**

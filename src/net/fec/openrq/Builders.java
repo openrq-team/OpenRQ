@@ -17,10 +17,10 @@
 package net.fec.openrq;
 
 
-import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.encoder.DataEncoderBuilder;
 import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.arithmetic.ExtraMath;
 
 
 /**
@@ -31,7 +31,7 @@ final class Builders {
 
     static DataEncoderBuilder<ArrayDataEncoder> newEncoderBuilder(byte[] array, int offset, int length) {
 
-        if (offset < 0 || length < 0 || (array.length - offset) > length) {
+        if (offset < 0 || length < 0 || (array.length - offset) < length) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -62,7 +62,7 @@ final class Builders {
             final int WS = maxDecBlock;
             final FECParameters fecParams = deriveParameters(F, T, WS);
 
-            return ArrayDataEncoder.newEncoder(array, offset, length, fecParams);
+            return ArrayDataEncoder.newEncoder(array, offset, fecParams);
         }
     }
 
@@ -135,7 +135,7 @@ final class Builders {
         final int SStimesAl = T;           // SS * Al = T
 
         // safe cast because F and T are appropriately bounded
-        final int Kt = (int)ceilDiv(F, T); // Kt = ceil(F/T)
+        final int Kt = (int)ExtraMath.ceilDiv(F, T); // Kt = ceil(F/T)
         final int N_max = T / SStimesAl;   // N_max = floor(T/(SS*Al))
 
         final int Z = deriveZ(Kt, N_max, WS, Al, T);
@@ -147,13 +147,13 @@ final class Builders {
     private static int deriveZ(long Kt, int N_max, int WS, int Al, int T) {
 
         // Z = ceil(Kt/KL(N_max))
-        return (int)ceilDiv(Kt, SystematicIndices.KL(N_max, WS, Al, T));
+        return (int)ExtraMath.ceilDiv(Kt, SystematicIndices.KL(N_max, WS, Al, T));
     }
 
     private static int deriveN(long Kt, int Z, int N_max, int WS, int Al, int T) {
 
         // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
-        final int KtOverZ = (int)ceilDiv(Kt, Z);
+        final int KtOverZ = (int)ExtraMath.ceilDiv(Kt, Z);
         int n;
         for (n = 1; n <= N_max && KtOverZ > SystematicIndices.KL(n, WS, Al, T); n++) {/* loop */}
 
