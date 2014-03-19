@@ -3,6 +3,7 @@ package net.fec.openrq;
 
 import net.fec.openrq.encoder.EncodingPacket;
 import net.fec.openrq.encoder.SourceBlockEncoder;
+import net.fec.openrq.util.bytevector.ByteVector;
 
 
 /**
@@ -12,37 +13,44 @@ import net.fec.openrq.encoder.SourceBlockEncoder;
 public final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
     // requires valid arguments
-    static ArraySourceBlockEncoder newSourceBlockEncoder(
+    static ArraySourceBlockEncoder newEncoder(
         byte[] array,
         int offset,
         FECParameters fecParams,
-        int Kprime,
-        int sbn)
+        int sbn,
+        int K
+        )
     {
 
-        final int length = Kprime * fecParams.symbolSize();
-        return new ArraySourceBlockEncoder(array, offset, length, fecParams, Kprime, sbn);
+        final int Kprime = SystematicIndices.ceil(K);
+        final int size = Kprime * fecParams.symbolSize();
+        return new ArraySourceBlockEncoder(size, array, offset, fecParams, K, sbn);
     }
 
 
-    private final byte[] array;
-    private final int offset;
-    private final int length;
+    private final ByteVector data;
 
     private final FECParameters fecParams;
-    private final int Kprime;
     private final int sbn;
 
+    private final int K;
 
-    private ArraySourceBlockEncoder(byte[] array, int offset, int length, FECParameters fecParams, int Kprime, int sbn) {
 
-        this.array = array;
-        this.offset = offset;
-        this.length = length;
+    private ArraySourceBlockEncoder(
+        int size,
+        byte[] array,
+        int offset,
+        FECParameters fecParams,
+        int K,
+        int sbn)
+    {
+
+        this.data = PaddedByteVector.newVector(size, array, offset);
 
         this.fecParams = fecParams;
-        this.Kprime = Kprime;
         this.sbn = sbn;
+
+        this.K = K;
     }
 
     @Override
@@ -54,8 +62,7 @@ public final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     @Override
     public int numberOfSourceSymbols() {
 
-        // TODO Auto-generated method stub
-        return 0;
+        return K;
     }
 
     @Override
@@ -84,35 +91,5 @@ public final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // TODO Auto-generated method stub
         return null;
-    }
-
-    /**
-     * Returns an array of bytes containing the data from the source block being encoded.
-     * 
-     * @return an array of bytes containing the data from the source block being encoded
-     */
-    public byte[] sourceBlockArray() {
-
-        return array;
-    }
-
-    /**
-     * Returns the index in the source block array of the first encodable byte.
-     * 
-     * @return the index in the source block of the first encodable byte
-     */
-    public int sourceBlockOffset() {
-
-        return offset;
-    }
-
-    /**
-     * Returns the length in number of bytes of the source block being encoded.
-     * 
-     * @return the length in number of bytes of the source block being encoded
-     */
-    public int sourceBlockLength() {
-
-        return length;
     }
 }

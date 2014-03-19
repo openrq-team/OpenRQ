@@ -63,15 +63,8 @@ public final class ArrayDataEncoder implements DataEncoder {
         FECParameters fecParams)
     {
 
-        
-        // TODO
-        return null;
-        
-        /*final int Kt = fecParams.totalSymbols();
-        final int T = fecParams.symbolSize();
+        final int Kt = fecParams.totalSymbols();
         final int Z = fecParams.numberOfSourceBlocks();
-        final int N = fecParams.numberOfSubBlocks();
-        final int Al = fecParams.symbolAlignment();
 
         // (KL, KS, ZL, ZS) = Partition[Kt, Z]
         final Partition KZ = new Partition(Kt, Z);
@@ -79,25 +72,27 @@ public final class ArrayDataEncoder implements DataEncoder {
         final int KS = KZ.get(2);
         final int ZL = KZ.get(3);
 
-        // (TL, TS, NL, NS) = Partition[T/Al, N]
-        final Partition TN = new Partition(T / Al, N);
-        final int TL = TN.get(1);
-        final int TS = TN.get(2);
-        final int NL = TN.get(3);
-
         // partitioned source blocks
         final ArraySourceBlockEncoder[] srcBlockEncoders = new ArraySourceBlockEncoder[Z];
 
         /*
          * The object MUST be partitioned into Z = ZL + ZS contiguous source blocks.
          * Each source block contains a region of the data array, except the last source block
-         * which may contain a newly allocated 
-
-        for (int i = 0; i < ZL; i++) { // first ZL
-            // source block i
-
-        }
+         * which may contain a newly allocated
          */
+
+        // source block number (index)
+        int sbn;
+
+        for (sbn = 0; sbn < ZL; sbn++) { // first ZL
+            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, KL, sbn);
+        }
+
+        for (; sbn < Z; sbn++) {// last ZS
+            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, KS, sbn);
+        }
+
+        return srcBlockEncoders;
     }
 
     @Override
