@@ -29,54 +29,52 @@ final class PaddedByteVector extends ByteVector implements ByteArrayFacade {
     private static final byte[] EMPTY_ARRAY = new byte[0];
 
 
-    static PaddedByteVector newVector(int size, ByteArrayFacade array) {
+    static PaddedByteVector newVector(ByteArrayFacade array, int paddedLen) {
 
-        if (size < 0) throw new IllegalArgumentException("negative size");
-
-        return new PaddedByteVector(array, 0, array.length(), size);
+        return newVector(array, 0, array.length(), paddedLen);
     }
 
-    static PaddedByteVector newVector(int size, ByteArrayFacade array, int offset) {
+    static PaddedByteVector newVector(ByteArrayFacade array, int off, int len, int paddedLen) {
 
-        if (size < 0) throw new IllegalArgumentException("negative size");
-        if (offset < 0) throw new IllegalArgumentException("negative offset");
+        ByteVector.checkArrayBounds(off, len, array.length());
+        if (paddedLen < 0) throw new IllegalArgumentException("negative padded length");
 
-        return new PaddedByteVector(array, offset, array.length() - offset, size);
+        return new PaddedByteVector(array, off, len, paddedLen);
     }
 
 
     private final ByteArrayFacade array;
-    private final int offset;
-    private final int length;
+    private final int off;
+    private final int len;
 
     // paddedLength >= length ALWAYS
-    private final int paddedLength;
+    private final int paddedLen;
     private final byte[] padding;
 
 
-    private PaddedByteVector(ByteArrayFacade array, int offset, int length, int paddedLength) {
+    private PaddedByteVector(ByteArrayFacade array, int off, int len, int paddedLen) {
 
         this.array = array;
-        this.offset = offset;
-        this.length = Math.min(length, paddedLength);
+        this.off = off;
+        this.len = Math.min(len, paddedLen);
+        this.paddedLen = paddedLen;
 
-        this.paddedLength = paddedLength;
-        if (this.paddedLength == this.length) {
+        if (length() == paddinglessLength()) {
             this.padding = EMPTY_ARRAY;
         }
         else {
-            this.padding = new byte[this.paddedLength - this.length];
+            this.padding = new byte[length() - paddinglessLength()];
         }
     }
 
     int paddinglessLength() {
 
-        return length;
+        return len;
     }
 
     int arrayOffset() {
 
-        return offset;
+        return off;
     }
 
     @Override
@@ -94,28 +92,28 @@ final class PaddedByteVector extends ByteVector implements ByteArrayFacade {
     @Override
     public int length() {
 
-        return paddedLength;
+        return paddedLen;
     }
 
     @Override
     protected byte safeGet(int index) {
 
-        if (index >= length) {
-            return padding[index - length];
+        if (index >= len) {
+            return padding[index - len];
         }
         else {
-            return array.get(offset + index);
+            return array.get(off + index);
         }
     }
 
     @Override
     protected void safeSet(int index, byte value) {
 
-        if (index >= length) {
-            padding[index - length] = value;
+        if (index >= len) {
+            padding[index - len] = value;
         }
         else {
-            array.set(offset + index, value);
+            array.set(off + index, value);
         }
     }
 }

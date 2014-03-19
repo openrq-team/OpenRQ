@@ -36,15 +36,17 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     // requires valid arguments
     static ArraySourceBlockEncoder newEncoder(
         byte[] array,
-        int offset,
+        int off,
         FECParameters fecParams,
         int sbn,
         int K)
     {
 
         final int Kprime = SystematicIndices.ceil(K);
-        final int size = Kprime * fecParams.symbolSize();
-        return new ArraySourceBlockEncoder(size, array, offset, fecParams, sbn, K);
+        final int sourceLen = Math.min(K * fecParams.symbolSize(), array.length - off);
+        final int extendedLen = Kprime * fecParams.symbolSize();
+
+        return new ArraySourceBlockEncoder(array, off, sourceLen, extendedLen, fecParams, sbn, K);
     }
 
 
@@ -57,15 +59,16 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
 
     private ArraySourceBlockEncoder(
-        int size,
         byte[] array,
-        int offset,
+        int off,
+        int sourceLen,
+        int extendedLen,
         FECParameters fecParams,
         int sbn,
         int K)
     {
 
-        this.data = PaddedByteVector.newVector(size, Facades.wrapByteArray(array), offset);
+        this.data = PaddedByteVector.newVector(Facades.wrapByteArray(array), off, sourceLen, extendedLen);
         this.sourceSymbols = prepareSourceSymbols(data, fecParams, K, sbn);
 
         this.fecParams = fecParams;
@@ -83,9 +86,9 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         final int T = fecParams.symbolSize();
 
         final EncodingSymbol[] symbols = new EncodingSymbol[K];
-        for (int esi = 0, symbolOffset = 0; esi < K; esi++, symbolOffset += T) {
+        for (int esi = 0, symbolOff = 0; esi < K; esi++, symbolOff += T) {
 
-            final PaddedByteVector symbolData = PaddedByteVector.newVector(T, data, symbolOffset);
+            final PaddedByteVector symbolData = PaddedByteVector.newVector(data, symbolOff, T, T);
             final FECPayloadID fecPayloadID = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
 
             symbols[esi] = new EncodingSymbol(symbolData, fecPayloadID);

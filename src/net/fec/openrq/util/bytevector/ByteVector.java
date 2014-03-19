@@ -179,7 +179,7 @@ public abstract class ByteVector {
         if (len > remaining) throw new BufferOverflowException();
     }
 
-    private static final void checkIndexRange(int index, int length) {
+    protected static final void checkIndexRange(int index, int length) {
 
         if (index < 0 || index >= length) {
             throw new IndexOutOfBoundsException(getIndexRangeMsg(index, length));
@@ -192,7 +192,7 @@ public abstract class ByteVector {
         return "index = " + index + "; length = " + length;
     }
 
-    private static final void checkArrayBounds(int arrOff, int arrLen, int length) {
+    protected static final void checkArrayBounds(int arrOff, int arrLen, int length) {
 
         // retrieved from java.nio.Buffer class
         if ((arrOff | arrLen | (arrOff + arrLen) | (length - (arrOff + arrLen))) < 0) {
