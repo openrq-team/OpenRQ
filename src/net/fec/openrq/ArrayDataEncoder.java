@@ -17,6 +17,7 @@ package net.fec.openrq;
 
 
 import net.fec.openrq.encoder.DataEncoder;
+import net.fec.openrq.encoder.SourceBlockEncoder;
 import RQLibrary.Partition;
 
 
@@ -44,7 +45,7 @@ public final class ArrayDataEncoder implements DataEncoder {
 
     private final FECParameters fecParams;
 
-    private final ArraySourceBlockEncoder[] srcBlockEncoders;
+    private final SourceBlockEncoder[] srcBlockEncoders;
 
 
     private ArrayDataEncoder(byte[] array, int offset, FECParameters fecParams) {
@@ -120,7 +121,7 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public ArraySourceBlockEncoder encoderForSourceBlock(int sourceBlockNum) {
+    public SourceBlockEncoder encoderForSourceBlock(int sourceBlockNum) {
 
         if (sourceBlockNum < 0 || sourceBlockNum >= srcBlockEncoders.length) {
             throw new IllegalArgumentException("invalid source block number");
