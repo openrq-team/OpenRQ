@@ -10,7 +10,7 @@ import net.fec.openrq.util.bytevector.ByteVector;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class ArraySourceBlockEncoder implements SourceBlockEncoder {
+final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
     // requires valid arguments
     static ArraySourceBlockEncoder newEncoder(
