@@ -16,8 +16,8 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.encoder.DataEncoder;
-import net.fec.openrq.encoder.SourceBlockEncoder;
+import net.fec.openrq.decoder.DataDecoder;
+import net.fec.openrq.decoder.SourceBlockDecoder;
 import RQLibrary.Partition;
 
 
@@ -25,40 +25,36 @@ import RQLibrary.Partition;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class ArrayDataEncoder implements DataEncoder {
+public final class ArrayDataDecoder implements DataDecoder {
 
-    static ArrayDataEncoder newEncoder(byte[] array, int offset, FECParameters fecParams) {
+    static ArrayDataDecoder newDecoder(FECParameters fecParams) {
 
         if (!fecParams.isValid()) {
             throw new IllegalArgumentException("invalid FEC parameters");
         }
-        if (offset < 0 || (array.length - offset) < fecParams.dataLength()) {
-            throw new IndexOutOfBoundsException();
+        if (fecParams.dataLength() > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("maximum data length exceeded");
         }
 
-        return new ArrayDataEncoder(array, offset, fecParams);
+        final byte[] array = new byte[(int)fecParams.dataLength()];
+        return new ArrayDataDecoder(array, fecParams);
     }
 
 
     private final byte[] array;
-    private final int offset;
     private final FECParameters fecParams;
-    private final SourceBlockEncoder[] srcBlockEncoders;
+    private final SourceBlockDecoder[] srcBlockDecoders;
 
 
-    private ArrayDataEncoder(byte[] array, int offset, FECParameters fecParams) {
+    private ArrayDataDecoder(byte[] array, FECParameters fecParams) {
 
         this.array = array;
-        this.offset = offset;
-
         this.fecParams = fecParams;
-
-        this.srcBlockEncoders = partitionData(array, offset, fecParams);
+        this.srcBlockDecoders = partitionData(array, fecParams);
     }
 
-    private static SourceBlockEncoder[] partitionData(
+    private static SourceBlockDecoder[] partitionData(
         byte[] array,
-        int offset,
         FECParameters fecParams)
     {
 
@@ -72,7 +68,7 @@ public final class ArrayDataEncoder implements DataEncoder {
         final int ZL = KZ.get(3);
 
         // partitioned source blocks
-        final SourceBlockEncoder[] srcBlockEncoders = new ArraySourceBlockEncoder[Z];
+        final SourceBlockDecoder[] srcBlockDecoders = new ArraySourceBlockDecoder[Z];
 
         /*
          * The object MUST be partitioned into Z = ZL + ZS contiguous source blocks.
@@ -84,14 +80,14 @@ public final class ArrayDataEncoder implements DataEncoder {
         int sbn;
 
         for (sbn = 0; sbn < ZL; sbn++) { // first ZL
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, KL, sbn);
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KL, sbn);
         }
 
         for (; sbn < Z; sbn++) {// last ZS
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, KS, sbn);
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KS, sbn);
         }
 
-        return srcBlockEncoders;
+        return srcBlockDecoders;
     }
 
     @Override
@@ -119,32 +115,34 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public SourceBlockEncoder encoderForSourceBlock(int sourceBlockNum) {
+    public boolean isDataDecoded() {
 
-        if (sourceBlockNum < 0 || sourceBlockNum >= srcBlockEncoders.length) {
+        for (SourceBlockDecoder dec : srcBlockDecoders) {
+            if (!dec.isSourceBlockDecoded()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public SourceBlockDecoder decoderForSourceBlock(int sourceBlockNum) {
+
+        if (sourceBlockNum < 0 || sourceBlockNum >= srcBlockDecoders.length) {
             throw new IllegalArgumentException("invalid source block number");
         }
 
-        return srcBlockEncoders[sourceBlockNum];
+        return srcBlockDecoders[sourceBlockNum];
     }
 
     /**
-     * Returns an array of bytes containing the encodable data.
+     * Returns an array of bytes containing the decodable data.
      * 
-     * @return an array of bytes containing the encodable data
+     * @return an array of bytes containing the decodable data
      */
     public byte[] dataArray() {
 
         return array;
-    }
-
-    /**
-     * Returns the index in the data array of the first encodable byte.
-     * 
-     * @return the index in the data array of the first encodable byte
-     */
-    public int dataOffset() {
-
-        return offset;
     }
 }
