@@ -17,7 +17,6 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.encoder.DataEncoderBuilder;
 
 
@@ -82,18 +81,30 @@ public final class OpenRQ {
 
         checkIndexBounds(beginIndex, endIndex, data.length);
         final int len = endIndex - beginIndex;
-        final FECParameters fecParams = FECParameters.makeFECParameters(len, symbolSize, numSourceBlocks, numSubBlocks);
+        final FECParameters fecParams = newParams(len, symbolSize, numSourceBlocks, numSubBlocks);
         return ArrayDataEncoder.newEncoder(data, beginIndex, fecParams);
     }
 
     /**
-     * @param params
+     * @param fecParams
      * @return
      */
-    public static DataDecoder newDecoder() {
+    public static ArrayDataDecoder newDecoder(FECParameters fecParams) {
 
-        // TODO return a decoder from the provided properties
-        return null;
+        return ArrayDataDecoder.newDecoder(fecParams);
+    }
+
+    /**
+     * @param dataLength
+     * @param symbolSize
+     * @param numSourceBlocks
+     * @param numSubBlocks
+     * @return
+     */
+    public static ArrayDataDecoder newDecoder(int dataLength, int symbolSize, int numSourceBlocks, int numSubBlocks) {
+
+        final FECParameters fecParams = newParams(dataLength, symbolSize, numSourceBlocks, numSubBlocks);
+        return ArrayDataDecoder.newDecoder(fecParams);
     }
 
     private static void checkIndexBounds(int beginIndex, int endIndex, int arrayLen) {
@@ -101,6 +112,11 @@ public final class OpenRQ {
         if (beginIndex < 0 || endIndex > arrayLen || beginIndex > endIndex) {
             throw new IndexOutOfBoundsException();
         }
+    }
+
+    private static FECParameters newParams(int F, int T, int Z, int N) {
+
+        return FECParameters.makeFECParameters(F, T, Z, N);
     }
 
     private OpenRQ() {
