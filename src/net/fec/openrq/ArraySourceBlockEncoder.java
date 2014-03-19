@@ -1,9 +1,15 @@
 package net.fec.openrq;
 
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
 import net.fec.openrq.encoder.EncodingPacket;
 import net.fec.openrq.encoder.SourceBlockEncoder;
-import net.fec.openrq.util.bytevector.ByteVector;
+import net.fec.openrq.util.bytevector.ByteArrayFacade;
+import net.fec.openrq.util.bytevector.Facades;
+import net.fec.openrq.util.collection.ImmutableList;
 
 
 /**
@@ -18,21 +24,20 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         int offset,
         FECParameters fecParams,
         int sbn,
-        int K
-        )
+        int K)
     {
 
         final int Kprime = SystematicIndices.ceil(K);
         final int size = Kprime * fecParams.symbolSize();
-        return new ArraySourceBlockEncoder(size, array, offset, fecParams, K, sbn);
+        return new ArraySourceBlockEncoder(size, array, offset, fecParams, sbn, K);
     }
 
 
-    private final ByteVector data;
+    private final PaddedByteVector data;
+    private final EncodingSymbol[] sourceSymbols;
 
     private final FECParameters fecParams;
     private final int sbn;
-
     private final int K;
 
 
@@ -41,16 +46,37 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         byte[] array,
         int offset,
         FECParameters fecParams,
+        int sbn,
+        int K)
+    {
+
+        this.data = PaddedByteVector.newVector(size, Facades.wrapByteArray(array), offset);
+        this.sourceSymbols = prepareSourceSymbols(data, fecParams, K, sbn);
+
+        this.fecParams = fecParams;
+        this.sbn = sbn;
+        this.K = K;
+    }
+
+    private static final EncodingSymbol[] prepareSourceSymbols(
+        ByteArrayFacade data,
+        FECParameters fecParams,
         int K,
         int sbn)
     {
 
-        this.data = PaddedByteVector.newVector(size, array, offset);
+        final int T = fecParams.symbolSize();
 
-        this.fecParams = fecParams;
-        this.sbn = sbn;
+        final EncodingSymbol[] symbols = new EncodingSymbol[K];
+        for (int esi = 0, symbolOffset = 0; esi < K; esi++, symbolOffset += T) {
 
-        this.K = K;
+            final PaddedByteVector symbolData = PaddedByteVector.newVector(T, data, symbolOffset);
+            final FECPayloadID fecPayloadID = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
+
+            symbols[esi] = new EncodingSymbol(symbolData, fecPayloadID);
+        }
+
+        return symbols;
     }
 
     @Override
@@ -68,15 +94,31 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     @Override
     public EncodingPacket getSourcePacket(int encSymbolID) {
 
-        // TODO Auto-generated method stub
-        return null;
+        checkESI(encSymbolID);
+
+        final EncodingSymbol sourceSymbol = sourceSymbols[encSymbolID];
+        final FECPayloadID fecPayloadID = sourceSymbol.getFECPayloadID();
+        final ByteBuffer buf = retrieveBuffer(sourceSymbol);
+
+        return new SourcePacket(fecPayloadID, ImmutableList.newList(buf));
     }
 
     @Override
     public EncodingPacket getSourcePacket(int encSymbolID, int numSymbols) {
 
-        // TODO Auto-generated method stub
-        return null;
+        checkESI(encSymbolID);
+        checkNumSymbols(encSymbolID, numSymbols);
+
+        final EncodingSymbol firstSymbol = sourceSymbols[encSymbolID];
+        final FECPayloadID fecPayloadID = firstSymbol.getFECPayloadID();
+
+        final List<ByteBuffer> bufs = new ArrayList<>();
+        bufs.add(retrieveBuffer(firstSymbol));
+        for (int esi = encSymbolID + 1; esi < K; esi++) {
+            bufs.add(retrieveBuffer(sourceSymbols[esi]));
+        }
+
+        return new SourcePacket(fecPayloadID, ImmutableList.copy(bufs));
     }
 
     @Override
@@ -91,5 +133,81 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // TODO Auto-generated method stub
         return null;
+    }
+
+    private static final ByteBuffer retrieveBuffer(EncodingSymbol symbol) {
+
+        final PaddedByteVector symbolData = symbol.getData();
+
+        return ByteBuffer.wrap(
+            symbolData.array(),
+            symbolData.arrayOffset(),
+            symbolData.paddinglessLength()
+            ).asReadOnlyBuffer();
+    }
+
+    private final void checkESI(int esi) {
+
+        if (esi < 0 || esi >= K) throw new IllegalArgumentException("invalid encoding symbol identifier");
+    }
+
+    // requires valid ESI
+    private final void checkNumSymbols(int esi, int numSymbols) {
+
+        if (numSymbols < 1 || numSymbols > K - esi) throw new IllegalArgumentException("invalid number of symbols");
+    }
+
+
+    private static abstract class AbstractEncodingPacket implements EncodingPacket {
+
+        private final FECPayloadID fecPayloadID;
+        private final ImmutableList<ByteBuffer> symbols;
+
+
+        AbstractEncodingPacket(FECPayloadID fecPayloadID, ImmutableList<ByteBuffer> symbols) {
+
+            this.fecPayloadID = fecPayloadID;
+            this.symbols = symbols;
+        }
+
+        @Override
+        public FECPayloadID fecPayloadID() {
+
+            return fecPayloadID;
+        }
+
+        @Override
+        public List<ByteBuffer> getSymbolData() {
+
+            return symbols;
+        }
+    }
+
+    private static final class SourcePacket extends AbstractEncodingPacket {
+
+        SourcePacket(FECPayloadID fecPayloadID, ImmutableList<ByteBuffer> symbols) {
+
+            super(fecPayloadID, symbols);
+        }
+
+        @Override
+        public SymbolType symbolType() {
+
+            return SymbolType.SOURCE;
+        }
+    }
+
+    private static final class RepairPacket extends AbstractEncodingPacket {
+
+        RepairPacket(FECPayloadID fecPayloadID, ImmutableList<ByteBuffer> symbols) {
+
+            super(fecPayloadID, symbols);
+        }
+
+        @Override
+        public SymbolType symbolType() {
+
+            return SymbolType.REPAIR;
+        }
     }
 }

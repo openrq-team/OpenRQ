@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ package net.fec.openrq.encoder;
 
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import net.fec.openrq.FECPayloadID;
 import net.fec.openrq.SymbolType;
@@ -40,20 +41,15 @@ public interface EncodingPacket {
      * Returns the data from the symbol(s) in this encoding packet. The returned symbol(s) have contiguous <i>encoding
      * symbol identifiers</i>.
      * <p>
-     * The returned buffer is {@linkplain ByteBuffer#isReadOnly() read-only} and has a
-     * {@linkplain ByteBuffer#position() position} of 0 and a {@linkplain ByteBuffer#limit() limit} less than or equal
-     * to the size of each symbol times the number of symbols in this packet.
+     * The returned list of buffers is immutable. Each buffer contains one distinct symbol and is
+     * {@linkplain ByteBuffer#isReadOnly() read-only}. Additionally, each buffer has initially a
+     * {@linkplain ByteBuffer#position() position} of 0, a {@linkplain ByteBuffer#capacity() capacity} less than or
+     * equal to the size of a symbol, and a {@linkplain ByteBuffer#limit() limit} equal to the capacity. Changes in the
+     * current positions or limits of the buffers will persist.
      * 
-     * @return a read-only buffer with the data from the symbol(s) in this packet
+     * @return an immutable list of one or more read-only buffers with the data from the symbol(s) in this packet
      */
-    public ByteBuffer getSymbolData();
-
-    /**
-     * Returns the number of symbols in this encoding packet. This value is always positive.
-     * 
-     * @return the number of symbols in this encoding packet
-     */
-    public int numberOfSymbols();
+    public List<ByteBuffer> getSymbolData();
 
     /**
      * Returns the type of all the symbols in this encoding packet.

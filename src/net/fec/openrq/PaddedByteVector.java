@@ -16,6 +16,7 @@
 package net.fec.openrq;
 
 
+import net.fec.openrq.util.bytevector.ByteArrayFacade;
 import net.fec.openrq.util.bytevector.ByteVector;
 
 
@@ -23,28 +24,28 @@ import net.fec.openrq.util.bytevector.ByteVector;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-final class PaddedByteVector extends ByteVector {
+final class PaddedByteVector extends ByteVector implements ByteArrayFacade {
 
     private static final byte[] EMPTY_ARRAY = new byte[0];
 
 
-    static PaddedByteVector newVector(int size, byte[] array) {
+    static PaddedByteVector newVector(int size, ByteArrayFacade array) {
 
         if (size < 0) throw new IllegalArgumentException("negative size");
 
-        return new PaddedByteVector(array, 0, array.length, size);
+        return new PaddedByteVector(array, 0, array.length(), size);
     }
 
-    static PaddedByteVector newVector(int size, byte[] array, int offset) {
+    static PaddedByteVector newVector(int size, ByteArrayFacade array, int offset) {
 
         if (size < 0) throw new IllegalArgumentException("negative size");
         if (offset < 0) throw new IllegalArgumentException("negative offset");
 
-        return new PaddedByteVector(array, offset, array.length - offset, size);
+        return new PaddedByteVector(array, offset, array.length() - offset, size);
     }
 
 
-    private final byte[] array;
+    private final ByteArrayFacade array;
     private final int offset;
     private final int length;
 
@@ -53,7 +54,7 @@ final class PaddedByteVector extends ByteVector {
     private final byte[] padding;
 
 
-    private PaddedByteVector(byte[] array, int offset, int length, int paddedLength) {
+    private PaddedByteVector(ByteArrayFacade array, int offset, int length, int paddedLength) {
 
         this.array = array;
         this.offset = offset;
@@ -66,6 +67,28 @@ final class PaddedByteVector extends ByteVector {
         else {
             this.padding = new byte[this.paddedLength - this.length];
         }
+    }
+
+    int paddinglessLength() {
+
+        return length;
+    }
+
+    int arrayOffset() {
+
+        return offset;
+    }
+
+    @Override
+    public boolean hasArray() {
+
+        return array.hasArray();
+    }
+
+    @Override
+    public byte[] array() {
+
+        return array.array();
     }
 
     @Override
@@ -81,7 +104,7 @@ final class PaddedByteVector extends ByteVector {
             return padding[index - length];
         }
         else {
-            return array[offset + index];
+            return array.get(offset + index);
         }
     }
 
@@ -92,7 +115,7 @@ final class PaddedByteVector extends ByteVector {
             padding[index - length] = value;
         }
         else {
-            array[offset + index] = value;
+            array.set(offset + index, value);
         }
     }
 }
