@@ -87,11 +87,12 @@ public final class OpenRQ {
 
     /**
      * @param fecParams
+     * @param extraSymbols
      * @return
      */
-    public static ArrayDataDecoder newDecoder(FECParameters fecParams) {
+    public static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
 
-        return ArrayDataDecoder.newDecoder(fecParams);
+        return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
     }
 
     /**
@@ -99,12 +100,19 @@ public final class OpenRQ {
      * @param symbolSize
      * @param numSourceBlocks
      * @param numSubBlocks
+     * @param extraSymbols
      * @return
      */
-    public static ArrayDataDecoder newDecoder(int dataLength, int symbolSize, int numSourceBlocks, int numSubBlocks) {
+    public static ArrayDataDecoder newDecoder(
+        int dataLength,
+        int symbolSize,
+        int numSourceBlocks,
+        int numSubBlocks,
+        int extraSymbols)
+    {
 
         final FECParameters fecParams = newParams(dataLength, symbolSize, numSourceBlocks, numSubBlocks);
-        return ArrayDataDecoder.newDecoder(fecParams);
+        return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
     }
 
     private static void checkIndexBounds(int beginIndex, int endIndex, int arrayLen) {

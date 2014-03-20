@@ -27,7 +27,7 @@ import RQLibrary.Partition;
  */
 public final class ArrayDataDecoder implements DataDecoder {
 
-    static ArrayDataDecoder newDecoder(FECParameters fecParams) {
+    static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
 
         if (!fecParams.isValid()) {
             throw new IllegalArgumentException("invalid FEC parameters");
@@ -35,9 +35,12 @@ public final class ArrayDataDecoder implements DataDecoder {
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("maximum data length exceeded");
         }
+        if (extraSymbols < 0) {
+            throw new IllegalArgumentException("negative number of extra symbols");
+        }
 
         final byte[] array = new byte[(int)fecParams.dataLength()];
-        return new ArrayDataDecoder(array, fecParams);
+        return new ArrayDataDecoder(array, fecParams, extraSymbols);
     }
 
 
@@ -46,16 +49,17 @@ public final class ArrayDataDecoder implements DataDecoder {
     private final SourceBlockDecoder[] srcBlockDecoders;
 
 
-    private ArrayDataDecoder(byte[] array, FECParameters fecParams) {
+    private ArrayDataDecoder(byte[] array, FECParameters fecParams, int extraSymbols) {
 
         this.array = array;
         this.fecParams = fecParams;
-        this.srcBlockDecoders = partitionData(array, fecParams);
+        this.srcBlockDecoders = partitionData(array, fecParams, extraSymbols);
     }
 
     private static SourceBlockDecoder[] partitionData(
         byte[] array,
-        FECParameters fecParams)
+        FECParameters fecParams,
+        int extraSymbols)
     {
 
         final int Kt = fecParams.totalSymbols();
@@ -80,11 +84,11 @@ public final class ArrayDataDecoder implements DataDecoder {
         int sbn;
 
         for (sbn = 0; sbn < ZL; sbn++) { // first ZL
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KL, sbn);
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KL, sbn, extraSymbols);
         }
 
         for (; sbn < Z; sbn++) {// last ZS
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KS, sbn);
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KS, sbn, extraSymbols);
         }
 
         return srcBlockDecoders;

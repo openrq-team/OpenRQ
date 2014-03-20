@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,16 +43,19 @@ public interface SourceBlockEncoder {
     /**
      * Returns an encoding packet with a source symbol from the source block currently being encoded.
      * <p>
-     * More specifically, if we assume that
+     * More specifically, if we have
      * <ul>
-     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
-     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * <li>{@code SBN} as the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} as the provided encoding symbol identifier,</li>
      * </ul>
      * then this method returns an encoding packet with a source symbol identified by {@code (SBN, ESI)}.
      * <p>
-     * Note that a valid encoding symbol identifier for a source symbol must be between {@code 0} (inclusive) and
-     * {@code K} (exclusive), where {@code K} is the number of source symbols from the source block currently being
-     * encoded.
+     * If we have
+     * <ul>
+     * <li>{@code K} as the number of source symbols from the source block currently being encoded,
+     * </ul>
+     * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= 0 && ESI < K)}.
+     * <p>
      * 
      * @param encSymbolID
      *            The encoding symbol identifier of the source symbol in the returned packet
@@ -67,17 +70,22 @@ public interface SourceBlockEncoder {
     /**
      * Returns an encoding packet with multiple source symbols from the source block currently being encoded.
      * <p>
-     * More specifically, if we assume that
+     * More specifically, if we have
      * <ul>
-     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
-     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * <li>{@code SBN} as the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} as the provided encoding symbol identifier,</li>
      * </ul>
      * then this method returns an encoding packet with a first source symbol identified by {@code (SBN, ESI)}, a second
      * symbol identified by {@code (SBN, ESI+1)}, a third symbol identified by {@code (SBN, ESI+2)}, etc.
      * <p>
-     * Note that a valid encoding symbol identifier for a source symbol must be between {@code 0} (inclusive) and
-     * {@code K} (exclusive), where {@code K} is the number of source symbols from the source block currently being
-     * encoded. Additionally, the number of symbols must be positive and no greater than ({@code K - ESI}).
+     * If we have
+     * <ul>
+     * <li>{@code K} as the number of source symbols from the source block currently being encoded,
+     * </ul>
+     * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= 0 && ESI < K)}.
+     * <p>
+     * Additionaly, the number of symbols ({@code S}) is only valid if {@code (S > 0 && S <= (K - ESI))}.
+     * <p>
      * 
      * @param encSymbolID
      *            The encoding symbol identifier of the first source symbol in the returned packet
@@ -94,16 +102,21 @@ public interface SourceBlockEncoder {
     /**
      * Returns an encoding packet with a repair symbol from the source block currently being encoded.
      * <p>
-     * More specifically, if we assume that
+     * More specifically, if we have
      * <ul>
-     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
-     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * <li>{@code SBN} as the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} as the provided encoding symbol identifier,</li>
      * </ul>
      * then this method returns an encoding packet with a repair symbol identified by {@code (SBN, ESI)}.
      * <p>
-     * Note that the encoding symbol identifier must be valid according to
-     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be greater than or equal to {@code K}, where
-     * {@code K} is the number of source symbols from the source block currently being encoded.
+     * If we have
+     * <ul>
+     * <li>{@code K} as the number of source symbols from the source block currently being encoded,
+     * <li>{@code MAX_ESI} as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum value for the encoding
+     * symbol identifier},</li>
+     * </ul>
+     * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= K && ESI <= MAX_ESI)}.
+     * <p>
      * 
      * @param encSymbolID
      *            The encoding symbol identifier of the repair symbol in the returned packet
@@ -117,19 +130,24 @@ public interface SourceBlockEncoder {
     /**
      * Returns an encoding packet with multiple repair symbols from the source block currently being encoded.
      * <p>
-     * More specifically, if we assume that
+     * More specifically, if we have
      * <ul>
-     * <li>{@code SBN} is the source block number for the source block currently being encoded,</li>
-     * <li>{@code ESI} is the provided encoding symbol identifier,</li>
+     * <li>{@code SBN} as the source block number for the source block currently being encoded,</li>
+     * <li>{@code ESI} as the provided encoding symbol identifier,</li>
      * </ul>
      * then this method returns an encoding packet with a first repair symbol identified by {@code (SBN, ESI)}, a second
      * symbol identified by {@code (SBN, ESI+1)}, a third symbol identified by {@code (SBN, ESI+2)}, etc.
      * <p>
-     * Note that the encoding symbol identifier must be valid according to
-     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be greater than or equal to {@code K}, where
-     * {@code K} is the number of source symbols from the source block currently being encoded. Additionally, the number
-     * of symbols must be positive and no greater than ({@code MAX_ESI - ESI}), where {@code MAX_ESI} is the
-     * {@linkplain ParameterChecker#maxEncodingSymbolID() maximum value for the encoding symbol identifier}.
+     * If we have
+     * <ul>
+     * <li>{@code K} as the number of source symbols from the source block currently being encoded,
+     * <li>{@code MAX_ESI} as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum value for the encoding
+     * symbol identifier},</li>
+     * </ul>
+     * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= K && ESI <= MAX_ESI)}.
+     * <p>
+     * Additionally, the number of symbols ({@code S}) is only valid if {@code (S > 0 && S <= (1 + MAX_ESI - ESI))}.
+     * <p>
      * 
      * @param encSymbolID
      *            The encoding symbol identifier of the first repair symbol in the returned packet

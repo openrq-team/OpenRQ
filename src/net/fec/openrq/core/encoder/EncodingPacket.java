@@ -52,6 +52,13 @@ public interface EncodingPacket {
     public List<ByteBuffer> getSymbolData();
 
     /**
+     * Returns the number of symbols in this encoding packet. This value is the same as {@code getSymbolData().size()}.
+     * 
+     * @return the number of symbols in this encoding packet
+     */
+    public int numberOfSymbols();
+
+    /**
      * Returns the type of all the symbols in this encoding packet.
      * 
      * @return the type of all the symbols in this encoding packet

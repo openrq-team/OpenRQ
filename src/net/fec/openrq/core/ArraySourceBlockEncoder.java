@@ -199,6 +199,12 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
             return symbols;
         }
+
+        @Override
+        public int numberOfSymbols() {
+
+            return symbols.size();
+        }
     }
 
     private static final class SourcePacket extends AbstractEncodingPacket {

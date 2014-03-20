@@ -36,14 +36,15 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         int off,
         FECParameters fecParams,
         int sbn,
-        int K)
+        int K,
+        int extraSymbols)
     {
 
         final int Kprime = SystematicIndices.ceil(K);
         final int sourceLen = Math.min(K * fecParams.symbolSize(), array.length - off);
         final int extendedLen = Kprime * fecParams.symbolSize();
 
-        return new ArraySourceBlockDecoder(array, off, sourceLen, extendedLen, fecParams, sbn, K);
+        return new ArraySourceBlockDecoder(array, off, sourceLen, extendedLen, fecParams, sbn, K, extraSymbols);
     }
 
 
@@ -52,6 +53,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private final FECParameters fecParams;
     private final int sbn;
     private final int K;
+    private final int symbolOverhead;
 
 
     private ArraySourceBlockDecoder(
@@ -61,7 +63,8 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         int extendedLen,
         FECParameters fecParams,
         int sbn,
-        int K)
+        int K,
+        int extraSymbols)
     {
 
         this.data = PaddedByteVector.newVector(Facades.wrapByteArray(array), off, sourceLen, extendedLen);
@@ -69,6 +72,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         this.fecParams = fecParams;
         this.sbn = sbn;
         this.K = K;
+        this.symbolOverhead = extraSymbols;
     }
 
     @Override
