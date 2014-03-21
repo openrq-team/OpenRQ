@@ -22,7 +22,8 @@ package net.fec.openrq.core.parameters;
  */
 final class InternalConstants {
 
-    // == K_max == //
+    // == K == //
+    static final int K_MIN = 1;
     static final int K_MAX = 56403;
 
     // == data length == //

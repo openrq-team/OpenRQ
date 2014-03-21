@@ -258,6 +258,24 @@ public final class ParameterChecker {
                encSymbolID <= maxEncodingSymbolID();
     }
 
+    // =========== number of source symbols - K =========== //
+
+    /**
+     * @return
+     */
+    public static int maxNumSourceSymbolsPerBlock() {
+
+        return InternalConstants.K_MAX;
+    }
+
+    /**
+     * @return
+     */
+    public static int minNumSourceSymbolsPerBlock() {
+
+        return InternalConstants.K_MIN;
+    }
+
     private ParameterChecker() {
 
         // not instantiable

@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test.util;
+package net.fec.openrq.test.util.summary;
 
 
 import java.util.EnumMap;
 import java.util.concurrent.Callable;
+
+import net.fec.openrq.test.util.StringConverter;
 
 
 /**
@@ -26,7 +28,8 @@ import java.util.concurrent.Callable;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public interface Summarizable<E extends Enum<E>> extends Callable<EnumMap<E, LongSummaryStatistics>> {
+public interface Summarizable<E extends Enum<E> & StringConverter<LongSummaryStatistics>>
+    extends Callable<EnumMap<E, LongSummaryStatistics>> {
 
     /* no new methods */
 }

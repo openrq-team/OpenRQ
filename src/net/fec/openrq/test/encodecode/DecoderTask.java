@@ -16,32 +16,22 @@
 package net.fec.openrq.test.encodecode;
 
 
-import net.fec.openrq.test.util.StringConverter;
+import java.util.EnumMap;
+
 import net.fec.openrq.test.util.summary.LongSummaryStatistics;
+import net.fec.openrq.test.util.summary.Summarizable;
 
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public enum EncoderStats implements StringConverter<LongSummaryStatistics> {
+public final class DecoderTask implements Summarizable<DecoderStats> {
 
-    ENCODER_INIT_TIME {
+    @Override
+    public EnumMap<DecoderStats, LongSummaryStatistics> call() throws Exception {
 
-        @Override
-        public String toString(LongSummaryStatistics stats) {
-
-            return String.format("Encoder initialization time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
-        }
-    },
-    SYMBOL_ENCODING_TIME {
-
-        @Override
-        public String toString(LongSummaryStatistics stats) {
-
-            return String.format("Symbol encoding time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
-        }
-    };
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

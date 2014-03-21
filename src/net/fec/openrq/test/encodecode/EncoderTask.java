@@ -34,8 +34,8 @@ import net.fec.openrq.core.encoder.EncodingPacket;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.numericaltype.SizeOf;
-import net.fec.openrq.test.util.LongSummaryStatistics;
-import net.fec.openrq.test.util.Summarizable;
+import net.fec.openrq.test.util.summary.LongSummaryStatistics;
+import net.fec.openrq.test.util.summary.Summarizable;
 
 
 /**
@@ -52,9 +52,14 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         ANY_SYMBOL_RANDOM;
     }
 
+    public static interface DataEncoderProvider {
+
+        public DataEncoder newEncoder();
+    }
+
     public static final class Builder {
 
-        private final DataEncoder encoder;
+        private final DataEncoderProvider encProvider;
         private final WritableByteChannel writable;
         private final Type type;
 
@@ -64,13 +69,13 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         private int numIterations;
 
 
-        public Builder(DataEncoder encoder, WritableByteChannel writable, Type type) {
+        public Builder(DataEncoderProvider encProvider, WritableByteChannel writable, Type type) {
 
-            checkEncoder(encoder);
+            checkProvider(encProvider);
             checkWritable(writable);
             checkType(type);
 
-            this.encoder = encoder;
+            this.encProvider = encProvider;
             this.writable = writable;
             this.type = type;
 
@@ -95,7 +100,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
 
         public Builder extraSymbols(int extra) {
 
-            checkExtraSymbols(extra, type, encoder);
+            checkExtraSymbols(extra, type);
             this.extraSymbols = extra;
             return this;
         }
@@ -135,7 +140,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         public EncoderTask build() {
 
             return new EncoderTask(
-                encoder,
+                encProvider,
                 writable,
                 type,
                 statsUnit,
@@ -147,7 +152,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
 
 
     /**
-     * @param encoder
+     * @param encProvider
      * @param writable
      * @param type
      * @param statsUnit
@@ -157,7 +162,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
      * @return
      */
     public static EncoderTask newEncoderTask(
-        DataEncoder encoder,
+        DataEncoderProvider encProvider,
         WritableByteChannel writable,
         Type type,
         TimeUnit statsUnit,
@@ -166,16 +171,16 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         int numIterations)
     {
 
-        checkEncoder(encoder);
+        checkProvider(encProvider);
         checkWritable(writable);
         checkType(type);
         checkStatsUnit(statsUnit);
-        checkExtraSymbols(extraSymbols, type, encoder);
+        checkExtraSymbols(extraSymbols, type);
         checkMaxSymbolsPerPacket(maxSymbolsPerPacket, type);
         checkNumIterations(numIterations);
 
         return new EncoderTask(
-            encoder,
+            encProvider,
             writable,
             type,
             statsUnit,
@@ -184,9 +189,10 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
             numIterations);
     }
 
-    private static void checkEncoder(DataEncoder encoder) {
+    private static void checkProvider(DataEncoderProvider encProvider) {
 
-        Objects.requireNonNull(encoder, "null encoder");
+        Objects.requireNonNull(encProvider, "null builder");
+        encProvider.newEncoder(); // test if it throws an exception
     }
 
     private static void checkWritable(WritableByteChannel writable) {
@@ -205,7 +211,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
     }
 
     // requires non-null type
-    private static void checkExtraSymbols(int extraSymbols, Type type, DataEncoder dataEnc) {
+    private static void checkExtraSymbols(int extraSymbols, Type type) {
 
         if (extraSymbols < 0) throw new IllegalArgumentException("extra symbols must be non-negative");
         switch (type) {
@@ -220,12 +226,8 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         }
 
         // integer overflow check
-        for (int sbn = 0; sbn < dataEnc.numberOfSourceBlocks(); sbn++) {
-            final SourceBlockEncoder enc = dataEnc.encoderForSourceBlock(sbn);
-            final int K = enc.numberOfSourceSymbols();
-            if (extraSymbols > Integer.MAX_VALUE - K) {
-                throw new IllegalArgumentException("extra symbols is too large");
-            }
+        if (extraSymbols > Integer.MAX_VALUE - ParameterChecker.maxNumSourceSymbolsPerBlock()) {
+            throw new IllegalArgumentException("extra symbols is too large");
         }
     }
 
@@ -251,7 +253,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
     }
 
 
-    private final DataEncoder encoder;
+    private final DataEncoderProvider encProvider;
     private final WritableByteChannel writable;
     private final Type type;
 
@@ -262,7 +264,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
 
 
     private EncoderTask(
-        DataEncoder encoder,
+        DataEncoderProvider encProvider,
         WritableByteChannel writable,
         Type type,
         TimeUnit statsUnit,
@@ -270,8 +272,8 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         int maxSymbolsPerPacket,
         int numIterations) {
 
+        this.encProvider = encProvider;
         this.writable = writable;
-        this.encoder = encoder;
         this.type = type;
 
         this.statsUnit = statsUnit;
@@ -283,22 +285,25 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
     @Override
     public EnumMap<EncoderStats, LongSummaryStatistics> call() throws IOException {
 
-        final LongSummaryStatistics stats = new LongSummaryStatistics();
+        final LongSummaryStatistics initStats = new LongSummaryStatistics();
+        final LongSummaryStatistics symbolStats = new LongSummaryStatistics();
         final Random rand = new Random();
-        final int numSourceBlocks = encoder.numberOfSourceBlocks();
-
-        sendDataHeader(encoder);
 
         switch (type) {
             case SOURCE_SYMBOLS_ONLY_SEQUENTIAL:
                 for (int n = 0; n < numIterations; n++) {
-                    for (int sbn = 0; sbn < numSourceBlocks; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = encoder.encoderForSourceBlock(sbn);
+                    final DataEncoder dataEnc = initDataEncoder(initStats);
+                    sendDataHeader(dataEnc);
+                    final int Z = dataEnc.numberOfSourceBlocks();
+
+                    for (int sbn = 0; sbn < Z; sbn++) {
+
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
                         final int numSymbols = srcBlockEnc.numberOfSourceSymbols();
 
                         for (int esi = 0; esi < numSymbols;) {
-                            final EncodingPacket packet = getSequentialSourcePacket(srcBlockEnc, esi, stats);
+                            final EncodingPacket packet = getSequentialSourcePacket(srcBlockEnc, esi, symbolStats);
                             sendPacket(packet);
                             esi += packet.numberOfSymbols();
                         }
@@ -308,13 +313,22 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
 
             case SOURCE_SYMBOLS_ONLY_RANDOM:
                 for (int n = 0; n < numIterations; n++) {
-                    for (int sbn = 0; sbn < numSourceBlocks; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = encoder.encoderForSourceBlock(sbn);
+                    final DataEncoder dataEnc = initDataEncoder(initStats);
+                    sendDataHeader(dataEnc);
+                    final int Z = dataEnc.numberOfSourceBlocks();
+
+                    for (int sbn = 0; sbn < Z; sbn++) {
+
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
                         final List<Integer> srcSymbolESIs = generateSourceSymbolESIs(srcBlockEnc);
 
                         while (!srcSymbolESIs.isEmpty()) {
-                            final EncodingPacket packet = getRandomSourcePacket(srcBlockEnc, srcSymbolESIs, rand, stats);
+                            final EncodingPacket packet = getRandomSourcePacket(
+                                srcBlockEnc,
+                                srcSymbolESIs,
+                                rand,
+                                symbolStats);
                             sendPacket(packet);
                         }
                     }
@@ -323,13 +337,18 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
 
             case SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM:
                 for (int n = 0; n < numIterations; n++) {
-                    for (int sbn = 0; sbn < numSourceBlocks; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = encoder.encoderForSourceBlock(sbn);
+                    final DataEncoder dataEnc = initDataEncoder(initStats);
+                    sendDataHeader(dataEnc);
+                    final int Z = dataEnc.numberOfSourceBlocks();
+
+                    for (int sbn = 0; sbn < Z; sbn++) {
+
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
                         final Set<Integer> esis = generateRandomSymbolESIs(srcBlockEnc, rand, true);
 
                         for (int esi : esis) {
-                            final EncodingPacket packet = getSingleSymbolPacket(srcBlockEnc, esi);
+                            final EncodingPacket packet = getSingleSymbolPacket(srcBlockEnc, esi, symbolStats);
                             sendPacket(packet);
                         }
                     }
@@ -338,13 +357,18 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
 
             case ANY_SYMBOL_RANDOM:
                 for (int n = 0; n < numIterations; n++) {
-                    for (int sbn = 0; sbn < numSourceBlocks; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = encoder.encoderForSourceBlock(sbn);
+                    final DataEncoder dataEnc = initDataEncoder(initStats);
+                    sendDataHeader(dataEnc);
+                    final int Z = dataEnc.numberOfSourceBlocks();
+
+                    for (int sbn = 0; sbn < Z; sbn++) {
+
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
                         final Set<Integer> esis = generateRandomSymbolESIs(srcBlockEnc, rand, false);
 
                         for (int esi : esis) {
-                            final EncodingPacket packet = getSingleSymbolPacket(srcBlockEnc, esi);
+                            final EncodingPacket packet = getSingleSymbolPacket(srcBlockEnc, esi, symbolStats);
                             sendPacket(packet);
                         }
                     }
@@ -352,20 +376,33 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
             break;
 
             default:
-                throw new AssertionError("unknown type");
+                throw new AssertionError("unknown enum type");
         }
 
         final EnumMap<EncoderStats, LongSummaryStatistics> map = new EnumMap<>(EncoderStats.class);
-        map.put(EncoderStats.ENCODING_TIME, stats);
+        map.put(EncoderStats.ENCODER_INIT_TIME, initStats);
+        map.put(EncoderStats.SYMBOL_ENCODING_TIME, symbolStats);
         return map;
     }
 
-    private void sendDataHeader(DataEncoder enc) throws IOException {
+    private DataEncoder initDataEncoder(LongSummaryStatistics initStats) {
 
-        final ByteBuffer header = ByteBuffer.allocate(12);
-        enc.fecParameters().writeToBuffer(header);
+        final long startNanos = System.nanoTime();
+        final DataEncoder dataEnc = encProvider.newEncoder();
+        final long endNanos = System.nanoTime();
+        initStats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+
+        return dataEnc;
+    }
+
+    private void sendDataHeader(DataEncoder dataEnc) throws IOException {
+
+        final ByteBuffer header = ByteBuffer.allocate(12 + SizeOf.INT);
+        dataEnc.fecParameters().writeToBuffer(header);
+        header.putInt(extraSymbols);
         header.rewind();
 
+        // send header (F, T, Z, N, Al) + EXTRA_SYMBOLS
         writable.write(header);
     }
 
@@ -378,8 +415,10 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         header.putInt(symbols.size());
         header.rewind();
 
+        // send header (SBN, ESI) + NUM_SYMBOLS
         writable.write(header);
         for (ByteBuffer symb : symbols) {
+            // send symbol data
             symb.rewind();
             writable.write(symb);
         }
@@ -413,6 +452,8 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
 
         final int K = enc.numberOfSourceSymbols();
         final int numSymbols = K + extraSymbols;
+        final int maxESI = ParameterChecker.maxEncodingSymbolID();
+
         final Set<Integer> esis = new LinkedHashSet<>(); // preserve randomized ordering
 
         if (preferSourceSymbols) {
@@ -420,12 +461,11 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
                 // exponential distribution with mean K/2
                 final int esi = (int)((-K / 2) * Math.log(1 - rand.nextDouble()));
                 // repeat sampling if a repeated ESI is obtained
-                esis.add(Math.min(esi, ParameterChecker.maxEncodingSymbolID()));
+                esis.add(Math.min(esi, maxESI));
             }
         }
         else {
             // Floyd's Algorithm for random sampling (uniform over all possible ESIs)
-            final int maxESI = ParameterChecker.maxEncodingSymbolID();
             for (int i = maxESI - numSymbols; i < maxESI; i++) {
                 // try to add a random index between 0 and i (inclusive)
                 if (!esis.add(rand.nextInt(i + 1))) {
@@ -450,7 +490,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         final int esi = srcSymbolESIs.remove(listIndex);
         final int maxNumSymbols = getMaxNumSymbols(enc, esi);
 
-        // find the actual maximum number of symbols here, since the list may contain non-contiguous ESIs
+        // find the actual number of symbols here since the list may contain non-contiguous ESIs
         int numSymbols = 1;
         final Iterator<Integer> iter = srcSymbolESIs.listIterator(listIndex); // points to the next ESI
         while (numSymbols < maxNumSymbols && iter.hasNext()) {
@@ -484,10 +524,23 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
         }
     }
 
-    private EncodingPacket getSingleSymbolPacket(SourceBlockEncoder enc, int esi) {
+    private EncodingPacket getSingleSymbolPacket(SourceBlockEncoder enc, int esi, LongSummaryStatistics stats) {
 
         final int K = enc.numberOfSourceSymbols();
-        if (esi < K) return enc.getSourcePacket(esi);
-        else return enc.getRepairPacket(esi);
+        final EncodingPacket packet;
+        if (esi < K) {
+            final long startNanos = System.nanoTime();
+            packet = enc.getSourcePacket(esi);
+            final long endNanos = System.nanoTime();
+            stats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+        }
+        else {
+            final long startNanos = System.nanoTime();
+            packet = enc.getRepairPacket(esi);
+            final long endNanos = System.nanoTime();
+            stats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+        }
+
+        return packet;
     }
 }
