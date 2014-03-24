@@ -160,7 +160,7 @@ public final class ParameterChecker {
         // check max-min bounds
         if ((F < minDataLength()) | (maxDataLength() < F) |
             (T < minSymbolSize()) | (maxSymbolSize() < T) |
-            (Z < minNumSourceBlocks()) | (maxSourceBlockNumber() < Z) |
+            (Z < minNumSourceBlocks()) | (maxNumSourceBlocks() < Z) |
             (N < minNumSubBlocks()) | (maxNumSubBlocks() < N)) {
             return false;
         }
@@ -173,7 +173,7 @@ public final class ParameterChecker {
         final long Kt = ExtraMath.ceilDiv(F, T);
 
         // check partitioning bounds
-        if (T > F || Kt > Z || N > (T / Al)) {
+        if (T > F || Z > Kt || N > (T / Al)) {
             return false;
         }
 

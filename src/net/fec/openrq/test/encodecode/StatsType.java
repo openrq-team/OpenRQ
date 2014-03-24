@@ -88,7 +88,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
             final long numFailures = stats.getCount();
             if (stats.hasNext()) {
                 final long totalDecodings = stats.getNext().getCount();
-                return String.format("Number of decoding failures:{%d (%05f %)}",
+                return String.format("Number of decoding failures:{%d (%05f %%)}",
                     numFailures, ((double)numFailures / totalDecodings));
             }
             else {

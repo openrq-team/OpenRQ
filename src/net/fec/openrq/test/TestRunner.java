@@ -162,34 +162,42 @@ public final class TestRunner {
         runWarmupTasks(executor, makeData(WARMUP_SIZE));
 
         System.out.println();
+        System.out.println();
         System.out.println("Running sequential source symbols test...");
         for (int size : DATA_SIZES) {
             final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
+            System.out.println();
             System.out.println("Data size = " + size + " bytes (" + maxSymbolsPerPacket + " max symbols per packet):");
             runSequentialSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
         }
 
         System.out.println();
+        System.out.println();
         System.out.println("Running random source symbols test...");
         for (int size : DATA_SIZES) {
             final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
+            System.out.println();
             System.out.println("Data size = " + size + " bytes (" + maxSymbolsPerPacket + " max symbols per packet):");
             runRandomSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
         }
 
         System.out.println();
+        System.out.println();
         System.out.println("Running source + repair symbols test...");
         for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
             for (int size : DATA_SIZES) {
+                System.out.println();
                 System.out.println("Data size = " + size + " bytes (" + extraSymbols + " extra symbols):");
                 runSourcePlusRepairSymbolsTasks(executor, makeData(size), extraSymbols);
             }
         }
 
         System.out.println();
+        System.out.println();
         System.out.println("Running any symbols test...");
         for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
             for (int size : DATA_SIZES) {
+                System.out.println();
                 System.out.println("Data size = " + size + " bytes (" + extraSymbols + " extra symbols):");
                 runAnySymbolsTasks(executor, makeData(size), extraSymbols);
             }

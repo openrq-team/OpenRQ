@@ -84,11 +84,11 @@ public final class ArrayDataEncoder implements DataEncoder {
         int sbn;
 
         for (sbn = 0; sbn < ZL; sbn++) { // first ZL
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, KL, sbn);
+            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, sbn, KL);
         }
 
         for (; sbn < Z; sbn++) {// last ZS
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, KS, sbn);
+            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, sbn, KS);
         }
 
         return srcBlockEncoders;
