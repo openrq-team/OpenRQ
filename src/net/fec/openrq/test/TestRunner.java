@@ -23,8 +23,6 @@ import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONL
 
 import java.io.IOException;
 import java.nio.channels.Pipe;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -77,6 +75,11 @@ public final class TestRunner {
         return data;
     }
 
+    private static int randomMaxSymbolsPerPacket() {
+
+        return 1 + rand.nextInt(50);
+    }
+
 
     private static final class EncProvider implements EncoderTask.DataEncoderProvider {
 
@@ -112,45 +115,6 @@ public final class TestRunner {
         }
     }
 
-
-    private static EncoderTask newEncoderTask(
-        byte[] data,
-        WritableByteChannel writable,
-        EncoderTask.Type type) {
-
-        final DataEncoderBuilder<ArrayDataEncoder> builder = OpenRQ.newEncoderBuilder(data);
-        return new EncoderTask.Builder(new EncProvider(builder), writable, type).build();
-    }
-
-    private static EncoderTask newEncoderTask(
-        byte[] data,
-        WritableByteChannel writable,
-        EncoderTask.Type type,
-        int numIters) {
-
-        final DataEncoderBuilder<ArrayDataEncoder> builder = OpenRQ.newEncoderBuilder(data);
-        return new EncoderTask.Builder(new EncProvider(builder), writable, type).numIterations(numIters).build();
-    }
-
-    private static DecoderTask newDecoderTask(byte[] data, ReadableByteChannel readable) {
-
-        return new DecoderTask.Builder(new DecChecker(data), readable).build();
-    }
-
-    private static DecoderTask newDecoderTask(byte[] data, ReadableByteChannel readable, int numIters) {
-
-        return new DecoderTask.Builder(new DecChecker(data), readable).numIterations(numIters).build();
-    }
-
-    private static DecoderTask newUncheckedDecoderTask(byte[] data, ReadableByteChannel readable) {
-
-        return new DecoderTask.Builder(readable).build();
-    }
-
-    private static DecoderTask newUncheckedDecoderTask(byte[] data, ReadableByteChannel readable, int numIters) {
-
-        return new DecoderTask.Builder(readable).numIterations(numIters).build();
-    }
 
     private static void runTasks(
         EncoderTask encTask,
@@ -200,29 +164,35 @@ public final class TestRunner {
         System.out.println();
         System.out.println("Running sequential source symbols test...");
         for (int size : DATA_SIZES) {
-            System.out.println("Data size = " + size + " bytes :");
-            runSequentialSourceSymbolsTasks(executor, makeData(size));
+            final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
+            System.out.println("Data size = " + size + " bytes (" + maxSymbolsPerPacket + " max symbols per packet):");
+            runSequentialSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
         }
 
         System.out.println();
         System.out.println("Running random source symbols test...");
         for (int size : DATA_SIZES) {
-            System.out.println("Data size = " + size + " bytes :");
-            runRandomSourceSymbolsTasks(executor, makeData(size));
+            final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
+            System.out.println("Data size = " + size + " bytes (" + maxSymbolsPerPacket + " max symbols per packet):");
+            runRandomSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
         }
 
         System.out.println();
         System.out.println("Running source + repair symbols test...");
-        for (int size : DATA_SIZES) {
-            System.out.println("Data size = " + size + " bytes :");
-            runSourcePlusRepairSymbolsTasks(executor, makeData(size));
+        for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
+            for (int size : DATA_SIZES) {
+                System.out.println("Data size = " + size + " bytes (" + extraSymbols + " extra symbols):");
+                runSourcePlusRepairSymbolsTasks(executor, makeData(size), extraSymbols);
+            }
         }
 
         System.out.println();
         System.out.println("Running any symbols test...");
-        for (int size : DATA_SIZES) {
-            System.out.println("Data size = " + size + " bytes :");
-            runAnySymbolsTasks(executor, makeData(size));
+        for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
+            for (int size : DATA_SIZES) {
+                System.out.println("Data size = " + size + " bytes (" + extraSymbols + " extra symbols):");
+                runAnySymbolsTasks(executor, makeData(size), extraSymbols);
+            }
         }
     }
 
@@ -233,8 +203,14 @@ public final class TestRunner {
         final Pipe pipe = Pipe.open();
         final int itersPerTask = 50;
 
-        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM, itersPerTask);
-        final DecoderTask decTask = newDecoderTask(data, pipe.source(), itersPerTask);
+        final EncoderTask encTask = new EncoderTask.Builder(
+            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM)
+            .numIterations(itersPerTask)
+            .build();
+        final DecoderTask decTask = new DecoderTask.Builder(
+            new DecChecker(data), pipe.source())
+            .numIterations(itersPerTask)
+            .build();
 
         final long startNanos = System.nanoTime();
         do {
@@ -245,52 +221,72 @@ public final class TestRunner {
 
     // ===== SEQUENTIAL SOURCE SYMBOLS ===== //
 
-    private static void runSequentialSourceSymbolsTasks(ExecutorService executor, byte[] data)
+    private static void runSequentialSourceSymbolsTasks(ExecutorService executor, byte[] data, int maxSymbolsPerPacket)
         throws IOException, InterruptedException {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_SYMBOLS_ONLY_SEQUENTIAL);
-        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+        final EncoderTask encTask = new EncoderTask.Builder(
+            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_SYMBOLS_ONLY_SEQUENTIAL)
+            .maxSymbolsPerPacket(maxSymbolsPerPacket)
+            .build();
+        final DecoderTask decTask = new DecoderTask.Builder(
+            new DecChecker(data), pipe.source())
+            .build();
 
         runTasks(encTask, decTask, executor, true);
     }
 
     // ===== RANDOM SOURCE SYMBOLS ===== //
 
-    private static void runRandomSourceSymbolsTasks(ExecutorService executor, byte[] data)
+    private static void runRandomSourceSymbolsTasks(ExecutorService executor, byte[] data, int maxSymbolsPerPacket)
         throws IOException, InterruptedException {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_SYMBOLS_ONLY_RANDOM);
-        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+        final EncoderTask encTask = new EncoderTask.Builder(
+            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_SYMBOLS_ONLY_RANDOM)
+            .maxSymbolsPerPacket(maxSymbolsPerPacket)
+            .build();
+        final DecoderTask decTask = new DecoderTask.Builder(
+            new DecChecker(data), pipe.source())
+            .build();
 
         runTasks(encTask, decTask, executor, true);
     }
 
     // ===== SOURCE + REPAIR SYMBOLS ===== //
 
-    private static void runSourcePlusRepairSymbolsTasks(ExecutorService executor, byte[] data)
+    private static void runSourcePlusRepairSymbolsTasks(ExecutorService executor, byte[] data, int extraSymbols)
         throws IOException, InterruptedException {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM);
-        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+        final EncoderTask encTask = new EncoderTask.Builder(
+            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM)
+            .extraSymbols(extraSymbols)
+            .build();
+        final DecoderTask decTask = new DecoderTask.Builder(
+            new DecChecker(data), pipe.source())
+            .build();
 
         runTasks(encTask, decTask, executor, true);
     }
 
     // ===== ANY SYMBOLS ===== //
 
-    private static void runAnySymbolsTasks(ExecutorService executor, byte[] data)
+    private static void runAnySymbolsTasks(ExecutorService executor, byte[] data, int extraSymbols)
         throws IOException, InterruptedException {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), ANY_SYMBOL_RANDOM);
-        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+        final EncoderTask encTask = new EncoderTask.Builder(
+            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), ANY_SYMBOL_RANDOM)
+            .extraSymbols(extraSymbols)
+            .build();
+        final DecoderTask decTask = new DecoderTask.Builder(
+            new DecChecker(data), pipe.source())
+            .build();
 
         runTasks(encTask, decTask, executor, true);
     }
