@@ -16,19 +16,36 @@
 package net.fec.openrq.test;
 
 
+import static net.fec.openrq.test.encodecode.EncoderTask.Type.ANY_SYMBOL_RANDOM;
+import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM;
+import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONLY_RANDOM;
+import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONLY_SEQUENTIAL;
+
+import java.io.IOException;
+import java.nio.channels.Pipe;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import net.fec.openrq.core.ArrayDataEncoder;
+import net.fec.openrq.core.OpenRQ;
 import net.fec.openrq.core.encoder.DataEncoder;
 import net.fec.openrq.core.encoder.DataEncoderBuilder;
 import net.fec.openrq.test.encodecode.DecoderTask;
 import net.fec.openrq.test.encodecode.EncoderTask;
+import net.fec.openrq.test.encodecode.StatsType;
+import net.fec.openrq.test.util.summary.LongSummaryStatistics;
+import net.fec.openrq.test.util.summary.Summaries;
 
 
 /**
@@ -96,21 +113,185 @@ public final class TestRunner {
     }
 
 
-    public static void main(String[] args) throws InterruptedException {
+    private static EncoderTask newEncoderTask(
+        byte[] data,
+        WritableByteChannel writable,
+        EncoderTask.Type type) {
+
+        final DataEncoderBuilder<ArrayDataEncoder> builder = OpenRQ.newEncoderBuilder(data);
+        return new EncoderTask.Builder(new EncProvider(builder), writable, type).build();
+    }
+
+    private static EncoderTask newEncoderTask(
+        byte[] data,
+        WritableByteChannel writable,
+        EncoderTask.Type type,
+        int numIters) {
+
+        final DataEncoderBuilder<ArrayDataEncoder> builder = OpenRQ.newEncoderBuilder(data);
+        return new EncoderTask.Builder(new EncProvider(builder), writable, type).numIterations(numIters).build();
+    }
+
+    private static DecoderTask newDecoderTask(byte[] data, ReadableByteChannel readable) {
+
+        return new DecoderTask.Builder(new DecChecker(data), readable).build();
+    }
+
+    private static DecoderTask newDecoderTask(byte[] data, ReadableByteChannel readable, int numIters) {
+
+        return new DecoderTask.Builder(new DecChecker(data), readable).numIterations(numIters).build();
+    }
+
+    private static DecoderTask newUncheckedDecoderTask(byte[] data, ReadableByteChannel readable) {
+
+        return new DecoderTask.Builder(readable).build();
+    }
+
+    private static DecoderTask newUncheckedDecoderTask(byte[] data, ReadableByteChannel readable, int numIters) {
+
+        return new DecoderTask.Builder(readable).numIterations(numIters).build();
+    }
+
+    private static void runTasks(
+        EncoderTask encTask,
+        DecoderTask decTask,
+        ExecutorService executor,
+        boolean printStats)
+        throws InterruptedException
+    {
+
+        final Future<Map<StatsType, LongSummaryStatistics>> decFuture = executor.submit(decTask);
+        final Future<Map<StatsType, LongSummaryStatistics>> encFuture = executor.submit(encTask);
+
+        boolean decDone = false;
+        boolean encDone = false;
+        do {
+            if (!decDone) decDone = handleFuture(decFuture, printStats);
+            if (!encDone) encDone = handleFuture(encFuture, printStats);
+        }
+        while (!(decDone && encDone));
+    }
+
+    private static boolean handleFuture(Future<Map<StatsType, LongSummaryStatistics>> future, boolean printStats)
+        throws InterruptedException
+    {
+
+        try {
+            final Map<StatsType, LongSummaryStatistics> stats = future.get(1L, TimeUnit.SECONDS);
+            if (printStats) Summaries.printlnToStream(stats, System.out);
+            return true;
+        }
+        catch (TimeoutException e) {
+            return false;
+        }
+        catch (ExecutionException e) {
+            e.getCause().printStackTrace();
+            return true;
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException, IOException {
 
         final ExecutorService executor = Executors.newFixedThreadPool(2);
 
+        System.out.println("Warming up...");
         runWarmupTasks(executor, makeData(WARMUP_SIZE));
+
+        System.out.println();
+        System.out.println("Running sequential source symbols test...");
+        for (int size : DATA_SIZES) {
+            System.out.println("Data size = " + size + " bytes :");
+            runSequentialSourceSymbolsTasks(executor, makeData(size));
+        }
+
+        System.out.println();
+        System.out.println("Running random source symbols test...");
+        for (int size : DATA_SIZES) {
+            System.out.println("Data size = " + size + " bytes :");
+            runRandomSourceSymbolsTasks(executor, makeData(size));
+        }
+
+        System.out.println();
+        System.out.println("Running source + repair symbols test...");
+        for (int size : DATA_SIZES) {
+            System.out.println("Data size = " + size + " bytes :");
+            runSourcePlusRepairSymbolsTasks(executor, makeData(size));
+        }
+
+        System.out.println();
+        System.out.println("Running any symbols test...");
+        for (int size : DATA_SIZES) {
+            System.out.println("Data size = " + size + " bytes :");
+            runAnySymbolsTasks(executor, makeData(size));
+        }
     }
 
     // ===== WARM-UP ===== //
 
-    private static void runWarmupTasks(ExecutorService executor, byte[] data) {
+    private static void runWarmupTasks(ExecutorService executor, byte[] data) throws IOException, InterruptedException {
+
+        final Pipe pipe = Pipe.open();
+        final int itersPerTask = 50;
+
+        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM, itersPerTask);
+        final DecoderTask decTask = newDecoderTask(data, pipe.source(), itersPerTask);
 
         final long startNanos = System.nanoTime();
         do {
-
+            runTasks(encTask, decTask, executor, false);
         }
         while (System.nanoTime() - startNanos < WARMUP_NANOS);
+    }
+
+    // ===== SEQUENTIAL SOURCE SYMBOLS ===== //
+
+    private static void runSequentialSourceSymbolsTasks(ExecutorService executor, byte[] data)
+        throws IOException, InterruptedException {
+
+        final Pipe pipe = Pipe.open();
+
+        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_SYMBOLS_ONLY_SEQUENTIAL);
+        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+
+        runTasks(encTask, decTask, executor, true);
+    }
+
+    // ===== RANDOM SOURCE SYMBOLS ===== //
+
+    private static void runRandomSourceSymbolsTasks(ExecutorService executor, byte[] data)
+        throws IOException, InterruptedException {
+
+        final Pipe pipe = Pipe.open();
+
+        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_SYMBOLS_ONLY_RANDOM);
+        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+
+        runTasks(encTask, decTask, executor, true);
+    }
+
+    // ===== SOURCE + REPAIR SYMBOLS ===== //
+
+    private static void runSourcePlusRepairSymbolsTasks(ExecutorService executor, byte[] data)
+        throws IOException, InterruptedException {
+
+        final Pipe pipe = Pipe.open();
+
+        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM);
+        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+
+        runTasks(encTask, decTask, executor, true);
+    }
+
+    // ===== ANY SYMBOLS ===== //
+
+    private static void runAnySymbolsTasks(ExecutorService executor, byte[] data)
+        throws IOException, InterruptedException {
+
+        final Pipe pipe = Pipe.open();
+
+        final EncoderTask encTask = newEncoderTask(data, pipe.sink(), ANY_SYMBOL_RANDOM);
+        final DecoderTask decTask = newDecoderTask(data, pipe.source());
+
+        runTasks(encTask, decTask, executor, true);
     }
 }

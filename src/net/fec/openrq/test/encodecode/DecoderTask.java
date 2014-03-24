@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.EnumMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -39,11 +40,71 @@ import net.fec.openrq.test.util.summary.Summarizable;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class DecoderTask implements Summarizable<DecoderStats> {
+public final class DecoderTask implements Summarizable<StatsType> {
 
     public static interface DecodedDataChecker {
 
         public boolean checkData(byte[] data);
+    }
+
+    public static final class Builder {
+
+        private final DecodedDataChecker dataChecker;
+        private final ReadableByteChannel readable;
+
+
+        public Builder(ReadableByteChannel readable) {
+
+            checkReadable(readable);
+            this.dataChecker = null;
+            this.readable = readable;
+            defStatsUnit();
+            defNumIterations();
+        }
+
+        public Builder(DecodedDataChecker dataChecker, ReadableByteChannel readable) {
+
+            checkDataChecker(dataChecker);
+            checkReadable(readable);
+            this.dataChecker = dataChecker;
+            this.readable = readable;
+            defStatsUnit();
+            defNumIterations();
+        }
+
+
+        private TimeUnit statsUnit;
+        private int numIters;
+
+
+        public Builder statsUnit(TimeUnit unit) {
+
+            this.statsUnit = unit;
+            return this;
+        }
+
+        public Builder defStatsUnit() {
+
+            this.statsUnit = Defaults.STATS_UNIT;
+            return this;
+        }
+
+        public Builder numIterations(int iters) {
+
+            this.numIters = iters;
+            return this;
+        }
+
+        public Builder defNumIterations() {
+
+            this.numIters = Defaults.NUM_ITERATIONS;
+            return this;
+        }
+
+        public DecoderTask build() {
+
+            return new DecoderTask(dataChecker, readable, statsUnit, numIters);
+        }
     }
 
 
@@ -123,7 +184,7 @@ public final class DecoderTask implements Summarizable<DecoderStats> {
     }
 
     @Override
-    public EnumMap<DecoderStats, LongSummaryStatistics> call() throws IOException {
+    public Map<StatsType, LongSummaryStatistics> call() throws IOException {
 
         final LongSummaryStatistics initTimeStats = new LongSummaryStatistics();
         final LongSummaryStatistics symbolTimeStats = new LongSummaryStatistics();
@@ -177,12 +238,12 @@ public final class DecoderTask implements Summarizable<DecoderStats> {
             checkData(dataDec);
         }
 
-        final EnumMap<DecoderStats, LongSummaryStatistics> map = new EnumMap<>(DecoderStats.class);
-        map.put(DecoderStats.DECODER_INIT_TIME, initTimeStats);
-        map.put(DecoderStats.SYMBOL_INPUT_TIME, symbolTimeStats);
-        map.put(DecoderStats.DECODING_TIME, decTimeStats);
-        map.put(DecoderStats.DECODING_FAILURE_TIME, decFailTimeStats);
-        map.put(DecoderStats.NUM_DECODING_FAILURES, numDecFailsStats);
+        final EnumMap<StatsType, LongSummaryStatistics> map = new EnumMap<>(StatsType.class);
+        map.put(StatsType.DECODER_INIT_TIME, initTimeStats);
+        map.put(StatsType.SYMBOL_INPUT_TIME, symbolTimeStats);
+        map.put(StatsType.DECODING_TIME, decTimeStats);
+        map.put(StatsType.DECODING_FAILURE_TIME, decFailTimeStats);
+        map.put(StatsType.NUM_DECODING_FAILURES, numDecFailsStats);
         return map;
     }
 

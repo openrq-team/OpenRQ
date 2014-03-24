@@ -16,7 +16,7 @@
 package net.fec.openrq.test.util.summary;
 
 
-import java.util.EnumMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import net.fec.openrq.test.util.StringConverter;
@@ -24,12 +24,11 @@ import net.fec.openrq.test.util.StringConverter;
 
 /**
  * @param <E>
- *            An enum type
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public interface Summarizable<E extends Enum<E> & StringConverter<LongSummaryStatistics>>
-    extends Callable<EnumMap<E, LongSummaryStatistics>> {
+public interface Summarizable<E extends StringConverter<LongSummaryStatistics>> extends
+    Callable<Map<E, LongSummaryStatistics>> {
 
     /* no new methods */
 }

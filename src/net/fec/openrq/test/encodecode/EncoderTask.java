@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
@@ -42,7 +43,7 @@ import net.fec.openrq.test.util.summary.Summarizable;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class EncoderTask implements Summarizable<EncoderStats> {
+public final class EncoderTask implements Summarizable<StatsType> {
 
     public static enum Type {
 
@@ -283,7 +284,7 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
     }
 
     @Override
-    public EnumMap<EncoderStats, LongSummaryStatistics> call() throws IOException {
+    public Map<StatsType, LongSummaryStatistics> call() throws IOException {
 
         final LongSummaryStatistics initStats = new LongSummaryStatistics();
         final LongSummaryStatistics symbolStats = new LongSummaryStatistics();
@@ -379,9 +380,9 @@ public final class EncoderTask implements Summarizable<EncoderStats> {
                 throw new AssertionError("unknown enum type");
         }
 
-        final EnumMap<EncoderStats, LongSummaryStatistics> map = new EnumMap<>(EncoderStats.class);
-        map.put(EncoderStats.ENCODER_INIT_TIME, initStats);
-        map.put(EncoderStats.SYMBOL_ENCODING_TIME, symbolStats);
+        final EnumMap<StatsType, LongSummaryStatistics> map = new EnumMap<>(StatsType.class);
+        map.put(StatsType.ENCODER_INIT_TIME, initStats);
+        map.put(StatsType.SYMBOL_ENCODING_TIME, symbolStats);
         return map;
     }
 
