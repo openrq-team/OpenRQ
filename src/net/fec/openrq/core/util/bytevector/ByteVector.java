@@ -53,32 +53,9 @@ public abstract class ByteVector {
         return safeGet(index);
     }
 
-    /**
-     * Applies a binary function to the byte at a given position and the provided secondary value, and returns the
-     * result.
-     * 
-     * @param index
-     *            A position in this vector (must be non-negative and less than {@code length()})
-     * @param value
-     *            A secondary byte value
-     * @param binaryFunction
-     *            A binary function to be applied to the byte at position {@code index} and {@code value}
-     * @return the result of {@code binaryFunction} applied to the byte at position {@code index} and {@code value}
-     */
-    public final byte get(int index, byte value, BinaryByteFunction binaryFunction) {
-
-        checkIndexRange(index, length());
-        return binaryFunction.op(safeGet(index), value);
-    }
-
     public final byte[] get(int index, byte[] dst) {
 
         return get(index, dst, 0, dst.length);
-    }
-
-    public final byte[] get(int index, BinaryByteFunction binaryFunction, byte[] dst) {
-
-        return get(index, binaryFunction, dst, 0, dst.length);
     }
 
     public final byte[] get(int index, byte[] dst, int off, int len) {
@@ -88,18 +65,6 @@ public abstract class ByteVector {
         final int end = off + len;
         for (int d = off, v = index; d < end; d++, v++) {
             dst[d] = safeGet(v);
-        }
-
-        return dst;
-    }
-
-    public final byte[] get(int index, BinaryByteFunction binaryFunction, byte[] dst, int off, int len) {
-
-        checkIndexAndArray(index, length(), dst, off, len);
-
-        final int end = off + len;
-        for (int d = off, v = index; d < end; d++, v++) {
-            dst[d] = binaryFunction.op(safeGet(v), dst[d]);
         }
 
         return dst;
@@ -121,33 +86,9 @@ public abstract class ByteVector {
         safeSet(index, value);
     }
 
-    /**
-     * Applies a binary function to the byte at a given position and the provided secondary value, and replaces the
-     * former byte with the result.
-     * 
-     * @param index
-     *            A position in this vector (must be non-negative and less than {@code length()})
-     * @param value
-     *            A secondary byte value
-     * @param binaryFunction
-     *            A binary function to be applied on the byte at position {@code index} and {@code value}
-     * @exception IndexOutOfBoundsException
-     *                If {@code index < 0} or if {@code index >= length()}
-     */
-    public final void set(int index, byte value, BinaryByteFunction binaryFunction) {
-
-        checkIndexRange(index, length());
-        safeSet(index, binaryFunction.op(safeGet(index), value));
-    }
-
     public final void set(int index, byte[] src) {
 
         set(index, src, 0, src.length);
-    }
-
-    public final void set(int index, BinaryByteFunction binaryFunction, byte[] src) {
-
-        set(index, binaryFunction, src, 0, src.length);
     }
 
     public final void set(int index, byte[] src, int off, int len) {
@@ -157,16 +98,6 @@ public abstract class ByteVector {
         final int end = off + len;
         for (int s = off, v = index; s < end; s++, v++) {
             safeSet(v, src[s]);
-        }
-    }
-
-    public void set(int index, BinaryByteFunction binaryFunction, byte[] src, int off, int len) {
-
-        checkIndexAndArray(index, length(), src, off, len);
-
-        final int end = off + len;
-        for (int s = off, v = index; s < end; s++, v++) {
-            safeSet(index, binaryFunction.op(safeGet(v), src[s]));
         }
     }
 
