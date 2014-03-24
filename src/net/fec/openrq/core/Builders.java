@@ -102,7 +102,15 @@ final class Builders {
         @Override
         public DataEncoderBuilder<T> defaultMaxPayload() {
 
-            this.symbolSize = DataEncoderBuilder.DEF_MAX_PAYLOAD_LENGTH;
+            int T = DataEncoderBuilder.DEF_MAX_PAYLOAD_LENGTH;
+            T = Math.min(T, ParameterChecker.symbolSizeUpperBound(dataLength));
+            
+            final int Al = ParameterChecker.symbolAlignmentValue();
+            T = (T / Al) * Al;
+            
+            T = Math.max(T, ParameterChecker.symbolSizeLowerBound(dataLength));
+
+            this.symbolSize = T;
             return this;
         }
 
