@@ -21,7 +21,6 @@ import java.util.Set;
 
 import net.fec.openrq.core.decoder.SourceBlockDecoder;
 import net.fec.openrq.core.decoder.SourceBlockState;
-import net.fec.openrq.core.util.bytevector.Facades;
 
 
 /**
@@ -33,22 +32,22 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     // requires valid arguments
     static ArraySourceBlockDecoder newDecoder(
         byte[] array,
-        int off,
+        int arrayOff,
         FECParameters fecParams,
         int sbn,
         int K,
         int extraSymbols)
     {
 
-        final int Kprime = SystematicIndices.ceil(K);
-        final int sourceLen = Math.min(K * fecParams.symbolSize(), array.length - off);
-        final int extendedLen = Kprime * fecParams.symbolSize();
+        final int paddedLen = K * fecParams.symbolSize();
+        final int arrayLen = Math.min(paddedLen, array.length - arrayOff);
+        final PaddedByteArray data = PaddedByteArray.newArray(array, arrayOff, arrayLen, paddedLen);
 
-        return new ArraySourceBlockDecoder(array, off, sourceLen, extendedLen, fecParams, sbn, K, extraSymbols);
+        return new ArraySourceBlockDecoder(data, fecParams, sbn, K, extraSymbols);
     }
 
 
-    private final PaddedByteVector data;
+    private final PaddedByteArray data;
 
     private final FECParameters fecParams;
     private final int sbn;
@@ -57,17 +56,14 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
 
     private ArraySourceBlockDecoder(
-        byte[] array,
-        int off,
-        int sourceLen,
-        int extendedLen,
+        PaddedByteArray data,
         FECParameters fecParams,
         int sbn,
         int K,
         int extraSymbols)
     {
 
-        this.data = PaddedByteVector.newVector(Facades.wrapByteArray(array), off, sourceLen, extendedLen);
+        this.data = data;
 
         this.fecParams = fecParams;
         this.sbn = sbn;

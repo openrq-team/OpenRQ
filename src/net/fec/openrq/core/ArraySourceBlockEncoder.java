@@ -22,8 +22,6 @@ import java.util.List;
 
 import net.fec.openrq.core.encoder.EncodingPacket;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
-import net.fec.openrq.core.util.bytevector.ByteArrayFacade;
-import net.fec.openrq.core.util.bytevector.Facades;
 import net.fec.openrq.core.util.collection.ImmutableList;
 
 
@@ -36,48 +34,23 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     // requires valid arguments
     static ArraySourceBlockEncoder newEncoder(
         byte[] array,
-        int off,
+        int arrayOff,
         FECParameters fecParams,
         int sbn,
         int K)
     {
 
-        final int Kprime = SystematicIndices.ceil(K);
-        final int sourceLen = Math.min(K * fecParams.symbolSize(), array.length - off);
-        final int extendedLen = Kprime * fecParams.symbolSize();
+        // account for padding in the last source symbol
+        final int arrayLen = Math.min(K * fecParams.symbolSize(), array.length - arrayOff);
+        final EncodingSymbol[] sourceSymbols = prepareSourceSymbols(array, arrayOff, arrayLen, fecParams, K, sbn);
 
-        return new ArraySourceBlockEncoder(array, off, sourceLen, extendedLen, fecParams, sbn, K);
-    }
-
-
-    private final PaddedByteVector data;
-    private final EncodingSymbol[] sourceSymbols;
-
-    private final FECParameters fecParams;
-    private final int sbn;
-    private final int K;
-
-
-    private ArraySourceBlockEncoder(
-        byte[] array,
-        int off,
-        int sourceLen,
-        int extendedLen,
-        FECParameters fecParams,
-        int sbn,
-        int K)
-    {
-
-        this.data = PaddedByteVector.newVector(Facades.wrapByteArray(array), off, sourceLen, extendedLen);
-        this.sourceSymbols = prepareSourceSymbols(data, fecParams, K, sbn);
-
-        this.fecParams = fecParams;
-        this.sbn = sbn;
-        this.K = K;
+        return new ArraySourceBlockEncoder(sourceSymbols, fecParams, sbn, K);
     }
 
     private static final EncodingSymbol[] prepareSourceSymbols(
-        ByteArrayFacade data,
+        byte[] array,
+        int arrayOff,
+        int arrayLen,
         FECParameters fecParams,
         int K,
         int sbn)
@@ -86,15 +59,38 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         final int T = fecParams.symbolSize();
 
         final EncodingSymbol[] symbols = new EncodingSymbol[K];
-        for (int esi = 0, symbolOff = 0; esi < K; esi++, symbolOff += T) {
-
-            final PaddedByteVector symbolData = PaddedByteVector.newVector(data, symbolOff, T, T);
+        for (int esi = 0, symbolOff = arrayOff; esi < K; esi++, symbolOff += T) {
+            // account for padding in the last source symbol
+            final int symbolLen = Math.min(T, arrayLen - symbolOff);
+            final PaddedByteArray symbolData = PaddedByteArray.newArray(array, symbolOff, symbolLen, T);
             final FECPayloadID fecPayloadID = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
 
-            symbols[esi] = new EncodingSymbol(symbolData, fecPayloadID);
+            symbols[esi] = EncodingSymbol.newSourceSymbol(fecPayloadID, symbolData);
         }
 
         return symbols;
+    }
+
+
+    private final EncodingSymbol[] sourceSymbols;
+
+    private final FECParameters fecParams;
+    private final int sbn;
+    private final int K;
+
+
+    private ArraySourceBlockEncoder(
+        EncodingSymbol[] sourceSymbols,
+        FECParameters fecParams,
+        int sbn,
+        int K)
+    {
+
+        this.sourceSymbols = sourceSymbols;
+
+        this.fecParams = fecParams;
+        this.sbn = sbn;
+        this.K = K;
     }
 
     @Override
@@ -116,7 +112,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         final EncodingSymbol sourceSymbol = sourceSymbols[encSymbolID];
         final FECPayloadID fecPayloadID = sourceSymbol.getFECPayloadID();
-        final ByteBuffer buf = retrieveBuffer(sourceSymbol);
+        final ByteBuffer buf = sourceSymbol.transportData();
 
         return new SourcePacket(fecPayloadID, ImmutableList.newList(buf));
     }
@@ -131,9 +127,9 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         final FECPayloadID fecPayloadID = firstSymbol.getFECPayloadID();
 
         final List<ByteBuffer> bufs = new ArrayList<>();
-        bufs.add(retrieveBuffer(firstSymbol));
+        bufs.add(firstSymbol.transportData());
         for (int esi = encSymbolID + 1; esi < K; esi++) {
-            bufs.add(retrieveBuffer(sourceSymbols[esi]));
+            bufs.add(sourceSymbols[esi].transportData());
         }
 
         return new SourcePacket(fecPayloadID, ImmutableList.copy(bufs));
@@ -151,17 +147,6 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // TODO Auto-generated method stub
         return null;
-    }
-
-    private static final ByteBuffer retrieveBuffer(EncodingSymbol symbol) {
-
-        final PaddedByteVector symbolData = symbol.getData();
-
-        return ByteBuffer.wrap(
-            symbolData.array(),
-            symbolData.arrayOffset(),
-            symbolData.paddinglessLength()
-            ).asReadOnlyBuffer();
     }
 
     private final void checkESI(int esi) {

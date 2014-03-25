@@ -84,11 +84,11 @@ public final class ArrayDataDecoder implements DataDecoder {
         int sbn;
 
         for (sbn = 0; sbn < ZL; sbn++) { // first ZL
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KL, sbn, extraSymbols);
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, sbn, KL, extraSymbols);
         }
 
         for (; sbn < Z; sbn++) {// last ZS
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, KS, sbn, extraSymbols);
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, sbn, KS, extraSymbols);
         }
 
         return srcBlockDecoders;

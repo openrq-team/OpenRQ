@@ -16,6 +16,8 @@
 package net.fec.openrq.core;
 
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Objects;
 
 
@@ -23,42 +25,147 @@ import java.util.Objects;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-final class EncodingSymbol {
+abstract class EncodingSymbol {
 
-    private final PaddedByteVector data;
+    /**
+     * @param fecPayloadID
+     * @param data
+     * @return
+     */
+    static EncodingSymbol newSourceSymbol(FECPayloadID fecPayloadID, PaddedByteArray data) {
+
+        return new SourceSymbol(fecPayloadID, data);
+    }
+
+    /**
+     * @param fecPayloadID
+     * @param data
+     * @return
+     */
+    static EncodingSymbol newRepairSymbol(FECPayloadID fecPayloadID, byte[] data) {
+
+        return new RepairSymbol(fecPayloadID, data);
+    }
+
+
     private final FECPayloadID fecPayloadID;
 
 
-    EncodingSymbol(PaddedByteVector data, FECPayloadID fecPayloadID) {
+    private EncodingSymbol(FECPayloadID fecPayloadID) {
 
-        this.data = Objects.requireNonNull(data);
         this.fecPayloadID = Objects.requireNonNull(fecPayloadID);
     }
 
-    PaddedByteVector getData() {
+    /**
+     * May have padding.
+     * 
+     * @return
+     */
+    abstract byte[] data();
 
-        return data;
-    }
+    /**
+     * Never has padding.
+     * 
+     * @return
+     */
+    abstract ByteBuffer transportData();
 
+    /**
+     * @return
+     */
     FECPayloadID getFECPayloadID() {
 
         return fecPayloadID;
     }
 
+    /**
+     * @return
+     */
     int getSBN() {
 
         return fecPayloadID.sourceBlockNumber();
     }
 
+    /**
+     * @return
+     */
     int getESI() {
 
         return fecPayloadID.encodingSymbolID();
     }
 
+    /**
+     * @param K
+     * @return
+     */
     int getISI(int K) {
 
         int kLinha = SystematicIndices.ceil(K);
 
         return getESI() + (kLinha - K); // yes, I know its commutative: it's just for a better code reading experience.
+    }
+
+
+    private static final class SourceSymbol extends EncodingSymbol {
+
+        private final PaddedByteArray data;
+        private final ByteBuffer transportBuffer;
+
+
+        SourceSymbol(FECPayloadID fecPayloadID, PaddedByteArray data) {
+
+            super(fecPayloadID);
+            this.data = data;
+            this.transportBuffer = prepareTransportBuffer(data);
+        }
+
+        private static ByteBuffer prepareTransportBuffer(PaddedByteArray data) {
+
+            return ByteBuffer.wrap(data.array(), data.arrayOffset(), data.paddinglessLength());
+        }
+
+        @Override
+        byte[] data() {
+
+            return data.getBytes(new byte[data.length()]);
+        }
+
+        @Override
+        ByteBuffer transportData() {
+
+            return transportBuffer.asReadOnlyBuffer();
+        }
+
+    }
+
+    private static final class RepairSymbol extends EncodingSymbol {
+
+        private final byte[] data;
+        private final ByteBuffer transportBuffer;
+
+
+        RepairSymbol(FECPayloadID fecPayloadID, byte[] data) {
+
+            super(fecPayloadID);
+            this.data = data;
+            this.transportBuffer = prepareTransportBuffer(data);
+        }
+
+        private static ByteBuffer prepareTransportBuffer(byte[] data) {
+
+            return ByteBuffer.wrap(data);
+        }
+
+        @Override
+        byte[] data() {
+
+            return Arrays.copyOf(data, data.length);
+        }
+
+        @Override
+        ByteBuffer transportData() {
+
+            return transportBuffer.asReadOnlyBuffer();
+        }
     }
 }
