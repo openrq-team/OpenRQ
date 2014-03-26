@@ -141,7 +141,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     @Override
     public EncodingPacket getRepairPacket(int encSymbolID) {
 
-    	checkESI(encSymbolID);
+    	if (encSymbolID < K) return null; // TODO should prolly look at this
     	
     	// check if we've got the intermediate symbols already
     	if (intermediateSymbols == null)    		
@@ -167,8 +167,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     @Override
     public EncodingPacket getRepairPacket(int encSymbolID, int numSymbols) {
 
-    	checkESI(encSymbolID);
-        checkNumSymbols(encSymbolID, numSymbols);
+    	if (encSymbolID < K) return null; // TODO should prolly look at this
 
     	// check if we've got the intermediate symbols already
     	if (intermediateSymbols == null)    		
