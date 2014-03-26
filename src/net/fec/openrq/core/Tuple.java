@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-package RQLibrary;
+package net.fec.openrq.core;
 
-public class Tuple{
+import net.fec.openrq.core.util.rq.Deg;
+import net.fec.openrq.core.util.rq.Rand;
+import net.fec.openrq.core.util.rq.Utilities;
+
+class Tuple{
 
 	private long d,a,b,d1,a1,b1;
 
@@ -52,32 +56,32 @@ public class Tuple{
 		this.b1 = Rand.rand(X, 5, P1);
 	}
 
-	public long getD() {
+	protected long getD() {
 		
 		return d;
 	}
 
-	public long getA() {
+	protected long getA() {
 		
 		return a;
 	}
 
-	public long getB() {
+	protected long getB() {
 		
 		return b;
 	}
 
-	public long getD1() {
+	protected long getD1() {
 		
 		return d1;
 	}
 
-	public long getA1() {
+	protected long getA1() {
 		
 		return a1;
 	}
 
-	public long getB1() {
+	protected long getB1() {
 		
 		return b1;
 	}

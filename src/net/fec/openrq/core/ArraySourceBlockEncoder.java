@@ -18,12 +18,14 @@ package net.fec.openrq.core;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.fec.openrq.core.encoder.EncodingPacket;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
 import net.fec.openrq.core.util.collection.ImmutableList;
-
+import net.fec.openrq.core.util.rq.SingularMatrixException;
+import net.fec.openrq.core.LinearSystem;
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
@@ -73,6 +75,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
 
     private final EncodingSymbol[] sourceSymbols;
+    private byte[] intermediateSymbols = null;
 
     private final FECParameters fecParams;
     private final int sbn;
@@ -138,15 +141,59 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     @Override
     public EncodingPacket getRepairPacket(int encSymbolID) {
 
-        // TODO Auto-generated method stub
-        return null;
+    	checkESI(encSymbolID);
+    	
+    	// check if we've got the intermediate symbols already
+    	if (intermediateSymbols == null)    		
+    		intermediateSymbols = generateIntermediateSymbols();
+    	
+    	// generate repair symbol
+    	int kPrime = SystematicIndices.ceil(K);
+    	int	isi = encSymbolID + (kPrime - K); 
+
+    	byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi), fecParams.symbolSize());
+
+    	// generate FEC Payload ID
+        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, encSymbolID, fecParams);
+    	
+        // generate repair symbol // TODO should we store the repair symbols generated?
+        EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(fpid, enc_data);
+        
+    	// return the repair packet
+        final ByteBuffer buf = repairSymbol.transportData();
+    	return(new RepairPacket(fpid, ImmutableList.newList(buf)));
     }
 
     @Override
     public EncodingPacket getRepairPacket(int encSymbolID, int numSymbols) {
 
-        // TODO Auto-generated method stub
-        return null;
+    	checkESI(encSymbolID);
+        checkNumSymbols(encSymbolID, numSymbols);
+
+    	// check if we've got the intermediate symbols already
+    	if (intermediateSymbols == null)    		
+    		intermediateSymbols = generateIntermediateSymbols();
+
+    	// generate FEC Payload ID
+        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, encSymbolID, fecParams);
+    	
+    	// generate repair symbols
+    	final List<ByteBuffer> bufs = new ArrayList<>();
+    	int kPrime = SystematicIndices.ceil(K); 
+    	int isi = encSymbolID + (kPrime - K);
+    	
+    	for (int i = 0; i < numSymbols; i++, isi++) { 
+
+    		byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi), fecParams.symbolSize());
+    		
+    		// generate repair symbol // TODO should we store the repair symbols generated?
+            EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(fpid, enc_data);
+            
+            bufs.add(repairSymbol.transportData());
+    	}
+    	
+    	// return the repair packet
+    	return(new RepairPacket(fpid, ImmutableList.copy(bufs)));
     }
 
     private final void checkESI(int esi) {
@@ -159,7 +206,36 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         if (numSymbols < 1 || numSymbols > K - esi) throw new IllegalArgumentException("invalid number of symbols");
     }
+    
+    private byte[] generateIntermediateSymbols() {
 
+		 // source block's parameters
+		 int Ki = SystematicIndices.getKIndex(K);
+		 int S = SystematicIndices.S(Ki);
+		 int H = SystematicIndices.H(Ki);
+		 int L = K + S + H;
+		 int T = fecParams.symbolSize();
+		 
+		 // generate LxL Constraint  Matrix
+		 byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(K, T); // A
+		 
+		 // allocate and initiallize vector D
+		 byte[][] D = new byte[L][T];
+		 for(int row = S + H, index=0; row < K + S + H; row++, index += T)
+			 	D[row] = sourceSymbols[index].data();
+		 
+		 // solve system of equations
+		 byte[] C = null;
+		try {
+			C = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, K);
+		} catch (SingularMatrixException e) {
+			System.err.println("FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		 
+		 return C;
+	 }
 
     private static abstract class AbstractEncodingPacket implements EncodingPacket {
 

@@ -54,6 +54,16 @@ public final class ExtraMath {
 
         return (long)Math.ceil((double)num / den);
     }
+    
+    public static final int ceil(double x)
+	{
+		return((int) Math.ceil(x));
+	}
+
+	public static final int floor(double x)
+	{		
+		return((int) Math.floor(x));
+	}
 
     private ExtraMath() {
 
