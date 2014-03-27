@@ -131,13 +131,13 @@ public final class ArrayDataDecoder implements DataDecoder {
     }
 
     @Override
-    public SourceBlockDecoder decoderForSourceBlock(int sourceBlockNum) {
+    public SourceBlockDecoder decoderForSourceBlock(int sbn) {
 
-        if (sourceBlockNum < 0 || sourceBlockNum >= srcBlockDecoders.length) {
+        if (sbn < 0 || sbn >= srcBlockDecoders.length) {
             throw new IllegalArgumentException("invalid source block number");
         }
 
-        return srcBlockDecoders[sourceBlockNum];
+        return srcBlockDecoders[sbn];
     }
 
     /**

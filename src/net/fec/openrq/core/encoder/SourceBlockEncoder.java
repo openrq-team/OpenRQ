@@ -57,7 +57,7 @@ public interface SourceBlockEncoder {
      * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= 0 && ESI < K)}.
      * <p>
      * 
-     * @param encSymbolID
+     * @param esi
      *            The encoding symbol identifier of the source symbol in the returned packet
      * @return an encoding packet with a source symbol from the source block currently being encoded
      * @exception IllegalArgumentException
@@ -65,7 +65,7 @@ public interface SourceBlockEncoder {
      * @see #sourceBlockNumber()
      * @see #numberOfSourceSymbols()
      */
-    public EncodingPacket getSourcePacket(int encSymbolID);
+    public EncodingPacket getSourcePacket(int esi);
 
     /**
      * Returns an encoding packet with multiple source symbols from the source block currently being encoded.
@@ -84,10 +84,10 @@ public interface SourceBlockEncoder {
      * </ul>
      * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= 0 && ESI < K)}.
      * <p>
-     * Additionaly, the number of symbols ({@code S}) is only valid if {@code (S > 0 && S <= (K - ESI))}.
+     * Additionally, the number of symbols ({@code S}) is only valid if {@code (S > 0 && S <= (K - ESI))}.
      * <p>
      * 
-     * @param encSymbolID
+     * @param esi
      *            The encoding symbol identifier of the first source symbol in the returned packet
      * @param numSymbols
      *            The number of source symbols to be placed in the returned packet
@@ -97,7 +97,7 @@ public interface SourceBlockEncoder {
      * @see #sourceBlockNumber()
      * @see #numberOfSourceSymbols()
      */
-    public EncodingPacket getSourcePacket(int encSymbolID, int numSymbols);
+    public EncodingPacket getSourcePacket(int esi, int numSymbols);
 
     /**
      * Returns an encoding packet with a repair symbol from the source block currently being encoded.
@@ -118,14 +118,14 @@ public interface SourceBlockEncoder {
      * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= K && ESI <= MAX_ESI)}.
      * <p>
      * 
-     * @param encSymbolID
+     * @param esi
      *            The encoding symbol identifier of the repair symbol in the returned packet
      * @return an encoding packet with a repair symbol from the source block currently being encoded
      * @exception IllegalArgumentException
      *                If the provided encoding symbol identifier is invalid
      * @see #sourceBlockNumber()
      */
-    public EncodingPacket getRepairPacket(int encSymbolID);
+    public EncodingPacket getRepairPacket(int esi);
 
     /**
      * Returns an encoding packet with multiple repair symbols from the source block currently being encoded.
@@ -149,7 +149,7 @@ public interface SourceBlockEncoder {
      * Additionally, the number of symbols ({@code S}) is only valid if {@code (S > 0 && S <= (1 + MAX_ESI - ESI))}.
      * <p>
      * 
-     * @param encSymbolID
+     * @param esi
      *            The encoding symbol identifier of the first repair symbol in the returned packet
      * @param numSymbols
      *            The number of repair symbols to be placed in the returned packet
@@ -159,5 +159,5 @@ public interface SourceBlockEncoder {
      * @see #sourceBlockNumber()
      * @see #numberOfSourceSymbols()
      */
-    public EncodingPacket getRepairPacket(int encSymbolID, int numSymbols);
+    public EncodingPacket getRepairPacket(int esi, int numSymbols);
 }

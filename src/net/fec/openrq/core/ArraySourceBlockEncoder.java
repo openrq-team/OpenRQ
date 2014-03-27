@@ -18,14 +18,14 @@ package net.fec.openrq.core;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import net.fec.openrq.core.encoder.EncodingPacket;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
+import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.collection.ImmutableList;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
-import net.fec.openrq.core.LinearSystem;
+
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
@@ -109,11 +109,11 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
-    public EncodingPacket getSourcePacket(int encSymbolID) {
+    public EncodingPacket getSourcePacket(int esi) {
 
-        checkESI(encSymbolID);
+        checkSourceSymbolESI(esi);
 
-        final EncodingSymbol sourceSymbol = sourceSymbols[encSymbolID];
+        final EncodingSymbol sourceSymbol = sourceSymbols[esi];
         final FECPayloadID fecPayloadID = sourceSymbol.getFECPayloadID();
         final ByteBuffer buf = sourceSymbol.transportData();
 
@@ -121,120 +121,145 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
-    public EncodingPacket getSourcePacket(int encSymbolID, int numSymbols) {
+    public EncodingPacket getSourcePacket(int esi, int numSymbols) {
 
-        checkESI(encSymbolID);
-        checkNumSymbols(encSymbolID, numSymbols);
+        checkSourceSymbolESI(esi);
+        checkNumSourceSymbols(esi, numSymbols);
 
-        final EncodingSymbol firstSymbol = sourceSymbols[encSymbolID];
+        final EncodingSymbol firstSymbol = sourceSymbols[esi];
         final FECPayloadID fecPayloadID = firstSymbol.getFECPayloadID();
 
         final List<ByteBuffer> bufs = new ArrayList<>();
         bufs.add(firstSymbol.transportData());
-        for (int esi = encSymbolID + 1; esi < K; esi++) {
-            bufs.add(sourceSymbols[esi].transportData());
+        for (int ii = esi + 1; ii < K; ii++) {
+            bufs.add(sourceSymbols[ii].transportData());
         }
 
         return new SourcePacket(fecPayloadID, ImmutableList.copy(bufs));
     }
 
     @Override
-    public EncodingPacket getRepairPacket(int encSymbolID) {
+    public EncodingPacket getRepairPacket(int esi) {
 
-    	if (encSymbolID < K) return null; // TODO should prolly look at this
-    	
-    	// check if we've got the intermediate symbols already
-    	if (intermediateSymbols == null)    		
-    		intermediateSymbols = generateIntermediateSymbols();
-    	
-    	// generate repair symbol
-    	int kPrime = SystematicIndices.ceil(K);
-    	int	isi = encSymbolID + (kPrime - K); 
+        checkRepairSymbolESI(esi);
 
-    	byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi), fecParams.symbolSize());
+        // check if we've got the intermediate symbols already
+        if (intermediateSymbols == null) {
+            intermediateSymbols = generateIntermediateSymbols();
+        }
 
-    	// generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, encSymbolID, fecParams);
-    	
+        // generate repair symbol
+        int kPrime = SystematicIndices.ceil(K);
+        int isi = esi + (kPrime - K);
+
+        byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi), fecParams.symbolSize());
+
+        // generate FEC Payload ID
+        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
+
         // generate repair symbol // TODO should we store the repair symbols generated?
         EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(fpid, enc_data);
-        
-    	// return the repair packet
+
+        // return the repair packet
         final ByteBuffer buf = repairSymbol.transportData();
-    	return(new RepairPacket(fpid, ImmutableList.newList(buf)));
+        return (new RepairPacket(fpid, ImmutableList.newList(buf)));
     }
 
     @Override
-    public EncodingPacket getRepairPacket(int encSymbolID, int numSymbols) {
+    public EncodingPacket getRepairPacket(int esi, int numSymbols) {
 
-    	if (encSymbolID < K) return null; // TODO should prolly look at this
+        checkRepairSymbolESI(esi);
+        checkNumRepairSymbols(esi, numSymbols);
 
-    	// check if we've got the intermediate symbols already
-    	if (intermediateSymbols == null)    		
-    		intermediateSymbols = generateIntermediateSymbols();
+        // check if we've got the intermediate symbols already
+        if (intermediateSymbols == null) {
+            intermediateSymbols = generateIntermediateSymbols();
+        }
 
-    	// generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, encSymbolID, fecParams);
-    	
-    	// generate repair symbols
-    	final List<ByteBuffer> bufs = new ArrayList<>();
-    	int kPrime = SystematicIndices.ceil(K); 
-    	int isi = encSymbolID + (kPrime - K);
-    	
-    	for (int i = 0; i < numSymbols; i++, isi++) { 
+        // generate FEC Payload ID
+        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
 
-    		byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi), fecParams.symbolSize());
-    		
-    		// generate repair symbol // TODO should we store the repair symbols generated?
+        // generate repair symbols
+        final List<ByteBuffer> bufs = new ArrayList<>();
+        int kPrime = SystematicIndices.ceil(K);
+        int isi = esi + (kPrime - K);
+
+        for (int i = 0; i < numSymbols; i++, isi++) {
+
+            byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi),
+                fecParams.symbolSize());
+
+            // generate repair symbol // TODO should we store the repair symbols generated?
             EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(fpid, enc_data);
-            
+
             bufs.add(repairSymbol.transportData());
-    	}
-    	
-    	// return the repair packet
-    	return(new RepairPacket(fpid, ImmutableList.copy(bufs)));
+        }
+
+        // return the repair packet
+        return (new RepairPacket(fpid, ImmutableList.copy(bufs)));
     }
 
-    private final void checkESI(int esi) {
+    private void checkSourceSymbolESI(int esi) {
 
-        if (esi < 0 || esi >= K) throw new IllegalArgumentException("invalid encoding symbol identifier");
+        if (esi < 0 || esi >= K) {
+            throw new IllegalArgumentException("invalid encoding symbol ID");
+        }
     }
 
     // requires valid ESI
-    private final void checkNumSymbols(int esi, int numSymbols) {
+    private final void checkNumSourceSymbols(int esi, int numSymbols) {
 
-        if (numSymbols < 1 || numSymbols > K - esi) throw new IllegalArgumentException("invalid number of symbols");
+        if (numSymbols < 1 || numSymbols > K - esi) {
+            throw new IllegalArgumentException("invalid number of symbols");
+        }
     }
-    
+
+    private void checkRepairSymbolESI(int esi) {
+
+        if (esi < K || esi > ParameterChecker.maxEncodingSymbolID()) {
+            throw new IllegalArgumentException("invalid encoding symbol ID");
+        }
+    }
+
+    // requires valid ESI
+    private final void checkNumRepairSymbols(int esi, int numSymbols) {
+
+        if (numSymbols < 1 || numSymbols > (1 + ParameterChecker.maxEncodingSymbolID() - esi)) {
+            throw new IllegalArgumentException("invalid number of symbols");
+        }
+    }
+
     private byte[] generateIntermediateSymbols() {
 
-		 // source block's parameters
-		 int Ki = SystematicIndices.getKIndex(K);
-		 int S = SystematicIndices.S(Ki);
-		 int H = SystematicIndices.H(Ki);
-		 int L = K + S + H;
-		 int T = fecParams.symbolSize();
-		 
-		 // generate LxL Constraint  Matrix
-		 byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(K, T); // A
-		 
-		 // allocate and initiallize vector D
-		 byte[][] D = new byte[L][T];
-		 for(int row = S + H, index=0; row < K + S + H; row++, index += T)
-			 	D[row] = sourceSymbols[index].data();
-		 
-		 // solve system of equations
-		 byte[] C = null;
-		try {
-			C = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, K);
-		} catch (SingularMatrixException e) {
-			System.err.println("FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
-			e.printStackTrace();
-			System.exit(-1);
-		}
-		 
-		 return C;
-	 }
+        // source block's parameters
+        int Ki = SystematicIndices.getKIndex(K);
+        int S = SystematicIndices.S(Ki);
+        int H = SystematicIndices.H(Ki);
+        int L = K + S + H;
+        int T = fecParams.symbolSize();
+
+        // generate LxL Constraint Matrix
+        byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(K, T); // A
+
+        // allocate and initiallize vector D
+        byte[][] D = new byte[L][T];
+        for (int row = S + H, index = 0; row < K + S + H; row++, index += T)
+            D[row] = sourceSymbols[index].data();
+
+        // solve system of equations
+        byte[] C = null;
+        try {
+            C = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, K);
+        }
+        catch (SingularMatrixException e) {
+            System.err.println("FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        return C;
+    }
+
 
     private static abstract class AbstractEncodingPacket implements EncodingPacket {
 

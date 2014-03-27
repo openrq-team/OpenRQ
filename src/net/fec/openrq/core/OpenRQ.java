@@ -96,7 +96,7 @@ public final class OpenRQ {
     }
 
     /**
-     * @param dataLength
+     * @param dataLen
      * @param symbolSize
      * @param numSourceBlocks
      * @param numSubBlocks
@@ -104,14 +104,14 @@ public final class OpenRQ {
      * @return
      */
     public static ArrayDataDecoder newDecoder(
-        int dataLength,
+        int dataLen,
         int symbolSize,
         int numSourceBlocks,
         int numSubBlocks,
         int extraSymbols)
     {
 
-        final FECParameters fecParams = newParams(dataLength, symbolSize, numSourceBlocks, numSubBlocks);
+        final FECParameters fecParams = newParams(dataLen, symbolSize, numSourceBlocks, numSubBlocks);
         return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
     }
 

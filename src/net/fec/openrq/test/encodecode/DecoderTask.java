@@ -250,7 +250,9 @@ public final class DecoderTask implements Summarizable<StatsType> {
     private void readBytes(ByteBuffer buf) throws IOException {
 
         final int pos = buf.position();
-        readable.read(buf);
+        while (buf.hasRemaining()) {
+            readable.read(buf);
+        }
         buf.flip().position(pos);
     }
 

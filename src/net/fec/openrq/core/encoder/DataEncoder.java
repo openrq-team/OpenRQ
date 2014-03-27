@@ -64,11 +64,11 @@ public interface DataEncoder {
      * Note that the provided source block number must be non-negative and less than
      * {@linkplain #numberOfSourceBlocks() the number of source blocks}.
      * 
-     * @param sourceBlockNum
+     * @param sbn
      *            A source block number
      * @return an encoder object for a specific source block
      * @exception IllegalArgumentException
      *                If the provided source block number is invalid
      */
-    public SourceBlockEncoder encoderForSourceBlock(int sourceBlockNum);
+    public SourceBlockEncoder encoderForSourceBlock(int sbn);
 }

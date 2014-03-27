@@ -68,20 +68,20 @@ public final class ParameterChecker {
      * The returned value is equal to
      * <code>floor(dataLength / (56403 &times; {@linkplain #maxNumSourceBlocks() maxNumSrcBlocks}))</code>.
      * 
-     * @param dataLength
+     * @param dataLen
      *            The length of some data object in number of bytes
      * @return a lower bound for the size of a symbol in number of bytes
      * @exception IllegalArgumentException
      *                If the data length is lower than its minimum value or greater than its maximum value
      */
-    public static int symbolSizeLowerBound(long dataLength) {
+    public static int symbolSizeLowerBound(long dataLen) {
 
-        if (dataLength < minDataLength() || dataLength > maxDataLength()) {
+        if (dataLen < minDataLength() || dataLen > maxDataLength()) {
             throw new IllegalArgumentException();
         }
 
         // safe cast since dataLength is safely upper bounded
-        return (int)(dataLength / ((long)InternalConstants.K_MAX * maxNumSourceBlocks()));
+        return (int)(dataLen / ((long)InternalConstants.K_MAX * maxNumSourceBlocks()));
     }
 
     /**
@@ -89,19 +89,19 @@ public final class ParameterChecker {
      * <p>
      * The returned value is equal to <code>min(dataLength,  {@linkplain #maxSymbolSize() maxSymbolSize})</code>
      * 
-     * @param dataLength
+     * @param dataLen
      *            The length of some data object in number of bytes
      * @return an upper bound for the size of a symbol in number of bytes
      * @exception IllegalArgumentException
      *                If the data length is lower than its minimum value or greater than its maximum value
      */
-    public static int symbolSizeUpperBound(long dataLength) {
+    public static int symbolSizeUpperBound(long dataLen) {
 
-        if (dataLength < minDataLength() || dataLength > maxDataLength()) {
+        if (dataLen < minDataLength() || dataLen > maxDataLength()) {
             throw new IllegalArgumentException();
         }
 
-        return (int)Math.min(maxSymbolSize(), dataLength);
+        return (int)Math.min(maxSymbolSize(), dataLen);
     }
 
     // =========== number of source blocks - Z ========== //
@@ -143,15 +143,15 @@ public final class ParameterChecker {
     // =========== F, T, Z, N =========== //
 
     /**
-     * @param dataLength
+     * @param dataLen
      * @param symbolSize
      * @param numSourceBlocks
      * @param numSubBlocks
      * @return
      */
-    public static boolean areValidFECParameters(long dataLength, int symbolSize, int numSourceBlocks, int numSubBlocks) {
+    public static boolean areValidFECParameters(long dataLen, int symbolSize, int numSourceBlocks, int numSubBlocks) {
 
-        final long F = dataLength;
+        final long F = dataLen;
         final int T = symbolSize;
         final int Z = numSourceBlocks;
         final int N = numSubBlocks;
@@ -239,23 +239,23 @@ public final class ParameterChecker {
     // =========== SBN, ESI =========== //
 
     /**
-     * @param sourceBlockNum
-     * @param encSymbolID
+     * @param sbn
+     * @param esi
      * @param numSourceBlocks
      * @return
      * @exception IllegalArgumentException
      *                If {@code numSourceBlocks} is invalid
      */
-    public static boolean isValidFECPayloadID(int sourceBlockNum, int encSymbolID, int numSourceBlocks) {
+    public static boolean isValidFECPayloadID(int sbn, int esi, int numSourceBlocks) {
 
         if (numSourceBlocks < minSourceBlockNumber() || numSourceBlocks > maxSourceBlockNumber()) {
-            throw new IllegalArgumentException("invalid numSourceBlocks");
+            throw new IllegalArgumentException("invalid number of source blocks");
         }
 
-        return sourceBlockNum >= minSourceBlockNumber() &&
-               sourceBlockNum < numSourceBlocks &&
-               encSymbolID >= minEncodingSymbolID() &&
-               encSymbolID <= maxEncodingSymbolID();
+        return sbn >= minSourceBlockNumber() &&
+               sbn < numSourceBlocks &&
+               esi >= minEncodingSymbolID() &&
+               esi <= maxEncodingSymbolID();
     }
 
     // =========== number of source symbols - K =========== //

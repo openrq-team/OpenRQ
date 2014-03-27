@@ -140,10 +140,10 @@ public class ParameterIO {
 
     // =========== source block number - SBN ========== //
 
-    private static int unsignSourceBlockNumber(int sourceBlockNum) {
+    private static int unsignSourceBlockNumber(int sbn) {
 
         // 8-bit value
-        return UnsignedTypes.getUnsignedByte(sourceBlockNum);
+        return UnsignedTypes.getUnsignedByte(sbn);
     }
 
     // For FEC Payload ID.
@@ -163,10 +163,10 @@ public class ParameterIO {
 
     // =========== encoding symbol identifier - ESI ========== //
 
-    private static int unsignEncodingSymbolID(int encSymbolID) {
+    private static int unsignEncodingSymbolID(int esi) {
 
         // 24-bit value
-        return UnsignedTypes.getUnsignedBytes(encSymbolID, InternalConstants.NUM_BYTES_ESI);
+        return UnsignedTypes.getUnsignedBytes(esi, InternalConstants.NUM_BYTES_ESI);
     }
 
     /**
@@ -254,14 +254,14 @@ public class ParameterIO {
     // =========== FEC payload ID - SBN|ESI ========== //
 
     /**
-     * @param sourceBlockNum
-     * @param encSymbolID
+     * @param sbn
+     * @param esi
      * @return
      */
-    public static int buildFECpayloadID(int sourceBlockNum, int encSymbolID) {
+    public static int buildFECpayloadID(int sbn, int esi) {
 
-        final int usSBN = unsignSourceBlockNumber(sourceBlockNum);
-        final int usESI = unsignEncodingSymbolID(encSymbolID);
+        final int usSBN = unsignSourceBlockNumber(sbn);
+        final int usESI = unsignEncodingSymbolID(esi);
 
         return (usSBN << sourceBlockNumberShift()) | usESI;
     }

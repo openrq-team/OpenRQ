@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ public interface SourceBlockDecoder {
      * {@code K} (exclusive), where {@code K} is the total number of expected source symbols for the source block
      * currently being decoded.
      * 
-     * @param encSymbolID
+     * @param esi
      *            An encoding symbol identifier for a specific source symbol
      * @return {@code true} if, and only if, the source block currently being decoded contains the specified source
      *         symbol
@@ -59,17 +59,16 @@ public interface SourceBlockDecoder {
      *                If the provided encoding symbol identifier does not represent a valid source symbol
      * @see #numberOfSourceSymbols()
      */
-    public boolean containsSourceSymbol(int encSymbolID);
+    public boolean containsSourceSymbol(int esi);
 
     /**
      * Returns {@code true} if, and only if, the source block currently being decoded contains the repair symbol with
      * the provided encoding symbol identifier.
      * <p>
-     * Note that the encoding symbol identifier must be valid according to
-     * {@link ParameterChecker#isValidEncodingSymbolID(int)}, and must also be greater than or equal to {@code K}, where
-     * {@code K} is the number of source symbols from the source block currently being decoded.
+     * Note that the encoding symbol identifier must be greater than or equal to {@code K}, where {@code K} is the
+     * number of source symbols from the source block currently being decoded.
      * 
-     * @param encSymbolID
+     * @param esi
      *            An encoding symbol identifier for a specific repair symbol
      * @return {@code true} if, and only if, the source block currently being decoded contains the specified repair
      *         symbol
@@ -77,7 +76,7 @@ public interface SourceBlockDecoder {
      *                If the provided encoding symbol identifier does not represent a valid repair symbol
      * @see #numberOfSourceSymbols()
      */
-    public boolean containsRepairSymbol(int encSymbolID);
+    public boolean containsRepairSymbol(int esi);
 
     /**
      * Returns {@code true} if, and only if, the source block currently being decoded is fully decoded. A source block
@@ -98,32 +97,32 @@ public interface SourceBlockDecoder {
     public Set<Integer> missingSourceSymbols();
 
     /**
-     * @param encSymbolID
-     * @param sourceSymbol
+     * @param esi
+     * @param symbolData
      * @return
      */
-    public SourceBlockState putSourceSymbol(int encSymbolID, ByteBuffer sourceSymbol);
+    public SourceBlockState putSourceSymbol(int esi, ByteBuffer symbolData);
 
     /**
-     * @param encSymbolID
-     * @param sourceSymbol
-     * @param offset
+     * @param esi
+     * @param symbolData
+     * @param off
      * @return
      */
-    public SourceBlockState putSourceSymbol(int encSymbolID, byte[] sourceSymbol, int offset);
+    public SourceBlockState putSourceSymbol(int esi, byte[] symbolData, int off);
 
     /**
-     * @param encSymbolID
-     * @param repairSymbol
+     * @param esi
+     * @param symbolData
      * @return
      */
-    public SourceBlockState putRepairSymbol(int encSymbolID, ByteBuffer repairSymbol);
+    public SourceBlockState putRepairSymbol(int esi, ByteBuffer symbolData);
 
     /**
-     * @param encSymbolID
-     * @param repairSymbol
-     * @param offset
+     * @param esi
+     * @param symbolData
+     * @param off
      * @return
      */
-    public SourceBlockState putRepairSymbol(int encSymbolID, byte[] repairSymbol, int offset);
+    public SourceBlockState putRepairSymbol(int esi, byte[] symbolData, int off);
 }

@@ -1,12 +1,12 @@
-/* 
+/*
  * Copyright 2014 Jose Lopes
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,11 +66,14 @@ public interface DataDecoder {
     public boolean isDataDecoded();
 
     /**
-     * Returns a decoder object for a specific source block.
+     * Returns a decoder object for the source block with the provided source block number.
+     * <p>
+     * Note that the provided source block number must be non-negative and less than
+     * {@linkplain #numberOfSourceBlocks() the number of source blocks}.
      * 
-     * @param sourceBlockNum
+     * @param sbn
      *            A source block number
      * @return a decoder object for a specific source block
      */
-    public SourceBlockDecoder decoderForSourceBlock(int sourceBlockNum);
+    public SourceBlockDecoder decoderForSourceBlock(int sbn);
 }

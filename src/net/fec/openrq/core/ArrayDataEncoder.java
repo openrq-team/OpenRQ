@@ -119,13 +119,13 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public SourceBlockEncoder encoderForSourceBlock(int sourceBlockNum) {
+    public SourceBlockEncoder encoderForSourceBlock(int sbn) {
 
-        if (sourceBlockNum < 0 || sourceBlockNum >= srcBlockEncoders.length) {
+        if (sbn < 0 || sbn >= srcBlockEncoders.length) {
             throw new IllegalArgumentException("invalid source block number");
         }
 
-        return srcBlockEncoders[sourceBlockNum];
+        return srcBlockEncoders[sbn];
     }
 
     /**

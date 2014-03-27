@@ -417,11 +417,15 @@ public final class EncoderTask implements Summarizable<StatsType> {
         header.rewind();
 
         // send header (SBN, ESI) + NUM_SYMBOLS
-        writable.write(header);
+        while (header.hasRemaining()) {
+            writable.write(header);
+        }
         for (ByteBuffer symb : symbols) {
             // send symbol data
             symb.rewind();
-            writable.write(symb);
+            while (symb.hasRemaining()) {
+                writable.write(symb);
+            }
         }
     }
 
