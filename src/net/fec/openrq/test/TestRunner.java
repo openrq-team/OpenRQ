@@ -36,10 +36,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import net.fec.openrq.core.ArrayDataEncoder;
+import net.fec.openrq.core.FECParameters;
 import net.fec.openrq.core.OpenRQ;
 import net.fec.openrq.core.encoder.DataEncoder;
 import net.fec.openrq.core.encoder.DataEncoderBuilder;
+import net.fec.openrq.core.util.arithmetic.ExtraMath;
 import net.fec.openrq.test.encodecode.DecoderTask;
+import net.fec.openrq.test.encodecode.DecoderTask.DecodedDataChecker;
+import net.fec.openrq.test.encodecode.Defaults;
 import net.fec.openrq.test.encodecode.EncoderTask;
 import net.fec.openrq.test.encodecode.StatsType;
 import net.fec.openrq.test.util.summary.LongSummaryStatistics;
@@ -53,16 +57,14 @@ import net.fec.openrq.test.util.summary.Summaries;
 public final class TestRunner {
 
     private static final List<Integer> DATA_SIZES = Collections.unmodifiableList(Arrays.asList(
-        1, 3, 7, 9));
-    /*
-     * 10, 13, 17, 99,
-     * 100, 103, 107, 999,
-     * 1000, 1003, 1007, 9999,
-     * 10_000, 10_003, 10_007, 99_999,
-     * 100_000, 100_003, 100_007, 999_999,
-     * 1_000_000, 1_000_003, 1_000_007, 9_999_999,
-     * 10_000_000, 10_000_003, 10_000_007, 99_999_999));
-     */
+        1, 3, 7, 9,
+        10, 13, 17, 99,
+        100, 103, 107, 999,
+        1000, 1003, 1007, 9999,
+        10_000, 10_003, 10_007, 99_999,
+        100_000, 100_003, 100_007, 999_999,
+        1_000_000, 1_000_003, 1_000_007, 9_999_999,
+        10_000_000, 10_000_003, 10_000_007, 99_999_999));
 
     private static final boolean WARMUP_ENABLED = false;
     private static final int WARMUP_SIZE = 1237;
@@ -116,7 +118,14 @@ public final class TestRunner {
         public boolean checkData(byte[] data) {
 
             System.out.println("CHECKING DATA"); // DEBUG
-            return Arrays.equals(data, originalData);
+            final boolean result = Arrays.equals(data, originalData);
+
+            if (!result) { // DEBUG
+                System.out.println("Original data:" + Arrays.toString(originalData));
+                System.out.println("Decoded data:" + Arrays.toString(data));
+            }
+
+            return result;
         }
     }
 
@@ -159,6 +168,21 @@ public final class TestRunner {
         }
     }
 
+    private static void printFECParameters(FECParameters fecParams) {
+
+        System.out.printf("FEC Parameters:{ F = %d; T = %d; Z = %d; N = %d; KL = %d }%n",
+            fecParams.dataLength(),
+            fecParams.symbolSize(),
+            fecParams.numberOfSourceBlocks(),
+            fecParams.numberOfSubBlocks(),
+            ExtraMath.ceilDiv(fecParams.totalSymbols(), fecParams.numberOfSourceBlocks()));
+    }
+
+    private static void printMiscParameters(int extraSymbols, int maxSymbolsPerPacket) {
+
+        System.out.printf("Extra symbols = %d; Max symbols/packet = %d%n", extraSymbols, maxSymbolsPerPacket);
+    }
+
     public static void main(String[] args) throws InterruptedException, IOException {
 
         final ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -174,7 +198,6 @@ public final class TestRunner {
         for (int size : DATA_SIZES) {
             final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
             System.out.println();
-            System.out.println("Data size = " + size + " bytes (" + maxSymbolsPerPacket + " max symbols per packet):");
             runSequentialSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
         }
 
@@ -184,7 +207,6 @@ public final class TestRunner {
         for (int size : DATA_SIZES) {
             final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
             System.out.println();
-            System.out.println("Data size = " + size + " bytes (" + maxSymbolsPerPacket + " max symbols per packet):");
             runRandomSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
         }
 
@@ -194,7 +216,6 @@ public final class TestRunner {
         for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
             for (int size : DATA_SIZES) {
                 System.out.println();
-                System.out.println("Data size = " + size + " bytes (" + extraSymbols + " extra symbols):");
                 runSourcePlusRepairSymbolsTasks(executor, makeData(size), extraSymbols);
             }
         }
@@ -205,11 +226,10 @@ public final class TestRunner {
         for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
             for (int size : DATA_SIZES) {
                 System.out.println();
-                System.out.println("Data size = " + size + " bytes (" + extraSymbols + " extra symbols):");
                 runAnySymbolsTasks(executor, makeData(size), extraSymbols);
             }
         }
-        
+
         executor.shutdown();
         executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
@@ -221,12 +241,17 @@ public final class TestRunner {
         final Pipe pipe = Pipe.open();
         final int itersPerTask = 50;
 
-        final EncoderTask encTask = new EncoderTask.Builder(
-            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM)
+        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final DecodedDataChecker checker = new DecChecker(data);
+        if (PRINT_WARMUP_STATS) {
+            printFECParameters(encProv.newEncoder().fecParameters());
+            printMiscParameters(Defaults.EXTRA_SYMBOLS, Defaults.MAX_SYMBOLS_PER_PACKET);
+        }
+
+        final EncoderTask encTask = new EncoderTask.Builder(encProv, pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM)
             .numIterations(itersPerTask)
             .build();
-        final DecoderTask decTask = new DecoderTask.Builder(
-            new DecChecker(data), pipe.source())
+        final DecoderTask decTask = new DecoderTask.Builder(checker, pipe.source())
             .numIterations(itersPerTask)
             .build();
 
@@ -248,12 +273,16 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = new EncoderTask.Builder(
-            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_SYMBOLS_ONLY_SEQUENTIAL)
+        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final DecodedDataChecker checker = new DecChecker(data);
+
+        printFECParameters(encProv.newEncoder().fecParameters());
+        printMiscParameters(Defaults.EXTRA_SYMBOLS, maxSymbolsPerPacket);
+
+        final EncoderTask encTask = new EncoderTask.Builder(encProv, pipe.sink(), SOURCE_SYMBOLS_ONLY_SEQUENTIAL)
             .maxSymbolsPerPacket(maxSymbolsPerPacket)
             .build();
-        final DecoderTask decTask = new DecoderTask.Builder(
-            new DecChecker(data), pipe.source())
+        final DecoderTask decTask = new DecoderTask.Builder(checker, pipe.source())
             .build();
 
         runTasks(encTask, decTask, executor, true);
@@ -266,12 +295,16 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = new EncoderTask.Builder(
-            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_SYMBOLS_ONLY_RANDOM)
+        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final DecodedDataChecker checker = new DecChecker(data);
+
+        printFECParameters(encProv.newEncoder().fecParameters());
+        printMiscParameters(Defaults.EXTRA_SYMBOLS, maxSymbolsPerPacket);
+
+        final EncoderTask encTask = new EncoderTask.Builder(encProv, pipe.sink(), SOURCE_SYMBOLS_ONLY_RANDOM)
             .maxSymbolsPerPacket(maxSymbolsPerPacket)
             .build();
-        final DecoderTask decTask = new DecoderTask.Builder(
-            new DecChecker(data), pipe.source())
+        final DecoderTask decTask = new DecoderTask.Builder(checker, pipe.source())
             .build();
 
         runTasks(encTask, decTask, executor, true);
@@ -284,12 +317,16 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = new EncoderTask.Builder(
-            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM)
+        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final DecodedDataChecker checker = new DecChecker(data);
+
+        printFECParameters(encProv.newEncoder().fecParameters());
+        printMiscParameters(extraSymbols, Defaults.MAX_SYMBOLS_PER_PACKET);
+
+        final EncoderTask encTask = new EncoderTask.Builder(encProv, pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM)
             .extraSymbols(extraSymbols)
             .build();
-        final DecoderTask decTask = new DecoderTask.Builder(
-            new DecChecker(data), pipe.source())
+        final DecoderTask decTask = new DecoderTask.Builder(checker, pipe.source())
             .build();
 
         runTasks(encTask, decTask, executor, true);
@@ -302,12 +339,16 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncoderTask encTask = new EncoderTask.Builder(
-            new EncProvider(OpenRQ.newEncoderBuilder(data)), pipe.sink(), ANY_SYMBOL_RANDOM)
+        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final DecodedDataChecker checker = new DecChecker(data);
+
+        printFECParameters(encProv.newEncoder().fecParameters());
+        printMiscParameters(extraSymbols, Defaults.MAX_SYMBOLS_PER_PACKET);
+
+        final EncoderTask encTask = new EncoderTask.Builder(encProv, pipe.sink(), ANY_SYMBOL_RANDOM)
             .extraSymbols(extraSymbols)
             .build();
-        final DecoderTask decTask = new DecoderTask.Builder(
-            new DecChecker(data), pipe.source())
+        final DecoderTask decTask = new DecoderTask.Builder(checker, pipe.source())
             .build();
 
         runTasks(encTask, decTask, executor, true);

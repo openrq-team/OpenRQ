@@ -160,9 +160,9 @@ public final class DecoderTask implements Summarizable<StatsType> {
         final LongSummaryStatistics initTimeStats = new LongSummaryStatistics();
         final LongSummaryStatistics symbolTimeStats = new LongSummaryStatistics();
         final LongSummaryStatistics decTimeStats = new LongSummaryStatistics();
-        final LongSummaryStatistics decFailTimeStats = new LongSummaryStatistics();
         final LongSummaryStatistics totalDecsStats = new LongSummaryStatistics();
         final LongSummaryStatistics numDecFailsStats = new LongSummaryStatistics(totalDecsStats);
+        final LongSummaryStatistics decFailTimeStats = new LongSummaryStatistics();
 
         final ByteBuffer dataHeaderBuf = DataHeader.allocateNewBuffer();
         final ByteBuffer symbolHeaderBuf = SymbolHeader.allocateNewBuffer();
@@ -186,7 +186,8 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
                 for (int i = 0; i < totalSymbols;) {
                     symbolHeaderBuf.clear();
-                    // System.out.println("---- Reading " + symbolHeaderBuf.remaining() + " packet header bytes..."); // DEBUG
+                    // System.out.println("---- Reading " + symbolHeaderBuf.remaining() + " packet header bytes..."); //
+                    // DEBUG
                     readBytes(symbolHeaderBuf);
                     final SymbolHeader symbolHeader = SymbolHeader.parseSymbolHeader(symbolHeaderBuf, fecParams, sbn);
                     final int firstESI = symbolHeader.getFECPayloadID().encodingSymbolID();
@@ -207,7 +208,7 @@ public final class DecoderTask implements Summarizable<StatsType> {
                             totalDecsStats,
                             numDecFailsStats);
                     }
-                    
+
                     i += numSymbolsInPacket;
                 }
             }
@@ -219,8 +220,10 @@ public final class DecoderTask implements Summarizable<StatsType> {
         map.put(StatsType.DECODER_INIT_TIME, initTimeStats);
         map.put(StatsType.SYMBOL_INPUT_TIME, symbolTimeStats);
         map.put(StatsType.DECODING_TIME, decTimeStats);
-        map.put(StatsType.DECODING_FAILURE_TIME, decFailTimeStats);
         map.put(StatsType.NUM_DECODING_FAILURES, numDecFailsStats);
+        if (numDecFailsStats.getCount() > 0) {
+            map.put(StatsType.DECODING_FAILURE_TIME, decFailTimeStats);
+        }
         return map;
     }
 

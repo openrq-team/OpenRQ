@@ -133,7 +133,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         final List<ByteBuffer> bufs = new ArrayList<>(numSymbols);
         bufs.add(firstSymbol.transportData());
-        for (int n = 1, ii = esi; n < numSymbols; n++, ii++) {
+        for (int n = 1, ii = esi + 1; n < numSymbols; n++, ii++) {
             bufs.add(sourceSymbols[ii].transportData());
         }
 
