@@ -115,7 +115,7 @@ public final class TestRunner {
         @Override
         public boolean checkData(byte[] data) {
 
-            System.out.println("CHECKING DATA");
+            System.out.println("CHECKING DATA"); // DEBUG
             return Arrays.equals(data, originalData);
         }
     }
@@ -209,6 +209,9 @@ public final class TestRunner {
                 runAnySymbolsTasks(executor, makeData(size), extraSymbols);
             }
         }
+        
+        executor.shutdown();
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 
     // ===== WARM-UP ===== //
