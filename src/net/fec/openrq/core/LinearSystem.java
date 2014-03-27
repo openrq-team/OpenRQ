@@ -142,17 +142,17 @@ final class LinearSystem {
 	/**
 	 * Generates the MT matrix that is used to generate G_HDPC submatrix.
 	 * @param H
-	 * @param K
+	 * @param Kprime
 	 * @param S
 	 * @return MT
 	 */
-	private static byte[][] generateMT(int H, int K, int S)
+	private static byte[][] generateMT(int H, int Kprime, int S)
 	{
-		byte[][] MT = new byte[H][K+S];
+		byte[][] MT = new byte[H][Kprime+S];
 
 		for(int row = 0; row < H; row++)
 		{
-			for(int col = 0; col < K + S - 1; col++)
+			for(int col = 0; col < Kprime + S - 1; col++)
 			{
 				if(row != (int)(Rand.rand(col + 1, 6, H)) && row != (((int)(Rand.rand(col + 1, 6, H)) + (int)(Rand.rand(col + 1, 7, H - 1)) + 1) % H))
 					continue;
@@ -162,24 +162,24 @@ final class LinearSystem {
 		}
 		
 		for(int row = 0; row < H; row++)
-			MT[row][K + S - 1] = OctectOps.getExp(row);
+			MT[row][Kprime + S - 1] = OctectOps.getExp(row);
 		
 		return(MT);
 	}
 	
 	/**
 	 * Generates the GAMMA matrix that is used to generate G_HDPC submatrix.
-	 * @param K
+	 * @param Kprime
 	 * @param S
 	 * @return GAMMA
 	 */
-	private static byte[][] generateGAMMA(int K, int S)
+	private static byte[][] generateGAMMA(int Kprime, int S)
 	{	
-		byte[][] GAMMA = new byte[K + S][K + S];
+		byte[][] GAMMA = new byte[Kprime + S][Kprime + S];
 
-		for(int row = 0; row < K + S; row++)
+		for(int row = 0; row < Kprime + S; row++)
 		{
-			for(int col = 0; col<K+S; col++)
+			for(int col = 0; col<Kprime+S; col++)
 			{
 				if(row >= col)
 					GAMMA[row][col] = OctectOps.getExp((row - col) % 256);
@@ -197,15 +197,15 @@ final class LinearSystem {
 	 * @param S
 	 * @param H
 	 * @param L
-	 * @param K
+	 * @param Kprime
 	 */
-	private static void initializeG_ENC(byte[][] constraint_matrix, int S, int H, int L, int K)
+	private static void initializeG_ENC(byte[][] constraint_matrix, int S, int H, int L, int Kprime)
 	{
 		for(int row = S + H; row < L; row++)
 		{
-			Tuple tuple = new Tuple(K, row - S - H);
+			Tuple tuple = new Tuple(Kprime, row - S - H);
 
-			Set<Integer> indexes = encIndexes(K, tuple);
+			Set<Integer> indexes = encIndexes(Kprime, tuple);
 
 			for(Integer j : indexes)
 			{
@@ -216,18 +216,18 @@ final class LinearSystem {
 	
 	/**
 	 * Generates the constraint matrix.
-	 * @param K
+	 * @param Kprime
 	 * @param T
 	 * @return
 	 */	
-	public static byte[][] generateConstraintMatrix(int K, int T)
+	public static byte[][] generateConstraintMatrix(int Kprime, int T)
 	{
 		// calculate necessary parameters
-		int Ki = SystematicIndices.getKIndex(K);
+		int Ki = SystematicIndices.getKIndex(Kprime);
 		int S = SystematicIndices.S(Ki);
 		int H = SystematicIndices.H(Ki);
 		int W = SystematicIndices.W(Ki);
-		int L = K + S + H;
+		int L = Kprime + S + H;
 		int P = L - W;
 		int U = P - H;
 		int B = W - S;
@@ -258,10 +258,10 @@ final class LinearSystem {
 		// initialize G_HDPC
 		
 		// MT
-		byte[][] MT = generateMT(H, K, S);
+		byte[][] MT = generateMT(H, Kprime, S);
 
 		// GAMMA
-		byte[][] GAMMA = generateGAMMA(K, S);
+		byte[][] GAMMA = generateGAMMA(Kprime, S);
 
 		// G_HDPC = MT * GAMMA
 		byte[][] G_HDPC = Utilities.multiplyMatrices(MT, GAMMA);
@@ -272,7 +272,7 @@ final class LinearSystem {
 				constraint_matrix[row][col] = G_HDPC[row-S][col];
 
 		// initialize G_ENC
-		initializeG_ENC(constraint_matrix, S, H, L, K);
+		initializeG_ENC(constraint_matrix, S, H, L, Kprime);
 		
 		// return the constraint matrix
 		return constraint_matrix;
@@ -281,21 +281,21 @@ final class LinearSystem {
 	/**
 	  * Returns the indexes of the intermediate symbols that should be XORed to encode
 	  *  the symbol for the given tuple.
-	  * @param K
+	  * @param Kprime
 	  * @param tuple
 	  * @return Set of indexes.
 	  */
-	 public static Set<Integer> encIndexes(int K, Tuple tuple)
+	 public static Set<Integer> encIndexes(int Kprime, Tuple tuple)
 	 {
 		 // allocate memory for the indexes
 		 Set<Integer> indexes = new TreeSet<Integer>();
 
 		 // parameters
-		 int Ki = SystematicIndices.getKIndex(K);
+		 int Ki = SystematicIndices.getKIndex(Kprime);
 		 int S = SystematicIndices.S(Ki);
 		 int H = SystematicIndices.H(Ki);
 		 int W = SystematicIndices.W(Ki);
-		 long L = K + S + H;
+		 long L = Kprime + S + H;
 		 long P = L - W;
 		 long P1 = Utilities.ceilPrime(P);
 
@@ -340,19 +340,19 @@ final class LinearSystem {
 	 
 	 /**
 	  * Encodes a source symbol.
-	  * @param K
+	  * @param Kprime
 	  * @param C
 	  * @param tuple
 	  * @return
 	  */
-	 public static byte[] enc(int K, byte[] C, Tuple tuple, int T)
+	 public static byte[] enc(int Kprime, byte[] C, Tuple tuple, int T)
 	 {
 		 // necessary parameters
-		 int Ki  = SystematicIndices.getKIndex(K);
+		 int Ki  = SystematicIndices.getKIndex(Kprime);
 		 int S   = SystematicIndices.S(Ki);
 		 int H   = SystematicIndices.H(Ki);
 		 int W   = SystematicIndices.W(Ki);
-		 long L  = K + S + H;
+		 long L  = Kprime + S + H;
 		 long P  = L - W;
 		 int P1  = (int)Utilities.ceilPrime(P);
 		 long d  = tuple.getD();
@@ -366,7 +366,7 @@ final class LinearSystem {
 		 byte[] result = Arrays.copyOfRange(C, (int)(b*T), (int)((b+1)*T));
 
 		 /*
-		  * encoding -- refer to section 5.3.3.3 of RFC 6330
+		  * encoding -- refer to section 5.3.5.3 of RFC 6330
 		  */
 		 
 		 for(long j = 0; j < d; j++)
@@ -397,18 +397,18 @@ final class LinearSystem {
 		 * @param A
 		 * @param D
 		 * @param symbol_size
-		 * @param K
+		 * @param Kprime
 		 * @return
 		 * @throws SingularMatrixException
 		 */
-		 public static byte[] PInactivationDecoding(byte[][] A, byte[][] D, int symbol_size, int K) throws SingularMatrixException {
+		 public static byte[] PInactivationDecoding(byte[][] A, byte[][] D, int symbol_size, int Kprime) throws SingularMatrixException {
 
 			 // decoding parameters
-	         int Ki = SystematicIndices.getKIndex(K);
+	         int Ki = SystematicIndices.getKIndex(Kprime);
 	         int S = SystematicIndices.S(Ki);
 	         int H = SystematicIndices.H(Ki);
 	         int W = SystematicIndices.W(Ki);
-	         int L = K + S + H;
+	         int L = Kprime + S + H;
 	         int P = L - W;
 	         int M = A.length;
 	         

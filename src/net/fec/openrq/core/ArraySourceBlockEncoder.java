@@ -80,6 +80,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     private final FECParameters fecParams;
     private final int sbn;
     private final int K;
+    private final int Kprime;
 
 
     private ArraySourceBlockEncoder(
@@ -94,6 +95,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         this.fecParams = fecParams;
         this.sbn = sbn;
         this.K = K;
+        this.Kprime = SystematicIndices.ceil(K);
     }
 
     @Override
@@ -149,10 +151,9 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         }
 
         // generate repair symbol
-        int kPrime = SystematicIndices.ceil(K);
-        int isi = esi + (kPrime - K);
+        int isi = esi + (Kprime - K);
 
-        byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi), fecParams.symbolSize());
+        byte[] enc_data = LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi), fecParams.symbolSize());
 
         // generate FEC Payload ID
         FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
@@ -181,12 +182,11 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // generate repair symbols
         final List<ByteBuffer> bufs = new ArrayList<>();
-        int kPrime = SystematicIndices.ceil(K);
-        int isi = esi + (kPrime - K);
+        int isi = esi + (Kprime - K);
 
         for (int i = 0; i < numSymbols; i++, isi++) {
 
-            byte[] enc_data = LinearSystem.enc(kPrime, intermediateSymbols, new Tuple(kPrime, isi),
+            byte[] enc_data = LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi),
                 fecParams.symbolSize());
 
             // generate repair symbol // TODO should we store the repair symbols generated?
@@ -232,16 +232,16 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     private byte[] generateIntermediateSymbols() {
 
         // source block's parameters
-        int Ki = SystematicIndices.getKIndex(K);
+        int Ki = SystematicIndices.getKIndex(Kprime);
         int S = SystematicIndices.S(Ki);
         int H = SystematicIndices.H(Ki);
-        int L = K + S + H;
+        int L = Kprime + S + H;
         int T = fecParams.symbolSize();
 
         // generate LxL Constraint Matrix
-        byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(K, T); // A
+        byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(Kprime, T); // A
 
-        // allocate and initiallize vector D
+        // allocate and initialize vector D
         byte[][] D = new byte[L][T];
         for (int row = S + H, index = 0; row < K + S + H; row++, index++)
             D[row] = sourceSymbols[index].data();
@@ -249,12 +249,11 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         // solve system of equations
         byte[] C = null;
         try {
-            C = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, K);
+            C = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
         }
         catch (SingularMatrixException e) {
-            System.err.println("FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
-            e.printStackTrace();
-            System.exit(-1);
+            throw new RuntimeException(
+                "FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
         }
 
         return C;

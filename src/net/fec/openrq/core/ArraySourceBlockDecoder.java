@@ -63,6 +63,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private final FECParameters fecParams;
     private final int sbn;
     private final int K;
+    private final int Kprime;
     private final int symbolOverhead;
 
     /*
@@ -90,6 +91,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         this.fecParams = fecParams;
         this.sbn = sbn;
         this.K = K;
+        this.Kprime = SystematicIndices.ceil(K);
         this.symbolOverhead = extraSymbols;
 
         this.repairSymbols = new HashSet<EncodingSymbol>();
@@ -327,15 +329,14 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private final byte[] generateIntermediateSymbols() {
 
         // constraint matrix parameters
-        int kPrime = SystematicIndices.ceil(K);
-        int Ki = SystematicIndices.getKIndex(K);
+        int Ki = SystematicIndices.getKIndex(Kprime);
         int S = SystematicIndices.S(Ki);
         int H = SystematicIndices.H(Ki);
-        int L = kPrime + S + H;
+        int L = Kprime + S + H;
         int T = fecParams.symbolSize();
 
         // number of extra repair symbols to be used for the decoding process
-        int overhead = repairSymbols.size() - (receivedSourceSymbols.size() - receivedSourceSymbols.cardinality());
+        int overhead = repairSymbols.size() - (K - receivedSourceSymbols.cardinality());
 
         // number of rows in the decoding matrix
         int M = L + overhead;
@@ -344,7 +345,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         byte[][] constraint_matrix = new byte[M][];
 
         // generate the original constraint matrix
-        byte[][] lConstraint = LinearSystem.generateConstraintMatrix(kPrime, T);
+        byte[][] lConstraint = LinearSystem.generateConstraintMatrix(Kprime, T);
 
         // copy to our decoding matrix
         for (int row = 0; row < L; row++)
@@ -354,8 +355,8 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         byte[][] D = new byte[M][T];
 
         // populate D with the received source symbols
-        for (int index = receivedSourceSymbols.nextSetBit(0); index != -1; receivedSourceSymbols.nextSetBit(index))
-            data.getBytes(index, D[S + H + index]);
+        for (int idx = receivedSourceSymbols.nextSetBit(0); idx != -1; idx = receivedSourceSymbols.nextSetBit(idx))
+            data.getBytes(idx * T, D[S + H + idx]);
 
         /*
          * for every repair symbol received
@@ -372,7 +373,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             int row = S + H + missing_ESI;
 
             // replace line S + H + missing_ESI with the line for encIndexes
-            Set<Integer> indexes = LinearSystem.encIndexes(kPrime, new Tuple(kPrime, repair.getISI(K)));
+            Set<Integer> indexes = LinearSystem.encIndexes(Kprime, new Tuple(Kprime, repair.getISI(K)));
 
             byte[] newLine = new byte[L];
 
@@ -392,9 +393,9 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             EncodingSymbol repair = repair_symbol.next();
 
             // generate the overhead lines
-            Tuple tuple = new Tuple(K, repair.getISI(K));
+            Tuple tuple = new Tuple(Kprime, repair.getISI(K));
 
-            Set<Integer> indexes = LinearSystem.encIndexes(K, tuple);
+            Set<Integer> indexes = LinearSystem.encIndexes(Kprime, tuple);
 
             byte[] newLine = new byte[L];
 
@@ -415,7 +416,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         byte[] intermediate_symbols = null;
 
         try {
-            intermediate_symbols = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, kPrime);
+            intermediate_symbols = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
         }
         catch (SingularMatrixException e) {
 

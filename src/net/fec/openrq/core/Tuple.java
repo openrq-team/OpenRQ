@@ -24,13 +24,13 @@ class Tuple{
 
 	private long d,a,b,d1,a1,b1;
 
-	public Tuple(int K, long X){
+	public Tuple(int Kprime, long X){
 
-		int Ki = SystematicIndices.getKIndex(K);
+		int Ki = SystematicIndices.getKIndex(Kprime);
 		int S = SystematicIndices.S(Ki);
 		int H = SystematicIndices.H(Ki);
 		int W = SystematicIndices.W(Ki);
-		int L = K + S + H;
+		int L = Kprime + S + H;
 		int J = SystematicIndices.J(Ki);
 		int P = L - W;
 		long P1 = Utilities.ceilPrime(P);
