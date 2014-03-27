@@ -16,6 +16,8 @@
 package net.fec.openrq.test.encodecode;
 
 
+import java.util.concurrent.TimeUnit;
+
 import net.fec.openrq.test.util.StringConverter;
 import net.fec.openrq.test.util.summary.LongSummaryStatistics;
 
@@ -32,7 +34,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         public String toString(LongSummaryStatistics stats) {
 
             return String.format("Encoder initialization time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
+                t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     },
     SYMBOL_ENCODING_TIME {
@@ -41,7 +43,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         public String toString(LongSummaryStatistics stats) {
 
             return String.format("Symbol encoding time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
+                t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     },
     DECODER_INIT_TIME {
@@ -50,7 +52,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         public String toString(LongSummaryStatistics stats) {
 
             return String.format("Decoder initialization time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
+                t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     },
     SYMBOL_INPUT_TIME {
@@ -59,7 +61,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         public String toString(LongSummaryStatistics stats) {
 
             return String.format("Symbol input time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
+                t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     },
     DECODING_TIME {
@@ -68,7 +70,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         public String toString(LongSummaryStatistics stats) {
 
             return String.format("Decoding time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
+                t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     },
     DECODING_FAILURE_TIME {
@@ -77,7 +79,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         public String toString(LongSummaryStatistics stats) {
 
             return String.format("Decoding failure time:{min=%d, average=%03f, max=%d}",
-                stats.getMin(), stats.getAverage(), stats.getMax());
+                t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     },
     NUM_DECODING_FAILURES {
@@ -88,12 +90,25 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
             final long numFailures = stats.getCount();
             if (stats.hasNext()) {
                 final long totalDecodings = stats.getNext().getCount();
-                return String.format("Number of decoding failures:{%d (%05f %%)}",
-                    numFailures, ((double)numFailures / totalDecodings));
+                return String.format("Number of decoding failures:{%d (%05f %% of %d total decodings)}",
+                    numFailures, ((double)numFailures / totalDecodings), totalDecodings);
             }
             else {
                 return String.format("Number of decoding failures:{%d}", numFailures);
             }
         }
     };
+
+    private static final TimeUnit STATS_UNIT = TimeUnit.MICROSECONDS;
+
+
+    private static long t(long value) {
+
+        return STATS_UNIT.convert(value, TimeUnit.NANOSECONDS);
+    }
+
+    private static double t(double value) {
+
+        return value / STATS_UNIT.toNanos(1L);
+    }
 }

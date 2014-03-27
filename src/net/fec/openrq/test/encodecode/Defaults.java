@@ -15,17 +15,12 @@
  */
 package net.fec.openrq.test.encodecode;
 
-
-import java.util.concurrent.TimeUnit;
-
-
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class Defaults {
 
-    public static final TimeUnit STATS_UNIT = TimeUnit.MILLISECONDS;
     public static final int EXTRA_SYMBOLS = 0;
     public static final int MAX_SYMBOLS_PER_PACKET = 1;
     public static final int NUM_ITERATIONS = 10_000;

@@ -284,9 +284,6 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private void checkSymbolData(ByteBuffer buf) {
 
         if (buf.remaining() < fecParams.symbolSize()) {
-            if (buf.hasArray()) {
-                System.err.println("pos = " + (buf.position() + buf.arrayOffset()) + Arrays.toString(buf.array()));
-            }
             throw new BufferUnderflowException();
         }
     }

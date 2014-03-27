@@ -46,7 +46,7 @@ final class PaddedByteArray {
     private final int arrayOff;
     private final int arrayLen;
 
-    // paddedLength >= length ALWAYS
+    // paddedLength >= arrayLen ALWAYS
     private final int paddedLen;
     private final byte[] padding;
 

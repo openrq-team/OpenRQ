@@ -80,15 +80,17 @@ public final class ArrayDataDecoder implements DataDecoder {
          * which may also contain extra padding.
          */
 
+        final int T = fecParams.symbolSize();
         // source block number (index)
         int sbn;
+        int off;
 
-        for (sbn = 0; sbn < ZL; sbn++) { // first ZL
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, sbn, KL, extraSymbols);
+        for (sbn = 0, off = 0; sbn < ZL; sbn++, off += KL * T) { // first ZL
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, off, fecParams, sbn, KL, extraSymbols);
         }
 
-        for (; sbn < Z; sbn++) {// last ZS
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, 0, fecParams, sbn, KS, extraSymbols);
+        for (; sbn < Z; sbn++, off += KS * T) {// last ZS
+            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(array, off, fecParams, sbn, KS, extraSymbols);
         }
 
         return srcBlockDecoders;

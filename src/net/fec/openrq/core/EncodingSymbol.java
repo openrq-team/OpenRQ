@@ -121,7 +121,15 @@ abstract class EncodingSymbol {
 
         private static ByteBuffer prepareTransportBuffer(PaddedByteArray data) {
 
-            return ByteBuffer.wrap(data.array(), data.arrayOffset(), data.paddinglessLength());
+            if (data.paddinglessLength() == data.length()) {
+                // need to return a slice of the wrapped buffer,
+                // otherwise the buffer position will be equal to data.arrayOffset()...
+                return ByteBuffer.wrap(data.array(), data.arrayOffset(), data.length()).slice();
+            }
+            else {
+                final byte[] paddedCopy = data.getBytes(new byte[data.length()]);
+                return ByteBuffer.wrap(paddedCopy);
+            }
         }
 
         @Override
@@ -135,7 +143,6 @@ abstract class EncodingSymbol {
 
             return transportBuffer.asReadOnlyBuffer();
         }
-
     }
 
     private static final class RepairSymbol extends EncodingSymbol {

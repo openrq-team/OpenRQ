@@ -80,15 +80,17 @@ public final class ArrayDataEncoder implements DataEncoder {
          * which may also contain extra padding.
          */
 
+        final int T = fecParams.symbolSize();
         // source block number (index)
         int sbn;
+        int off;
 
-        for (sbn = 0; sbn < ZL; sbn++) { // first ZL
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, sbn, KL);
+        for (sbn = 0, off = offset; sbn < ZL; sbn++, off += KL * T) { // first ZL
+            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, off, fecParams, sbn, KL);
         }
 
-        for (; sbn < Z; sbn++) {// last ZS
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, offset, fecParams, sbn, KS);
+        for (; sbn < Z; sbn++, off += KS * T) {// last ZS
+            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(array, off, fecParams, sbn, KS);
         }
 
         return srcBlockEncoders;

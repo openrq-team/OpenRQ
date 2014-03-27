@@ -20,8 +20,6 @@ package net.fec.openrq.core.decoder;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
-import net.fec.openrq.core.parameters.ParameterChecker;
-
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;

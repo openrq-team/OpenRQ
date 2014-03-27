@@ -22,7 +22,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.core.ArrayDataDecoder;
 import net.fec.openrq.core.FECParameters;
@@ -58,7 +57,6 @@ public final class DecoderTask implements Summarizable<StatsType> {
             checkReadable(readable);
             this.dataChecker = null;
             this.readable = readable;
-            defStatsUnit();
             defNumIterations();
         }
 
@@ -68,26 +66,12 @@ public final class DecoderTask implements Summarizable<StatsType> {
             checkReadable(readable);
             this.dataChecker = dataChecker;
             this.readable = readable;
-            defStatsUnit();
             defNumIterations();
         }
 
 
-        private TimeUnit statsUnit;
         private int numIters;
 
-
-        public Builder statsUnit(TimeUnit unit) {
-
-            this.statsUnit = unit;
-            return this;
-        }
-
-        public Builder defStatsUnit() {
-
-            this.statsUnit = Defaults.STATS_UNIT;
-            return this;
-        }
 
         public Builder numIterations(int iters) {
 
@@ -103,44 +87,39 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
         public DecoderTask build() {
 
-            return new DecoderTask(dataChecker, readable, statsUnit, numIters);
+            return new DecoderTask(dataChecker, readable, numIters);
         }
     }
 
 
     /**
      * @param readable
-     * @param statsUnit
      * @param numIterations
      * @return
      */
-    public static DecoderTask newDecoderTask(ReadableByteChannel readable, TimeUnit statsUnit, int numIterations) {
+    public static DecoderTask newDecoderTask(ReadableByteChannel readable, int numIterations) {
 
         checkReadable(readable);
-        checkStatsUnit(statsUnit);
         checkNumIterations(numIterations);
-        return new DecoderTask(null, readable, statsUnit, numIterations);
+        return new DecoderTask(null, readable, numIterations);
     }
 
     /**
      * @param dataChecker
      * @param readable
-     * @param statsUnit
      * @param numIterations
      * @return
      */
     public static DecoderTask newDecoderTask(
         DecodedDataChecker dataChecker,
         ReadableByteChannel readable,
-        TimeUnit statsUnit,
         int numIterations)
     {
 
         checkDataChecker(dataChecker);
         checkReadable(readable);
-        checkStatsUnit(statsUnit);
         checkNumIterations(numIterations);
-        return new DecoderTask(dataChecker, readable, statsUnit, numIterations);
+        return new DecoderTask(dataChecker, readable, numIterations);
     }
 
     private static void checkDataChecker(DecodedDataChecker dataChecker) {
@@ -153,11 +132,6 @@ public final class DecoderTask implements Summarizable<StatsType> {
         Objects.requireNonNull(readable, "null readable");
     }
 
-    private static void checkStatsUnit(TimeUnit statsUnit) {
-
-        Objects.requireNonNull(statsUnit, "null stats unit");
-    }
-
     private static void checkNumIterations(int numIterations) {
 
         if (numIterations < 1) throw new IllegalArgumentException("number of iterations must be positive");
@@ -166,20 +140,17 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
     private final DecodedDataChecker dataChecker;
     private final ReadableByteChannel readable;
-    private final TimeUnit statsUnit;
     private final int numIterations;
 
 
     private DecoderTask(
         DecodedDataChecker dataChecker,
         ReadableByteChannel readable,
-        TimeUnit statsUnit,
         int numIterations)
     {
 
         this.dataChecker = dataChecker;
         this.readable = readable;
-        this.statsUnit = statsUnit;
         this.numIterations = numIterations;
     }
 
@@ -249,6 +220,8 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
     private void readBytes(ByteBuffer buf) throws IOException {
 
+        // System.out.println("Reading " + buf.remaining() + " bytes..."); // DEBUG
+
         final int pos = buf.position();
         while (buf.hasRemaining()) {
             readable.read(buf);
@@ -264,7 +237,7 @@ public final class DecoderTask implements Summarizable<StatsType> {
         final long startNanos = System.nanoTime();
         final ArrayDataDecoder dataDec = OpenRQ.newDecoder(fecParams, extraSymbols);
         final long endNanos = System.nanoTime();
-        initTimeStats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+        initTimeStats.accept(endNanos - startNanos);
 
         return dataDec;
     }
@@ -299,19 +272,21 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
         switch (state) {
             case DECODED:
-                decTimeStats.accept(statsUnit.convert(nanos, TimeUnit.NANOSECONDS));
+                symbolTimeStats.accept(nanos);
+                decTimeStats.accept(nanos);
                 totalDecsStats.accept(1);
             break;
 
             case DECODING_FAILURE:
-                decTimeStats.accept(statsUnit.convert(nanos, TimeUnit.NANOSECONDS));
+                symbolTimeStats.accept(nanos);
+                decTimeStats.accept(nanos);
                 totalDecsStats.accept(1);
-                decFailTimeStats.accept(statsUnit.convert(nanos, TimeUnit.NANOSECONDS));
+                decFailTimeStats.accept(nanos);
                 numDecFailsStats.accept(1);
             break;
 
             case INCOMPLETE:
-                symbolTimeStats.accept(statsUnit.convert(nanos, TimeUnit.NANOSECONDS));
+                symbolTimeStats.accept(nanos);
             break;
 
             default:

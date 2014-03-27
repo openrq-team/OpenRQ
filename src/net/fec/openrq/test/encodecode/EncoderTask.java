@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.core.encoder.DataEncoder;
 import net.fec.openrq.core.encoder.EncodingPacket;
@@ -64,7 +63,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         private final WritableByteChannel writable;
         private final Type type;
 
-        private TimeUnit statsUnit;
         private int extraSymbols;
         private int maxSymbolsPerPacket;
         private int numIterations;
@@ -80,23 +78,9 @@ public final class EncoderTask implements Summarizable<StatsType> {
             this.writable = writable;
             this.type = type;
 
-            defStatsUnit();
             defExtraSymbols();
             defMaxSymbolsPerPacket();
             defNumIterations();
-        }
-
-        public Builder statsUnit(TimeUnit unit) {
-
-            checkStatsUnit(unit);
-            this.statsUnit = unit;
-            return this;
-        }
-
-        public Builder defStatsUnit() {
-
-            this.statsUnit = Defaults.STATS_UNIT;
-            return this;
         }
 
         public Builder extraSymbols(int extra) {
@@ -144,7 +128,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
                 encProvider,
                 writable,
                 type,
-                statsUnit,
                 extraSymbols,
                 maxSymbolsPerPacket,
                 numIterations);
@@ -156,7 +139,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
      * @param encProvider
      * @param writable
      * @param type
-     * @param statsUnit
      * @param extraSymbols
      * @param maxSymbolsPerPacket
      * @param numIterations
@@ -166,7 +148,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         DataEncoderProvider encProvider,
         WritableByteChannel writable,
         Type type,
-        TimeUnit statsUnit,
         int extraSymbols,
         int maxSymbolsPerPacket,
         int numIterations)
@@ -175,7 +156,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         checkProvider(encProvider);
         checkWritable(writable);
         checkType(type);
-        checkStatsUnit(statsUnit);
         checkExtraSymbols(extraSymbols, type);
         checkMaxSymbolsPerPacket(maxSymbolsPerPacket, type);
         checkNumIterations(numIterations);
@@ -184,7 +164,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
             encProvider,
             writable,
             type,
-            statsUnit,
             extraSymbols,
             maxSymbolsPerPacket,
             numIterations);
@@ -204,11 +183,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
     private static void checkType(Type type) {
 
         Objects.requireNonNull(type, "null type");
-    }
-
-    private static void checkStatsUnit(TimeUnit statsUnit) {
-
-        Objects.requireNonNull(statsUnit, "null stats unit");
     }
 
     // requires non-null type
@@ -258,7 +232,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
     private final WritableByteChannel writable;
     private final Type type;
 
-    private final TimeUnit statsUnit;
     private final int extraSymbols;
     private final int maxSymbolsPerPacket;
     private final int numIterations;
@@ -268,7 +241,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         DataEncoderProvider encProvider,
         WritableByteChannel writable,
         Type type,
-        TimeUnit statsUnit,
         int extraSymbols,
         int maxSymbolsPerPacket,
         int numIterations) {
@@ -277,7 +249,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         this.writable = writable;
         this.type = type;
 
-        this.statsUnit = statsUnit;
         this.extraSymbols = extraSymbols;
         this.maxSymbolsPerPacket = maxSymbolsPerPacket;
         this.numIterations = numIterations;
@@ -391,7 +362,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
         final long startNanos = System.nanoTime();
         final DataEncoder dataEnc = encProvider.newEncoder();
         final long endNanos = System.nanoTime();
-        initStats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+        initStats.accept(endNanos - startNanos);
 
         return dataEnc;
     }
@@ -403,8 +374,12 @@ public final class EncoderTask implements Summarizable<StatsType> {
         header.putInt(extraSymbols);
         header.rewind();
 
+        // System.out.println("Writing " + header.remaining() + " data header bytes..."); // DEBUG
+
         // send header (F, T, Z, N, Al) + EXTRA_SYMBOLS
-        writable.write(header);
+        while (header.hasRemaining()) {
+            writable.write(header);
+        }
     }
 
     private void sendPacket(EncodingPacket packet) throws IOException {
@@ -416,6 +391,9 @@ public final class EncoderTask implements Summarizable<StatsType> {
         header.putInt(symbols.size());
         header.rewind();
 
+        // System.out.println("Writing " + header.remaining() + " packet header bytes..."); // DEBUG
+        // System.out.println("Writing " + symbols.size() + " symbols...");
+
         // send header (SBN, ESI) + NUM_SYMBOLS
         while (header.hasRemaining()) {
             writable.write(header);
@@ -423,6 +401,9 @@ public final class EncoderTask implements Summarizable<StatsType> {
         for (ByteBuffer symb : symbols) {
             // send symbol data
             symb.rewind();
+
+            // System.out.println("Writing " + symb.remaining() + " symbol data bytes..."); // DEBUG
+
             while (symb.hasRemaining()) {
                 writable.write(symb);
             }
@@ -436,7 +417,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
         final long startNanos = System.nanoTime();
         final EncodingPacket packet = enc.getSourcePacket(esi, numSymbols);
         final long endNanos = System.nanoTime();
-        stats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+        stats.accept(endNanos - startNanos);
 
         return packet;
     }
@@ -511,7 +492,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
         final long startNanos = System.nanoTime();
         final EncodingPacket packet = enc.getSourcePacket(esi, numSymbols);
         final long endNanos = System.nanoTime();
-        stats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+        stats.accept(endNanos - startNanos);
 
         return packet;
     }
@@ -537,13 +518,13 @@ public final class EncoderTask implements Summarizable<StatsType> {
             final long startNanos = System.nanoTime();
             packet = enc.getSourcePacket(esi);
             final long endNanos = System.nanoTime();
-            stats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+            stats.accept(endNanos - startNanos);
         }
         else {
             final long startNanos = System.nanoTime();
             packet = enc.getRepairPacket(esi);
             final long endNanos = System.nanoTime();
-            stats.accept(statsUnit.convert(endNanos - startNanos, TimeUnit.NANOSECONDS));
+            stats.accept(endNanos - startNanos);
         }
 
         return packet;

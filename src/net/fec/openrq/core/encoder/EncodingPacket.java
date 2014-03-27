@@ -43,9 +43,9 @@ public interface EncodingPacket {
      * <p>
      * The returned list of buffers is immutable. Each buffer contains one distinct symbol and is
      * {@linkplain ByteBuffer#isReadOnly() read-only}. Additionally, each buffer has initially a
-     * {@linkplain ByteBuffer#position() position} of 0, a {@linkplain ByteBuffer#capacity() capacity} less than or
-     * equal to the size of a symbol, and a {@linkplain ByteBuffer#limit() limit} equal to the capacity. Changes in the
-     * current positions or limits of the buffers will persist.
+     * {@linkplain ByteBuffer#position() position} of 0, a {@linkplain ByteBuffer#capacity() capacity} equal to the size
+     * of a symbol, and a {@linkplain ByteBuffer#limit() limit} equal to the capacity. Changes in the current positions
+     * or limits of the buffers will persist.
      * 
      * @return an immutable list of one or more read-only buffers with the data from the symbol(s) in this packet
      */

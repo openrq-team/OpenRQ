@@ -62,8 +62,9 @@ public final class TestRunner {
         1_000_000, 1_000_003, 1_000_007, 9_999_999,
         10_000_000, 10_000_003, 10_000_007, 99_999_999));
 
-    private static final int WARMUP_SIZE = 1234;
+    private static final int WARMUP_SIZE = 1237;
     private static final long WARMUP_NANOS = TimeUnit.SECONDS.toNanos(15L);
+    private static final boolean PRINT_WARMUP_STATS = true;
 
     private static final Random rand = new Random();
 
@@ -222,7 +223,11 @@ public final class TestRunner {
 
         final long startNanos = System.nanoTime();
         do {
-            runTasks(encTask, decTask, executor, false);
+            if (PRINT_WARMUP_STATS) {
+                System.out.println();
+                System.out.println("Data size = " + WARMUP_SIZE + " bytes (1 symbol per packet)");
+            }
+            runTasks(encTask, decTask, executor, PRINT_WARMUP_STATS);
         }
         while (System.nanoTime() - startNanos < WARMUP_NANOS);
     }
