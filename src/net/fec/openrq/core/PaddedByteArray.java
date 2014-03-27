@@ -86,9 +86,7 @@ final class PaddedByteArray {
         return paddedLen;
     }
 
-    byte get(int index) {
-
-        checkIndexRange(index, length());
+    private byte safeGet(int index) {
 
         if (index >= arrayLen) {
             return padding[index - arrayLen];
@@ -98,9 +96,7 @@ final class PaddedByteArray {
         }
     }
 
-    void set(int index, byte value) {
-
-        checkIndexRange(index, length());
+    private void safeSet(int index, byte value) {
 
         if (index >= arrayLen) {
             padding[index - arrayLen] = value;
@@ -108,6 +104,18 @@ final class PaddedByteArray {
         else {
             array[arrayOff + index] = value;
         }
+    }
+
+    byte get(int index) {
+
+        checkIndexRange(index, length());
+        return safeGet(index);
+    }
+
+    void set(int index, byte value) {
+
+        checkIndexRange(index, length());
+        safeSet(index, value);
     }
 
     byte[] getBytes(byte[] dst) {
@@ -128,10 +136,10 @@ final class PaddedByteArray {
     byte[] getBytes(int index, byte[] dst, int off, int len) {
 
         checkIndexAndArray(index, length(), dst, off, len);
-        
+
         final int end = off + len;
-        for (int d = off, a = index; d < end; d++, a++) {
-            dst[d] = array[a];
+        for (int d = off, ii = index; d < end; d++, ii++) {
+            dst[d] = safeGet(ii);
         }
 
         return dst;
@@ -157,8 +165,8 @@ final class PaddedByteArray {
         checkIndexAndArray(index, length(), src, off, len);
 
         final int end = off + len;
-        for (int s = off, a = index; s < end; s++, a++) {
-            array[a] = src[s];
+        for (int s = off, ii = index; s < end; s++, ii++) {
+            safeSet(ii, src[s]);
         }
     }
 
