@@ -169,6 +169,7 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
         for (int n = 0; n < numIterations; n++) {
             dataHeaderBuf.clear();
+            System.out.println("-- Reading " + dataHeaderBuf.remaining() + " data header bytes..."); // DEBUG
             readBytes(dataHeaderBuf);
             final DataHeader dataHeader = DataHeader.parseDataHeader(dataHeaderBuf);
             final FECParameters fecParams = dataHeader.getFECParams();
@@ -185,13 +186,16 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
                 for (int i = 0; i < totalSymbols; i++) {
                     symbolHeaderBuf.clear();
+                    System.out.println("---- Reading " + symbolHeaderBuf.remaining() + " packet header bytes..."); // DEBUG
                     readBytes(symbolHeaderBuf);
                     final SymbolHeader symbolHeader = SymbolHeader.parseSymbolHeader(symbolHeaderBuf, fecParams, sbn);
                     final int firstESI = symbolHeader.getFECPayloadID().encodingSymbolID();
                     final int numSymbolsInPacket = symbolHeader.getNumSymbols();
 
+                    System.out.println("---- Reading " + numSymbolsInPacket + " symbols..."); // DEBUG
                     for (int s = 0; s < numSymbolsInPacket; s++) {
                         symbolBuf.clear();
+                        System.out.println("------ Reading " + symbolBuf.remaining() + " symbol bytes..."); // DEBUG
                         readBytes(symbolBuf);
                         putSymbol(
                             srcBlockDec,
@@ -219,8 +223,6 @@ public final class DecoderTask implements Summarizable<StatsType> {
     }
 
     private void readBytes(ByteBuffer buf) throws IOException {
-
-        // System.out.println("Reading " + buf.remaining() + " bytes..."); // DEBUG
 
         final int pos = buf.position();
         while (buf.hasRemaining()) {

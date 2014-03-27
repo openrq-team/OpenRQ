@@ -62,6 +62,7 @@ public final class TestRunner {
         1_000_000, 1_000_003, 1_000_007, 9_999_999,
         10_000_000, 10_000_003, 10_000_007, 99_999_999));
 
+    private static final boolean WARMUP_ENABLED = false;
     private static final int WARMUP_SIZE = 1237;
     private static final long WARMUP_NANOS = TimeUnit.SECONDS.toNanos(15L);
     private static final boolean PRINT_WARMUP_STATS = true;
@@ -159,8 +160,10 @@ public final class TestRunner {
 
         final ExecutorService executor = Executors.newFixedThreadPool(2);
 
-        System.out.println("Warming up...");
-        runWarmupTasks(executor, makeData(WARMUP_SIZE));
+        if (WARMUP_ENABLED) {
+            System.out.println("Warming up...");
+            runWarmupTasks(executor, makeData(WARMUP_SIZE));
+        }
 
         System.out.println();
         System.out.println();
