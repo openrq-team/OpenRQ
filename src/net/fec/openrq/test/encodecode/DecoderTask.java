@@ -184,7 +184,7 @@ public final class DecoderTask implements Summarizable<StatsType> {
                 final SourceBlockDecoder srcBlockDec = dataDec.decoderForSourceBlock(sbn);
                 final int totalSymbols = srcBlockDec.numberOfSourceSymbols() + extraSymbols;
 
-                for (int i = 0; i < totalSymbols; i++) {
+                for (int i = 0; i < totalSymbols;) {
                     symbolHeaderBuf.clear();
                     System.out.println("---- Reading " + symbolHeaderBuf.remaining() + " packet header bytes..."); // DEBUG
                     readBytes(symbolHeaderBuf);
@@ -207,6 +207,8 @@ public final class DecoderTask implements Summarizable<StatsType> {
                             totalDecsStats,
                             numDecFailsStats);
                     }
+                    
+                    i += numSymbolsInPacket;
                 }
             }
 

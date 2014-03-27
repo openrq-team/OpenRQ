@@ -53,14 +53,16 @@ import net.fec.openrq.test.util.summary.Summaries;
 public final class TestRunner {
 
     private static final List<Integer> DATA_SIZES = Collections.unmodifiableList(Arrays.asList(
-        1, 3, 7, 9,
-        10, 13, 17, 99,
-        100, 103, 107, 999,
-        1000, 1003, 1007, 9999,
-        10_000, 10_003, 10_007, 99_999,
-        100_000, 100_003, 100_007, 999_999,
-        1_000_000, 1_000_003, 1_000_007, 9_999_999,
-        10_000_000, 10_000_003, 10_000_007, 99_999_999));
+        1, 3, 7, 9));
+    /*
+     * 10, 13, 17, 99,
+     * 100, 103, 107, 999,
+     * 1000, 1003, 1007, 9999,
+     * 10_000, 10_003, 10_007, 99_999,
+     * 100_000, 100_003, 100_007, 999_999,
+     * 1_000_000, 1_000_003, 1_000_007, 9_999_999,
+     * 10_000_000, 10_000_003, 10_000_007, 99_999_999));
+     */
 
     private static final boolean WARMUP_ENABLED = false;
     private static final int WARMUP_SIZE = 1237;
@@ -113,6 +115,7 @@ public final class TestRunner {
         @Override
         public boolean checkData(byte[] data) {
 
+            System.out.println("CHECKING DATA");
             return Arrays.equals(data, originalData);
         }
     }
