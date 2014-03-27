@@ -140,8 +140,8 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         // linked hash set preserves insertion ordering (while not being sorted)
         Set<Integer> missingSourceSymbols = new LinkedHashSet<Integer>();
 
-        for (int idx = receivedSourceSymbols.nextClearBit(0); idx < K; idx = receivedSourceSymbols.nextClearBit(idx))
-            missingSourceSymbols.add(idx);
+        for (int i = receivedSourceSymbols.nextClearBit(0); i < K; i = receivedSourceSymbols.nextClearBit(i + 1))
+            missingSourceSymbols.add(i);
 
         return missingSourceSymbols;
     }
@@ -355,8 +355,8 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         byte[][] D = new byte[M][T];
 
         // populate D with the received source symbols
-        for (int idx = receivedSourceSymbols.nextSetBit(0); idx != -1; idx = receivedSourceSymbols.nextSetBit(idx))
-            data.getBytes(idx * T, D[S + H + idx]);
+        for (int i = receivedSourceSymbols.nextSetBit(0); i >= 0; i = receivedSourceSymbols.nextSetBit(i + 1))
+            data.getBytes(i * T, D[S + H + i]);
 
         /*
          * for every repair symbol received
