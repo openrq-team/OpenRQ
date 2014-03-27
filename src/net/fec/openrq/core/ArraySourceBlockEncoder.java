@@ -243,7 +243,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // allocate and initiallize vector D
         byte[][] D = new byte[L][T];
-        for (int row = S + H, index = 0; row < K + S + H; row++, index += T)
+        for (int row = S + H, index = 0; row < K + S + H; row++, index++)
             D[row] = sourceSymbols[index].data();
 
         // solve system of equations
