@@ -178,7 +178,7 @@ public final class ParameterChecker {
         }
 
         // check number of symbols
-        if (ExtraMath.ceilDiv(Kt, Z) > InternalConstants.K_MAX) {
+        if (Z < Kt / InternalConstants.K_MAX) {
             return false;
         }
 
