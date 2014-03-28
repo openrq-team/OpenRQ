@@ -117,15 +117,7 @@ public final class TestRunner {
         @Override
         public boolean checkData(byte[] data) {
 
-            System.out.println("CHECKING DATA"); // DEBUG
-            final boolean result = Arrays.equals(data, originalData);
-
-            if (!result) { // DEBUG
-                System.out.println("Original data:" + Arrays.toString(originalData));
-                System.out.println("Decoded data:" + Arrays.toString(data));
-            }
-
-            return result;
+            return Arrays.equals(data, originalData);
         }
     }
 

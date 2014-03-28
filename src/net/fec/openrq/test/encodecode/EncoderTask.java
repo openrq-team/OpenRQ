@@ -374,8 +374,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         header.putInt(extraSymbols);
         header.rewind();
 
-        // System.out.println("oo Writing " + header.remaining() + " data header bytes..."); // DEBUG
-
         // send header (F, T, Z, N, Al) + EXTRA_SYMBOLS
         while (header.hasRemaining()) {
             writable.write(header);
@@ -391,9 +389,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         header.putInt(symbols.size());
         header.rewind();
 
-        // System.out.println("oooo Writing " + header.remaining() + " packet header bytes..."); // DEBUG
-        // System.out.println("oooo Writing " + symbols.size() + " symbols...");
-
         // send header (SBN, ESI) + NUM_SYMBOLS
         while (header.hasRemaining()) {
             writable.write(header);
@@ -401,8 +396,6 @@ public final class EncoderTask implements Summarizable<StatsType> {
         for (ByteBuffer symb : symbols) {
             // send symbol data
             symb.rewind();
-
-            // System.out.println("oooooo Writing " + symb.remaining() + " symbol data bytes..."); // DEBUG
 
             while (symb.hasRemaining()) {
                 writable.write(symb);

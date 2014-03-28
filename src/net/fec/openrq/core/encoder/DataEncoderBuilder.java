@@ -52,7 +52,7 @@ public interface DataEncoderBuilder<T extends DataEncoder> {
     /**
      * Default value of 1392 bytes for the maximum payload length.
      */
-    public static final int DEF_MAX_PAYLOAD_LENGTH = 1; //1392; // P'
+    public static final int DEF_MAX_PAYLOAD_LENGTH = 1392; // P'
 
     /**
      * Default value of 76800 bytes for the maximum block size that is decodable in working memory.

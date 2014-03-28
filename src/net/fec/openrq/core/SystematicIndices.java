@@ -588,9 +588,6 @@ final class SystematicIndices {
                                            {56403, 471, 907, 16, 56951}
     };
 
-    // MUST BE DEFINED BELOW TABLE2, OTHERWISE IT WILL ACCESS NULL TABLE
-    static final int K_max = K(table2.length - 1);
-
 
     private SystematicIndices() {
 

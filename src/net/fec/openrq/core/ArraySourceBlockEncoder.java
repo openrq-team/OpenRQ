@@ -43,16 +43,13 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     {
 
         // account for padding in the last source symbol
-        final int arrayLen = Math.min(K * fecParams.symbolSize(), array.length - arrayOff);
-        final EncodingSymbol[] sourceSymbols = prepareSourceSymbols(array, arrayOff, arrayLen, fecParams, sbn, K);
-
+        final EncodingSymbol[] sourceSymbols = prepareSourceSymbols(array, arrayOff, fecParams, sbn, K);
         return new ArraySourceBlockEncoder(sourceSymbols, fecParams, sbn, K);
     }
 
     private static final EncodingSymbol[] prepareSourceSymbols(
         byte[] array,
         int arrayOff,
-        int arrayLen,
         FECParameters fecParams,
         int sbn,
         int K)
@@ -63,7 +60,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         final EncodingSymbol[] symbols = new EncodingSymbol[K];
         for (int esi = 0, symbolOff = arrayOff; esi < K; esi++, symbolOff += T) {
             // account for padding in the last source symbol
-            final int symbolLen = Math.min(T, arrayLen - symbolOff);
+            final int symbolLen = Math.min(T, array.length - symbolOff);
             final PaddedByteArray symbolData = PaddedByteArray.newArray(array, symbolOff, symbolLen, T);
             final FECPayloadID fecPayloadID = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
 
