@@ -23,6 +23,7 @@ import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONL
 
 import java.io.IOException;
 import java.nio.channels.Pipe;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,11 +36,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.fec.openrq.core.ArrayDataEncoder;
-import net.fec.openrq.core.FECParameters;
 import net.fec.openrq.core.OpenRQ;
 import net.fec.openrq.core.encoder.DataEncoder;
-import net.fec.openrq.core.encoder.DataEncoderBuilder;
+import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.util.arithmetic.ExtraMath;
 import net.fec.openrq.test.encodecode.DecoderTask;
 import net.fec.openrq.test.encodecode.DecoderTask.DecodedDataChecker;
@@ -56,15 +55,44 @@ import net.fec.openrq.test.util.summary.Summaries;
  */
 public final class TestRunner {
 
-    private static final List<Integer> DATA_SIZES = Collections.unmodifiableList(Arrays.asList(
-        1, 3, 7, 9,
-        10, 13, 17, 99,
-        100, 103, 107, 999,
-        1000, 1003, 1007, 9999,
-        10_000, 10_003, 10_007, 99_999,
-        100_000, 100_003, 100_007, 999_999,
-        1_000_000, 1_000_003, 1_000_007, 9_999_999,
-        10_000_000, 10_000_003, 10_000_007, 99_999_999));
+    private static final int DEF_MAX_PAYLOAD_LENGTH = 7;//1392;  // P'
+    private static final int DEF_MAX_DEC_BLOCK_SIZE = 70;//76800; // WS // B
+
+    private static final List<Integer> DATA_SIZES;
+
+    static {
+        final int[] small = {1, 2, 3, 5, 7,
+                             10, 22, 33, 55, 77,
+                             100, 222, 333, 555, 777,};
+
+        // final int[] medium = {1000, 2222, 3333, 5555, 7777,
+        // 10_000, 22_222, 33_333, 55_555, 77_777,
+        // 100_000, 222_222, 333_333, 555_555, 777_777};
+
+        // final int[] large = {1_000_000, 2_222_222, 3_333_333, 5_555_555, 7_777_777};
+
+        // final int[] xLarge = {10_000_000, 22_222_222, 33_333_333, 55_555_555, 77_777_777};
+
+        // final int[] xxLarge = {100_000_000, 222_222_222, 333_333_333, 555_555_555, 777_777_777};
+
+        final List<Integer> list = new ArrayList<>(45);
+        putInts(small, list);
+        // putInts(medium, list);
+        // putInts(large, list);
+        // putInts(xLarge, list);
+        // putInts(xxLarge, list);
+
+        DATA_SIZES = Collections.unmodifiableList(list);
+    }
+
+
+    private static void putInts(int[] ints, List<Integer> list) {
+
+        for (int i : ints) {
+            list.add(i);
+        }
+    }
+
 
     private static final boolean WARMUP_ENABLED = false;
     private static final int WARMUP_SIZE = 1237;
@@ -86,21 +114,32 @@ public final class TestRunner {
         return 1 + rand.nextInt(50);
     }
 
+    private static FECParameters deriveFECParams(byte[] data) {
+
+        final int dataLen = data.length;
+        final int maxPayLen = DEF_MAX_PAYLOAD_LENGTH;
+        final int maxDecBlock = Math.max(DEF_MAX_DEC_BLOCK_SIZE, data.length / 200);
+
+        return FECParameters.deriveParameters(dataLen, maxPayLen, maxDecBlock);
+    }
+
 
     private static final class EncProvider implements EncoderTask.DataEncoderProvider {
 
-        private final DataEncoderBuilder<ArrayDataEncoder> builder;
+        private final byte[] data;
+        private final FECParameters fecParams;
 
 
-        EncProvider(DataEncoderBuilder<ArrayDataEncoder> builder) {
+        EncProvider(byte[] data, FECParameters fecParams) {
 
-            this.builder = builder;
+            this.data = data;
+            this.fecParams = fecParams;
         }
 
         @Override
         public DataEncoder newEncoder() {
 
-            return builder.build();
+            return OpenRQ.newEncoder(data, fecParams);
         }
     }
 
@@ -233,7 +272,7 @@ public final class TestRunner {
         final Pipe pipe = Pipe.open();
         final int itersPerTask = 50;
 
-        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final EncProvider encProv = new EncProvider(data, deriveFECParams(data));
         final DecodedDataChecker checker = new DecChecker(data);
         if (PRINT_WARMUP_STATS) {
             printFECParameters(encProv.newEncoder().fecParameters());
@@ -265,7 +304,7 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final EncProvider encProv = new EncProvider(data, deriveFECParams(data));
         final DecodedDataChecker checker = new DecChecker(data);
 
         printFECParameters(encProv.newEncoder().fecParameters());
@@ -287,7 +326,7 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final EncProvider encProv = new EncProvider(data, deriveFECParams(data));
         final DecodedDataChecker checker = new DecChecker(data);
 
         printFECParameters(encProv.newEncoder().fecParameters());
@@ -309,7 +348,7 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final EncProvider encProv = new EncProvider(data, deriveFECParams(data));
         final DecodedDataChecker checker = new DecChecker(data);
 
         printFECParameters(encProv.newEncoder().fecParameters());
@@ -331,7 +370,7 @@ public final class TestRunner {
 
         final Pipe pipe = Pipe.open();
 
-        final EncProvider encProv = new EncProvider(OpenRQ.newEncoderBuilder(data));
+        final EncProvider encProv = new EncProvider(data, deriveFECParams(data));
         final DecodedDataChecker checker = new DecChecker(data);
 
         printFECParameters(encProv.newEncoder().fecParameters());

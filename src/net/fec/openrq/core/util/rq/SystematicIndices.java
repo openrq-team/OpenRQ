@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package net.fec.openrq.core;
-
-
-import static net.fec.openrq.core.util.arithmetic.ExtraMath.ceilDiv;
-
+package net.fec.openrq.core.util.rq;
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-final class SystematicIndices {
+public final class SystematicIndices {
 
-    static int getKIndex(int K) {
+    public static int getKIndex(int K) {
 
         /*
          * if(K < 1) throw new IllegalArgumentException("K must be positive.");
@@ -42,40 +38,32 @@ final class SystematicIndices {
         throw new RuntimeException("Invalid table state");
     }
 
-    static int K(int K_index) {
+    public static int K(int K_index) {
 
         return table2[K_index][0];
     }
 
-    static int J(int K_index) {
+    public static int J(int K_index) {
 
         return table2[K_index][1];
     }
 
-    static int S(int K_index) {
+    public static int S(int K_index) {
 
         return table2[K_index][2];
     }
 
-    static int H(int K_index) {
+    public static int H(int K_index) {
 
         return table2[K_index][3];
     }
 
-    static int W(int K_index) {
+    public static int W(int K_index) {
 
         return table2[K_index][4];
     }
 
-    static int KL(int n, int WS, int Al, int T) {
-
-        // if(n < 1 || WS < 1 || Al < 1 || T < 1) throw new IllegalArgumentException("All arguments must be positive.");
-
-        final int upper_bound = WS / (Al * ceilDiv(T, Al * n));
-        return floor(upper_bound);
-    }
-
-    static int ceil(int k) {
+    public static int ceil(int k) {
 
         /*
          * if(k < 1) throw new IllegalArgumentException("K must be positive.");
@@ -91,7 +79,7 @@ final class SystematicIndices {
         throw new RuntimeException("Invalid table state");
     }
 
-    static int floor(int k) {
+    public static int floor(int k) {
 
         /*
          * if(k < 1) throw new IllegalArgumentException("K must be positive.");

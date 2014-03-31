@@ -23,7 +23,7 @@ public final class Defaults {
 
     public static final int EXTRA_SYMBOLS = 0;
     public static final int MAX_SYMBOLS_PER_PACKET = 1;
-    public static final int NUM_ITERATIONS = 1;//10_000;
+    public static final int NUM_ITERATIONS = 10_000;
 
 
     private Defaults() {

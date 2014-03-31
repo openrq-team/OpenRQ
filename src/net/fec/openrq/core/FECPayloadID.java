@@ -22,8 +22,10 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 
+import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.parameters.ParameterIO;
+import net.fec.openrq.core.util.Optional;
 
 
 /**
@@ -39,30 +41,27 @@ import net.fec.openrq.core.parameters.ParameterIO;
 public final class FECPayloadID {
 
     /**
-     * Reads from the provided buffer a {@code FECPayloadID} instance given a valid {@code FECParameters} instance.
+     * Reads from the provided buffer an optional {@code FECPayloadID} instance given FEC parameters associated to some
+     * data.
      * <p>
      * The provided buffer must have at least 4 bytes {@linkplain ByteBuffer#remaining() remaining}. If this method
      * returns normally, the position of the provided buffer will have advanced by 4 bytes.
      * <p>
-     * The returned {@code FECPayloadID} instance is only {@linkplain #isValid() valid} if the payload identifier
-     * parameters contained inside the buffer have valid values according to the provided {@code FECparameters}
-     * instance.
+     * A {@code FECPayloadID} instance is only {@linkplain Optional#isPresent() present} inside the returned optional
+     * instance if the payload ID parameters contained inside the buffer have valid values according to the provided FEC
+     * parameters.
      * 
      * @param buffer
      *            A buffer from which a {@code FECPayloadID} instance is read
      * @param fecParams
      *            FEC parameters associated to some data object
-     * @return a {@code FECPayloadID} instance
+     * @return an optional {@code FECPayloadID} instance
      * @exception NullPointerException
      *                If any argument is {@code null}
-     * @exception IllegalArgumentException
-     *                If the provided {@code FECParameters} instance is {@linkplain FECParameters#isValid() invalid}
      * @exception BufferUnderflowException
      *                If the provided buffer has less than 4 bytes remaining
      */
-    public static FECPayloadID readFromBuffer(ByteBuffer buffer, FECParameters fecParams) {
-
-        if (!fecParams.isValid()) throw new IllegalArgumentException("invalid FEC parameters");
+    public static Optional<FECPayloadID> readFromBuffer(ByteBuffer buffer, FECParameters fecParams) {
 
         final int fecPayloadID = ParameterIO.readFECpayloadID(buffer); // 4 bytes
 
@@ -70,21 +69,22 @@ public final class FECPayloadID {
         final int esi = ParameterIO.extractEncodingSymbolID(fecPayloadID);
 
         if (ParameterChecker.isValidFECPayloadID(sbn, esi, fecParams.numberOfSourceBlocks())) {
-            return makeValidPayloadID(fecPayloadID);
+            return Optional.of(newInstance(sbn, esi));
         }
         else {
-            return makeInvalidPayloadID();
+            return Optional.empty();
         }
     }
 
     /**
-     * Reads from the provided array starting in a specific index a {@code FECPayloadID} instance given a valid
-     * {@code FECParameters} instance.
+     * Reads from the provided array starting in a specific index an optional {@code FECPayloadID} instance given FEC
+     * parameters associated to some data.
      * <p>
      * The provided array must have at least 4 bytes between the given index and its length.
      * <p>
-     * The returned {@code FECPayloadID} instance is only {@linkplain #isValid() valid} if the payload identifier
-     * parameters contained inside the array have valid values according to the provided {@code FECparameters} instance.
+     * A {@code FECPayloadID} instance is only {@linkplain Optional#isPresent() present} inside the returned optional
+     * instance if the payload ID parameters contained inside the array have valid values according to the provided FEC
+     * parameters.
      * 
      * @param array
      *            An array from which a {@code FECPayloadID} instance is read
@@ -92,25 +92,33 @@ public final class FECPayloadID {
      *            The starting array index at which a {@code FECPayloadID} instance is read
      * @param fecParams
      *            FEC parameters associated to some data object
-     * @return a {@code FECPayloadID} instance
+     * @return an optional {@code FECPayloadID} instance
      * @exception NullPointerException
      *                If any argument is {@code null}
      * @exception IndexOutOfBoundsException
      *                If a {@code FECPayloadID} instance cannot be read at the given index
-     * @exception IllegalArgumentException
-     *                If the provided {@code FECParameters} instance is {@linkplain FECParameters#isValid() invalid}
      */
-    public static FECPayloadID readFromArray(byte[] array, int offset, FECParameters fecParams) {
+    public static Optional<FECPayloadID> readFromArray(byte[] array, int offset, FECParameters fecParams) {
 
         if (offset < 0 || array.length - offset < 4) throw new IndexOutOfBoundsException();
         return readFromBuffer(ByteBuffer.wrap(array, offset, 4), fecParams);
     }
 
-    // requires valid FECParameters instance
-    static FECPayloadID makeFECPayloadID(int sbn, int esi, FECParameters fecParams) {
+    /**
+     * Returns a new instance, given specific FEC payload ID parameters.
+     * 
+     * @param sbn
+     *            The source block number associated to some source block
+     * @param esi
+     *            The encoding symbol identifier associated to the first symbol in an encoding packet
+     * @param fecParams
+     *            FEC parameters associated to some data
+     * @return a new {@code FECPayloadID} instance
+     */
+    public static FECPayloadID newPayloadID(int sbn, int esi, FECParameters fecParams) {
 
         if (ParameterChecker.isValidFECPayloadID(sbn, esi, fecParams.numberOfSourceBlocks())) {
-            return makeValidPayloadID(ParameterIO.buildFECpayloadID(sbn, esi));
+            return newInstance(sbn, esi);
         }
         else {
             throw new IllegalArgumentException("invalid FEC Payload ID");
@@ -118,25 +126,18 @@ public final class FECPayloadID {
 
     }
 
-    private static FECPayloadID makeValidPayloadID(int fecPayloadID) {
+    private static FECPayloadID newInstance(int sbn, int esi) {
 
-        return new FECPayloadID(fecPayloadID, true);
-    }
-
-    private static FECPayloadID makeInvalidPayloadID() {
-
-        return new FECPayloadID(0, false);
+        return new FECPayloadID(ParameterIO.buildFECpayloadID(sbn, esi));
     }
 
 
     private final int fecPayloadID;
-    private final boolean isValid;
 
 
-    private FECPayloadID(int fecPayloadID, boolean isValid) {
+    private FECPayloadID(int fecPayloadID) {
 
         this.fecPayloadID = fecPayloadID;
-        this.isValid = isValid;
     }
 
     /**
@@ -148,8 +149,6 @@ public final class FECPayloadID {
      * 
      * @param buffer
      *            A buffer on which the FEC payload ID is written
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECPayloadID} instance
      * @exception NullPointerException
      *                If the provided the buffer is {@code null}
      * @exception ReadOnlyBufferException
@@ -159,7 +158,6 @@ public final class FECPayloadID {
      */
     public void writeToBuffer(ByteBuffer buffer) {
 
-        checkValid();
         ParameterIO.writeFECpayloadID(fecPayloadID, buffer); // 4 bytes
     }
 
@@ -172,8 +170,6 @@ public final class FECPayloadID {
      *            An array on which the FEC payload ID is written
      * @param offset
      *            The starting array index at which the FEC payload ID is written
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECPayloadID} instance
      * @exception NullPointerException
      *                If the provided the array is {@code null}
      * @exception IndexOutOfBoundsException
@@ -181,7 +177,6 @@ public final class FECPayloadID {
      */
     public void writeToArray(byte[] array, int offset) {
 
-        checkValid();
         if (offset < 0 || array.length - offset < 4) throw new IndexOutOfBoundsException();
         writeToBuffer(ByteBuffer.wrap(array, offset, 4));
     }
@@ -190,12 +185,9 @@ public final class FECPayloadID {
      * Returns the source block number associated to some source block.
      * 
      * @return the source block number associated to some source block
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECPayloadID} instance
      */
     public int sourceBlockNumber() {
 
-        checkValid();
         return ParameterIO.extractSourceBlockNumber(fecPayloadID);
     }
 
@@ -203,28 +195,9 @@ public final class FECPayloadID {
      * Returns the encoding symbol identifier associated to the first symbol in an encoding packet.
      * 
      * @return the encoding symbol identifier associated to the first symbol in an encoding packet
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECPayloadID} instance
      */
     public int encodingSymbolID() {
 
-        checkValid();
         return ParameterIO.extractEncodingSymbolID(fecPayloadID);
-    }
-
-    /**
-     * Returns {@code true} if, and only if, this {@code FECPayloadID} instance is valid, that is, if all payload
-     * identifier parameters have valid values.
-     * 
-     * @return {@code true} if, and only if, this {@code FECPayloadID} instance is valid
-     */
-    public boolean isValid() {
-
-        return isValid;
-    }
-
-    private void checkValid() {
-
-        if (!isValid()) throw new IllegalStateException("invalid FEC Payload ID");
     }
 }

@@ -69,7 +69,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-            return String.format("Decoding time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
+            return String.format("Source block decoding time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
                 STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
         }
     },
@@ -81,7 +81,8 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
             final long numFailures = stats.getCount();
             if (stats.hasNext()) {
                 final long totalDecodings = stats.getNext().getCount();
-                return String.format("Number of decoding failures:{ %d (%03.3f %% of %d total decodings) }",
+                return String.format(
+                    "Number of source block decoding failures:{ %d (%03.3f %% of %d total decodings) }",
                     numFailures, ((double)numFailures / totalDecodings), totalDecodings);
             }
             else {
@@ -94,7 +95,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-            return String.format("Decoding failure time (in %s):{min=%03.3f, average=%03.3f, max=%03.3f}",
+            return String.format("Source block decoding failure time (in %s):{min=%03.3f, average=%03.3f, max=%03.3f}",
                 STATS_UNIT.name().toLowerCase(), t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     };

@@ -34,7 +34,7 @@ public class ParameterIO {
     private static long unsignDataLength(long dataLen) {
 
         // 40-bit value
-        return UnsignedTypes.getLongUnsignedBytes(dataLen, InternalConstants.NUM_BYTES_F);
+        return UnsignedTypes.getLongUnsignedBytes(dataLen, InternalConstants.F_num_bytes);
     }
 
     // For Common FEC OTI.
@@ -149,7 +149,7 @@ public class ParameterIO {
     // For FEC Payload ID.
     private static int sourceBlockNumberShift() {
 
-        return InternalConstants.NUM_BYTES_ESI * Byte.SIZE;
+        return InternalConstants.ESI_num_bytes * Byte.SIZE;
     }
 
     /**
@@ -166,7 +166,7 @@ public class ParameterIO {
     private static int unsignEncodingSymbolID(int esi) {
 
         // 24-bit value
-        return UnsignedTypes.getUnsignedBytes(esi, InternalConstants.NUM_BYTES_ESI);
+        return UnsignedTypes.getUnsignedBytes(esi, InternalConstants.ESI_num_bytes);
     }
 
     /**
@@ -218,14 +218,14 @@ public class ParameterIO {
     /**
      * @param numSourceBlocks
      * @param numSubBlocks
-     * @param symbolAlign
+     * @param sAlign 
      * @return
      */
-    public static int buildSchemeSpecFecOTI(int numSourceBlocks, int numSubBlocks) {
+    public static int buildSchemeSpecFecOTI(int numSourceBlocks, int numSubBlocks, int sAlign) {
 
         final int usZ = unsignNumSourceBlocks(numSourceBlocks);
         final int usN = unsignNumSubBlocks(numSubBlocks);
-        final int usAl = unsignSymbolAlignment(InternalConstants.ALIGN_VALUE);
+        final int usAl = unsignSymbolAlignment(sAlign);
 
         return (usZ << numSourceBlocksShift()) | (usN << numSubBlocksShift()) | usAl;
 

@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package net.fec.openrq.core;
+package net.fec.openrq.core.parameters;
 
+
+import static net.fec.openrq.core.parameters.InternalConstants.T_max;
+import static net.fec.openrq.core.parameters.InternalFunctions.KL;
+import static net.fec.openrq.core.util.arithmetic.ExtraMath.ceilDiv;
 
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 
-import net.fec.openrq.core.parameters.ParameterChecker;
-import net.fec.openrq.core.parameters.ParameterIO;
+import net.fec.openrq.core.util.Optional;
 import net.fec.openrq.core.util.arithmetic.ExtraMath;
 
 
@@ -41,23 +44,23 @@ import net.fec.openrq.core.util.arithmetic.ExtraMath;
 public final class FECParameters {
 
     /**
-     * Reads from the provided buffer a {@code FECParameters} instance.
+     * Reads from the provided buffer an optional {@code FECParameters} instance.
      * <p>
      * The provided buffer must have at least 12 bytes {@linkplain ByteBuffer#remaining() remaining}. If this method
      * returns normally, the position of the provided buffer will have advanced by 12 bytes.
      * <p>
-     * The returned {@code FECParameters} instance is only {@linkplain #isValid() valid} if the FEC parameters contained
-     * inside the buffer have valid values.
+     * A {@code FECParameters} instance is only {@linkplain Optional#isPresent() present} inside the returned optional
+     * instance if the FEC parameters contained inside the buffer have valid values.
      * 
      * @param buffer
      *            A buffer from which a {@code FECParameters} instance is read
-     * @return a {@code FECParameters} instance
+     * @return an optional {@code FECParameters} instance
      * @exception NullPointerException
      *                If the provided buffer is {@code null}
      * @exception BufferUnderflowException
      *                If the provided buffer has less than 12 bytes remaining
      */
-    public static FECParameters readFromBuffer(ByteBuffer buffer) {
+    public static Optional<FECParameters> readFromBuffer(ByteBuffer buffer) {
 
         final long commonFecOTI = ParameterIO.readCommonFecOTI(buffer);        // 8 bytes
         final int schemeSpecFecOTI = ParameterIO.readSchemeSpecFecOTI(buffer); // 4 bytes
@@ -68,71 +71,181 @@ public final class FECParameters {
         final int N = ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
         final int Al = ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
 
-        if (ParameterChecker.areValidFECParameters(F, T, Z, N) && ParameterChecker.isValidSymbolAlignment(Al)) {
-            return makeValidFECParameters(commonFecOTI, schemeSpecFecOTI);
+        if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
+            return Optional.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
         }
         else {
-            return makeInvalidFECParameters();
+            return Optional.empty();
         }
     }
 
     /**
-     * Reads from the provided array starting in a specific index a {@code FECParameters} instance.
+     * Reads from the provided array starting in a specific index an optional {@code FECParameters} instance.
      * <p>
      * The provided array must have at least 12 bytes between the given index and its length.
      * <p>
-     * The returned {@code FECParameters} instance is only {@linkplain #isValid() valid} if the FEC parameters contained
-     * inside the buffer have valid values.
+     * A {@code FECParameters} instance is only {@linkplain Optional#isPresent() present} inside the returned optional
+     * instance if the FEC parameters contained inside the array have valid values.
      * 
      * @param array
      *            An array from which a {@code FECParameters} instance is read
      * @param offset
      *            The starting array index at which a {@code FECParameters} instance is read
-     * @return a {@code FECParameters} instance
+     * @return an optional {@code FECParameters} instance
      * @exception NullPointerException
      *                If the provided array is {@code null}
      * @exception IndexOutOfBoundsException
      *                If a {@code FECParameters} instance cannot be read at the given index
      */
-    public static FECParameters readFromArray(byte[] array, int offset) {
+    public static Optional<FECParameters> readFromArray(byte[] array, int offset) {
 
         if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
         return readFromBuffer(ByteBuffer.wrap(array, offset, 12));
     }
 
-    static FECParameters makeFECParameters(long F, int T, int Z, int N) {
+    /**
+     * Returns a new instance, given specific FEC parameters.
+     * <p>
+     * The provided FEC parameters must be valid according to
+     * {@link ParameterChecker#areValidFECParameters(long, int, int, int, int)}, otherwise an
+     * {@code IllegalArgumentException} is thrown. Note, however, that the symbol alignment parameter is internally
+     * obtained.
+     * 
+     * @param dataLen
+     *            The length of the encodable data in number of bytes
+     * @param symbolSize
+     *            The size of a symbol in number of bytes
+     * @param numSourceBlocks
+     *            The number of blocks into which the encodable data is partitioned
+     * @param numSubBlocks
+     *            The number of sub-blocks per source block into which the encodable data is partitioned
+     * @return a new {@code FECParameters} instance
+     * @exception IllegalArgumentException
+     *                If the provided FEC parameters are invalid
+     */
+    public static FECParameters newParameters(long dataLen, int symbolSize, int numSourceBlocks, int numSubBlocks) {
 
-        if (ParameterChecker.areValidFECParameters(F, T, Z, N)) {
-            final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
-            final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N);
-            return makeValidFECParameters(commonFecOTI, schemeSpecFecOTI);
+        final long F = dataLen;
+        final int T = symbolSize;
+        final int Z = numSourceBlocks;
+        final int N = numSubBlocks;
+        final int Al = ParameterChecker.symbolAlignmentValue();
+
+        if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
+            return newInstance(F, T, Z, N, Al);
         }
         else {
             throw new IllegalArgumentException("invalid FEC parameters");
         }
     }
 
-    private static FECParameters makeValidFECParameters(long commonFecOTI, int schemeSpecFecOTI) {
+    /**
+     * Derives FEC parameters from specific deriving parameters.
+     * <p>
+     * A maximum payload length is required, and affects the maximum size of an encoding symbol, which will be equal to
+     * the provided payload length.
+     * <p>
+     * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
+     * limited amount of memory in an efficient way.
+     * <p>
+     * The provided FEC parameters must be valid according to
+     * {@link ParameterChecker#areValidDerivingParameters(long, int, int, int)}, otherwise an
+     * {@code IllegalArgumentException} is thrown. Note, however, that the symbol alignment parameter is internally
+     * obtained.
+     * 
+     * @param dataLen
+     *            The length of the encodable data in number of bytes
+     * @param maxPayLen
+     *            The maximum payload length in number of bytes
+     * @param maxDecBlock
+     *            The maximum block size in number of bytes that is decodable in working memory
+     * @return a derived {@code FECParameters} instance
+     */
+    public static FECParameters deriveParameters(long dataLen, int maxPayLen, int maxDecBlock) {
 
-        return new FECParameters(commonFecOTI, schemeSpecFecOTI, true);
+        final long F = dataLen;
+        final int P = maxPayLen;
+        final int WS = maxDecBlock;
+        final int Al = ParameterChecker.symbolAlignmentValue();
+
+        if (ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)) {
+            final int T = Math.min(P, T_max);
+            // interleaving is disabled for now
+            final int SStimesAl = T;                     // SS * Al = T
+
+            // safe cast because F and T are appropriately bounded
+            final int Kt = (int)ExtraMath.ceilDiv(F, T); // Kt = ceil(F/T)
+            final int N_max = T / SStimesAl;             // N_max = floor(T/(SS*Al))
+
+            final int Z = deriveZ(Kt, N_max, WS, Al, T);
+            final int N = deriveN(Kt, Z, N_max, WS, Al, T);
+
+            return newInstance(F, T, Z, N, Al);
+        }
+        else {
+            throw new IllegalArgumentException("invalid deriving parameters");
+        }
     }
 
-    private static FECParameters makeInvalidFECParameters() {
+    private static int deriveZ(long Kt, int N_max, int WS, int Al, int T) {
 
-        return new FECParameters(0L, 0, false);
+        // Z = ceil(Kt/KL(N_max))
+        return (int)ceilDiv(Kt, KL(N_max, WS, Al, T));
+    }
+
+    private static int deriveN(long Kt, int Z, int N_max, int WS, int Al, int T) {
+
+        // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
+        final int KtOverZ = (int)ceilDiv(Kt, Z);
+        int n;
+        for (n = 1; n <= N_max && KtOverZ > KL(n, WS, Al, T); n++) {/* loop */}
+
+        return n;
+    }
+
+    /**
+     * Derives FEC parameters from specific deriving parameters.
+     * <p>
+     * A maximum payload length is required, and affects the maximum size of an encoding symbol, which will be equal to
+     * the provided payload length.
+     * <p>
+     * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
+     * limited amount of memory in an efficient way.
+     * <p>
+     * The provided FEC parameters must be valid according to
+     * {@link ParameterChecker#areValidDerivingParameters(long, int, int, int)}, otherwise an
+     * {@code IllegalArgumentException} is thrown. Note, however, that the symbol alignment parameter is internally
+     * obtained.
+     * 
+     * @param dataLen
+     *            The length of the encodable data in number of bytes
+     * @param maxPayLen
+     *            The maximum payload length in number of bytes
+     * @param maxDecBlock
+     *            The maximum block size in number of bytes that is decodable in working memory
+     * @return a derived {@code FECParameters} instance
+     */
+    public static FECParameters deriveParameters(int dataLen, int maxPayLen, int maxDecBlock) {
+
+        return deriveParameters((long)dataLen, maxPayLen, maxDecBlock);
+    }
+
+    private static FECParameters newInstance(long F, int T, int Z, int N, int Al) {
+
+        final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
+        final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N, Al);
+        return new FECParameters(commonFecOTI, schemeSpecFecOTI);
     }
 
 
     private final long commonFecOTI;
     private final int schemeSpecFecOTI;
-    private final boolean isValid;
 
 
-    private FECParameters(long commonFecOTI, int schemeSpecFecOTI, boolean isValid) {
+    private FECParameters(long commonFecOTI, int schemeSpecFecOTI) {
 
         this.commonFecOTI = commonFecOTI;
         this.schemeSpecFecOTI = schemeSpecFecOTI;
-        this.isValid = isValid;
     }
 
     /**
@@ -144,8 +257,6 @@ public final class FECParameters {
      * 
      * @param buffer
      *            A buffer on which the FEC parameters are written
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECParamaters} instance
      * @exception NullPointerException
      *                If the provided the buffer is {@code null}
      * @exception ReadOnlyBufferException
@@ -155,7 +266,6 @@ public final class FECParameters {
      */
     public void writeToBuffer(ByteBuffer buffer) {
 
-        checkValid();
         ParameterIO.writeCommonFecOTI(commonFecOTI, buffer);         // 8 bytes
         ParameterIO.writeSchemeSpecFecOTI(schemeSpecFecOTI, buffer); // 4 bytes
     }
@@ -169,8 +279,6 @@ public final class FECParameters {
      *            An array on which the FEC parameters are written
      * @param offset
      *            The starting array index at which the FEC parameters are written
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECParamaters} instance
      * @exception NullPointerException
      *                If the provided the array is {@code null}
      * @exception IndexOutOfBoundsException
@@ -178,7 +286,6 @@ public final class FECParameters {
      */
     public void writeToArray(byte[] array, int offset) {
 
-        checkValid();
         if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
         writeToBuffer(ByteBuffer.wrap(array, offset, 12));
     }
@@ -187,12 +294,9 @@ public final class FECParameters {
      * Returns the length of the encodable data in number of bytes.
      * 
      * @return the length of the encodable data in number of bytes
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECParamaters} instance
      */
     public long dataLength() {
 
-        checkValid();
         return ParameterIO.extractDataLength(commonFecOTI);
     }
 
@@ -200,12 +304,9 @@ public final class FECParameters {
      * Returns the size of a symbol in number of bytes.
      * 
      * @return the size of a symbol in number of bytes
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECParamaters} instance
      */
     public int symbolSize() {
 
-        checkValid();
         return ParameterIO.extractSymbolSize(commonFecOTI);
     }
 
@@ -213,12 +314,9 @@ public final class FECParameters {
      * Returns the number of blocks into which the encodable data is partitioned.
      * 
      * @return the number of blocks into which the encodable data is partitioned
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECParamaters} instance
      */
     public int numberOfSourceBlocks() {
 
-        checkValid();
         return ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI);
     }
 
@@ -226,12 +324,9 @@ public final class FECParameters {
      * Returns the number of sub-blocks per source block into which the encodable data is partitioned.
      * 
      * @return the number of sub-blocks per source block into which the encodable data is partitioned
-     * @exception IllegalStateException
-     *                If this is an invalid {@code FECParamaters} instance
      */
     public int numberOfSubBlocks() {
 
-        checkValid();
         return ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
     }
 
@@ -242,7 +337,6 @@ public final class FECParameters {
      */
     public int symbolAlignment() {
 
-        checkValid();
         return ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
     }
 
@@ -253,24 +347,7 @@ public final class FECParameters {
      */
     public int totalSymbols() {
 
-        checkValid();
         // safe cast because F and T are valid, which prevents integer overflow
         return (int)ExtraMath.ceilDiv(dataLength(), symbolSize());
-    }
-
-    /**
-     * Returns {@code true} if, and only if, this {@code FECParameters} instance is valid, that is, if all FEC
-     * parameters have valid values.
-     * 
-     * @return {@code true} if, and only if, this {@code FECParameters} instance is valid
-     */
-    public boolean isValid() {
-
-        return isValid;
-    }
-
-    private void checkValid() {
-
-        if (!isValid()) throw new IllegalStateException("invalid FEC parameters");
     }
 }

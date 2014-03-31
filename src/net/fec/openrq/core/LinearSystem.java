@@ -28,6 +28,7 @@ import java.util.TreeSet;
 
 import net.fec.openrq.core.util.rq.OctectOps;
 import net.fec.openrq.core.util.rq.Rand;
+import net.fec.openrq.core.util.rq.SystematicIndices;
 import net.fec.openrq.core.util.rq.Utilities;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
 

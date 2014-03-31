@@ -17,7 +17,7 @@
 package net.fec.openrq.core;
 
 
-import net.fec.openrq.core.encoder.DataEncoderBuilder;
+import net.fec.openrq.core.parameters.FECParameters;
 
 
 /**
@@ -27,62 +27,28 @@ import net.fec.openrq.core.encoder.DataEncoderBuilder;
 public final class OpenRQ {
 
     /**
+     * @param fecParams
      * @param data
-     * @param beginIndex
-     * @param endIndex
      * @return
      */
-    public static DataEncoderBuilder<ArrayDataEncoder> newEncoderBuilder(byte[] data) {
+    public static ArrayDataEncoder newEncoder(byte[] data, FECParameters fecParams) {
 
-        return newEncoderBuilder(data, 0, data.length);
+        return newEncoder(data, 0, fecParams);
     }
 
     /**
+     * @param fecParams
      * @param data
-     * @param beginIndex
-     * @param endIndex
+     * @param offset
      * @return
      */
-    public static DataEncoderBuilder<ArrayDataEncoder> newEncoderBuilder(byte[] data, int beginIndex, int endIndex) {
+    public static ArrayDataEncoder newEncoder(byte[] data, int offset, FECParameters fecParams) {
 
-        checkIndexBounds(beginIndex, endIndex, data.length);
-        return Builders.newEncoderBuilder(data, beginIndex, endIndex - beginIndex);
-    }
+        final long longDataLen = fecParams.dataLength();
+        if (longDataLen > Integer.MAX_VALUE) throw new IllegalArgumentException("data length is too large");
+        checkArrayBounds(offset, (int)longDataLen, data.length);
 
-    /**
-     * @param symbolSize
-     * @param numSourceBlocks
-     * @param numSubBlocks
-     * @param data
-     * @return
-     */
-    public static ArrayDataEncoder newEncoder(int symbolSize, int numSourceBlocks, int numSubBlocks, byte[] data) {
-
-        return newEncoder(symbolSize, numSourceBlocks, numSubBlocks, data, 0, data.length);
-    }
-
-    /**
-     * @param symbolSize
-     * @param numSourceBlocks
-     * @param numSubBlocks
-     * @param data
-     * @param beginIndex
-     * @param endIndex
-     * @return
-     */
-    public static ArrayDataEncoder newEncoder(
-        int symbolSize,
-        int numSourceBlocks,
-        int numSubBlocks,
-        byte[] data,
-        int beginIndex,
-        int endIndex)
-    {
-
-        checkIndexBounds(beginIndex, endIndex, data.length);
-        final int len = endIndex - beginIndex;
-        final FECParameters fecParams = newParams(len, symbolSize, numSourceBlocks, numSubBlocks);
-        return ArrayDataEncoder.newEncoder(data, beginIndex, fecParams);
+        return ArrayDataEncoder.newEncoder(data, offset, fecParams);
     }
 
     /**
@@ -95,36 +61,18 @@ public final class OpenRQ {
         return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
     }
 
-    /**
-     * @param dataLen
-     * @param symbolSize
-     * @param numSourceBlocks
-     * @param numSubBlocks
-     * @param extraSymbols
-     * @return
-     */
-    public static ArrayDataDecoder newDecoder(
-        int dataLen,
-        int symbolSize,
-        int numSourceBlocks,
-        int numSubBlocks,
-        int extraSymbols)
-    {
+    private static final void checkArrayBounds(int arrOff, int arrLen, int length) {
 
-        final FECParameters fecParams = newParams(dataLen, symbolSize, numSourceBlocks, numSubBlocks);
-        return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
-    }
-
-    private static void checkIndexBounds(int beginIndex, int endIndex, int arrayLen) {
-
-        if (beginIndex < 0 || endIndex > arrayLen || beginIndex > endIndex) {
-            throw new IndexOutOfBoundsException();
+        // retrieved from java.nio.Buffer class
+        if ((arrOff | arrLen | (arrOff + arrLen) | (length - (arrOff + arrLen))) < 0) {
+            throw new IndexOutOfBoundsException(getArrayBoundsMsg(arrOff, arrLen, length));
         }
     }
 
-    private static FECParameters newParams(int F, int T, int Z, int N) {
+    // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
+    private static final String getArrayBoundsMsg(int off, int len, int arrLength) {
 
-        return FECParameters.makeFECParameters(F, T, Z, N);
+        return "region off = " + off + "; region length = " + len + "; array length = " + arrLength;
     }
 
     private OpenRQ() {

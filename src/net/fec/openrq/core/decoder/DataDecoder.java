@@ -16,7 +16,7 @@
 package net.fec.openrq.core.decoder;
 
 
-import net.fec.openrq.core.FECParameters;
+import net.fec.openrq.core.parameters.FECParameters;
 
 
 /**

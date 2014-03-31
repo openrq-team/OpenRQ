@@ -17,7 +17,24 @@
 package net.fec.openrq.core.parameters;
 
 
-import net.fec.openrq.core.util.arithmetic.ExtraMath;
+import static net.fec.openrq.core.parameters.InternalConstants.Al_min;
+import static net.fec.openrq.core.parameters.InternalConstants.ESI_max;
+import static net.fec.openrq.core.parameters.InternalConstants.ESI_min;
+import static net.fec.openrq.core.parameters.InternalConstants.F_max;
+import static net.fec.openrq.core.parameters.InternalConstants.F_min;
+import static net.fec.openrq.core.parameters.InternalConstants.K_max;
+import static net.fec.openrq.core.parameters.InternalConstants.K_min;
+import static net.fec.openrq.core.parameters.InternalConstants.Kt_max;
+import static net.fec.openrq.core.parameters.InternalConstants.N_max;
+import static net.fec.openrq.core.parameters.InternalConstants.N_min;
+import static net.fec.openrq.core.parameters.InternalConstants.SBN_max;
+import static net.fec.openrq.core.parameters.InternalConstants.SBN_min;
+import static net.fec.openrq.core.parameters.InternalConstants.T_max;
+import static net.fec.openrq.core.parameters.InternalConstants.T_min;
+import static net.fec.openrq.core.parameters.InternalConstants.Z_max;
+import static net.fec.openrq.core.parameters.InternalConstants.Z_min;
+import static net.fec.openrq.core.parameters.InternalFunctions.KL;
+import static net.fec.openrq.core.util.arithmetic.ExtraMath.ceilDiv;
 
 
 /**
@@ -26,14 +43,14 @@ import net.fec.openrq.core.util.arithmetic.ExtraMath;
  */
 public final class ParameterChecker {
 
-    // =========== data length - F ========== //
+    // =========== F -> "transfer length of the object, in octets" ========== //
 
     /**
      * @return
      */
     public static long minDataLength() {
 
-        return InternalConstants.MIN_F;
+        return F_min;
     }
 
     /**
@@ -41,17 +58,17 @@ public final class ParameterChecker {
      */
     public static long maxDataLength() {
 
-        return InternalConstants.MAX_F;
+        return F_max;
     }
 
-    // =========== symbol size - T ========== //
+    // =========== T -> "symbol size, in octets" ========== //
 
     /**
      * @return
      */
     public static int minSymbolSize() {
 
-        return InternalConstants.MIN_T;
+        return T_min;
     }
 
     /**
@@ -59,59 +76,17 @@ public final class ParameterChecker {
      */
     public static int maxSymbolSize() {
 
-        return InternalConstants.MAX_T;
+        return T_max;
     }
 
-    /**
-     * Returns a lower bound for the size of a symbol given the length of some data object.
-     * <p>
-     * The returned value is equal to
-     * <code>floor(dataLength / (56403 &times; {@linkplain #maxNumSourceBlocks() maxNumSrcBlocks}))</code>.
-     * 
-     * @param dataLen
-     *            The length of some data object in number of bytes
-     * @return a lower bound for the size of a symbol in number of bytes
-     * @exception IllegalArgumentException
-     *                If the data length is lower than its minimum value or greater than its maximum value
-     */
-    public static int symbolSizeLowerBound(long dataLen) {
-
-        if (dataLen < minDataLength() || dataLen > maxDataLength()) {
-            throw new IllegalArgumentException();
-        }
-
-        // safe cast since dataLength is safely upper bounded
-        return (int)(dataLen / ((long)InternalConstants.K_MAX * maxNumSourceBlocks()));
-    }
-
-    /**
-     * Returns an upper bound for the size of a symbol given the length of some data object.
-     * <p>
-     * The returned value is equal to <code>min(dataLength,  {@linkplain #maxSymbolSize() maxSymbolSize})</code>
-     * 
-     * @param dataLen
-     *            The length of some data object in number of bytes
-     * @return an upper bound for the size of a symbol in number of bytes
-     * @exception IllegalArgumentException
-     *                If the data length is lower than its minimum value or greater than its maximum value
-     */
-    public static int symbolSizeUpperBound(long dataLen) {
-
-        if (dataLen < minDataLength() || dataLen > maxDataLength()) {
-            throw new IllegalArgumentException();
-        }
-
-        return (int)Math.min(maxSymbolSize(), dataLen);
-    }
-
-    // =========== number of source blocks - Z ========== //
+    // =========== Z -> "number of source blocks" ========== //
 
     /**
      * @return
      */
     public static int minNumSourceBlocks() {
 
-        return InternalConstants.MIN_Z;
+        return Z_min;
     }
 
     /**
@@ -119,17 +94,17 @@ public final class ParameterChecker {
      */
     public static int maxNumSourceBlocks() {
 
-        return InternalConstants.MAX_Z;
+        return Z_max;
     }
 
-    // =========== number of sub-blocks - N ========== //
+    // =========== N -> "number of sub-blocks in each source block" ========== //
 
     /**
      * @return
      */
     public static int minNumSubBlocks() {
 
-        return InternalConstants.MIN_N;
+        return N_min;
     }
 
     /**
@@ -137,67 +112,131 @@ public final class ParameterChecker {
      */
     public static int maxNumSubBlocks() {
 
-        return InternalConstants.MAX_N;
+        return N_max;
     }
 
-    // =========== F, T, Z, N =========== //
-
-    /**
-     * @param dataLen
-     * @param symbolSize
-     * @param numSourceBlocks
-     * @param numSubBlocks
-     * @return
-     */
-    public static boolean areValidFECParameters(long dataLen, int symbolSize, int numSourceBlocks, int numSubBlocks) {
-
-        final long F = dataLen;
-        final int T = symbolSize;
-        final int Z = numSourceBlocks;
-        final int N = numSubBlocks;
-        final int Al = symbolAlignmentValue();
-
-        // check max-min bounds
-        if ((F < minDataLength()) | (maxDataLength() < F) |
-            (T < minSymbolSize()) | (maxSymbolSize() < T) |
-            (Z < minNumSourceBlocks()) | (maxNumSourceBlocks() < Z) |
-            (N < minNumSubBlocks()) | (maxNumSubBlocks() < N)) {
-            return false;
-        }
-
-        // check multiple of symbol alignment
-        if ((T % Al) != 0) {
-            return false;
-        }
-
-        final long Kt = ExtraMath.ceilDiv(F, T);
-
-        // check partitioning bounds
-        if (T > F || Z > Kt || N > (T / Al)) {
-            return false;
-        }
-
-        // check number of symbols
-        if (Z < Kt / InternalConstants.K_MAX) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // =========== symbol alignment - Al ========== //
+    // =========== Al -> "symbol alignment parameter" ========== //
 
     /**
      * @return
      */
     public static int symbolAlignmentValue() {
 
-        return InternalConstants.ALIGN_VALUE;
+        return 1; // fixed value
     }
 
-    public static boolean isValidSymbolAlignment(int symbolAlign) {
+    // =========== F, T, Z, N, Al =========== //
 
-        return symbolAlign == symbolAlignmentValue();
+    /**
+     * @param dataLen
+     * @param symbolSize
+     * @param numSourceBlocks
+     * @param numSubBlocks
+     * @param sAlign
+     * @return
+     */
+    public static boolean areValidFECParameters(
+        long dataLen,
+        int symbolSize,
+        int numSourceBlocks,
+        int numSubBlocks,
+        int sAlign)
+    {
+
+        final long F = dataLen;
+        final int T = symbolSize;
+        final int Z = numSourceBlocks;
+        final int N = numSubBlocks;
+        final int Al = sAlign;
+
+        // domain restrictions
+        if ((F < F_min) || (F_max < F) ||
+            (T < Al) || (T_max < T) ||
+            (Z < Z_min) || (Z_max < Z) ||
+            (N < N_min) || (N_max < N) ||
+            (Al < Al_min)) {
+            return false;
+        }
+
+        // T must be a multiple of Al
+        if (T % Al != 0) {
+            return false;
+        }
+        // the number of symbols cannot exceed Kt_max
+        if (ceilDiv(F, T) > Kt_max) {
+            return false;
+        }
+
+        // number of symbols (the downcast never overflows)
+        final int Kt = (int)ceilDiv(F, T);
+
+        // at least one symbol, and at most K_max symbols in each source block
+        if (Z > Kt || Z < ceilDiv(Kt, K_max)) {
+            return false;
+        }
+
+        // sub-symbol size must be at least Al
+        if (N > T / Al) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // =========== F, P', WS, Al =========== //
+
+    /**
+     * @param dataLen
+     * @param maxPayLen
+     * @param maxDecBlock
+     * @param sAlign
+     * @return
+     */
+    public static boolean areValidDerivingParameters(long dataLen, int maxPayLen, int maxDecBlock, int sAlign) {
+
+        final long F = dataLen;
+        final int P = maxPayLen;
+        final int WS = maxDecBlock;
+        final int Al = sAlign;
+
+        // domain restrictions
+        if (F < F_min || F_max < F ||
+            P < Al || // (no upper bound due to it being a max value)
+            WS < 1 || // ...
+            Al < Al_min) {
+            return false;
+        }
+
+        // P must be a multiple of Al
+        if (P % Al != 0) {
+            return false;
+        }
+
+        // the number of symbols cannot exceed Kt_max
+        if (P < ceilDiv(F, Kt_max)) {
+            return false;
+        }
+
+        // T is at most P but cannot exceed T_max
+        final int T = Math.min(P, T_max);
+
+        // number of symbols (the downcast never overflows)
+        final int Kt = (int)ceilDiv(F, T);
+
+        // WS cannot be too small
+        if (WS < K_min * T) {
+            return false;
+        }
+
+        // number of symbols in a source block (always between K_min and K_max)
+        final int KL = KL(N_max, WS, Al, T);
+
+        // the number of source blocks cannot exceed Z_max
+        if (ceilDiv(Kt, KL) > Z_max) {
+            return false;
+        }
+
+        return true;
     }
 
     // =========== source block number - SBN ========== //
@@ -207,7 +246,7 @@ public final class ParameterChecker {
      */
     public static int minSourceBlockNumber() {
 
-        return InternalConstants.MIN_SBN;
+        return SBN_min;
     }
 
     /**
@@ -215,7 +254,7 @@ public final class ParameterChecker {
      */
     public static int maxSourceBlockNumber() {
 
-        return InternalConstants.MAX_SBN;
+        return SBN_max;
     }
 
     // =========== encoding symbol identifier - ESI ========== //
@@ -225,7 +264,7 @@ public final class ParameterChecker {
      */
     public static int minEncodingSymbolID() {
 
-        return InternalConstants.MIN_ESI;
+        return ESI_min;
     }
 
     /**
@@ -233,7 +272,7 @@ public final class ParameterChecker {
      */
     public static int maxEncodingSymbolID() {
 
-        return InternalConstants.MAX_ESI;
+        return ESI_max;
     }
 
     // =========== SBN, ESI =========== //
@@ -265,15 +304,7 @@ public final class ParameterChecker {
      */
     public static int maxNumSourceSymbolsPerBlock() {
 
-        return InternalConstants.K_MAX;
-    }
-
-    /**
-     * @return
-     */
-    public static int minNumSourceSymbolsPerBlock() {
-
-        return InternalConstants.K_MIN;
+        return K_max;
     }
 
     private ParameterChecker() {

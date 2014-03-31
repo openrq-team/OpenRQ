@@ -18,6 +18,7 @@ package net.fec.openrq.core;
 
 import net.fec.openrq.core.decoder.DataDecoder;
 import net.fec.openrq.core.decoder.SourceBlockDecoder;
+import net.fec.openrq.core.parameters.FECParameters;
 import RQLibrary.Partition;
 
 
@@ -29,9 +30,6 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
 
-        if (!fecParams.isValid()) {
-            throw new IllegalArgumentException("invalid FEC parameters");
-        }
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("maximum data length exceeded");
         }

@@ -29,8 +29,10 @@ import java.util.TreeMap;
 
 import net.fec.openrq.core.decoder.SourceBlockDecoder;
 import net.fec.openrq.core.decoder.SourceBlockState;
+import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
+import net.fec.openrq.core.util.rq.SystematicIndices;
 import net.fec.openrq.core.util.rq.Utilities;
 
 
@@ -212,7 +214,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         checkSymbolData(symbolData);
 
         // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
+        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
 
         // generate repair symbol (cannot avoid copy)
         byte[] repairData = new byte[fecParams.symbolSize()];
@@ -247,7 +249,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         checkSymbolData(symbolData, offset);
 
         // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
+        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
 
         // generate repair symbol (cannot avoid copy)
         byte[] repairData = Arrays.copyOfRange(symbolData, offset, offset + fecParams.symbolSize());

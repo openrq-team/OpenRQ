@@ -18,6 +18,7 @@ package net.fec.openrq.core;
 
 import net.fec.openrq.core.encoder.DataEncoder;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
+import net.fec.openrq.core.parameters.FECParameters;
 import RQLibrary.Partition;
 
 
@@ -29,9 +30,6 @@ public final class ArrayDataEncoder implements DataEncoder {
 
     static ArrayDataEncoder newEncoder(byte[] array, int offset, FECParameters fecParams) {
 
-        if (!fecParams.isValid()) {
-            throw new IllegalArgumentException("invalid FEC parameters");
-        }
         if (offset < 0 || (array.length - offset) < fecParams.dataLength()) {
             throw new IndexOutOfBoundsException();
         }

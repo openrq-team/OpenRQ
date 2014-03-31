@@ -24,12 +24,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import net.fec.openrq.core.ArrayDataDecoder;
-import net.fec.openrq.core.FECParameters;
 import net.fec.openrq.core.FECPayloadID;
 import net.fec.openrq.core.OpenRQ;
 import net.fec.openrq.core.decoder.SourceBlockDecoder;
 import net.fec.openrq.core.decoder.SourceBlockState;
+import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
+import net.fec.openrq.core.util.Optional;
 import net.fec.openrq.core.util.numericaltype.SizeOf;
 import net.fec.openrq.test.util.summary.LongSummaryStatistics;
 import net.fec.openrq.test.util.summary.Summarizable;
@@ -314,10 +315,9 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
         static DataHeader parseDataHeader(ByteBuffer buf) {
 
-            final FECParameters fecParams = FECParameters.readFromBuffer(buf);
-            if (!fecParams.isValid()) {
-                throw new IllegalArgumentException("invalid FEC parameters");
-            }
+            final Optional<FECParameters> optional = FECParameters.readFromBuffer(buf);
+            if (!optional.isPresent()) throw new IllegalArgumentException("invalid FEC parameters");
+            final FECParameters fecParams = optional.get();
 
             final int extraSymbols = buf.getInt();
             if (extraSymbols < 0 || extraSymbols > Integer.MAX_VALUE - ParameterChecker.maxNumSourceSymbolsPerBlock()) {
@@ -358,10 +358,10 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
         static SymbolHeader parseSymbolHeader(ByteBuffer buf, FECParameters fecParams, int sbn) {
 
-            final FECPayloadID fecPayloadID = FECPayloadID.readFromBuffer(buf, fecParams);
-            if (!fecPayloadID.isValid()) {
-                throw new IllegalArgumentException("invalid FEC Payload ID");
-            }
+            final Optional<FECPayloadID> optional = FECPayloadID.readFromBuffer(buf, fecParams);
+            if (!optional.isPresent()) throw new IllegalArgumentException("invalid FEC Payload ID");
+            final FECPayloadID fecPayloadID = optional.get();
+
             if (fecPayloadID.sourceBlockNumber() != sbn) {
                 throw new IllegalArgumentException("source block number does not match the expected");
             }

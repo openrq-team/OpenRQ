@@ -22,9 +22,11 @@ import java.util.List;
 
 import net.fec.openrq.core.encoder.EncodingPacket;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
+import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.collection.ImmutableList;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
+import net.fec.openrq.core.util.rq.SystematicIndices;
 
 
 /**
@@ -62,7 +64,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
             // account for padding in the last source symbol
             final int symbolLen = Math.min(T, array.length - symbolOff);
             final PaddedByteArray symbolData = PaddedByteArray.newArray(array, symbolOff, symbolLen, T);
-            final FECPayloadID fecPayloadID = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
+            final FECPayloadID fecPayloadID = FECPayloadID.newPayloadID(sbn, esi, fecParams);
 
             symbols[esi] = EncodingSymbol.newSourceSymbol(fecPayloadID, symbolData);
         }
@@ -153,7 +155,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         byte[] enc_data = LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi), fecParams.symbolSize());
 
         // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
+        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
 
         // generate repair symbol // TODO should we store the repair symbols generated?
         EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(fpid, enc_data);
@@ -175,7 +177,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         }
 
         // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.makeFECPayloadID(sbn, esi, fecParams);
+        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
 
         // generate repair symbols
         final List<ByteBuffer> bufs = new ArrayList<>();
