@@ -30,7 +30,7 @@ public abstract class Rand {
 		
 		int x0, x1, x2, x3;
 		
-		x0 = (int) ((y + i)                             % 256);
+		x0 = (int) ((y + i)                               % 256);
 		x1 = (ExtraMath.floor((double) y /      256) + i) % 256;
 		x2 = (ExtraMath.floor((double) y /    65536) + i) % 256;
 		x3 = (ExtraMath.floor((double) y / 16777216) + i) % 256;

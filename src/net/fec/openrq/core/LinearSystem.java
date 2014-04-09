@@ -504,7 +504,7 @@ final class LinearSystem {
 	            		 }
 	            	 }
 	            	 
-	            	 // is this a HDPC row? this is not 100% accurate (false negatives) but is accurate enough)
+	            	 // is this a HDPC row? this is not 100% accurate (false negatives) but is accurate enough
 	            	 if(degree <= nonZeros)
 	            	 {
 	            		 isHDPC = false;
@@ -514,6 +514,7 @@ final class LinearSystem {
 	            		 isHDPC = true;
 	            	 }
 	      
+	            	 // this is an optimization
 	                 if(nonZeros == 2 && !isHDPC)
 	                	 rows.put(row, new Row(row, nonZeros, degree, isHDPC, edges));
 	                 else
@@ -557,8 +558,8 @@ final class LinearSystem {
 	            	 if(isHDPC2 && chosenRowsCounter < nonHDPCRows)
 	            	 { // if it is, then we must choose another line
 	                                 
-	            		 int newDegree = 256*L;
-	            		 int newR = L+1;
+	            		 // we use 'r' to find the degree, since non-HDPC rows only have 1's and 0's
+	            		 int newR = L+1; 
 	                                
 	            		 // lets go search all the rows
 	            		 for(Row row : rows.values())
@@ -573,7 +574,6 @@ final class LinearSystem {
 	            					 //  so lets update our 'currently chosen' row
 	            					 newR = row.nonZeros;
 	            					 rLinha = row.id;
-	            					 newDegree = row.degree;
 	            				 }
 	            			 }
 	            			 else
