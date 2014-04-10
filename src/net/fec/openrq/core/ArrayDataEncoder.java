@@ -19,7 +19,6 @@ package net.fec.openrq.core;
 import net.fec.openrq.core.encoder.DataEncoder;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
 import net.fec.openrq.core.parameters.FECParameters;
-import RQLibrary.Partition;
 
 
 /**
