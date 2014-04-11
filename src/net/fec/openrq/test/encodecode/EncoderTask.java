@@ -29,8 +29,8 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 
+import net.fec.openrq.core.EncodingPacket;
 import net.fec.openrq.core.encoder.DataEncoder;
-import net.fec.openrq.core.encoder.EncodingPacket;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.numericaltype.SizeOf;
@@ -370,7 +370,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
     private void sendDataHeader(DataEncoder dataEnc) throws IOException {
 
         final ByteBuffer header = ByteBuffer.allocate(12 + SizeOf.INT);
-        dataEnc.fecParameters().writeToBuffer(header);
+        dataEnc.fecParameters().writeTo(header);
         header.putInt(extraSymbols);
         header.rewind();
 
@@ -382,25 +382,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
 
     private void sendPacket(EncodingPacket packet) throws IOException {
 
-        final List<ByteBuffer> symbols = packet.getSymbolData();
-
-        final ByteBuffer header = ByteBuffer.allocate(4 + SizeOf.INT);
-        packet.fecPayloadID().writeToBuffer(header);
-        header.putInt(symbols.size());
-        header.rewind();
-
-        // send header (SBN, ESI) + NUM_SYMBOLS
-        while (header.hasRemaining()) {
-            writable.write(header);
-        }
-        for (ByteBuffer symb : symbols) {
-            // send symbol data
-            symb.rewind();
-
-            while (symb.hasRemaining()) {
-                writable.write(symb);
-            }
-        }
+        packet.writeTo(writable);
     }
 
     private EncodingPacket getSequentialSourcePacket(SourceBlockEncoder enc, int esi, LongSummaryStatistics stats) {

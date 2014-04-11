@@ -16,7 +16,15 @@
 package net.fec.openrq.core.decoder;
 
 
+import java.io.DataInput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+
+import net.fec.openrq.core.EncodingPacket;
+import net.fec.openrq.core.SerializablePacket;
 import net.fec.openrq.core.parameters.FECParameters;
+import net.fec.openrq.core.util.parsing.Parsed;
 
 
 /**
@@ -76,4 +84,247 @@ public interface DataDecoder {
      * @return a decoder object for a specific source block
      */
     public SourceBlockDecoder decoderForSourceBlock(int sbn);
+
+    /**
+     * Parses an encoding packet from the given source block number, encoding symbol identifier of the first symbol, and
+     * symbols data.
+     * <p>
+     * The symbols data will be read, in the array, from position {@code 0} inclusive to position {@code symbols.length}
+     * exclusive.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param sbn
+     *            The common source block number of all symbols in the packet
+     * @param esi
+     *            The encoding symbol identifier of the first symbol in the packet
+     * @param symbols
+     *            An array of bytes containing the symbols data
+     * @param copySymbols
+     *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
+     *            reference to the array
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @exception NullPointerException
+     *                If {@code symbols} is {@code null}
+     */
+    public Parsed<EncodingPacket> parsePacket(int sbn, int esi, byte[] symbols, boolean copySymbols);
+
+    /**
+     * Parses an encoding packet from the given source block number, encoding symbol identifier of the first symbol, and
+     * symbols data.
+     * <p>
+     * The symbols data will be read, in the array, from position {@code off} inclusive to position {@code (off + len)}
+     * exclusive.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param sbn
+     *            The common source block number of all symbols in the packet
+     * @param esi
+     *            The encoding symbol identifier of the first symbol in the packet
+     * @param symbols
+     *            An array of bytes containing the symbols data
+     * @param off
+     *            The starting index in the array (must be non-negative)
+     * @param len
+     *            The length of the symbols data (must be non-negative and no larger than {@code symbols.length - off})
+     * @param copySymbols
+     *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
+     *            reference to the array
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @exception IndexOutOfBoundsException
+     *                If the pre-conditions on the offset and data length do not hold
+     * @exception NullPointerException
+     *                If {@code symbols} is {@code null}
+     */
+    public Parsed<EncodingPacket> parsePacket(int sbn, int esi, byte[] symbols, int off, int len, boolean copySymbols);
+
+    /**
+     * Parses an encoding packet from the given source block number, encoding symbol identifier of the first symbol, and
+     * symbols data.
+     * <p>
+     * The symbols data will be read, in the buffer, from the current {@linkplain ByteBuffer#position() position}
+     * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
+     * of the buffer will be advanced to the limit.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param sbn
+     *            The common source block number of all symbols in the packet
+     * @param esi
+     *            The encoding symbol identifier of the first symbol in the packet
+     * @param symbols
+     *            A buffer containing the symbols data
+     * @param copySymbols
+     *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
+     *            {@linkplain ByteBuffer#duplicate() duplicate} of the buffer
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @exception NullPointerException
+     *                If {@code symbols} is {@code null}
+     */
+    public Parsed<EncodingPacket> parsePacket(int sbn, int esi, ByteBuffer symbols, boolean copySymbols);
+
+    /**
+     * Parses an encoding packet from the given serializable packet.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param ser
+     *            A serializable packet
+     * @param copySymbols
+     *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
+     *            reference to the array inside the serializable packet
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @exception NullPointerException
+     *                If {@code ser} is {@code null}
+     */
+    public Parsed<EncodingPacket> parsePacket(SerializablePacket ser, boolean copySymbols);
+
+    /**
+     * Parses an encoding packet from the given array. The format of the packet in the array must follow the format
+     * specified by {@link EncodingPacket#asArray()}.
+     * <p>
+     * The encoding packet will be read, in the array, from position {@code 0} inclusive to position
+     * {@code array.length} exclusive.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param array
+     *            An array containing an encoding packet
+     * @param copySymbols
+     *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
+     *            reference to the array
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @exception NullPointerException
+     *                If {@code array} is {@code null}
+     */
+    public Parsed<EncodingPacket> parsePacket(byte[] array, boolean copySymbols);
+
+    /**
+     * Parses an encoding packet from the given array. The format of the packet in the array must follow the format
+     * specified by {@link EncodingPacket#asArray()}.
+     * <p>
+     * The encoding packet will be read, in the array, from position {@code off} inclusive to position
+     * {@code (off + len)} exclusive.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param array
+     *            An array containing an encoding packet
+     * @param off
+     *            The starting index in the array (must be non-negative)
+     * @param len
+     *            The length of the encoding packet (must be non-negative and no larger than {@code array.length - off})
+     * @param copySymbols
+     *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
+     *            reference to the array
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @exception NullPointerException
+     *                If {@code array} is {@code null}
+     */
+    public Parsed<EncodingPacket> parsePacket(byte[] array, int off, int len, boolean copySymbols);
+
+    /**
+     * Parses an encoding packet from the given buffer. The format of the packet in the array must follow the format
+     * specified by {@link EncodingPacket#asBuffer()}.
+     * <p>
+     * The encoding packet will be read, in the buffer, from the current {@linkplain ByteBuffer#position() position}
+     * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
+     * of the buffer will be advanced to the limit.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param buffer
+     *            A buffer containing an encoding packet
+     * @param copySymbols
+     *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
+     *            {@linkplain ByteBuffer#duplicate() duplicate} of the buffer
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @exception NullPointerException
+     *                If {@code buffer} is {@code null}
+     */
+    public Parsed<EncodingPacket> parsePacket(ByteBuffer buffer, boolean copySymbols);
+
+    /**
+     * Reads and parses an encoding packet from a {@code DataInput} object. The format of the packet data must follow
+     * the format specified by {@link EncodingPacket#writeTo(java.io.DataOutput)}.
+     * <p>
+     * Examples of {@code DataInput} objects are {@link java.io.DataInputStream DataInputStream} and
+     * {@link java.io.ObjectInputStream ObjectInputStream}.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param in
+     *            A {@code DataInput} object from which a packet is read
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code DataInput} object
+     * @exception NullPointerException
+     *                If {@code in} is {@code null}
+     */
+    public Parsed<EncodingPacket> readPacketFrom(DataInput in) throws IOException;
+
+    /**
+     * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. The format of the packet data must
+     * follow the format specified by {@link EncodingPacket#writeTo(java.nio.channels.WritableByteChannel)}.
+     * <p>
+     * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
+     * {@link java.nio.channels.FileChannel FileChannel}.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param ch
+     *            A {@code ReadableByteChannel} object from which a packet is read
+     * @return a container object containing an encoding packet or a parsing failure reason string
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     * @exception NullPointerException
+     *                If {@code ch} is {@code null}
+     */
+    public Parsed<EncodingPacket> readPacketFrom(ReadableByteChannel ch) throws IOException;
 }

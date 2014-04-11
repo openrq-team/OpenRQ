@@ -18,7 +18,6 @@ package net.fec.openrq.core;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Objects;
 
 import net.fec.openrq.core.util.rq.SystematicIndices;
 
@@ -30,32 +29,32 @@ import net.fec.openrq.core.util.rq.SystematicIndices;
 abstract class EncodingSymbol {
 
     /**
-     * @param fecPayloadID
+     * @param esi
      * @param data
      * @return
      */
-    static EncodingSymbol newSourceSymbol(FECPayloadID fecPayloadID, PaddedByteArray data) {
+    static EncodingSymbol newSourceSymbol(int esi, PaddedByteArray data) {
 
-        return new SourceSymbol(fecPayloadID, data);
+        return new SourceSymbol(esi, data);
     }
 
     /**
-     * @param fecPayloadID
+     * @param esi
      * @param data
      * @return
      */
-    static EncodingSymbol newRepairSymbol(FECPayloadID fecPayloadID, byte[] data) {
+    static EncodingSymbol newRepairSymbol(int esi, byte[] data) {
 
-        return new RepairSymbol(fecPayloadID, data);
+        return new RepairSymbol(esi, data);
     }
 
 
-    private final FECPayloadID fecPayloadID;
+    private final int esi;
 
 
-    private EncodingSymbol(FECPayloadID fecPayloadID) {
+    private EncodingSymbol(int esi) {
 
-        this.fecPayloadID = Objects.requireNonNull(fecPayloadID);
+        this.esi = esi;
     }
 
     /**
@@ -75,25 +74,14 @@ abstract class EncodingSymbol {
     /**
      * @return
      */
-    FECPayloadID getFECPayloadID() {
-
-        return fecPayloadID;
-    }
+    abstract int transportSize();
 
     /**
      * @return
      */
-    int getSBN() {
+    int esi() {
 
-        return fecPayloadID.sourceBlockNumber();
-    }
-
-    /**
-     * @return
-     */
-    int getESI() {
-
-        return fecPayloadID.encodingSymbolID();
+        return esi;
     }
 
     /**
@@ -104,7 +92,7 @@ abstract class EncodingSymbol {
 
         int kLinha = SystematicIndices.ceil(K);
 
-        return getESI() + (kLinha - K); // yes, I know its commutative: it's just for a better code reading experience.
+        return esi() + (kLinha - K); // yes, I know its commutative: it's just for a better code reading experience.
     }
 
 
@@ -114,9 +102,9 @@ abstract class EncodingSymbol {
         private final ByteBuffer transportBuffer;
 
 
-        SourceSymbol(FECPayloadID fecPayloadID, PaddedByteArray data) {
+        SourceSymbol(int esi, PaddedByteArray data) {
 
-            super(fecPayloadID);
+            super(esi);
             this.data = data;
             this.transportBuffer = prepareTransportBuffer(data);
         }
@@ -145,6 +133,12 @@ abstract class EncodingSymbol {
 
             return transportBuffer.asReadOnlyBuffer();
         }
+
+        @Override
+        int transportSize() {
+
+            return transportBuffer.remaining();
+        }
     }
 
     private static final class RepairSymbol extends EncodingSymbol {
@@ -153,9 +147,9 @@ abstract class EncodingSymbol {
         private final ByteBuffer transportBuffer;
 
 
-        RepairSymbol(FECPayloadID fecPayloadID, byte[] data) {
+        RepairSymbol(int esi, byte[] data) {
 
-            super(fecPayloadID);
+            super(esi);
             this.data = data;
             this.transportBuffer = prepareTransportBuffer(data);
         }
@@ -175,6 +169,12 @@ abstract class EncodingSymbol {
         ByteBuffer transportData() {
 
             return transportBuffer.asReadOnlyBuffer();
+        }
+
+        @Override
+        int transportSize() {
+
+            return transportBuffer.remaining();
         }
     }
 }

@@ -24,14 +24,15 @@ import java.util.Map;
 import java.util.Objects;
 
 import net.fec.openrq.core.ArrayDataDecoder;
-import net.fec.openrq.core.FECPayloadID;
+import net.fec.openrq.core.EncodingPacket;
 import net.fec.openrq.core.OpenRQ;
+import net.fec.openrq.core.decoder.DataDecoder;
 import net.fec.openrq.core.decoder.SourceBlockDecoder;
 import net.fec.openrq.core.decoder.SourceBlockState;
 import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
-import net.fec.openrq.core.util.Optional;
 import net.fec.openrq.core.util.numericaltype.SizeOf;
+import net.fec.openrq.core.util.parsing.Parsed;
 import net.fec.openrq.test.util.summary.LongSummaryStatistics;
 import net.fec.openrq.test.util.summary.Summarizable;
 
@@ -166,7 +167,6 @@ public final class DecoderTask implements Summarizable<StatsType> {
         final LongSummaryStatistics decFailTimeStats = new LongSummaryStatistics();
 
         final ByteBuffer dataHeaderBuf = DataHeader.allocateNewBuffer();
-        final ByteBuffer symbolHeaderBuf = SymbolHeader.allocateNewBuffer();
 
         for (int n = 0; n < numIterations; n++) {
             dataHeaderBuf.clear();
@@ -174,8 +174,6 @@ public final class DecoderTask implements Summarizable<StatsType> {
             final DataHeader dataHeader = DataHeader.parseDataHeader(dataHeaderBuf);
             final FECParameters fecParams = dataHeader.getFECParams();
             final int extraSymbols = dataHeader.getExtraSymbols();
-
-            final ByteBuffer symbolBuf = ByteBuffer.allocate(fecParams.symbolSize());
 
             final ArrayDataDecoder dataDec = initDataDecoder(fecParams, extraSymbols, initTimeStats);
             final int Z = dataDec.numberOfSourceBlocks();
@@ -185,27 +183,17 @@ public final class DecoderTask implements Summarizable<StatsType> {
                 final int totalSymbols = srcBlockDec.numberOfSourceSymbols() + extraSymbols;
 
                 for (int i = 0; i < totalSymbols;) {
-                    symbolHeaderBuf.clear();
-                    readBytes(symbolHeaderBuf);
-                    final SymbolHeader symbolHeader = SymbolHeader.parseSymbolHeader(symbolHeaderBuf, fecParams, sbn);
-                    final int firstESI = symbolHeader.getFECPayloadID().encodingSymbolID();
-                    final int numSymbolsInPacket = symbolHeader.getNumSymbols();
+                    final EncodingPacket packet = readPacket(dataDec);
+                    putPacket(
+                        srcBlockDec,
+                        packet,
+                        symbolTimeStats,
+                        decTimeStats,
+                        decFailTimeStats,
+                        totalDecsStats,
+                        numDecFailsStats);
 
-                    for (int s = 0; s < numSymbolsInPacket; s++) {
-                        symbolBuf.clear();
-                        readBytes(symbolBuf);
-                        putSymbol(
-                            srcBlockDec,
-                            firstESI + s,
-                            symbolBuf,
-                            symbolTimeStats,
-                            decTimeStats,
-                            decFailTimeStats,
-                            totalDecsStats,
-                            numDecFailsStats);
-                    }
-
-                    i += numSymbolsInPacket;
+                    i += packet.numberOfSymbols();
                 }
             }
 
@@ -232,6 +220,11 @@ public final class DecoderTask implements Summarizable<StatsType> {
         buf.flip().position(pos);
     }
 
+    private EncodingPacket readPacket(DataDecoder dec) throws IOException {
+
+        return dec.readPacketFrom(readable).value();
+    }
+
     private ArrayDataDecoder initDataDecoder(
         FECParameters fecParams,
         int extraSymbols,
@@ -245,10 +238,9 @@ public final class DecoderTask implements Summarizable<StatsType> {
         return dataDec;
     }
 
-    private void putSymbol(
+    private void putPacket(
         SourceBlockDecoder srcBlockDec,
-        int esi,
-        ByteBuffer buf,
+        EncodingPacket packet,
         LongSummaryStatistics symbolTimeStats,
         LongSummaryStatistics decTimeStats,
         LongSummaryStatistics decFailTimeStats,
@@ -256,23 +248,11 @@ public final class DecoderTask implements Summarizable<StatsType> {
         LongSummaryStatistics numDecFailsStats)
     {
 
-        final int K = srcBlockDec.numberOfSourceSymbols();
+        final long startNanos = System.nanoTime();
+        final SourceBlockState state = srcBlockDec.putEncodingPacket(packet);
+        final long endNanos = System.nanoTime();
 
-        final SourceBlockState state;
-        final long nanos;
-        if (esi < K) {
-            final long startNanos = System.nanoTime();
-            state = srcBlockDec.putSourceSymbol(esi, buf);
-            final long endNanos = System.nanoTime();
-            nanos = endNanos - startNanos;
-        }
-        else {
-            final long startNanos = System.nanoTime();
-            state = srcBlockDec.putRepairSymbol(esi, buf);
-            final long endNanos = System.nanoTime();
-            nanos = endNanos - startNanos;
-        }
-
+        final long nanos = endNanos - startNanos;
         switch (state) {
             case DECODED:
                 symbolTimeStats.accept(nanos);
@@ -315,9 +295,8 @@ public final class DecoderTask implements Summarizable<StatsType> {
 
         static DataHeader parseDataHeader(ByteBuffer buf) {
 
-            final Optional<FECParameters> optional = FECParameters.readFromBuffer(buf);
-            if (!optional.isPresent()) throw new IllegalArgumentException("invalid FEC parameters");
-            final FECParameters fecParams = optional.get();
+            final Parsed<FECParameters> parsed = FECParameters.parse(buf);
+            final FECParameters fecParams = parsed.value(); // may throw ParsingFailureException with failure reason msg
 
             final int extraSymbols = buf.getInt();
             if (extraSymbols < 0 || extraSymbols > Integer.MAX_VALUE - ParameterChecker.maxNumSourceSymbolsPerBlock()) {
@@ -346,53 +325,6 @@ public final class DecoderTask implements Summarizable<StatsType> {
         int getExtraSymbols() {
 
             return extraSymbols;
-        }
-    }
-
-    private static final class SymbolHeader {
-
-        static ByteBuffer allocateNewBuffer() {
-
-            return ByteBuffer.allocate(4 + SizeOf.INT);
-        }
-
-        static SymbolHeader parseSymbolHeader(ByteBuffer buf, FECParameters fecParams, int sbn) {
-
-            final Optional<FECPayloadID> optional = FECPayloadID.readFromBuffer(buf, fecParams);
-            if (!optional.isPresent()) throw new IllegalArgumentException("invalid FEC Payload ID");
-            final FECPayloadID fecPayloadID = optional.get();
-
-            if (fecPayloadID.sourceBlockNumber() != sbn) {
-                throw new IllegalArgumentException("source block number does not match the expected");
-            }
-
-            final int numSymbols = buf.getInt();
-            if (numSymbols < 1) {
-                throw new IllegalArgumentException("invalid number of symbols");
-            }
-
-            return new SymbolHeader(fecPayloadID, numSymbols);
-        }
-
-
-        private final FECPayloadID fecPayloadID;
-        private final int numSymbols;
-
-
-        SymbolHeader(FECPayloadID fecPayloadID, int numSymbols) {
-
-            this.fecPayloadID = fecPayloadID;
-            this.numSymbols = numSymbols;
-        }
-
-        FECPayloadID getFECPayloadID() {
-
-            return fecPayloadID;
-        }
-
-        int getNumSymbols() {
-
-            return numSymbols;
         }
     }
 }

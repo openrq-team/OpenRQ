@@ -17,8 +17,9 @@
 package net.fec.openrq.core.decoder;
 
 
-import java.nio.ByteBuffer;
 import java.util.Set;
+
+import net.fec.openrq.core.EncodingPacket;
 
 
 /**
@@ -95,32 +96,10 @@ public interface SourceBlockDecoder {
     public Set<Integer> missingSourceSymbols();
 
     /**
-     * @param esi
-     * @param symbolData
+     * @param packet
      * @return
+     * @exception IllegalArgumentException
+     *                If {@code packet.sourceBlockNumber() != sourceBlockNumber()}
      */
-    public SourceBlockState putSourceSymbol(int esi, ByteBuffer symbolData);
-
-    /**
-     * @param esi
-     * @param symbolData
-     * @param off
-     * @return
-     */
-    public SourceBlockState putSourceSymbol(int esi, byte[] symbolData, int off);
-
-    /**
-     * @param esi
-     * @param symbolData
-     * @return
-     */
-    public SourceBlockState putRepairSymbol(int esi, ByteBuffer symbolData);
-
-    /**
-     * @param esi
-     * @param symbolData
-     * @param off
-     * @return
-     */
-    public SourceBlockState putRepairSymbol(int esi, byte[] symbolData, int off);
+    public SourceBlockState putEncodingPacket(EncodingPacket packet);
 }

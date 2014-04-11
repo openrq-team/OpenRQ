@@ -16,9 +16,7 @@
 package net.fec.openrq.core;
 
 
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -125,7 +123,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         checkRepairSymbolESI(esi);
         for (EncodingSymbol repairSymbol : repairSymbols)
-            if (repairSymbol.getESI() == esi) return true;
+            if (repairSymbol.esi() == esi) return true;
 
         return false;
     }
@@ -149,114 +147,31 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     }
 
     @Override
-    public SourceBlockState putSourceSymbol(int esi, ByteBuffer symbolData) {
+    public SourceBlockState putEncodingPacket(EncodingPacket packet) {
+
+        // other than a different SBN, this method assumes a correct encoding packet
+        if (packet.sourceBlockNumber() != sourceBlockNumber()) {
+            throw new IllegalArgumentException("source block number does not match the expected");
+        }
 
         /*
          * TODO deal with repeated symbols and avoid doing replacing
          * already existing data (first symbol data stays)
          */
-
-        checkSourceSymbolESI(esi);
-        checkSymbolData(symbolData);
 
         // put source symbol data
-        putSourceData(esi, symbolData);
-
-        // do we have all source symbols?
-        if (isSourceBlockDecoded()) {
-            return SourceBlockState.DECODED;
+        final ByteBuffer symbols = packet.symbols();
+        int esi = packet.encodingSymbolID();
+        if (packet.symbolType() == SymbolType.SOURCE) {
+            for (int i = 0; i < packet.numberOfSymbols(); i++) {
+                putSourceData(esi + i, symbols);
+            }
         }
-        // check if we have enough symbols to decode
-        else if (receivedSourceSymbols.cardinality() + repairSymbols.size() >= K + symbolOverhead) {
-            return decode();
+        else { // packet.symbolType() == SymbolType.REPAIR
+            for (int i = 0; i < packet.numberOfSymbols(); i++) {
+                putRepairData(esi + i, symbols);
+            }
         }
-        else {
-            return SourceBlockState.INCOMPLETE;
-        }
-    }
-
-    @Override
-    public SourceBlockState putSourceSymbol(int esi, byte[] symbolData, int offset) {
-
-        /*
-         * TODO deal with repeated symbols and avoid doing replacing
-         * already existing data (first symbol data stays)
-         */
-
-        checkSourceSymbolESI(esi);
-        checkSymbolData(symbolData, offset);
-
-        // put source symbol data
-        putSourceData(esi, symbolData, offset);
-
-        // do we have all source symbols?
-        if (isSourceBlockDecoded()) {
-            return SourceBlockState.DECODED;
-        }
-        // check if we have enough symbols to decode
-        else if (receivedSourceSymbols.cardinality() + repairSymbols.size() >= K + symbolOverhead) {
-            return decode();
-        }
-        else {
-            return SourceBlockState.INCOMPLETE;
-        }
-    }
-
-    @Override
-    public SourceBlockState putRepairSymbol(int esi, ByteBuffer symbolData) {
-
-        /*
-         * TODO deal with repeated symbols and avoid doing replacing
-         * already existing data (first symbol data stays)
-         */
-
-        checkRepairSymbolESI(esi);
-        checkSymbolData(symbolData);
-
-        // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
-
-        // generate repair symbol (cannot avoid copy)
-        byte[] repairData = new byte[fecParams.symbolSize()];
-        symbolData.get(repairData); // this also advances buffer position
-        EncodingSymbol repair = EncodingSymbol.newRepairSymbol(fpid, repairData);
-
-        // add this repair symbol to the set of received repair symbols
-        repairSymbols.add(repair);
-
-        // do we have all source symbols?
-        if (isSourceBlockDecoded()) {
-            return SourceBlockState.DECODED;
-        }
-        // check if we have enough symbols to decode
-        else if (receivedSourceSymbols.cardinality() + repairSymbols.size() >= K + symbolOverhead) {
-            return decode();
-        }
-        else {
-            return SourceBlockState.INCOMPLETE;
-        }
-    }
-
-    @Override
-    public SourceBlockState putRepairSymbol(int esi, byte[] symbolData, int offset) {
-
-        /*
-         * TODO deal with repeated symbols and avoid doing replacing
-         * already existing data (first symbol data stays)
-         */
-
-        checkRepairSymbolESI(esi);
-        checkSymbolData(symbolData, offset);
-
-        // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
-
-        // generate repair symbol (cannot avoid copy)
-        byte[] repairData = Arrays.copyOfRange(symbolData, offset, offset + fecParams.symbolSize());
-        EncodingSymbol repair = EncodingSymbol.newRepairSymbol(fpid, repairData);
-
-        // add this repair symbol to the set of received repair symbols
-        repairSymbols.add(repair);
 
         // do we have all source symbols?
         if (isSourceBlockDecoded()) {
@@ -282,21 +197,6 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         if (esi < K || esi > ParameterChecker.maxEncodingSymbolID()) {
             throw new IllegalArgumentException("invalid encoding symbol ID");
-        }
-    }
-
-    private void checkSymbolData(ByteBuffer buf) {
-
-        if (buf.remaining() < fecParams.symbolSize()) {
-            throw new BufferUnderflowException();
-        }
-    }
-
-    private void checkSymbolData(byte[] arr, int off) {
-
-        // careful check to avoid integer overflow
-        if (off < 0 || arr.length - off < fecParams.symbolSize()) {
-            throw new IllegalArgumentException("invalid array offset (or insufficient bytes in array)");
         }
     }
 
@@ -431,7 +331,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     // requires valid ESI
     private void putSourceData(int esi, ByteBuffer symbolData) {
 
-        final int T = fecParams.symbolSize();
+        final int T = fecParams.symbolSize(); // TODO handle last symbol size (no padding)
         final int bufPos = symbolData.position();
 
         if (receivedSourceSymbols.get(esi)) { // if already received, just advance the buffer position
@@ -461,5 +361,17 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             data.putBytes(esi * T, symbolData, off, T);
             receivedSourceSymbols.set(esi); // mark the symbol as received
         }
+    }
+
+    // requires valid ESI
+    private void putRepairData(int esi, ByteBuffer symbolData) {
+
+        // generate repair symbol (cannot avoid copy)
+        final byte[] repairData = new byte[fecParams.symbolSize()]; // TODO handle last symbol size (no padding)
+        symbolData.get(repairData); // this also advances buffer position
+        final EncodingSymbol repair = EncodingSymbol.newRepairSymbol(esi, repairData);
+
+        // add this repair symbol to the set of received repair symbols
+        repairSymbols.add(repair);
     }
 }

@@ -18,6 +18,7 @@ package net.fec.openrq.core;
 
 
 import net.fec.openrq.core.parameters.FECParameters;
+import net.fec.openrq.core.util.array.ArrayUtils;
 
 
 /**
@@ -46,7 +47,7 @@ public final class OpenRQ {
 
         final long longDataLen = fecParams.dataLength();
         if (longDataLen > Integer.MAX_VALUE) throw new IllegalArgumentException("data length is too large");
-        checkArrayBounds(offset, (int)longDataLen, data.length);
+        ArrayUtils.checkArrayBounds(offset, (int)longDataLen, data.length);
 
         return ArrayDataEncoder.newEncoder(data, offset, fecParams);
     }
@@ -59,20 +60,6 @@ public final class OpenRQ {
     public static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
 
         return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
-    }
-
-    private static final void checkArrayBounds(int arrOff, int arrLen, int length) {
-
-        // retrieved from java.nio.Buffer class
-        if ((arrOff | arrLen | (arrOff + arrLen) | (length - (arrOff + arrLen))) < 0) {
-            throw new IndexOutOfBoundsException(getArrayBoundsMsg(arrOff, arrLen, length));
-        }
-    }
-
-    // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
-    private static final String getArrayBoundsMsg(int off, int len, int arrLength) {
-
-        return "region off = " + off + "; region length = " + len + "; array length = " + arrLength;
     }
 
     private OpenRQ() {

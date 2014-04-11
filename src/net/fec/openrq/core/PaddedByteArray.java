@@ -18,6 +18,8 @@ package net.fec.openrq.core;
 
 import java.nio.BufferOverflowException;
 
+import net.fec.openrq.core.util.array.ArrayUtils;
+
 
 /**
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
@@ -35,7 +37,7 @@ final class PaddedByteArray {
 
     static PaddedByteArray newArray(byte[] array, int off, int len, int paddedLen) {
 
-        checkArrayBounds(off, len, array.length);
+        ArrayUtils.checkArrayBounds(off, len, array.length);
         if (paddedLen < 0) throw new IllegalArgumentException("negative padded length");
 
         return new PaddedByteArray(array, off, len, paddedLen);
@@ -108,13 +110,13 @@ final class PaddedByteArray {
 
     byte get(int index) {
 
-        checkIndexRange(index, length());
+        ArrayUtils.checkIndexRange(index, length());
         return safeGet(index);
     }
 
     void set(int index, byte value) {
 
-        checkIndexRange(index, length());
+        ArrayUtils.checkIndexRange(index, length());
         safeSet(index, value);
     }
 
@@ -172,37 +174,10 @@ final class PaddedByteArray {
 
     private static final void checkIndexAndArray(int index, int length, byte[] dst, int off, int len) {
 
-        checkIndexRange(index, length);
-        checkArrayBounds(off, len, dst.length);
+        ArrayUtils.checkIndexRange(index, length);
+        ArrayUtils.checkArrayBounds(off, len, dst.length);
 
         final int remaining = length - index;
         if (len > remaining) throw new BufferOverflowException();
-    }
-
-    private static final void checkIndexRange(int index, int length) {
-
-        if (index < 0 || index >= length) {
-            throw new IndexOutOfBoundsException(getIndexRangeMsg(index, length));
-        }
-    }
-
-    // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
-    private static final String getIndexRangeMsg(int index, int length) {
-
-        return "index = " + index + "; length = " + length;
-    }
-
-    private static final void checkArrayBounds(int arrOff, int arrLen, int length) {
-
-        // retrieved from java.nio.Buffer class
-        if ((arrOff | arrLen | (arrOff + arrLen) | (length - (arrOff + arrLen))) < 0) {
-            throw new IndexOutOfBoundsException(getArrayBoundsMsg(arrOff, arrLen, length));
-        }
-    }
-
-    // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
-    private static final String getArrayBoundsMsg(int off, int len, int arrLength) {
-
-        return "region off = " + off + "; region length = " + len + "; array length = " + arrLength;
     }
 }

@@ -17,8 +17,6 @@
 package net.fec.openrq.core.parameters;
 
 
-import java.nio.ByteBuffer;
-
 import net.fec.openrq.core.util.numericaltype.SizeOf;
 import net.fec.openrq.core.util.numericaltype.UnsignedTypes;
 
@@ -193,32 +191,12 @@ public class ParameterIO {
         return (usF << dataLengthShift()) | usT;
     }
 
-    /**
-     * @param commonFecOTI
-     * @param buffer
-     */
-    public static void writeCommonFecOTI(long commonFecOTI, ByteBuffer buffer) {
-
-        // 64-bit value
-        buffer.putLong(commonFecOTI);
-    }
-
-    /**
-     * @param buffer
-     * @return
-     */
-    public static long readCommonFecOTI(ByteBuffer buffer) {
-
-        // 64-bit value
-        return buffer.getLong();
-    }
-
     // =========== Encoded Scheme-specific FEC OTI - Z|N|Al ========== //
 
     /**
      * @param numSourceBlocks
      * @param numSubBlocks
-     * @param sAlign 
+     * @param sAlign
      * @return
      */
     public static int buildSchemeSpecFecOTI(int numSourceBlocks, int numSubBlocks, int sAlign) {
@@ -229,26 +207,6 @@ public class ParameterIO {
 
         return (usZ << numSourceBlocksShift()) | (usN << numSubBlocksShift()) | usAl;
 
-    }
-
-    /**
-     * @param schemeSpecFecOTI
-     * @param buffer
-     */
-    public static void writeSchemeSpecFecOTI(int schemeSpecFecOTI, ByteBuffer buffer) {
-
-        // 32-bit value
-        buffer.putInt(schemeSpecFecOTI);
-    }
-
-    /**
-     * @param buffer
-     * @return
-     */
-    public static int readSchemeSpecFecOTI(ByteBuffer buffer) {
-
-        // 32-bit value
-        return buffer.getInt();
     }
 
     // =========== FEC payload ID - SBN|ESI ========== //
@@ -264,26 +222,6 @@ public class ParameterIO {
         final int usESI = unsignEncodingSymbolID(esi);
 
         return (usSBN << sourceBlockNumberShift()) | usESI;
-    }
-
-    /**
-     * @param fecPayloadID
-     * @param buffer
-     */
-    public static void writeFECpayloadID(int fecPayloadID, ByteBuffer buffer) {
-
-        // 32-bit value
-        buffer.putInt(fecPayloadID);
-    }
-
-    /**
-     * @param buffer
-     * @return
-     */
-    public static int readFECpayloadID(ByteBuffer buffer) {
-
-        // 32-bit value
-        return buffer.getInt();
     }
 
     private ParameterIO() {

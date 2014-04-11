@@ -21,13 +21,19 @@ import static net.fec.openrq.core.parameters.InternalConstants.T_max;
 import static net.fec.openrq.core.parameters.InternalFunctions.KL;
 import static net.fec.openrq.core.util.arithmetic.ExtraMath.ceilDiv;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
-import net.fec.openrq.core.util.Optional;
 import net.fec.openrq.core.util.arithmetic.ExtraMath;
+import net.fec.openrq.core.util.numericaltype.SizeOf;
+import net.fec.openrq.core.util.parsing.Parsed;
 
 
 /**
@@ -44,26 +50,30 @@ import net.fec.openrq.core.util.arithmetic.ExtraMath;
 public final class FECParameters {
 
     /**
-     * Reads from the provided buffer an optional {@code FECParameters} instance.
+     * Parses FEC parameters from the provided buffer.
      * <p>
      * The provided buffer must have at least 12 bytes {@linkplain ByteBuffer#remaining() remaining}. If this method
      * returns normally, the position of the provided buffer will have advanced by 12 bytes.
      * <p>
-     * A {@code FECParameters} instance is only {@linkplain Optional#isPresent() present} inside the returned optional
-     * instance if the FEC parameters contained inside the buffer have valid values.
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
      * 
      * @param buffer
      *            A buffer from which a {@code FECParameters} instance is read
-     * @return an optional {@code FECParameters} instance
+     * @return a container object containing FEC parameters or a parsing failure reason string
      * @exception NullPointerException
      *                If the provided buffer is {@code null}
      * @exception BufferUnderflowException
      *                If the provided buffer has less than 12 bytes remaining
      */
-    public static Optional<FECParameters> readFromBuffer(ByteBuffer buffer) {
+    public static Parsed<FECParameters> parse(ByteBuffer buffer) {
 
-        final long commonFecOTI = ParameterIO.readCommonFecOTI(buffer);        // 8 bytes
-        final int schemeSpecFecOTI = ParameterIO.readSchemeSpecFecOTI(buffer); // 4 bytes
+        final long commonFecOTI = buffer.getLong();   // 8 bytes
+        final int schemeSpecFecOTI = buffer.getInt(); // 4 bytes
 
         final long F = ParameterIO.extractDataLength(commonFecOTI);
         final int T = ParameterIO.extractSymbolSize(commonFecOTI);
@@ -72,35 +82,134 @@ public final class FECParameters {
         final int Al = ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
 
         if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
-            return Optional.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
+            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
         }
         else {
-            return Optional.empty();
+            return Parsed.invalid(ParameterChecker.testFECParameters(F, T, Z, N, Al));
         }
     }
 
     /**
-     * Reads from the provided array starting in a specific index an optional {@code FECParameters} instance.
+     * Parses FEC parameters from the provided array starting in a specific index.
      * <p>
      * The provided array must have at least 12 bytes between the given index and its length.
      * <p>
-     * A {@code FECParameters} instance is only {@linkplain Optional#isPresent() present} inside the returned optional
-     * instance if the FEC parameters contained inside the array have valid values.
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
      * 
      * @param array
      *            An array from which a {@code FECParameters} instance is read
      * @param offset
      *            The starting array index at which a {@code FECParameters} instance is read
-     * @return an optional {@code FECParameters} instance
+     * @return a container object containing FEC parameters or a parsing failure reason string
      * @exception NullPointerException
      *                If the provided array is {@code null}
      * @exception IndexOutOfBoundsException
      *                If a {@code FECParameters} instance cannot be read at the given index
      */
-    public static Optional<FECParameters> readFromArray(byte[] array, int offset) {
+    public static Parsed<FECParameters> parse(byte[] array, int offset) {
 
         if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
-        return readFromBuffer(ByteBuffer.wrap(array, offset, 12));
+        return parse(ByteBuffer.wrap(array, offset, 12));
+    }
+
+    /**
+     * Reads and parses FEC parameters from a {@code DataInput} object.
+     * <p>
+     * Examples of {@code DataInput} objects are {@link java.io.DataInputStream DataInputStream} and
+     * {@link java.io.ObjectInputStream ObjectInputStream}.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param in
+     *            A {@code DataInput} object from which FEC parameters are read
+     * @return a container object containing FEC parameters or a parsing failure reason string
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code DataInput} object
+     * @exception NullPointerException
+     *                If {@code in} is {@code null}
+     */
+    public static Parsed<FECParameters> readFrom(DataInput in) throws IOException {
+
+        final long commonFecOTI = in.readLong();   // 8 bytes
+        final int schemeSpecFecOTI = in.readInt(); // 4 bytes
+
+        final long F = ParameterIO.extractDataLength(commonFecOTI);
+        final int T = ParameterIO.extractSymbolSize(commonFecOTI);
+        final int Z = ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI);
+        final int N = ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
+        final int Al = ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
+
+        if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
+            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
+        }
+        else {
+            return Parsed.invalid(ParameterChecker.testFECParameters(F, T, Z, N, Al));
+        }
+    }
+
+    /**
+     * Reads and parses FEC parameters from a {@code ReadableByteChannel} object.
+     * <p>
+     * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
+     * {@link java.nio.channels.FileChannel FileChannel}.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}</li>
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}</li>
+     * </ul>
+     * 
+     * @param ch
+     *            A {@code ReadableByteChannel} object from which FEC parameters are read
+     * @return a container object containing FEC parameters or a parsing failure reason string
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     * @exception NullPointerException
+     *                If {@code ch} is {@code null}
+     */
+    public static Parsed<FECParameters> readFrom(ReadableByteChannel ch) throws IOException {
+
+        final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.LONG + SizeOf.INT);
+        while (buffer.hasRemaining()) {
+            ch.read(buffer);
+        }
+        buffer.flip();
+        return parse(buffer);
+    }
+
+    /**
+     * Returns a new instance, given specific FEC parameters. The number of sub-blocks will be equal to 1, which
+     * effectively means that data interleaving is disabled.
+     * <p>
+     * The provided FEC parameters must be valid according to
+     * {@link ParameterChecker#areValidFECParameters(long, int, int, int, int)}, otherwise an
+     * {@code IllegalArgumentException} is thrown. Note, however, that the symbol alignment parameter is internally
+     * obtained.
+     * 
+     * @param dataLen
+     *            The length of the encodable data in number of bytes
+     * @param symbolSize
+     *            The size of a symbol in number of bytes
+     * @param numSourceBlocks
+     *            The number of blocks into which the encodable data is partitioned
+     * @return a new {@code FECParameters} instance
+     * @exception IllegalArgumentException
+     *                If the provided FEC parameters are invalid
+     */
+    public static FECParameters newParameters(long dataLen, int symbolSize, int numSourceBlocks) {
+
+        return newParameters(dataLen, symbolSize, numSourceBlocks, 1);
     }
 
     /**
@@ -135,7 +244,7 @@ public final class FECParameters {
             return newInstance(F, T, Z, N, Al);
         }
         else {
-            throw new IllegalArgumentException("invalid FEC parameters");
+            throw new IllegalArgumentException(ParameterChecker.testFECParameters(F, T, Z, N, Al));
         }
     }
 
@@ -258,16 +367,16 @@ public final class FECParameters {
      * @param buffer
      *            A buffer on which the FEC parameters are written
      * @exception NullPointerException
-     *                If the provided the buffer is {@code null}
+     *                If the provided buffer is {@code null}
      * @exception ReadOnlyBufferException
      *                If the provided buffer is read-only
      * @exception BufferOverflowException
      *                If the provided buffer has less than 12 bytes remaining
      */
-    public void writeToBuffer(ByteBuffer buffer) {
+    public void writeTo(ByteBuffer buffer) {
 
-        ParameterIO.writeCommonFecOTI(commonFecOTI, buffer);         // 8 bytes
-        ParameterIO.writeSchemeSpecFecOTI(schemeSpecFecOTI, buffer); // 4 bytes
+        buffer.putLong(commonFecOTI);    // 8 bytes
+        buffer.putInt(schemeSpecFecOTI); // 4 bytes
     }
 
     /**
@@ -280,14 +389,56 @@ public final class FECParameters {
      * @param offset
      *            The starting array index at which the FEC parameters are written
      * @exception NullPointerException
-     *                If the provided the array is {@code null}
+     *                If the provided array is {@code null}
      * @exception IndexOutOfBoundsException
      *                If the FEC parameters cannot be written at the given index
      */
-    public void writeToArray(byte[] array, int offset) {
+    public void writeTo(byte[] array, int offset) {
 
         if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
-        writeToBuffer(ByteBuffer.wrap(array, offset, 12));
+        writeTo(ByteBuffer.wrap(array, offset, 12));
+    }
+
+    /**
+     * Writes these FEC parameters directly into the provided {@code DataOutput} object.
+     * <p>
+     * Examples of {@code DataOutput} objects are {@link java.io.DataOutputStream DataOutputStream} and
+     * {@link java.io.ObjectOutputStream ObjectOutputStream}.
+     * 
+     * @param out
+     *            A {@code DataOutput} object into which these FEC parameters are written
+     * @throws IOException
+     *             If an IO error occurs while writing to the {@code DataOutput} object
+     * @exception NullPointerException
+     *                If {@code out} is {@code null}
+     */
+    public void writeTo(DataOutput out) throws IOException {
+
+        out.writeLong(commonFecOTI);
+        out.writeInt(schemeSpecFecOTI);
+    }
+
+    /**
+     * Writes these FEC parameters directly into the provided {@code WritableByteChannel} object.
+     * <p>
+     * Examples of {@code WritableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
+     * {@link java.nio.channels.FileChannel FileChannel}.
+     * 
+     * @param ch
+     *            A {@code WritableByteChannel} object into which these FEC parameters are written
+     * @throws IOException
+     *             If an IO error occurs while writing to the {@code WritableByteChannel} object
+     * @exception NullPointerException
+     *                If {@code ch} is {@code null}
+     */
+    public void writeTo(WritableByteChannel ch) throws IOException {
+
+        final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.LONG + SizeOf.INT);
+        writeTo(buffer);
+        buffer.flip();
+        while (buffer.hasRemaining()) {
+            ch.write(buffer);
+        }
     }
 
     /**

@@ -17,14 +17,10 @@ package net.fec.openrq.core;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
-import net.fec.openrq.core.encoder.EncodingPacket;
 import net.fec.openrq.core.encoder.SourceBlockEncoder;
 import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
-import net.fec.openrq.core.util.collection.ImmutableList;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
 import net.fec.openrq.core.util.rq.SystematicIndices;
 
@@ -45,7 +41,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     {
 
         // account for padding in the last source symbol
-        final EncodingSymbol[] sourceSymbols = prepareSourceSymbols(array, arrayOff, fecParams, sbn, K);
+        final EncodingSymbol[] sourceSymbols = prepareSourceSymbols(array, arrayOff, fecParams, K);
         return new ArraySourceBlockEncoder(sourceSymbols, fecParams, sbn, K);
     }
 
@@ -53,7 +49,6 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         byte[] array,
         int arrayOff,
         FECParameters fecParams,
-        int sbn,
         int K)
     {
 
@@ -64,9 +59,8 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
             // account for padding in the last source symbol
             final int symbolLen = Math.min(T, array.length - symbolOff);
             final PaddedByteArray symbolData = PaddedByteArray.newArray(array, symbolOff, symbolLen, T);
-            final FECPayloadID fecPayloadID = FECPayloadID.newPayloadID(sbn, esi, fecParams);
 
-            symbols[esi] = EncodingSymbol.newSourceSymbol(fecPayloadID, symbolData);
+            symbols[esi] = EncodingSymbol.newSourceSymbol(esi, symbolData);
         }
 
         return symbols;
@@ -115,10 +109,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         checkSourceSymbolESI(esi);
 
         final EncodingSymbol sourceSymbol = sourceSymbols[esi];
-        final FECPayloadID fecPayloadID = sourceSymbol.getFECPayloadID();
-        final ByteBuffer buf = sourceSymbol.transportData();
-
-        return new SourcePacket(fecPayloadID, ImmutableList.newList(buf));
+        return EncodingPacket.newSourcePacket(sbn, esi, sourceSymbol.transportData(), 1);
     }
 
     @Override
@@ -127,16 +118,19 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         checkSourceSymbolESI(esi);
         checkNumSourceSymbols(esi, numSymbols);
 
-        final EncodingSymbol firstSymbol = sourceSymbols[esi];
-        final FECPayloadID fecPayloadID = firstSymbol.getFECPayloadID();
-
-        final List<ByteBuffer> bufs = new ArrayList<>(numSymbols);
-        bufs.add(firstSymbol.transportData());
-        for (int n = 1, ii = esi + 1; n < numSymbols; n++, ii++) {
-            bufs.add(sourceSymbols[ii].transportData());
+        // must calculate the size beforehand (total size may be less than numSymbols * T)
+        int totalSize = 0;
+        for (int n = 0, ii = esi; n < numSymbols; n++, ii++) {
+            totalSize += sourceSymbols[ii].transportSize();
         }
 
-        return new SourcePacket(fecPayloadID, ImmutableList.copy(bufs));
+        final ByteBuffer symbols = ByteBuffer.allocate(totalSize);
+        for (int n = 0, ii = esi; n < numSymbols; n++, ii++) {
+            symbols.put(sourceSymbols[ii].transportData());
+        }
+        symbols.flip();
+
+        return EncodingPacket.newSourcePacket(sbn, esi, symbols.asReadOnlyBuffer(), numSymbols);
     }
 
     @Override
@@ -154,15 +148,11 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         byte[] enc_data = LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi), fecParams.symbolSize());
 
-        // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
-
         // generate repair symbol // TODO should we store the repair symbols generated?
-        EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(fpid, enc_data);
+        EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(esi, enc_data);
 
         // return the repair packet
-        final ByteBuffer buf = repairSymbol.transportData();
-        return (new RepairPacket(fpid, ImmutableList.newList(buf)));
+        return EncodingPacket.newRepairPacket(sbn, esi, repairSymbol.transportData(), 1);
     }
 
     @Override
@@ -172,30 +162,27 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         checkNumRepairSymbols(esi, numSymbols);
 
         // check if we've got the intermediate symbols already
-        if (intermediateSymbols == null) {
+        if (intermediateSymbols == null) { // TODO maybe make this thread safe?
             intermediateSymbols = generateIntermediateSymbols();
         }
 
-        // generate FEC Payload ID
-        FECPayloadID fpid = FECPayloadID.newPayloadID(sbn, esi, fecParams);
-
         // generate repair symbols
-        final List<ByteBuffer> bufs = new ArrayList<>();
+        final ByteBuffer symbols = ByteBuffer.allocate(numSymbols * fecParams.symbolSize());
         int isi = esi + (Kprime - K);
 
-        for (int i = 0; i < numSymbols; i++, isi++) {
-
-            byte[] enc_data = LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi),
-                fecParams.symbolSize());
+        for (int i = 0; i < numSymbols; i++) {
+            byte[] enc_data = LinearSystem.enc(
+                Kprime, intermediateSymbols, new Tuple(Kprime, isi + i), fecParams.symbolSize());
 
             // generate repair symbol // TODO should we store the repair symbols generated?
-            EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(fpid, enc_data);
+            EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(esi + i, enc_data);
 
-            bufs.add(repairSymbol.transportData());
+            symbols.put(repairSymbol.transportData());
         }
+        symbols.flip();
 
         // return the repair packet
-        return (new RepairPacket(fpid, ImmutableList.copy(bufs)));
+        return EncodingPacket.newRepairPacket(sbn, esi, symbols.asReadOnlyBuffer(), numSymbols);
     }
 
     private void checkSourceSymbolESI(int esi) {
@@ -256,65 +243,5 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         }
 
         return C;
-    }
-
-
-    private static abstract class AbstractEncodingPacket implements EncodingPacket {
-
-        private final FECPayloadID fecPayloadID;
-        private final ImmutableList<ByteBuffer> symbols;
-
-
-        AbstractEncodingPacket(FECPayloadID fecPayloadID, ImmutableList<ByteBuffer> symbols) {
-
-            this.fecPayloadID = fecPayloadID;
-            this.symbols = symbols;
-        }
-
-        @Override
-        public FECPayloadID fecPayloadID() {
-
-            return fecPayloadID;
-        }
-
-        @Override
-        public List<ByteBuffer> getSymbolData() {
-
-            return symbols;
-        }
-
-        @Override
-        public int numberOfSymbols() {
-
-            return symbols.size();
-        }
-    }
-
-    private static final class SourcePacket extends AbstractEncodingPacket {
-
-        SourcePacket(FECPayloadID fecPayloadID, ImmutableList<ByteBuffer> symbols) {
-
-            super(fecPayloadID, symbols);
-        }
-
-        @Override
-        public SymbolType symbolType() {
-
-            return SymbolType.SOURCE;
-        }
-    }
-
-    private static final class RepairPacket extends AbstractEncodingPacket {
-
-        RepairPacket(FECPayloadID fecPayloadID, ImmutableList<ByteBuffer> symbols) {
-
-            super(fecPayloadID, symbols);
-        }
-
-        @Override
-        public SymbolType symbolType() {
-
-            return SymbolType.REPAIR;
-        }
     }
 }
