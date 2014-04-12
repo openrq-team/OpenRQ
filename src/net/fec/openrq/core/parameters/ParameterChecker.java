@@ -34,6 +34,7 @@ import static net.fec.openrq.core.parameters.InternalConstants.T_min;
 import static net.fec.openrq.core.parameters.InternalConstants.Z_max;
 import static net.fec.openrq.core.parameters.InternalConstants.Z_min;
 import static net.fec.openrq.core.parameters.InternalFunctions.KL;
+import static net.fec.openrq.core.parameters.InternalFunctions.minWS;
 import static net.fec.openrq.core.util.arithmetic.ExtraMath.ceilDiv;
 
 
@@ -241,27 +242,57 @@ public final class ParameterChecker {
      */
     public static boolean areValidDerivingParameters(long dataLen, int maxPayLen, int maxDecBlock, int sAlign) {
 
+        return testDerivingParameters(dataLen, maxPayLen, maxDecBlock, sAlign).isEmpty();
+    }
+
+    /**
+     * @param dataLen
+     * @param maxPayLen
+     * @param maxDecBlock
+     * @param sAlign
+     * @return
+     */
+    public static String testDerivingParameters(long dataLen, int maxPayLen, int maxDecBlock, int sAlign) {
+
         final long F = dataLen;
         final int P = maxPayLen;
         final int WS = maxDecBlock;
         final int Al = sAlign;
 
         // domain restrictions
-        if (F < F_min || F_max < F ||
-            P < Al || // (no upper bound due to it being a max value)
-            WS < 1 || // ...
-            Al < Al_min) {
-            return false;
+        if (F < F_min || F_max < F) {
+            return String.format(
+                "data length (%d) must be within [%d, %d] bytes",
+                F, F_min, F_max);
+        }
+        if (P < Al) { // (no upper bound due to it being a max value)
+            return String.format(
+                "max payload length (%d) must be at least %d %s",
+                P, Al, Al == 1 ? "byte" : "bytes");
+        }
+        if (WS < 1) { // ...
+            return String.format(
+                "max decoding block length (%d) must be at least 1 byte",
+                WS);
+        }
+        if (Al < Al_min) {
+            return String.format(
+                "symbol aligment value (%d) must be at least %d",
+                Al, Al_min);
         }
 
         // P must be a multiple of Al
         if (P % Al != 0) {
-            return false;
+            return String.format(
+                "max payload length (%d) must be a multiple of %d",
+                P, Al);
         }
 
         // the number of symbols cannot exceed Kt_max
         if (P < ceilDiv(F, Kt_max)) {
-            return false;
+            return String.format(
+                "a data length of %d bytes requires a max payload length (%d) of at least %d bytes",
+                F, P, ceilDiv(F, Kt_max));
         }
 
         // T is at most P but cannot exceed T_max
@@ -272,18 +303,22 @@ public final class ParameterChecker {
 
         // WS cannot be too small
         if (WS < K_min * T) {
-            return false;
+            return String.format(
+                "a symbol size of %d bytes requires a max decoding block length (%d) of at least %d bytes",
+                T, WS, K_min * T);
         }
 
         // number of symbols in a source block (always between K_min and K_max)
         final int KL = KL(N_max, WS, Al, T);
 
         // the number of source blocks cannot exceed Z_max
-        if (ceilDiv(Kt, KL) > Z_max) {
-            return false;
+        if (KL < ceilDiv(Kt, Z_max)) {
+            return String.format(
+                "a data length of %d bytes and a symbol size of %d bytes require a max decoding block length (%d) of at least %d bytes",
+                F, T, WS, minWS(ceilDiv(Kt, Z_max), N_max, Al, T));
         }
 
-        return true;
+        return "";
     }
 
     // =========== source block number - SBN ========== //

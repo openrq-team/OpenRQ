@@ -32,6 +32,12 @@ final class InternalFunctions {
         final int upper_bound = WS / (Al * ExtraMath.ceilDiv(T, Al * n));
         return SystematicIndices.floor(upper_bound);
     }
+    
+    // requires valid arguments
+    static int minWS(int KL, int n, int Al, int T) {
+        
+        return KL * (Al * ExtraMath.ceilDiv(T, Al * n));
+    }
 
     private InternalFunctions() {
 

@@ -277,7 +277,7 @@ public final class FECParameters {
         final int WS = maxDecBlock;
         final int Al = ParameterChecker.symbolAlignmentValue();
 
-        if (ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)) {
+        if (ParameterChecker.areValidDerivingParameters(F, P, WS, Al)) {
             final int T = Math.min(P, T_max);
             // interleaving is disabled for now
             final int SStimesAl = T;                     // SS * Al = T
@@ -292,7 +292,7 @@ public final class FECParameters {
             return newInstance(F, T, Z, N, Al);
         }
         else {
-            throw new IllegalArgumentException("invalid deriving parameters");
+            throw new IllegalArgumentException(ParameterChecker.testDerivingParameters(F, P, WS, Al));
         }
     }
 
