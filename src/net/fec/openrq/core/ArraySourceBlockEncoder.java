@@ -68,7 +68,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
 
     private final EncodingSymbol[] sourceSymbols;
-    private byte[] intermediateSymbols = null;
+    private byte[][] intermediateSymbols = null;
 
     private final FECParameters fecParams;
     private final int sbn;
@@ -215,7 +215,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         }
     }
 
-    private byte[] generateIntermediateSymbols() {
+    private byte[][] generateIntermediateSymbols() {
 
         // source block's parameters
         int Ki = SystematicIndices.getKIndex(Kprime);
@@ -233,15 +233,12 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
             D[row] = sourceSymbols[index].data();
 
         // solve system of equations
-        byte[] C = null;
         try {
-            C = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
+            return LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
         }
         catch (SingularMatrixException e) {
             throw new RuntimeException(
                 "FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
         }
-
-        return C;
     }
 }

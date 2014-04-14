@@ -55,15 +55,15 @@ import net.fec.openrq.test.util.summary.Summaries;
  */
 public final class TestRunner {
 
-    private static final int DEF_MAX_PAYLOAD_LENGTH = 7;//1392;  // P'
-    private static final int DEF_MAX_DEC_BLOCK_SIZE = 70;//76800; // WS // B
+    private static final int DEF_MAX_PAYLOAD_LENGTH = 386; //1392; // P'
+    private static final int DEF_MAX_DEC_BLOCK_SIZE = 76800; // WS // B
 
     private static final List<Integer> DATA_SIZES;
 
     static {
-        final int[] small = {1, 2, 3, 5, 7,
-                             10, 22, 33, 55, 77};
-        //                   100, 222, 333, 555, 777,};
+        // final int[] small = {1, 2, 3, 5, 7,
+        // 10, 22, 33, 55, 77};
+        // 100, 222, 333, 555, 777,};
 
         // final int[] medium = {1000, 2222, 3333, 5555, 7777,
         // 10_000, 22_222, 33_333, 55_555, 77_777,
@@ -76,7 +76,8 @@ public final class TestRunner {
         // final int[] xxLarge = {100_000_000, 222_222_222, 333_333_333, 555_555_555, 777_777_777};
 
         final List<Integer> list = new ArrayList<>(45);
-        putInts(small, list);
+        list.add(49_999);
+        // putInts(small, list);
         // putInts(medium, list);
         // putInts(large, list);
         // putInts(xLarge, list);
@@ -94,10 +95,10 @@ public final class TestRunner {
     }
 
 
-    private static final boolean WARMUP_ENABLED = false;
+    private static final boolean WARMUP_ENABLED = true;
     private static final int WARMUP_SIZE = 1237;
     private static final long WARMUP_NANOS = TimeUnit.SECONDS.toNanos(15L);
-    private static final boolean PRINT_WARMUP_STATS = true;
+    private static final boolean PRINT_WARMUP_STATS = false;
 
     private static final Random rand = new Random();
 
@@ -223,34 +224,39 @@ public final class TestRunner {
             runWarmupTasks(executor, makeData(WARMUP_SIZE));
         }
 
-        System.out.println();
-        System.out.println();
-        System.out.println("Running sequential source symbols test...");
-        for (int size : DATA_SIZES) {
-            final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
-            System.out.println();
-            runSequentialSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
-        }
+        /*
+         * System.out.println();
+         * System.out.println();
+         * System.out.println("Running sequential source symbols test...");
+         * for (int size : DATA_SIZES) {
+         * final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
+         * System.out.println();
+         * runSequentialSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
+         * }
+         */
 
-        System.out.println();
-        System.out.println();
-        System.out.println("Running random source symbols test...");
-        for (int size : DATA_SIZES) {
-            final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
-            System.out.println();
-            runRandomSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
-        }
-
-        System.out.println();
-        System.out.println();
-        System.out.println("Running source + repair symbols test...");
-        for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
-            for (int size : DATA_SIZES) {
-                System.out.println();
-                runSourcePlusRepairSymbolsTasks(executor, makeData(size), extraSymbols);
-            }
-        }
-
+        /*
+         * System.out.println();
+         * System.out.println();
+         * System.out.println("Running random source symbols test...");
+         * for (int size : DATA_SIZES) {
+         * final int maxSymbolsPerPacket = randomMaxSymbolsPerPacket();
+         * System.out.println();
+         * runRandomSourceSymbolsTasks(executor, makeData(size), maxSymbolsPerPacket);
+         * }
+         */
+        
+        /*
+         * System.out.println();
+         * System.out.println();
+         * System.out.println("Running source + repair symbols test...");
+         * for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
+         * for (int size : DATA_SIZES) {
+         * System.out.println();
+         * runSourcePlusRepairSymbolsTasks(executor, makeData(size), extraSymbols);
+         * }
+         * }
+         */
         System.out.println();
         System.out.println();
         System.out.println("Running any symbols test...");

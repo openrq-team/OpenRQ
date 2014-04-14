@@ -203,7 +203,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private SourceBlockState decode() {
 
         // generate intermediate symbols -- watch out for decoding failure
-        byte[] intermediate_symbols = generateIntermediateSymbols();
+        byte[][] intermediate_symbols = generateIntermediateSymbols();
         if (intermediate_symbols == null) {
             return SourceBlockState.DECODING_FAILURE;
         }
@@ -218,8 +218,8 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         {
             // multiply the constraint matrix line relative to the missing source symbol
             // by the vector of intermediate symbols to recover the missing source symbol
-            byte[] original_symbol = Utilities.multiplyByteLineBySymbolVector(missing.getValue(), intermediate_symbols,
-                fecParams.symbolSize());
+            byte[] original_symbol = Utilities.multiplyByteLineBySymbolVector(missing.getValue(),
+                missing.getValue().length, intermediate_symbols);
 
             // write to data buffer
             putSourceData(missing.getKey(), original_symbol, 0);
@@ -228,7 +228,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         return SourceBlockState.DECODED;
     }
 
-    private final byte[] generateIntermediateSymbols() {
+    private final byte[][] generateIntermediateSymbols() {
 
         // constraint matrix parameters
         int Ki = SystematicIndices.getKIndex(Kprime);
@@ -315,17 +315,13 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
          * we have the system of linear equations ready to be solved
          */
 
-        byte[] intermediate_symbols = null;
-
         try {
-            intermediate_symbols = LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
+            return LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
         }
         catch (SingularMatrixException e) {
 
             return null;
         }
-
-        return intermediate_symbols;
     }
 
     // requires valid ESI
