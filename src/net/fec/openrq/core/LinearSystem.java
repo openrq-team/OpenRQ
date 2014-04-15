@@ -16,7 +16,9 @@
 package net.fec.openrq.core;
 
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -168,7 +170,7 @@ final class LinearSystem {
         }
 
         for (int row = 0; row < H; row++)
-            MT[row][Kprime + S - 1] = OctectOps.getExp(row);
+            MT[row][Kprime + S - 1] = (byte)OctectOps.getExp(row);
 
         return (MT);
     }
@@ -189,8 +191,10 @@ final class LinearSystem {
         {
             for (int col = 0; col < Kprime + S; col++)
             {
-                if (row >= col) GAMMA[row][col] = OctectOps.getExp((row - col) % 256);
-                else continue;
+                if (row >= col)
+                	GAMMA[row][col] = (byte)OctectOps.getExp((row - col) % 256);
+                else
+                	continue;
             }
         }
 
@@ -468,337 +472,307 @@ final class LinearSystem {
 
         // the number of rows that are not HDPC
         // (these should be chosen first)
-        int nonHDPCRows = S + H;
+        int nonHDPCRows = S + Kprime;
 
         /*
          * TODO Optimizacao: ao inves de percorrer isto todas as vezes, ver so as linhas que perderam
          * um non-zero, e subtrair ao 'r' original (e ao grau). Como lidar com as novas dimensoes de V?
          */
+        
+        // maps the index of a row to an object Row (which stores that row's characteristics)
+        Map<Integer, Row> rows = new HashMap<Integer, Row>();
+        
+        // go through all matrix rows counting non-zeros
+        for (int row = 0; row < M; row++)
+        {
 
+        	int nonZeros = 0, degree = 0;
+        	boolean isHDPC = false;
+        	
+            Set<Integer> nodes = new HashSet<Integer>();
+
+            // check all columns for non-zeros
+            for (int col = 0; col < L - u; col++)
+            {
+                if (A[row][col] == 0) // branch prediction
+                	continue;
+                else
+                {
+                    // count the non-zero
+                    nonZeros++;
+
+                    // add to the degree of this row
+                    degree += OctectOps.UNSIGN(A[row][col]);
+
+                    nodes.add(col);
+                }
+            }
+
+            // is this a HDPC row?
+            if (row < S || row >= S + H)
+            {
+                isHDPC = false;
+            }
+            else
+            {
+                isHDPC = true;
+            }
+
+            // this is an optimization
+            if (nonZeros == 2 && !isHDPC)
+            	rows.put(row, new Row(row, nonZeros, degree, isHDPC, nodes));
+            else
+            	rows.put(row, new Row(row, nonZeros, degree, isHDPC));
+        }
+        
         // at most L steps
         while (i + u != L)
         {
+        	// the degree of the 'currently chosen' row
+        	int minDegree = 256 * L;
 
-            // number of non-zeros in the 'currently chosen' row
-            int r = L + 1;
+        	// number of non-zeros in the 'currently chosen' row
+        	int r = L + 1;
 
-            // the index of the 'currently chosen' row
-            int rLinha = 0;
+        	// currently chosen row
+        	Row chosenRow = null;
 
-            // the degree of the 'currently chosen' row
-            int minDegree = 256 * L;
+        	// decoding failure?
+        	boolean allZeros = true;
+        	
+        	/*
+        	 * find r
+        	 */
 
-            // maps the index of a row to an object Row (which stores that row's characteristics)
-            Map<Integer, Row> rows = new HashMap<Integer, Row>();
+        	for (Map.Entry<Integer, Row> row : rows.entrySet()) {
 
-            // is the row HDPC or not?
-            boolean isHDPC, isHDPC2 = false;
+        		Row temp = row.getValue();
 
-            /*
-             * find r
-             */
+        		if (temp.nonZeros != 0)
+        			allZeros = false;
 
-            // go through all matrix rows counting non-zeros
-            for (int row = i, nonZeros = 0, degree = 0; row < M; row++, nonZeros = 0, degree = 0)
-            {
-                Set<Integer> edges = new HashSet<Integer>();
+        		if (temp.isHDPC && chosenRowsCounter < nonHDPCRows)
+        			continue;
 
-                // check all columns for non-zeros
-                for (int col = i; col < L - u; col++)
-                {
-                    if (A[row][col] == 0) // branch prediction
-                    continue;
-                    else
-                    {
-                        // count the non-zero
-                        nonZeros++;
+        		if (temp.nonZeros < r) {
 
-                        // add to the degree of this row
-                        degree += OctectOps.UNSIGN(A[row][col]);
+        			chosenRow = temp;
+        			r = chosenRow.nonZeros;
+        			minDegree = chosenRow.originalDegree;
+        		}  
+        		else {
+        			if (temp.nonZeros == r && temp.originalDegree < minDegree) {
 
-                        edges.add(col);
-                    }
-                }
+        				chosenRow = temp;
+        				minDegree = chosenRow.originalDegree;
+        			}
+        		}
+        	}
 
-                // is this a HDPC row? this is not 100% accurate (false negatives) but is accurate enough
-                if (degree <= nonZeros)
-                {
-                    isHDPC = false;
-                }
-                else
-                {
-                    isHDPC = true;
-                }
 
-                // this is an optimization
-                if (nonZeros == 2 && !isHDPC) rows.put(row, new Row(row, nonZeros, degree, isHDPC, edges));
-                else rows.put(row, new Row(row, nonZeros, degree, isHDPC));
+        	if (allZeros) // DECODING FAILURE
+        		throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 1: All entries in V are zero.");
 
-                if (nonZeros > r || nonZeros == 0 || degree == 0) // branch prediction
-                continue;
-                else
-                {
-                    if (nonZeros == r)
-                    {
-                        if (degree < minDegree)
-                        {
-                            rLinha = row;
-                            minDegree = degree;
-                            isHDPC2 = isHDPC;
-                        }
-                        else continue;
-                    }
-                    else
-                    {
-                        r = nonZeros;
-                        rLinha = row;
-                        minDegree = degree;
-                        isHDPC2 = isHDPC;
-                    }
-                }
-            }
+        	/*
+        	 * choose the row
+        	 */
 
-            if (r == L + 1) // DECODING FAILURE
-            throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 1: All entries in V are zero.");
+        	if (r == 2 && minDegree == 2 ) {
 
-            /*
-             * choose the row
-             */
+        		/*
+        		 * create graph
+        		 */
 
-            if (r != 2)
-            {
-                // "HDPC rows should not be chosen untill all non-HDPC rows have been processed"
-                if (isHDPC2 && chosenRowsCounter < nonHDPCRows)
-                { // if it is, then we must choose another line
+        		// allocate memory
+        		Map<Integer, Set<Integer>> graph = new HashMap<Integer, Set<Integer>>();
 
-                    // we use 'r' to find the degree, since non-HDPC rows only have 1's and 0's
-                    int newR = L + 1;
+        		// lets go through all the rows... (yet again!)
+        		for (Row row : rows.values())
+        		{
+        			// is this row an edge?
+        			if (row.nodes != null)
+        			{
+        				// get the nodes connected through this edge
+        				Integer[] edge = row.nodes.toArray(new Integer[2]);
+        				int node1 = edge[0];
+        				int node2 = edge[1];
 
-                    // lets go search all the rows
-                    for (Row row : rows.values())
-                    {
-                        // if they're not HDPC rows
-                        if (!row.isHDPC && row.degree != 0)
-                        {
-                            // does it have less non-zeros than our 'currently chosen' one?
-                            if (row.nonZeros < newR)
-                            {// if it does, since it's non-HDPC it'll also have a lower degree
+        				// node1 already in graph?
+        				if (graph.keySet().contains(node1))
+        				{ // it is
 
-                                // so lets update our 'currently chosen' row
-                                newR = row.nonZeros;
-                                rLinha = row.id;
-                            }
-                        }
-                        else continue;
-                    }
-                }
+        					// then lets add node 2 to its neighbours
+        					graph.get(node1).add(node2);
+        				}
+        				else
+        				{ // it isn't
 
-                // choose rLinha
-                chosenRowsCounter++;
-            }
-            else
-            { // r = 2
+        					// allocate memory for its neighbours
+        					Set<Integer> edges = new HashSet<Integer>();
 
-                // do we have a row with exactly two 1's? (remember we already know that there are rows with only 2
-                // non-zeros)
-                if (minDegree == 2)
-                {
-                    /*
-                     * create graph
-                     */
+        					// add node 2 to its neighbours
+        					edges.add(node2);
 
-                    // allocate memory
-                    Map<Integer, Set<Integer>> graph = new HashMap<Integer, Set<Integer>>();
+        					// finally, add node 1 to the graph along with its neighbours
+        					graph.put(node1, edges);
+        				}
 
-                    // lets go through all the rows... (yet again!)
-                    for (Row row : rows.values())
-                    {
-                        // is this row an edge?
-                        if (row.edges != null)
-                        {
-                            // get the nodes connected through this edge
-                            Integer[] edge = row.edges.toArray(new Integer[2]);
-                            int node1 = edge[0];
-                            int node2 = edge[1];
+        				// node2 already in graph?
+        				if (graph.keySet().contains(node2))
+        				{ // it is
 
-                            // node1 already in graph?
-                            if (graph.keySet().contains(node1))
-                            { // it is
+        					// then lets add node 1 to its neighbours
+        					graph.get(node2).add(node1);
+        				}
+        				else
+        				{ // it isn't
 
-                                // then lets add node 2 to its neighbours
-                                graph.get(node1).add(node2);
-                            }
-                            else
-                            { // it isn't
+        					// allocate memory for its neighbours
+        					Set<Integer> edges = new HashSet<Integer>();
 
-                                // allocate memory for its neighbours
-                                Set<Integer> edges = new HashSet<Integer>();
+        					// add node 1 to its neighbours
+        					edges.add(node1);
 
-                                // add node 2 to its neighbours
-                                edges.add(node2);
+        					// finally, add node 2 to the graph along with its neighbours
+        					graph.put(node2, edges);
+        				}
+        			}
+        			else continue;
+        		}
 
-                                // finally, add node 1 to the graph along with its neighbours
-                                graph.put(node1, edges);
-                            }
+        		/*
+        		 * the graph is complete, now we must
+        		 * find the maximum size component
+        		 */
 
-                            // node2 already in graph?
-                            if (graph.keySet().contains(node2))
-                            { // it is
+        		// set of visited nodes
+        		Set<Integer> visited = null;
 
-                                // then lets add node 1 to its neighbours
-                                graph.get(node2).add(node1);
-                            }
-                            else
-                            { // it isn't
+        		/*
+        		 * TODO Optimizacao: - ja procurei, e ha algoritmos optimizados para achar connected components
+        		 * e so depois ver qual o maior...
+        		 */
 
-                                // allocate memory for its neighbours
-                                Set<Integer> edges = new HashSet<Integer>();
+        		// what is the size of the largest component we've already found
+        		int maximumSize = 0;
 
-                                // add node 1 to its neighbours
-                                edges.add(node1);
+        		// the maximum size component
+        		Set<Integer> greatestComponent = null; // TODO testar tempos com isto
 
-                                // finally, add node 2 to the graph along with its neighbours
-                                graph.put(node2, edges);
-                            }
-                        }
-                        else continue;
-                    }
+        		// which nodes have already been used (either in visited or in toVisit)
+        		Set<Integer> used = new HashSet<Integer>();
 
-                    /*
-                     * the graph is complete, now we must
-                     * find the maximum size component
-                     */
+        		// iterates the nodes in the graph
+        		Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
 
-                    // have we found the maximum size component yet?
-                    boolean found = false;
+        		// let's iterate through the nodes in the graph, looking for the maximum
+        		// size component. we will be doing a breadth first seach // TODO optimize this with a better
+        		// algorithm?
+        		while (it.hasNext())
+        		{
+        			// get our initial node
+        			Map.Entry<Integer, Set<Integer>> node = it.next();
+        			int initialNode = node.getKey();
 
-                    // set of visited nodes
-                    Set<Integer> visited = null;
+        			// we can't have used it before!
+        			if (used.contains(initialNode)) 
+        				continue;
 
-                    /*
-                     * TODO Optimizacao: - ja procurei, e ha algoritmos optimizados para achar connected components
-                     * e so depois ver qual o maior...
-                     */
+        			// what are the edges of our initial node?
+        			Integer[] edges = (Integer[])node.getValue().toArray(new Integer[node.getValue().size()]);
 
-                    // what is the size of the largest component we've already found
-                    int maximumSize = 0;
+        			// allocate memory for the set of visited nodes
+        			visited = new HashSet<Integer>();
 
-                    // the maximum size component
-                    Set<Integer> greatestComponent = null; // TODO testar tempos com isto
+        			// the set of nodes we must still visit
+        			List<Integer> toVisit = new LinkedList<Integer>();
 
-                    // which nodes have already been used (either in visited or in toVisit)
-                    Set<Integer> used = new HashSet<Integer>();
+        			// add the initial node to the set of used and visited nodes
+        			visited.add(initialNode);
+        			used.add(initialNode);
 
-                    // iterates the nodes in the graph
-                    Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
+        			// add my edges to the set of nodes we must visit
+        			// and also put them in the used set
+        			for (Integer edge : edges)
+        			{
+        				toVisit.add(edge);
+        				used.add(edge);
+        			}
 
-                    // let's iterate through the nodes in the graph, looking for the maximum
-                    // size component. we will be doing a breadth first seach // TODO optimize this with a better
-                    // algorithm?
-                    while (it.hasNext() && !found)
-                    {
-                        // get our initial node
-                        Map.Entry<Integer, Set<Integer>> node = it.next();
-                        int initialNode = node.getKey();
+        			// start the search!
+        			while (toVisit.size() != 0)
+        			{
+        				// the node we are visiting
+        				int no = toVisit.remove(0);
 
-                        // we can't have used it before!
-                        if (used.contains(initialNode)) continue;
+        				// add node to visited set
+        				visited.add(no);
 
-                        // what are the edges of our initial node?
-                        Integer[] edges = (Integer[])node.getValue().toArray(new Integer[1]);
+        				// queue edges to be visited (if they haven't been already
+        				for (Integer edge : graph.get(no))
+        					if (!visited.contains(edge))
+        						toVisit.add(edge);
+        			}
 
-                        // allocate memory for the set of visited nodes
-                        visited = new HashSet<Integer>();
+        			// is the number of visited nodes, greater than the 'currently' largest component?
+        			if (visited.size() > maximumSize)
+        			{ // it is! we've found a greater component then...
 
-                        // the set of nodes we must still visit
-                        List<Integer> toVisit = new LinkedList<Integer>();
+        				// update the maximum size
+        				maximumSize = visited.size();
 
-                        // add the initial node to the set of used and visited nodes
-                        visited.add(initialNode);
-                        used.add(initialNode);
+        				// update our greatest component
+        				greatestComponent = visited;
+        			}
+        			else continue;
+        		}
 
-                        // add my edges to the set of nodes we must visit
-                        // and also put them in the used set
-                        for (Integer edge : edges)
-                        {
-                            toVisit.add(edge);
-                            used.add(edge);
-                        }
+        		/*
+        		 * we've found the maximum size connected component -- 'greatestComponent'
+        		 */
 
-                        // start the search!
-                        while (toVisit.size() != 0)
-                        {
-                            // the node we are visiting
-                            int no = toVisit.remove(0);
+        		// let's choose the row
+        		for (Row row : rows.values())
+        		{
+        			// is it a node in the graph?
+        			if (row.nodes != null)
+        			{ // it is
 
-                            // add node to visited set
-                            visited.add(no);
+        				// get the nodes connected through this edge
+        				Integer[] edge = row.nodes.toArray(new Integer[2]);
+        				int node1 = edge[0];
+        				int node2 = edge[1];
 
-                            // queue edges to be visited (if they haven't been already
-                            for (Integer edge : graph.get(no))
-                                if (!visited.contains(edge)) toVisit.add(edge);
-                        }
+        				// is this row an edge in the maximum size component?
+        				if (greatestComponent.contains(node1) && greatestComponent.contains(node2))
+        				{
+        					chosenRow = row;
+        					break;
+        				}
+        				else continue;
+        			}
+        			else continue;
+        		}
 
-                        // is the number of visited nodes, greater than the 'currently' largest component?
-                        if (visited.size() > maximumSize)
-                        { // it is! we've found a greater component then...
+        		chosenRowsCounter++;
+        	}
+        	else {
 
-                            // update the maximum size
-                            maximumSize = visited.size();
-
-                            // update our greatest component
-                            greatestComponent = visited;
-                        }
-                        else continue;
-                    }
-
-                    /*
-                     * we've found the maximum size connected component -- 'greatestComponent'
-                     */
-
-                    // let's choose the row
-                    for (Row row : rows.values())
-                    {
-                        // is it a node in the graph?
-                        if (row.edges != null)
-                        { // it is
-
-                            // get the nodes connected through this edge
-                            Integer[] edge = row.edges.toArray(new Integer[2]);
-                            int node1 = edge[0];
-                            int node2 = edge[1];
-
-                            // is this row an edge in the maximum size component?
-                            if (greatestComponent.contains(node1) && greatestComponent.contains(node2))
-                            {
-                                rLinha = row.id;
-                                break;
-                            }
-                            else continue;
-                        }
-                        else continue;
-                    }
-
-                    chosenRowsCounter++;
-                }
-                else
-                { // no rows with 2 ones
-                    chosenRowsCounter++;
-                }
-            }
+        		// already chosen (in 'find r')
+        		chosenRowsCounter++;
+        	}
 
             /*
-             * a row has been chosen! -- 'rLinha'
+             * a row has been chosen! -- 'chosenRow'
              */
-
-            // get the chosen row
-            Row chosenRow = rows.get(rLinha);
 
             /*
              * "After the row is chosen in this step, the first row of A that intersects V is exchanged
              * with the chosen row so that the chosen row is the first row that intersects V."
              */
 
+        	int rLinha = chosenRow.position;
+        	
             // if the chosen row is not 'i' already
             if (rLinha != i)
             {
@@ -816,6 +790,12 @@ final class LinearSystem {
                 int auxIndex = d[i];
                 d[i] = d[rLinha];
                 d[rLinha] = auxIndex;
+                
+                // update values in 'rows' map
+                Row other = rows.remove(i);
+                rows.put(rLinha, other);
+                other.position = rLinha;
+                chosenRow.position = i;
             }
 
             /*
@@ -825,17 +805,17 @@ final class LinearSystem {
              */
 
             // if there are non-zeros
-            if (chosenRow.degree > 0)
+            if (chosenRow.nonZeros > 0)
             {
                 // stack of non-zeros in the chosen row
-                Stack<Integer> nonZeros = new Stack();
+            	Deque<Integer> nonZeros = new ArrayDeque<>(chosenRow.nonZeros);
 
                 // search the chosen row for the positions of the non-zeros
                 for (int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++) 		// TODO the positions of the non-zeros could
-                                                                          // be stored as a Row attribute
+                                                                          		// be stored as a Row attribute
                 {																// this would spare wasting time in this for (little optimization)
                     if (A[i][col] == 0) // a zero
-                    continue;
+                    	continue;
                     else
                     { // a non-zero
                         nZ++;
@@ -866,7 +846,7 @@ final class LinearSystem {
                     c[column] = auxIndex;
                 }
                 else // it is, so let's remove 'i' from the stack
-                nonZeros.remove((Integer)i);
+                	nonZeros.remove((Integer)i);
 
                 // swap the remaining non-zeros' columns so that they're the last columns in V
                 for (int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--)
@@ -895,7 +875,7 @@ final class LinearSystem {
 
                 // let's look at all rows below the chosen one
                 for (int row = i + 1; row < M; row++)				// TODO queue these row operations for when/if the row is chosen -
-                                                      // Page35@RFC6330 1st Par.
+                                                      				// Page35@RFC6330 1st Par.
                 {
                     // if it's already 0, no problem
                     if (A[row][i] == 0) continue;
@@ -918,10 +898,12 @@ final class LinearSystem {
 
                         // addition
                         A[row] = Utilities.xorSymbol(A[row], product);
+                        //Utilities.xorSymbolInPlace(A[row], product);
 
                         // decoding process - (beta * D[d[i]]) + D[d[row]]
                         product = OctectOps.betaProduct(balpha, D[d[i]]);
                         D[d[row]] = Utilities.xorSymbol(D[d[row]], product);
+                        //Utilities.xorSymbolInPlace(D[d[row]], product);
                     }
                 }
             }
@@ -931,7 +913,29 @@ final class LinearSystem {
              */
             i++;
             u += r - 1;
+        
+            // update nonZeros
+            for (Row row : rows.values())
+            {
+            	int nonZeros = 0;
+            	int line = row.position;
+            	
+            	// check all columns for non-zeros
+            	for (int col = i; col < L - u; col++)
+            	{
+            		if (A[line][col] == 0) // branch prediction
+            			continue;
+            		else
+            		{
+            			// count the non-zero
+            			nonZeros++;           			
+            		}
+            	}
+            	
+            	row.nonZeros = nonZeros;
+            }
         }
+        
         // END OF FIRST PHASE
 
         /*

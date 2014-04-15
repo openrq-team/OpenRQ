@@ -33,8 +33,9 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-            return String.format("Encoder initialization time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
-                STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
+        	return ""; // DEBUG
+            //return String.format("Encoder initialization time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
+            //    STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
         }
     },
     SYMBOL_ENCODING_TIME {
@@ -42,8 +43,9 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-            return String.format("Symbol encoding time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
-                STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
+        	return ""; // DEBUG
+            //return String.format("Symbol encoding time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
+              //  STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
         }
     },
     DECODER_INIT_TIME {
@@ -51,8 +53,9 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-            return String.format("Decoder initialization time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
-                STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
+        	return ""; // DEBUG
+            //return String.format("Decoder initialization time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
+              //  STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
         }
     },
     SYMBOL_INPUT_TIME {
@@ -60,8 +63,9 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-            return String.format("Symbol input time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
-                STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
+        	return ""; // DEBUG
+            //return String.format("Symbol input time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
+              //  STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
         }
     },
     DECODING_TIME {
@@ -78,6 +82,8 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
+        	return ""; // DEBUG
+        	/*
             final long numFailures = stats.getCount();
             if (stats.hasNext()) {
                 final long totalDecodings = stats.getNext().getCount();
@@ -88,6 +94,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
             else {
                 return String.format("Number of decoding failures:{ %d }", numFailures);
             }
+            */
         }
     },
     DECODING_FAILURE_TIME {
@@ -95,8 +102,9 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-            return String.format("Source block decoding failure time (in %s):{min=%03.3f, average=%03.3f, max=%03.3f}",
-                STATS_UNIT.name().toLowerCase(), t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
+        	return ""; // DEBUG
+            //return String.format("Source block decoding failure time (in %s):{min=%03.3f, average=%03.3f, max=%03.3f}",
+              //  STATS_UNIT.name().toLowerCase(), t(stats.getMin()), t(stats.getAverage()), t(stats.getMax()));
         }
     };
 

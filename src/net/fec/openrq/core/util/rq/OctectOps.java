@@ -22,20 +22,19 @@ import java.util.Arrays;
 
 public abstract class OctectOps {
 
-    public static final short UNSIGN(byte b) {
+    public static final int UNSIGN(int b) {
 
-        return ((short)(b & 0xFF));
+        return b & 0xFF;
     }
 
-    public static final byte getExp(int i) {
+    public static final int getExp(int i) {
 
-        if (i >= 0) return (byte)OCT_EXP[i];
-        else return (byte)OCT_EXP[UNSIGN((byte)i)];
+        return OCT_EXP[i];
     }
 
-    public static final byte getLog(int i) {
+    public static final int getLog(int i) {
 
-        return ((byte)OCT_LOG[UNSIGN((byte)i)]);
+        return OCT_LOG[i];
     }
 
     public static final byte addition(byte u, byte v) {
@@ -52,12 +51,10 @@ public abstract class OctectOps {
 
         // if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
 
-        if (v == 1) return u;
-
         if (u == 0) return 0;
         else {
 
-            byte quotient = getExp(UNSIGN(getLog(u - 1)) - UNSIGN(getLog(v - 1)) + 255);
+            byte quotient = (byte)getExp(getLog(UNSIGN(u - 1)) - getLog(UNSIGN(v - 1)) + 255);
 
             return quotient;
         }
@@ -67,20 +64,12 @@ public abstract class OctectOps {
 
         if (u == 0 || v == 0) return 0;
 
-        if (u == 1) return v;
-
-        if (v == 1) return u;
-        else {
-
-            byte product = getExp(UNSIGN(getLog(u - 1)) + UNSIGN(getLog(v - 1)));
-
-            return product;
-        }
+        return (byte)getExp(getLog(UNSIGN(u - 1)) + getLog(UNSIGN(v - 1)));
     }
 
     public static final byte alphaPower(int i) {
 
-        return getExp(i);
+        return (byte)getExp(i);
     }
 
     public static final byte[] betaProduct(byte beta, byte[] U) {
@@ -191,7 +180,7 @@ public abstract class OctectOps {
     }
 
 
-    private static final char[] OCT_EXP =
+    private static final int[] OCT_EXP =
     {
      1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76,
      152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192, 157,
@@ -230,7 +219,7 @@ public abstract class OctectOps {
      142
     };
 
-    private static final char[] OCT_LOG =
+    private static final int[] OCT_LOG =
     {
      0, 1, 25, 2, 50, 26, 198, 3, 223, 51, 238, 27, 104, 199, 75, 4, 100,
      224, 14, 52, 141, 239, 129, 28, 193, 105, 248, 200, 8, 76, 113, 5,

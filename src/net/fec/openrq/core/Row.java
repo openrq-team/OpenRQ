@@ -20,26 +20,26 @@ import java.util.Set;
 
 class Row{
 	
-	public int id;
+	public int position;
 	public int nonZeros;
-	public int degree;
-	public Set<Integer> edges = null;
+	public int originalDegree;
+	public Set<Integer> nodes = null;
 	public boolean isHDPC;
 	
 	protected Row(int i, int r, int d, boolean hdpc){
 		
-		id = i;
+		position = i;
 		nonZeros = r;
-		degree = d;
+		originalDegree = d;
 		isHDPC = hdpc;
 	}
 	
 	protected Row(int i, int r, int d, boolean hdpc, Set<Integer> e){
 	
-		id = i;
+		position = i;
 		nonZeros = r;
-		degree = d;
-		edges = e;
+		originalDegree = d;
+		nodes = e;
 		isHDPC = hdpc;
 	}
 	
@@ -49,7 +49,7 @@ class Row{
 		if(!o.getClass().getName().equals(this.getClass().getName())) 
 			return false;
 		else
-			if(((Row) o).id == this.id)
+			if(((Row) o).position == this.position)
 				return true;
 			else
 				return false;
