@@ -220,6 +220,9 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             // by the vector of intermediate symbols to recover the missing source symbol
             byte[] original_symbol = Utilities.multiplyByteLineBySymbolVector(missing.getValue(),
                 missing.getValue().length, intermediate_symbols);
+        	// TODO check this
+        	//int isi = missing.getKey() + Kprime - K;
+        	//byte[] original_symbol = LinearSystem.enc(Kprime, intermediate_symbols, new Tuple(Kprime, isi), fecParams.symbolSize());
 
             // write to data buffer
             putSourceData(missing.getKey(), original_symbol, 0);
@@ -317,6 +320,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         try {
             return LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
+            //return Utilities.gaussElimination(constraint_matrix, D);
         }
         catch (SingularMatrixException e) {
 

@@ -22,9 +22,9 @@ class Row{
 	
 	public int position;
 	public int nonZeros;
-	public int originalDegree;
+	public final int originalDegree;
 	public Set<Integer> nodes = null;
-	public boolean isHDPC;
+	public final boolean isHDPC;
 	
 	protected Row(int i, int r, int d, boolean hdpc){
 		

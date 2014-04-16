@@ -304,7 +304,7 @@ final class LinearSystem {
     {
 
         // allocate memory for the indexes
-        Set<Integer> indexes = new TreeSet<Integer>();
+        Set<Integer> indexes = new HashSet<Integer>(Kprime);
 
         // parameters
         int Ki = SystematicIndices.getKIndex(Kprime);
@@ -537,9 +537,13 @@ final class LinearSystem {
         	// currently chosen row
         	Row chosenRow = null;
 
+        	
         	// decoding failure?
         	boolean allZeros = true;
         	
+        	// there is a row with exactly two ones
+        	boolean two1s = false;
+        	        	
         	/*
         	 * find r
         	 */
@@ -550,11 +554,16 @@ final class LinearSystem {
 
         		if (temp.nonZeros != 0)
         			allZeros = false;
-
+        		
         		if (temp.isHDPC && chosenRowsCounter < nonHDPCRows)
         			continue;
 
-        		if (temp.nonZeros < r) {
+        		// if it's an edge, then it must have exactly two 1's
+        		// we must do this after the check above because HDPC rows are never edges
+        		if (temp.nodes != null)
+        			two1s = true;
+        		
+        		if (temp.nonZeros < r && temp.nonZeros > 0) {
 
         			chosenRow = temp;
         			r = chosenRow.nonZeros;
@@ -568,8 +577,7 @@ final class LinearSystem {
         			}
         		}
         	}
-
-
+        	
         	if (allZeros) // DECODING FAILURE
         		throw new SingularMatrixException("Decoding Failure - PI Decoding @ Phase 1: All entries in V are zero.");
 
@@ -577,7 +585,7 @@ final class LinearSystem {
         	 * choose the row
         	 */
 
-        	if (r == 2 && minDegree == 2 ) {
+        	if (r == 2 && two1s) {
 
         		/*
         		 * create graph
@@ -804,107 +812,102 @@ final class LinearSystem {
              * appear in the last columns of V."
              */
 
-            // if there are non-zeros
-            if (chosenRow.nonZeros > 0)
+            // stack of non-zeros in the chosen row
+        	Deque<Integer> nonZerosStack = new ArrayDeque<>(chosenRow.nonZeros);
+
+            // search the chosen row for the positions of the non-zeros
+            for (int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++) 		// TODO the positions of the non-zeros could
+                                                                      		// be stored as a Row attribute
+            {																// this would spare wasting time in this for (little optimization)
+                if (A[i][col] == 0) // a zero
+                	continue;
+                else
+                { // a non-zero
+                    nZ++;
+
+                    // add this non-zero's position to the stack
+                    nonZerosStack.push(col);
+                }
+            }
+
+            /*
+             * lets start swapping columns!
+             */
+
+            // swap a non-zero's column to the first column in V
+            int column;
+            if (A[i][i] == 0) // is the first column in V already the place of a non-zero?
             {
-                // stack of non-zeros in the chosen row
-            	Deque<Integer> nonZeros = new ArrayDeque<>(chosenRow.nonZeros);
+                // column to be swapped
+                column = nonZerosStack.pop();
 
-                // search the chosen row for the positions of the non-zeros
-                for (int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++) 		// TODO the positions of the non-zeros could
-                                                                          		// be stored as a Row attribute
-                {																// this would spare wasting time in this for (little optimization)
-                    if (A[i][col] == 0) // a zero
-                    	continue;
-                    else
-                    { // a non-zero
-                        nZ++;
+                // swap columns
+                Utilities.swapColumns(A, column, i);
+                Utilities.swapColumns(X, column, i);
 
-                        // add this non-zero's position to the stack
-                        nonZeros.push(col);
-                    }
-                }
+                // decoding process - swap i and column in c
+                int auxIndex = c[i];
+                c[i] = c[column];
+                c[column] = auxIndex;
+            }
+            else // it is, so let's remove 'i' from the stack
+            	nonZerosStack.remove((Integer)i);
+               
+            // swap the remaining non-zeros' columns so that they're the last columns in V
+            for (int remainingNZ = nonZerosStack.size(); remainingNZ > 0; remainingNZ--)
+            {
+                // column to be swapped
+                column = nonZerosStack.pop();
 
-                /*
-                 * lets start swapping columns!
-                 */
+                // swap columns
+                Utilities.swapColumns(A, column, L - u - remainingNZ);
+                Utilities.swapColumns(X, column, L - u - remainingNZ);
 
-                // swap a non-zero's column to the first column in V
-                int column;
-                if (A[i][i] == 0) // is the first column in V already the place of a non-zero?
+                // decoding process - swap column with L-u-remainingNZ in c
+                int auxIndex = c[L - u - remainingNZ];
+                c[L - u - remainingNZ] = c[column];
+                c[column] = auxIndex;
+                
+            }
+
+            /*
+             * "... if a row below the chosen row has entry beta in the first column of V, and the chosen
+             * row has entry alpha in the first column of V, then beta/alpha multiplied by the chosen
+             * row is added to this row to leave a zero value in the first column of V."
+             */
+
+            // "the chosen row has entry alpha in the first column of V"
+            byte alpha = A[i][i];
+
+            // let's look at all rows below the chosen one
+            for (int row = i + 1; row < M; row++)				// TODO queue these row operations for when/if the row is chosen -
+                                                  				// Page35@RFC6330 1st Par.
+            {
+                // if it's already 0, no problem
+                if (A[row][i] == 0) continue;
+
+                // if it's a non-zero we've got to "zerofy" it
+                else
                 {
-                    // column to be swapped
-                    column = nonZeros.pop();
+                    // "if a row below the chosen row has entry beta in the first column of V"
+                    byte beta = A[row][i];
 
-                    // swap columns
-                    Utilities.swapColumns(A, column, i);
-                    Utilities.swapColumns(X, column, i);
+                    /*
+                     * "then beta/alpha multiplied by the chosen row is added to this row"
+                     */
 
-                    // decoding process - swap i and column in c
-                    int auxIndex = c[i];
-                    c[i] = c[column];
-                    c[column] = auxIndex;
-                }
-                else // it is, so let's remove 'i' from the stack
-                	nonZeros.remove((Integer)i);
+                    // division
+                    byte balpha = OctectOps.division(beta, alpha);
 
-                // swap the remaining non-zeros' columns so that they're the last columns in V
-                for (int remainingNZ = nonZeros.size(); remainingNZ > 0; remainingNZ--)
-                {
-                    // column to be swapped
-                    column = nonZeros.pop();
+                    // multiplication
+                    byte[] product = OctectOps.betaProduct(balpha, A[i]);
 
-                    // swap columns
-                    Utilities.swapColumns(A, column, L - u - remainingNZ);
-                    Utilities.swapColumns(X, column, L - u - remainingNZ);
+                    // addition
+                    Utilities.xorSymbolInPlace(A[row], product);
 
-                    // decoding process - swap column with L-u-remainingNZ in c
-                    int auxIndex = c[L - u - remainingNZ];
-                    c[L - u - remainingNZ] = c[column];
-                    c[column] = auxIndex;
-                }
-
-                /*
-                 * "... if a row below the chosen row has entry beta in the first column of V, and the chosen
-                 * row has entry alpha in the first column of V, then beta/alpha multiplied by the chosen
-                 * row is added to this row to leave a zero value in the first column of V."
-                 */
-
-                // "the chosen row has entry alpha in the first column of V"
-                byte alpha = A[i][i];
-
-                // let's look at all rows below the chosen one
-                for (int row = i + 1; row < M; row++)				// TODO queue these row operations for when/if the row is chosen -
-                                                      				// Page35@RFC6330 1st Par.
-                {
-                    // if it's already 0, no problem
-                    if (A[row][i] == 0) continue;
-
-                    // if it's a non-zero we've got to "zerofy" it
-                    else
-                    {
-                        // "if a row below the chosen row has entry beta in the first column of V"
-                        byte beta = A[row][i];
-
-                        /*
-                         * "then beta/alpha multiplied by the chosen row is added to this row"
-                         */
-
-                        // division
-                        byte balpha = OctectOps.division(beta, alpha);
-
-                        // multiplication
-                        byte[] product = OctectOps.betaProduct(balpha, A[i]);
-
-                        // addition
-                        A[row] = Utilities.xorSymbol(A[row], product);
-                        //Utilities.xorSymbolInPlace(A[row], product);
-
-                        // decoding process - (beta * D[d[i]]) + D[d[row]]
-                        product = OctectOps.betaProduct(balpha, D[d[i]]);
-                        D[d[row]] = Utilities.xorSymbol(D[d[row]], product);
-                        //Utilities.xorSymbolInPlace(D[d[row]], product);
-                    }
+                    // decoding process - (beta * D[d[i]]) + D[d[row]]
+                    product = OctectOps.betaProduct(balpha, D[d[i]]);
+                    Utilities.xorSymbolInPlace(D[d[row]], product);
                 }
             }
 
@@ -919,6 +922,7 @@ final class LinearSystem {
             {
             	int nonZeros = 0;
             	int line = row.position;
+            	Set<Integer> nodes = new HashSet<Integer>();
             	
             	// check all columns for non-zeros
             	for (int col = i; col < L - u; col++)
@@ -928,9 +932,17 @@ final class LinearSystem {
             		else
             		{
             			// count the non-zero
-            			nonZeros++;           			
+            			nonZeros++;
+            			
+            			// add node to this edge
+            			nodes.add(col);
             		}
             	}
+            	
+            	if(nonZeros != 2 || row.isHDPC)
+            		row.nodes = null;
+            	else
+            		row.nodes = nodes;
             	
             	row.nonZeros = nonZeros;
             }

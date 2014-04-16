@@ -23,6 +23,7 @@ import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
 import net.fec.openrq.core.util.rq.SystematicIndices;
+import net.fec.openrq.core.util.rq.Utilities;
 
 
 /**
@@ -235,6 +236,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         // solve system of equations
         try {
             return LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
+        	//return Utilities.gaussElimination(constraint_matrix, D);
         }
         catch (SingularMatrixException e) {
             throw new RuntimeException(

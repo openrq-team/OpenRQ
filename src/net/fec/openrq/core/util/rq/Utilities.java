@@ -194,36 +194,6 @@ public final class Utilities {
      * in <code>vector</coder>
      * 
      * @param line
-     * @param vector
-     * @param symbol_size
-     * @return
-     */
-    public static byte[] multiplyByteLineBySymbolVector(byte[] line, byte[] vector, int symbol_size) {
-
-        // if((line.length * symbol_size) != vector.length) throw new
-        // RuntimeException("Illegal line/vector dimensions.");
-
-        byte[] result = new byte[symbol_size];
-
-        for (int octet = 0; octet < symbol_size; octet++) {
-
-            for (int colRow = 0; colRow < line.length; colRow++) {
-
-                byte temp = OctectOps.product(line[colRow], vector[(colRow * symbol_size) + octet]);
-
-                result[octet] = (byte)(result[octet] ^ temp);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Multiplies a row (<code>line</code>) by a vector.
-     * The number of columns in <code>line</code> must be equal to the number of rows
-     * in <code>vector</coder>
-     * 
-     * @param line
      * @param line_length 
      * @param vector
      * @return
@@ -290,7 +260,8 @@ public final class Utilities {
      * @param d
      * @param D
      */
-    public static void reduceToRowEchelonForm(byte[][] A,
+    public static void reduceToRowEchelonForm(
+        byte[][] A,
         int first_row,
         int last_row,
         int first_col,
@@ -355,63 +326,7 @@ public final class Utilities {
 
                     // decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
                     product = OctectOps.betaProduct(beta, D[d[r + first_row]]);
-                    D[d[i + first_row]] = xorSymbol(D[d[i + first_row]], product);
-                }
-            }
-
-            lead++;
-        }
-    }
-
-    public static void reduceToRowEchelonForm(byte[][] A, int first_row, int last_row, int first_col, int last_col) {
-
-        int lead = 0;
-        int rowCount = last_row - first_row;
-        int columnCount = last_col - first_col;
-
-        for (int r = 0; r < rowCount; r++) {
-
-            if (columnCount <= lead) return;
-
-            int i = r;
-            while (A[i + first_row][lead + first_col] == 0) {
-
-                i++;
-
-                if (rowCount == i) {
-
-                    i = r;
-                    lead++;
-                    if (columnCount == lead) return;
-                }
-            }
-
-            if (i != r) {
-
-                byte[] auxRow = A[i + first_row];
-                A[i + first_row] = A[r + first_row];
-                A[r + first_row] = auxRow;
-            }
-
-            byte beta = A[r + first_row][lead + first_col];
-            if (beta != 0) {
-                for (int col = 0; col < columnCount; col++)
-                    A[r + first_row][col + first_col] = OctectOps.division(A[r + first_row][col + first_col], beta);
-
-            }
-
-            for (i = 0; i < rowCount; i++) {
-
-                beta = A[i + first_row][lead + first_col];
-
-                if (i != r) {
-                    // U_lower[i] - (U_lower[i][lead] * U_lower[r])
-                    byte[] product = OctectOps.betaProduct(beta, A[r + first_row], first_col, columnCount);
-
-                    for (int col = 0; col < columnCount; col++)
-                        A[i + first_row][col + first_col] = OctectOps.subtraction(A[i + first_row][col + first_col],
-                            product[col]);
-
+                    xorSymbolInPlace(D[d[i + first_row]], product);
                 }
             }
 
@@ -558,16 +473,16 @@ public final class Utilities {
      * @return Array of symbols 'x'
      * @throws SingularMatrixException
      */
-    public static byte[] gaussElimination(byte[][] A, byte[][] b) throws SingularMatrixException
+    public static byte[][] gaussElimination(byte[][] A, byte[][] b) throws SingularMatrixException
     {
 
         if (A.length != A[0].length || b.length != A.length) throw new RuntimeException("Illegal matrix dimensions.");
 
         int num_cols = b[0].length;
 
-        byte[] x = new byte[b.length * num_cols];
+        byte[][] x = new byte[b.length][num_cols];
 
-        Utilities.printMatrix(A);
+        //Utilities.printMatrix(A);
 
         int ROWS = b.length;
 
@@ -591,8 +506,8 @@ public final class Utilities {
             // singular or nearly singular
             if (A[row][row] == 0) {
                 // System.err.println("LINHA QUE DEU SINGULAR: "+row);
-                Utilities.printMatrix(b);
-                Utilities.printMatrix(A);
+//                Utilities.printMatrix(b);
+//                Utilities.printMatrix(A);
                 throw new SingularMatrixException("LINHA QUE DEU SINGULAR: " + row);
             }
 
@@ -603,7 +518,7 @@ public final class Utilities {
 
                 temp = OctectOps.betaProduct(alpha, b[row]);
 
-                b[i] = Utilities.xorSymbol(b[i], temp);
+                Utilities.xorSymbolInPlace(b[i], temp);
 
                 for (int j = row; j < ROWS; j++) {
 
@@ -622,18 +537,18 @@ public final class Utilities {
             for (int j = i + 1; j < ROWS; j++) {
 
                 // i*num_cols+j
-                byte[] temp = OctectOps.betaProduct(A[i][j], x, j * num_cols, num_cols);
+                byte[] temp = OctectOps.betaProduct(A[i][j], x[j], 0, num_cols);
 
-                sum = Utilities.xorSymbol(sum, temp);
+                Utilities.xorSymbolInPlace(sum, temp);
             }
 
             byte[] temp = Utilities.xorSymbol(b[i], sum);
 
-            // x[i] = OctectOps.betaDivision(temp, A[i][i]);
-            for (int bite = 0; bite < num_cols; bite++) {
-
-                x[(i * num_cols) + bite] = OctectOps.division(temp[bite], A[i][i]);
-            }
+            x[i] = OctectOps.betaDivision(temp, A[i][i]);
+//            for (int bite = 0; bite < num_cols; bite++) {
+//
+//                x[(i * num_cols) + bite] = OctectOps.division(temp[bite], A[i][i]);
+//            }
         }
 
         return x;

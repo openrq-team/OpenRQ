@@ -43,9 +43,8 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-        	return ""; // DEBUG
-            //return String.format("Symbol encoding time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
-              //  STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
+            return String.format("Symbol encoding time (in %s):{ avg = %03.3f, min = %03.3f, max = %03.3f }",
+              STATS_UNIT.name().toLowerCase(), t(stats.getAverage()), t(stats.getMin()), t(stats.getMax()));
         }
     },
     DECODER_INIT_TIME {
@@ -82,8 +81,7 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
         @Override
         public String toString(LongSummaryStatistics stats) {
 
-        	return ""; // DEBUG
-        	/*
+        	
             final long numFailures = stats.getCount();
             if (stats.hasNext()) {
                 final long totalDecodings = stats.getNext().getCount();
@@ -94,7 +92,6 @@ public enum StatsType implements StringConverter<LongSummaryStatistics> {
             else {
                 return String.format("Number of decoding failures:{ %d }", numFailures);
             }
-            */
         }
     },
     DECODING_FAILURE_TIME {

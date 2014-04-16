@@ -260,7 +260,7 @@ public final class TestRunner {
         System.out.println();
         System.out.println();
         System.out.println("Running any symbols test...");
-        for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
+        for (int extraSymbols = 0; extraSymbols <= 0; extraSymbols++) {
             for (int size : DATA_SIZES) {
                 System.out.println();
                 runAnySymbolsTasks(executor, makeData(size), extraSymbols);
@@ -285,7 +285,7 @@ public final class TestRunner {
             printMiscParameters(Defaults.EXTRA_SYMBOLS, Defaults.MAX_SYMBOLS_PER_PACKET);
         }
 
-        final EncoderTask encTask = new EncoderTask.Builder(encProv, pipe.sink(), SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM)
+        final EncoderTask encTask = new EncoderTask.Builder(encProv, pipe.sink(), EncoderTask.Type.ANY_SYMBOL_RANDOM)
             .numIterations(itersPerTask)
             .build();
         final DecoderTask decTask = new DecoderTask.Builder(checker, pipe.source())
