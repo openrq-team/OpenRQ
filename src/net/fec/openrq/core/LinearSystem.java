@@ -230,10 +230,9 @@ final class LinearSystem {
      * Generates the constraint matrix.
      * 
      * @param Kprime
-     * @param T
      * @return
      */
-    public static byte[][] generateConstraintMatrix(int Kprime, int T)
+    public static byte[][] generateConstraintMatrix(int Kprime)
     {
 
         // calculate necessary parameters
@@ -360,6 +359,7 @@ final class LinearSystem {
      * @param Kprime
      * @param C
      * @param tuple
+     * @param T 
      * @return
      */
     public static byte[] enc(int Kprime, byte[][] C, Tuple tuple, int T)
@@ -415,12 +415,11 @@ final class LinearSystem {
      * 
      * @param A
      * @param D
-     * @param symbol_size
      * @param Kprime
      * @return
      * @throws SingularMatrixException
      */
-    public static byte[][] PInactivationDecoding(byte[][] A, byte[][] D, int symbol_size, int Kprime)
+    public static byte[][] PInactivationDecoding(byte[][] A, byte[][] D, int Kprime)
         throws SingularMatrixException {
 
         // decoding parameters

@@ -30,7 +30,7 @@ import net.fec.openrq.core.util.rq.Utilities;
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-final class ArraySourceBlockEncoder implements SourceBlockEncoder {
+public final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
     // requires valid arguments
     static ArraySourceBlockEncoder newEncoder(
@@ -134,6 +134,22 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         return EncodingPacket.newSourcePacket(sbn, esi, symbols.asReadOnlyBuffer(), numSymbols);
     }
 
+    // DEBUG
+    public byte[] generateSourceSymbol(int esi) {
+
+        checkSourceSymbolESI(esi);
+
+        // check if we've got the intermediate symbols already
+        if (intermediateSymbols == null) {
+            intermediateSymbols = generateIntermediateSymbols();
+        }
+        
+        int isi = esi + (Kprime - K);
+        
+        // generate source symbol
+        return LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi), fecParams.symbolSize());
+    }
+
     @Override
     public EncodingPacket getRepairPacket(int esi) {
 
@@ -226,7 +242,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         int T = fecParams.symbolSize();
 
         // generate LxL Constraint Matrix
-        byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(Kprime, T); // A
+        byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(Kprime); // A
 
         // allocate and initialize vector D
         byte[][] D = new byte[L][T];
@@ -235,8 +251,8 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // solve system of equations
         try {
-            return LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
-        	//return Utilities.gaussElimination(constraint_matrix, D);
+            return LinearSystem.PInactivationDecoding(constraint_matrix, D, Kprime);
+            // return Utilities.gaussElimination(constraint_matrix, D);
         }
         catch (SingularMatrixException e) {
             throw new RuntimeException(

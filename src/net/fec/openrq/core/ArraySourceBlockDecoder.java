@@ -250,7 +250,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         byte[][] constraint_matrix = new byte[M][];
 
         // generate the original constraint matrix
-        byte[][] lConstraint = LinearSystem.generateConstraintMatrix(Kprime, T);
+        byte[][] lConstraint = LinearSystem.generateConstraintMatrix(Kprime);
 
         // copy to our decoding matrix
         for (int row = 0; row < L; row++)
@@ -319,7 +319,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
          */
 
         try {
-            return LinearSystem.PInactivationDecoding(constraint_matrix, D, T, Kprime);
+            return LinearSystem.PInactivationDecoding(constraint_matrix, D, Kprime);
             //return Utilities.gaussElimination(constraint_matrix, D);
         }
         catch (SingularMatrixException e) {

@@ -40,7 +40,7 @@ public final class ArrayDataEncoder implements DataEncoder {
     private final byte[] array;
     private final int offset;
     private final FECParameters fecParams;
-    private final SourceBlockEncoder[] srcBlockEncoders;
+    private final ArraySourceBlockEncoder[] srcBlockEncoders;
 
 
     private ArrayDataEncoder(byte[] array, int offset, FECParameters fecParams) {
@@ -53,7 +53,7 @@ public final class ArrayDataEncoder implements DataEncoder {
         this.srcBlockEncoders = partitionData(array, offset, fecParams);
     }
 
-    private static SourceBlockEncoder[] partitionData(
+    private static ArraySourceBlockEncoder[] partitionData(
         byte[] array,
         int offset,
         FECParameters fecParams)
@@ -69,7 +69,7 @@ public final class ArrayDataEncoder implements DataEncoder {
         final int ZL = KZ.get(3);
 
         // partitioned source blocks
-        final SourceBlockEncoder[] srcBlockEncoders = new ArraySourceBlockEncoder[Z];
+        final ArraySourceBlockEncoder[] srcBlockEncoders = new ArraySourceBlockEncoder[Z];
 
         /*
          * The object MUST be partitioned into Z = ZL + ZS contiguous source blocks.
@@ -118,7 +118,7 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public SourceBlockEncoder encoderForSourceBlock(int sbn) {
+    public ArraySourceBlockEncoder encoderForSourceBlock(int sbn) {
 
         if (sbn < 0 || sbn >= srcBlockEncoders.length) {
             throw new IllegalArgumentException("invalid source block number");
