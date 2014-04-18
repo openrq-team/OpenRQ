@@ -23,7 +23,6 @@ import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
 import net.fec.openrq.core.util.rq.SystematicIndices;
-import net.fec.openrq.core.util.rq.Utilities;
 
 
 /**
@@ -132,22 +131,6 @@ public final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         symbols.flip();
 
         return EncodingPacket.newSourcePacket(sbn, esi, symbols.asReadOnlyBuffer(), numSymbols);
-    }
-
-    // DEBUG
-    public byte[] generateSourceSymbol(int esi) {
-
-        checkSourceSymbolESI(esi);
-
-        // check if we've got the intermediate symbols already
-        if (intermediateSymbols == null) {
-            intermediateSymbols = generateIntermediateSymbols();
-        }
-        
-        int isi = esi + (Kprime - K);
-        
-        // generate source symbol
-        return LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi), fecParams.symbolSize());
     }
 
     @Override

@@ -31,7 +31,6 @@ import net.fec.openrq.core.parameters.FECParameters;
 import net.fec.openrq.core.parameters.ParameterChecker;
 import net.fec.openrq.core.util.rq.SingularMatrixException;
 import net.fec.openrq.core.util.rq.SystematicIndices;
-import net.fec.openrq.core.util.rq.Utilities;
 
 
 /**
@@ -75,7 +74,6 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
     private Set<EncodingSymbol> repairSymbols; // TODO free memory when decoded
     private BitSet receivedSourceSymbols;
-    private Map<Integer, byte[]> esiToLTCode; // TODO free memory when decoded
 
 
     private ArraySourceBlockDecoder(
@@ -96,7 +94,6 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         this.repairSymbols = new HashSet<EncodingSymbol>();
         this.receivedSourceSymbols = new BitSet(K);
-        this.esiToLTCode = new TreeMap<Integer, byte[]>();
     }
 
     @Override
@@ -214,20 +211,14 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
          */
 
         // recover missing source symbols
-        for (Map.Entry<Integer, byte[]> missing : esiToLTCode.entrySet())
-        {
-            // multiply the constraint matrix line relative to the missing source symbol
-            // by the vector of intermediate symbols to recover the missing source symbol
-            byte[] original_symbol = Utilities.multiplyByteLineBySymbolVector(missing.getValue(),
-                missing.getValue().length, intermediate_symbols);
-        	// TODO check this
-        	//int isi = missing.getKey() + Kprime - K;
-        	//byte[] original_symbol = LinearSystem.enc(Kprime, intermediate_symbols, new Tuple(Kprime, isi), fecParams.symbolSize());
+        for (int esi : missingSourceSymbols()) {
+            byte[] sourceSymbol = LinearSystem.enc(Kprime, intermediate_symbols, new Tuple(Kprime, esi),
+                fecParams.symbolSize());
 
             // write to data buffer
-            putSourceData(missing.getKey(), original_symbol, 0);
+            putSourceData(esi, sourceSymbol, 0);
         }
-
+        
         return SourceBlockState.DECODED;
     }
 
@@ -285,7 +276,6 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             for (Integer col : indexes)
                 newLine[col] = 1;
 
-            esiToLTCode.put(missing_ESI, constraint_matrix[row]);
             constraint_matrix[row] = newLine;
 
             // fill in missing source symbols in D with the repair symbols
@@ -320,7 +310,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         try {
             return LinearSystem.PInactivationDecoding(constraint_matrix, D, Kprime);
-            //return Utilities.gaussElimination(constraint_matrix, D);
+            // return Utilities.gaussElimination(constraint_matrix, D);
         }
         catch (SingularMatrixException e) {
 
@@ -367,7 +357,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private void putRepairData(int esi, ByteBuffer symbolData) {
 
         // generate repair symbol (cannot avoid copy)
-        final byte[] repairData = new byte[fecParams.symbolSize()]; // TODO handle last symbol size (no padding)
+        final byte[] repairData = new byte[fecParams.symbolSize()];
         symbolData.get(repairData); // this also advances buffer position
         final EncodingSymbol repair = EncodingSymbol.newRepairSymbol(esi, repairData);
 

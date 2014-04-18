@@ -58,7 +58,7 @@ import net.fec.openrq.test.util.summary.Summaries;
  */
 public final class TestRunner {
 
-    private static final int DEF_MAX_PAYLOAD_LENGTH = 10; // 386; // 1392; // P'
+    private static final int DEF_MAX_PAYLOAD_LENGTH = 386; // 1392; // P'
     private static final int DEF_MAX_DEC_BLOCK_SIZE = 76800; // WS // B
 
     private static final List<Integer> DATA_SIZES;
@@ -79,7 +79,7 @@ public final class TestRunner {
         // final int[] xxLarge = {100_000_000, 222_222_222, 333_333_333, 555_555_555, 777_777_777};
 
         final List<Integer> list = new ArrayList<>(45);
-        list.add(50);
+        list.add(49_999);
         // putInts(small, list);
         // putInts(medium, list);
         // putInts(large, list);
@@ -98,7 +98,7 @@ public final class TestRunner {
     }
 
 
-    private static final boolean WARMUP_ENABLED = false;
+    private static final boolean WARMUP_ENABLED = true;
     private static final int WARMUP_SIZE = 1237;
     private static final long WARMUP_NANOS = TimeUnit.SECONDS.toNanos(15L);
     private static final boolean PRINT_WARMUP_STATS = false;
@@ -261,25 +261,25 @@ public final class TestRunner {
          * }
          */
 
+        System.out.println();
+        System.out.println();
+        System.out.println("Running any symbols test...");
+        for (int extraSymbols = 0; extraSymbols <= 2; extraSymbols++) {
+            for (int size : DATA_SIZES) {
+                System.out.println();
+                runAnySymbolsTasks(executor, makeData(size), extraSymbols);
+            }
+        }
+
         /*
          * System.out.println();
          * System.out.println();
-         * System.out.println("Running any symbols test...");
-         * for (int extraSymbols = 0; extraSymbols <= 0; extraSymbols++) {
+         * System.out.println("Running debug source symbols test...");
          * for (int size : DATA_SIZES) {
          * System.out.println();
-         * runAnySymbolsTasks(executor, makeData(size), extraSymbols);
-         * }
+         * runDebugSourceSymbolTasks(makeData(size));
          * }
          */
-
-        System.out.println();
-        System.out.println();
-        System.out.println("Running debug source symbols test...");
-        for (int size : DATA_SIZES) {
-            System.out.println();
-            runDebugSourceSymbolTasks(makeData(size));
-        }
 
         executor.shutdown();
         executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
@@ -403,67 +403,5 @@ public final class TestRunner {
             .build();
 
         runTasks(encTask, decTask, executor, true);
-    }
-
-    // ===== DEBUG SOURCE SYMBOLS ===== //
-
-    private static void runDebugSourceSymbolTasks(byte[] data) {
-
-        final FECParameters fecParams = deriveFECParams(data);
-        final ArrayDataEncoder dataEnc = OpenRQ.newEncoder(data, fecParams);
-        final long F = dataEnc.dataLength();
-        final int T = dataEnc.symbolSize();
-        final int Z = dataEnc.numberOfSourceBlocks();
-
-        System.out.println("-- data --");
-        System.out.println("F = " + F);
-        System.out.println("T = " + T);
-        System.out.println("Z = " + Z);
-        System.out.println(byteArrayToString(data));
-
-        for (int sbn = 0; sbn < Z; sbn++) {
-            final ArraySourceBlockEncoder blockEnc = dataEnc.encoderForSourceBlock(sbn);
-            final int K = blockEnc.numberOfSourceSymbols();
-
-            System.out.println();
-            System.out.println("-- source block " + sbn + " --");
-            System.out.println("K = " + K);
-            
-            System.out.println();
-            System.out.println("- original source symbols -");
-            final byte[] symbolData = new byte[T];
-            for (int esi = 0; esi < K; esi++) {
-                final ByteBuffer symbols = blockEnc.getSourcePacket(esi).symbols();
-                symbols.get(symbolData);
-                System.out.println(byteArrayToString(symbolData));
-            }
-            
-            System.out.println();
-            System.out.println("- generated source symbols -");
-            for (int esi = 0; esi < K; esi++) {
-                System.out.println(byteArrayToString(blockEnc.generateSourceSymbol(esi)));
-            }
-        }
-    }
-
-    private static String byteArrayToString(byte[] arr) {
-
-        final StringBuilder builder = new StringBuilder(2 + arr.length * 4);
-        builder.append("[");
-        if (arr.length > 0) {
-            builder.append(byteToHex(arr[0]));
-            for (int i = 1; i < arr.length; i++) {
-                builder.append(" | ");
-                builder.append(byteToHex(arr[i]));
-            }
-        }
-        builder.append("]");
-        return builder.toString();
-    }
-
-    private static String byteToHex(byte b) {
-
-        final int i = b & 0xFF;
-        return (i < 0x10 ? "0" : "") + Integer.toHexString(i).toUpperCase();
     }
 }
