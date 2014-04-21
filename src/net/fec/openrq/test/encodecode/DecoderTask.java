@@ -23,23 +23,21 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 
-import net.fec.openrq.core.ArrayDataDecoder;
-import net.fec.openrq.core.EncodingPacket;
-import net.fec.openrq.core.OpenRQ;
-import net.fec.openrq.core.decoder.DataDecoder;
-import net.fec.openrq.core.decoder.SourceBlockDecoder;
-import net.fec.openrq.core.decoder.SourceBlockState;
-import net.fec.openrq.core.parameters.FECParameters;
-import net.fec.openrq.core.parameters.ParameterChecker;
-import net.fec.openrq.core.util.numericaltype.SizeOf;
-import net.fec.openrq.core.util.parsing.Parsed;
+import net.fec.openrq.ArrayDataDecoder;
+import net.fec.openrq.EncodingPacket;
+import net.fec.openrq.OpenRQ;
+import net.fec.openrq.decoder.DataDecoder;
+import net.fec.openrq.decoder.SourceBlockDecoder;
+import net.fec.openrq.decoder.SourceBlockState;
+import net.fec.openrq.parameters.FECParameters;
+import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.test.util.summary.LongSummaryStatistics;
 import net.fec.openrq.test.util.summary.Summarizable;
+import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.parsing.Parsed;
 
 
 /**
- * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class DecoderTask implements Summarizable<StatsType> {
 

@@ -22,7 +22,6 @@ import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONL
 import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONLY_SEQUENTIAL;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,12 +36,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.fec.openrq.core.ArrayDataEncoder;
-import net.fec.openrq.core.ArraySourceBlockEncoder;
-import net.fec.openrq.core.OpenRQ;
-import net.fec.openrq.core.encoder.DataEncoder;
-import net.fec.openrq.core.parameters.FECParameters;
-import net.fec.openrq.core.util.arithmetic.ExtraMath;
+import net.fec.openrq.OpenRQ;
+import net.fec.openrq.encoder.DataEncoder;
+import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.test.encodecode.DecoderTask;
 import net.fec.openrq.test.encodecode.DecoderTask.DecodedDataChecker;
 import net.fec.openrq.test.encodecode.Defaults;
@@ -50,11 +46,10 @@ import net.fec.openrq.test.encodecode.EncoderTask;
 import net.fec.openrq.test.encodecode.StatsType;
 import net.fec.openrq.test.util.summary.LongSummaryStatistics;
 import net.fec.openrq.test.util.summary.Summaries;
+import net.fec.openrq.util.arithmetic.ExtraMath;
 
 
 /**
- * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class TestRunner {
 

@@ -16,8 +16,6 @@
 package net.fec.openrq.test.encodecode;
 
 /**
- * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class Defaults {
 

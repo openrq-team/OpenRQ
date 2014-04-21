@@ -25,8 +25,6 @@ import net.fec.openrq.test.util.StringConverter;
 
 
 /**
- * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class Summaries {
 
