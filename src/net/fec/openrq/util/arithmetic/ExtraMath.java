@@ -15,6 +15,10 @@
  */
 package net.fec.openrq.util.arithmetic;
 
+
+import java.math.BigInteger;
+
+
 /**
  * Defines arithmetical functions not present in class {@code java.lang.Math}.
  */
@@ -33,7 +37,7 @@ public final class ExtraMath {
      */
     public static int ceilDiv(int num, int den) {
 
-        return (int)Math.ceil((double)num / den);
+        return (int)((num + (den - 1L)) / den);
     }
 
     /**
@@ -49,7 +53,14 @@ public final class ExtraMath {
      */
     public static long ceilDiv(long num, long den) {
 
-        return (long)Math.ceil((double)num / den);
+        if (Long.MAX_VALUE - num < den - 1L) {
+            final BigInteger bigNum = BigInteger.valueOf(num);
+            final BigInteger bigDen = BigInteger.valueOf(den);
+            return bigNum.add(bigDen.subtract(BigInteger.ONE)).divide(bigDen).longValue();
+        }
+        else {
+            return (num + (den - 1L)) / den;
+        }
     }
 
     private ExtraMath() {
