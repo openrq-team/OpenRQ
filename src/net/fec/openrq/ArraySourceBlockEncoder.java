@@ -114,6 +114,19 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
+    public EncodingPacket getGenericEncodingPacket(int esi) {
+
+        checkGenericEncodingSymbolESI(esi);
+
+        if (esi < K) { // source symbol
+            return EncodingPacket.newSourcePacket(sbn, esi, getSourceSymbol(esi).transportData(), 1);
+        }
+        else { // repair symbol
+            return EncodingPacket.newRepairPacket(sbn, esi, getRepairSymbol(esi).transportData(), 1);
+        }
+    }
+
+    @Override
     public EncodingPacket getSourcePacket(int esi) {
 
         checkSourceSymbolESI(esi);
@@ -149,21 +162,12 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         checkRepairSymbolESI(esi);
 
         // check if we've got the intermediate symbols already
-        if (intermediateSymbols == null) {
+        if (intermediateSymbols == null) { // TODO maybe make this thread safe?
             intermediateSymbols = generateIntermediateSymbols();
         }
 
-        // generate repair symbol
-        int isi = esi + (Kprime - K);
-
-        byte[] enc_data = LinearSystem.enc(
-            Kprime, intermediateSymbols, new Tuple(Kprime, isi), fecParameters().symbolSize());
-
-        // generate repair symbol // TODO should we store the repair symbols generated?
-        EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(esi, enc_data);
-
         // return the repair packet
-        return EncodingPacket.newRepairPacket(sbn, esi, repairSymbol.transportData(), 1);
+        return EncodingPacket.newRepairPacket(sbn, esi, getRepairSymbol(esi).transportData(), 1);
     }
 
     @Override
@@ -177,18 +181,10 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
             intermediateSymbols = generateIntermediateSymbols();
         }
 
-        // generate repair symbols
+        // retrieve repair symbols data
         final ByteBuffer symbols = ByteBuffer.allocate(numSymbols * fecParameters().symbolSize());
-        int isi = esi + (Kprime - K);
-
         for (int i = 0; i < numSymbols; i++) {
-            byte[] enc_data = LinearSystem.enc(
-                Kprime, intermediateSymbols, new Tuple(Kprime, isi + i), fecParameters().symbolSize());
-
-            // generate repair symbol // TODO should we store the repair symbols generated?
-            EncodingSymbol repairSymbol = EncodingSymbol.newRepairSymbol(esi + i, enc_data);
-
-            symbols.put(repairSymbol.transportData());
+            symbols.put(getRepairSymbol(esi + i).transportData());
         }
         symbols.flip();
 
@@ -196,34 +192,61 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         return EncodingPacket.newRepairPacket(sbn, esi, symbols.asReadOnlyBuffer(), numSymbols);
     }
 
-    private void checkSourceSymbolESI(int esi) {
+    private void checkGenericEncodingSymbolESI(int esi) {
 
-        if (esi < 0 || esi >= K) {
+        if (esi < 0 || esi > ParameterChecker.maxEncodingSymbolID()) {
             throw new IllegalArgumentException("invalid encoding symbol ID");
         }
     }
 
+    private void checkSourceSymbolESI(int esi) {
+
+        if (esi < 0 || esi >= K) {
+            throw new IllegalArgumentException("invalid source symbol ID");
+        }
+    }
+
     // requires valid ESI
-    private final void checkNumSourceSymbols(int esi, int numSymbols) {
+    private void checkNumSourceSymbols(int esi, int numSymbols) {
 
         if (numSymbols < 1 || numSymbols > K - esi) {
-            throw new IllegalArgumentException("invalid number of symbols");
+            throw new IllegalArgumentException("invalid number of source symbols");
         }
     }
 
     private void checkRepairSymbolESI(int esi) {
 
         if (esi < K || esi > ParameterChecker.maxEncodingSymbolID()) {
-            throw new IllegalArgumentException("invalid encoding symbol ID");
+            throw new IllegalArgumentException("invalid repair symbol ID");
         }
     }
 
     // requires valid ESI
-    private final void checkNumRepairSymbols(int esi, int numSymbols) {
+    private void checkNumRepairSymbols(int esi, int numSymbols) {
 
         if (numSymbols < 1 || numSymbols > (1 + ParameterChecker.maxEncodingSymbolID() - esi)) {
-            throw new IllegalArgumentException("invalid number of symbols");
+            throw new IllegalArgumentException("invalid number of repair symbols");
         }
+    }
+
+    // requires valid ESI
+    private EncodingSymbol getSourceSymbol(int esi) {
+
+        return sourceSymbols[esi];
+    }
+
+    // requires valid ESI
+    private EncodingSymbol getRepairSymbol(int esi) {
+
+        // calculate ISI from ESI
+        final int isi = esi + (Kprime - K);
+
+        // generate the repair symbol data
+        final int T = fecParameters().symbolSize();
+        byte[] enc_data = LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi), T);
+
+        // TODO should we store the repair symbols generated?
+        return EncodingSymbol.newRepairSymbol(esi, enc_data);
     }
 
     private byte[][] generateIntermediateSymbols() {

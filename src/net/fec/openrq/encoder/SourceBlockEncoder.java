@@ -63,6 +63,30 @@ public interface SourceBlockEncoder {
     public int numberOfSourceSymbols();
 
     /**
+     * Returns an encoding packet with an encoding symbol from the source block being encoded. The symbol is a source or
+     * a repair symbol according to the provided identifier.
+     * <p>
+     * More specifically, if we have <b>sbn</b> as the source block number for the source block being encoded, then this
+     * method returns an encoding packet with an encoding symbol identified by <b>&lt;sbn, esi&gt;</b>.
+     * <p>
+     * Additionally, if we have <b>K</b> as the number of source symbols into which is divided the source block being
+     * encoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum value for the
+     * encoding symbol identifier}, then the following must be true, otherwise an {@code IllegalArgumentException} is
+     * thrown:
+     * <ul>
+     * <li><b>esi</b> &ge; 0
+     * <li><b>esi</b> &le; <b>max_esi</b>
+     * </ul>
+     * 
+     * @param esi
+     *            The encoding symbol identifier of the encoding symbol in the returned packet
+     * @return an encoding packet with an encoding symbol from the source block being encoded
+     * @see #sourceBlockNumber()
+     * @see #numberOfSourceSymbols()
+     */
+    public EncodingPacket getGenericEncodingPacket(int esi);
+
+    /**
      * Returns an encoding packet with a source symbol from the source block being encoded.
      * <p>
      * More specifically, if we have <b>sbn</b> as the source block number for the source block being encoded, then this
