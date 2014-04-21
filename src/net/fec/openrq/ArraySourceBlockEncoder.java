@@ -17,6 +17,7 @@ package net.fec.openrq;
 
 
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 import java.util.Objects;
 
 import net.fec.openrq.encoder.SourceBlockEncoder;
@@ -192,6 +193,34 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         return EncodingPacket.newRepairPacket(sbn, esi, symbols.asReadOnlyBuffer(), numSymbols);
     }
 
+    @Override
+    public IterableBuilder newIterableBuilder() {
+
+        return new IterBuilder(this);
+    }
+
+    @Override
+    public Iterable<EncodingPacket> sourcePacketsIterable() {
+
+        return newIterableBuilder()
+            .startAtInitialSourceSymbol()
+            .endAtFinalSourceSymbol()
+            .build();
+    }
+
+    @Override
+    public Iterable<EncodingPacket> repairPacketsIterable(int numRepairPackets) {
+
+        if (numRepairPackets < 1 || numRepairPackets > (1 + ParameterChecker.maxEncodingSymbolID() - K)) {
+            throw new IllegalArgumentException("invalid number of repair packets");
+        }
+
+        return newIterableBuilder()
+            .startAtInitialRepairSymbol()
+            .endAt(numberOfSourceSymbols() + numRepairPackets - 1)
+            .build();
+    }
+
     private void checkGenericEncodingSymbolESI(int esi) {
 
         if (esi < 0 || esi > ParameterChecker.maxEncodingSymbolID()) {
@@ -274,6 +303,136 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         catch (SingularMatrixException e) {
             throw new RuntimeException(
                 "FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
+        }
+    }
+
+
+    private static final class IterBuilder implements IterableBuilder {
+
+        private final SourceBlockEncoder encoder;
+        private int startingESI;
+        private int endingESI;
+
+
+        IterBuilder(SourceBlockEncoder encoder) {
+
+            this.encoder = Objects.requireNonNull(encoder);
+            this.startingESI = 0;
+            this.endingESI = ParameterChecker.maxEncodingSymbolID();
+        }
+
+        @Override
+        public IterableBuilder startAt(int esi) {
+
+            if (esi < 0 || esi > ParameterChecker.maxEncodingSymbolID()) {
+                throw new IllegalArgumentException("invalid encoding symbol identifier");
+            }
+
+            setStartingESI(esi);
+            return this;
+        }
+
+        @Override
+        public IterableBuilder startAtInitialSourceSymbol() {
+
+            setStartingESI(0);
+            return this;
+        }
+
+        @Override
+        public IterableBuilder startAtInitialRepairSymbol() {
+
+            setStartingESI(encoder.numberOfSourceSymbols());
+            return this;
+        }
+
+        @Override
+        public IterableBuilder endAt(int esi) {
+
+            if (esi < 0 || esi > ParameterChecker.maxEncodingSymbolID()) {
+                throw new IllegalArgumentException("invalid encoding symbol identifier");
+            }
+
+            setEndingESI(esi);
+            return this;
+        }
+
+        @Override
+        public IterableBuilder endAtFinalSourceSymbol() {
+
+            setEndingESI(encoder.numberOfSourceSymbols() - 1);
+            return this;
+        }
+
+        @Override
+        public Iterable<EncodingPacket> build() {
+
+            return new Iterable<EncodingPacket>() {
+
+                @Override
+                public Iterator<EncodingPacket> iterator() {
+
+                    return new EncodingPacketIterator(encoder, startingESI, endingESI);
+                }
+            };
+        }
+
+        // requires valid ESI
+        private void setStartingESI(int esi) {
+
+            startingESI = esi;
+            if (endingESI < esi) {
+                endingESI = esi;
+            }
+        }
+
+        // requires valid ESI
+        private void setEndingESI(int esi) {
+
+            endingESI = esi;
+            if (esi < startingESI) {
+                startingESI = esi;
+            }
+        }
+    }
+
+    private static final class EncodingPacketIterator implements Iterator<EncodingPacket> {
+
+        private final SourceBlockEncoder encoder;
+        private final int fence;
+        private int nextESI;
+
+
+        EncodingPacketIterator(SourceBlockEncoder encoder, int startingESI, int endingESI) {
+
+            if (endingESI < startingESI) throw new IllegalArgumentException("ending ESI smaller than starting ESI");
+
+            this.encoder = Objects.requireNonNull(encoder);
+            this.fence = endingESI + 1;
+            this.nextESI = startingESI;
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return nextESI < fence;
+        }
+
+        @Override
+        public EncodingPacket next() {
+
+            try {
+                return encoder.getGenericEncodingPacket(nextESI);
+            }
+            finally {
+                this.nextESI++;
+            }
+        }
+
+        @Override
+        public void remove() {
+
+            throw new UnsupportedOperationException();
         }
     }
 }

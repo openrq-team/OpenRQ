@@ -16,7 +16,12 @@
 package net.fec.openrq;
 
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import net.fec.openrq.encoder.DataEncoder;
+import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 
 
@@ -38,7 +43,7 @@ public final class ArrayDataEncoder implements DataEncoder {
     private final byte[] array;
     private final int offset;
     private final FECParameters fecParams;
-    private final ArraySourceBlockEncoder[] srcBlockEncoders;
+    private final List<ArraySourceBlockEncoder> srcBlockEncoders;
 
 
     private ArrayDataEncoder(byte[] array, int offset, FECParameters fecParams) {
@@ -48,7 +53,7 @@ public final class ArrayDataEncoder implements DataEncoder {
 
         this.fecParams = fecParams;
 
-        this.srcBlockEncoders = partitionData(this, array, offset, fecParams);
+        this.srcBlockEncoders = Arrays.asList(partitionData(this, array, offset, fecParams));
     }
 
     private static ArraySourceBlockEncoder[] partitionData(
@@ -119,11 +124,17 @@ public final class ArrayDataEncoder implements DataEncoder {
     @Override
     public ArraySourceBlockEncoder encoderForSourceBlock(int sbn) {
 
-        if (sbn < 0 || sbn >= srcBlockEncoders.length) {
+        if (sbn < 0 || sbn >= srcBlockEncoders.size()) {
             throw new IllegalArgumentException("invalid source block number");
         }
 
-        return srcBlockEncoders[sbn];
+        return srcBlockEncoders.get(sbn); // list is random access
+    }
+
+    @Override
+    public Iterable<SourceBlockEncoder> sourceBlockIterable() {
+
+        return Collections.<SourceBlockEncoder>unmodifiableList(srcBlockEncoders);
     }
 
     /**

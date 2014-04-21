@@ -42,6 +42,95 @@ import net.fec.openrq.parameters.ParameterChecker;
 public interface SourceBlockEncoder {
 
     /**
+     * A builder class for an {@link Iterable} over {@link EncodingPacket} instances.
+     */
+    public static interface IterableBuilder {
+
+        /**
+         * Defines the encoding symbol identifier (ESI) of the symbol in the first encoding packet. If a starting ESI is
+         * not defined, then the resulting iterable starts at ESI 0.
+         * <p>
+         * <b>NOTE:</b> if the starting ESI is greater than the {@linkplain #endAt(int) ending} ESI, then the ending ESI
+         * will be set to the starting ESI.
+         * <p>
+         * If we have <b>K</b> as the number of source symbols into which is divided the source block being encoded, and
+         * <b>max_esi</b> as the maximum value for the encoding symbol identifier, then the following must be true,
+         * otherwise an {@code IllegalArgumentException} is thrown:
+         * <ul>
+         * <li><b>esi</b> &ge; 0
+         * <li><b>esi</b> &le; <b>max_esi</b>
+         * </ul>
+         * 
+         * @param esi
+         *            The encoding symbol identifier of the symbol in the first encoding packet
+         * @return this builder (for chained invocation)
+         * @exception IllegalArgumentException
+         *                If the provided encoding symbol identifier is invalid
+         */
+        public IterableBuilder startAt(int esi);
+
+        /**
+         * Convenience method for defining the {@linkplain #startAt(int) starting} encoding symbol identifier (ESI) to
+         * the ESI of the first source symbol.
+         * 
+         * @return this builder (for chained invocation)
+         */
+        public IterableBuilder startAtInitialSourceSymbol();
+
+        /**
+         * Convenience method for defining the {@linkplain #startAt(int) starting} encoding symbol identifier (ESI) to
+         * the ESI of the first repair symbol.
+         * 
+         * @return this builder (for chained invocation)
+         */
+        public IterableBuilder startAtInitialRepairSymbol();
+
+        /**
+         * Defines the encoding symbol identifier (ESI) of the symbol in the last encoding packet. If an ending ESI is
+         * not defined, then the resulting iterable ends at the {@linkplain ParameterChecker#maxEncodingSymbolID()
+         * maximum value for the ESI}.
+         * <p>
+         * <b>NOTE:</b> if the ending ESI is less than the {@linkplain #startAt(int) starting} ESI, then the starting
+         * ESI will be set to the ending ESI.
+         * <p>
+         * If we have <b>K</b> as the number of source symbols into which is divided the source block being encoded, and
+         * <b>max_esi</b> as the maximum value for the encoding symbol identifier, then the following must be true,
+         * otherwise an {@code IllegalArgumentException} is thrown:
+         * <ul>
+         * <li><b>esi</b> &ge; 0
+         * <li><b>esi</b> &le; <b>max_esi</b>
+         * </ul>
+         * 
+         * @param esi
+         *            The encoding symbol identifier of the symbol in the last encoding packet
+         * @return this builder (for chained invocation)
+         * @exception IllegalArgumentException
+         *                If the provided encoding symbol identifier is invalid
+         */
+        public IterableBuilder endAt(int esi);
+
+        /**
+         * Convenience method for defining the {@linkplain #endAt(int) ending} encoding symbol identifier (ESI) to the
+         * ESI of the last source symbol.
+         * 
+         * @return this builder (for chained invocation)
+         */
+        public IterableBuilder endAtFinalSourceSymbol();
+
+        /**
+         * Returns the resulting iterable over encoding packets based on the currently defined properties. Each iterated
+         * encoding packet contains a single encoding symbols within.
+         * <p>
+         * <b>NOTE:</b> <i>The iterator from the resulting iterable will not support the
+         * {@linkplain java.util.Iterator#remove() remove()} method.</i>
+         * 
+         * @return the resulting iterable over encoding packets
+         */
+        public Iterable<EncodingPacket> build();
+    }
+
+
+    /**
      * Returns the data encoder object from which this source block encoder was retrieved.
      * 
      * @return the data encoder object from which this source block encoder was retrieved
@@ -81,6 +170,8 @@ public interface SourceBlockEncoder {
      * @param esi
      *            The encoding symbol identifier of the encoding symbol in the returned packet
      * @return an encoding packet with an encoding symbol from the source block being encoded
+     * @exception IllegalArgumentException
+     *                If the provided encoding symbol identifier is invalid
      * @see #sourceBlockNumber()
      * @see #numberOfSourceSymbols()
      */
@@ -201,4 +292,69 @@ public interface SourceBlockEncoder {
      * @see #numberOfSourceSymbols()
      */
     public EncodingPacket getRepairPacket(int esi, int numSymbols);
+
+    /**
+     * Returns a new builder object for an iterable over encoding packets.
+     * <p>
+     * For example, the following code shows how to retrieve an iterable over encoding packets that starts at encoding
+     * symbol identifier (ESI) 51 and ends at ESI 100:
+     * 
+     * <pre><code>
+     * Iterable&lt;EncodingPacket&gt; iterable = newIterableBuilder().startAt(50)
+     *                                                         .endAt(100)
+     *                                                         .build();
+     * </code></pre>
+     * The resulting iterable can iterated using a "foreach" loop:
+     * 
+     * <pre><code>
+     * for (EncodingPacket packet : iterable) {
+     *   // process packet...
+     * }
+     * </code></pre>
+     * 
+     * @return a new builder object for an iterable over encoding packets
+     */
+    public IterableBuilder newIterableBuilder();
+
+    /**
+     * Returns an iterable over all source packets, each packet containing one source symbol.
+     * <p>
+     * Calling this method is the same as calling:
+     * 
+     * <pre><code>
+     * encoder.newIterableBuilder().startAtInitialSourceSymbol()
+     *                             .endAtFinalSourceSymbol()
+     *                             .build();
+     * </code></pre>
+     * 
+     * @return an iterable over all source packets
+     */
+    public Iterable<EncodingPacket> sourcePacketsIterable();
+
+    /**
+     * Returns an iterable over a number of repair packets, each packet containing one repair symbol.
+     * <p>
+     * Calling this method is the same as calling:
+     * 
+     * <pre><code>
+     * encoder.newIterableBuilder().startAtInitialRepairSymbol()
+     *                             .endAt(encoder.numberOfSourceSymbols() + numRepairPackets - 1)
+     *                             .build();
+     * </code></pre>
+     * If we have <b>K</b> as the number of source symbols into which is divided the source block being encoded, and
+     * <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum value for the
+     * encoding symbol identifier}, then the following must be true, otherwise an {@code IllegalArgumentException} is
+     * thrown:
+     * <ul>
+     * <li><b>numRepairPackets</b> &gt; 0
+     * <li><b>numRepairPackets</b> &le; (1 + <b>max_esi</b> - <b>K</b>)
+     * </ul>
+     * 
+     * @param numRepairPackets
+     *            The number of repair packets to iterate
+     * @return an iterable over a number of repair packets
+     * @exception IllegalArgumentException
+     *                If the number of repair packets is invalid
+     */
+    public Iterable<EncodingPacket> repairPacketsIterable(int numRepairPackets);
 }

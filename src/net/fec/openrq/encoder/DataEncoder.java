@@ -80,4 +80,11 @@ public interface DataEncoder {
      *                If the provided source block number is invalid
      */
     public SourceBlockEncoder encoderForSourceBlock(int sbn);
+
+    /**
+     * Returns a new iterable over all source blocks. The resulting iterable can be iterated using a "foreach" loop.
+     * 
+     * @return a new iterable over all source blocks
+     */
+    public Iterable<SourceBlockEncoder> sourceBlockIterable();
 }
