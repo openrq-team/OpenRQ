@@ -323,7 +323,7 @@ public abstract class EncodingPacket {
     public abstract int fecPayloadID();
 
     /**
-     * Returns the number of symbols in this encoding packet. This value is the same as {@code symbols().remaining()}.
+     * Returns the number of symbols in this encoding packet.
      * 
      * @return the number of symbols in this encoding packet
      */
@@ -352,7 +352,7 @@ public abstract class EncodingPacket {
     public abstract ByteBuffer symbols();
 
     /**
-     * Returns the length of the symbols data in number of bytes.
+     * Returns the length of the symbols data in number of bytes. This value is the same as {@code symbols().remaining()}.
      * 
      * @return the length of the symbols data in number of bytes
      */
