@@ -16,9 +16,9 @@
 /**
  * This is the main package in the OpenRQ API.
  * <p>
- * The OpenRQ API provides a way to encode and decode data according to the fountain code RaptorQ, as defined in <a
- * href="http://tools.ietf.org/html/rfc6330">RFC 6330</a>.
- * <h2>Background</h2>
+ * The OpenRQ API provides a way to encode and decode data according to the fountain erasure code RaptorQ, as defined in
+ * <a href="http://tools.ietf.org/html/rfc6330">RFC 6330</a>.
+ * <h2>Useful background definitions</h2>
  * <dl>
  * <dt><b>Forward Error Correction (FEC):</b></dt>
  * <dd>A technique for the recovery of errors in data disseminated over unreliable or noisy communication channels. The
@@ -41,12 +41,12 @@
  * <dd>The closest solution to an ideal digital fountain code. It has the capability of achieving constant per-symbol
  * encoding/decoding cost with an overhead near to zero.</dd>
  * </dl>
- * <h2>Where to use this API</h2> This API is intended as an erasure corrector for unreliable or noisy communication
+ * <h2>Where to use this API</h2> OpenRQ is intended as an erasure corrector for unreliable or noisy communication
  * channels. Typically, the following steps are performed:
  * <ol>
- * <li>Data is encoded using this API, resulting in encoded packets;
+ * <li>Data is encoded using encoder objects, resulting in encoded packets;
  * <li>The encoded packets are transmitted to one or more receivers using any communication protocol;
- * <li>Encoded packets are collected at the receivers until a certain number is reached;
+ * <li>Encoded packets are collected by decoder objects at the receivers until a certain number is reached;
  * <li>Data is decoded from the encoding packets, resulting in the original data.
  * </ol>
  * <b>NOTE:</b> <i>The use of this API is also recommended in situations where retransmissions are costly, such as when
