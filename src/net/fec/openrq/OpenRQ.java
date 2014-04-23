@@ -37,12 +37,20 @@ public final class OpenRQ {
     /**
      * Returns a {@link DataEncoder} object with an array of bytes as the source data, configured according to the
      * provided FEC parameters.
+     * <p>
+     * Note that the maximum supported data length is {@link Integer#MAX_VALUE}.
      * 
      * @param fecParams
      *            FEC parameters that configure the returned data encoder object
      * @param data
      *            An array of bytes containing the source data to be encoded
      * @return a data encoder object backed by an array of bytes
+     * @exception NullPointerException
+     *                If {@code data} or {@code fecParams} are {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
+     * @exception IndexOutOfBoundsException
+     *                If {@code fecParams.dataLength() > data.length}
      */
     public static ArrayDataEncoder newEncoder(byte[] data, FECParameters fecParams) {
 
@@ -52,6 +60,8 @@ public final class OpenRQ {
     /**
      * Returns a {@link DataEncoder} object with an array of bytes as the source data, configured according to the
      * provided FEC parameters.
+     * <p>
+     * Note that the maximum supported data length is {@link Integer#MAX_VALUE}.
      * 
      * @param fecParams
      *            FEC parameters that configure the returned data encoder object
@@ -60,11 +70,17 @@ public final class OpenRQ {
      * @param offset
      *            The index in the array where the source data begins
      * @return a data encoder object backed by an array of bytes
+     * @exception NullPointerException
+     *                If {@code data} or {@code fecParams} are {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
+     * @exception IndexOutOfBoundsException
+     *                If {@code offset < 0 || fecParams.dataLength() > (data.length - offset)}
      */
     public static ArrayDataEncoder newEncoder(byte[] data, int offset, FECParameters fecParams) {
 
         final long longDataLen = fecParams.dataLength();
-        if (longDataLen > Integer.MAX_VALUE) throw new IllegalArgumentException("data length is too large");
+        if (longDataLen > Integer.MAX_VALUE) throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         ArrayUtils.checkArrayBounds(offset, (int)longDataLen, data.length);
 
         return ArrayDataEncoder.newEncoder(data, offset, fecParams);
@@ -78,14 +94,27 @@ public final class OpenRQ {
      * source symbols as the total number of encoding symbols that trigger a decoding operation. The larger the symbol
      * overhead, the less likely is a decoding failure to occur, at the cost of more data to be transmitted. Naturally,
      * this only applies when some source symbols are missing and repair symbols are available to substitute them.
+     * <p>
+     * Note that the maximum supported data length is {@link Integer#MAX_VALUE}.
      * 
      * @param fecParams
      *            FEC parameters that configure the returned data decoder object
      * @param extraSymbols
      *            Repair symbol overhead (must be non-negative)
      * @return a data decoder object that decodes source data into an array of bytes
+     * @exception NullPointerException
+     *                If {@code fecParams} is {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || extraSymbols < 0}
      */
     public static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
+
+        if (fecParams.dataLength() > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
+        }
+        if (extraSymbols < 0) {
+            throw new IllegalArgumentException("negative number of extra symbols");
+        }
 
         return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
     }
@@ -95,12 +124,14 @@ public final class OpenRQ {
      * rate.
      * 
      * @param numSourceSymbols
-     *            The number of source symbols in the source block
+     *            The number of source symbols in the source block (must be positive)
      * @param extraSymbols
-     *            Number of extra repair symbols necessary for decoding
+     *            Number of extra repair symbols necessary for decoding (must be non-negative)
      * @param loss
      *            The expected network loss rate (must be between 0 and 1).
      * @return the minimum number of repair symbols that should be transmitted
+     * @exception IllegalArgumentException
+     *                If {@code numSourceSymbols}, {@code extraSymbols} or {@code loss} are out of bounds
      */
     public static final int minRepairSymbols(int numSourceSymbols, int extraSymbols, double loss) {
 
