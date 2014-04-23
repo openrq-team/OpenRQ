@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * This package contains encoder related classes. Please refer to the documentation of the {@link net.fec.openrq}
- * package for more details.
+ * This package contains RaptorQ encoder related classes. Please refer to the documentation of the
+ * {@link net.fec.openrq} package for more details.
  */
 package net.fec.openrq.encoder;
