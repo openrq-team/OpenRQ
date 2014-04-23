@@ -115,7 +115,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
-    public EncodingPacket getGenericEncodingPacket(int esi) {
+    public EncodingPacket encodingPacket(int esi) {
 
         checkGenericEncodingSymbolESI(esi);
 
@@ -128,7 +128,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
-    public EncodingPacket getSourcePacket(int esi) {
+    public EncodingPacket sourcePacket(int esi) {
 
         checkSourceSymbolESI(esi);
 
@@ -137,7 +137,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
-    public EncodingPacket getSourcePacket(int esi, int numSymbols) {
+    public EncodingPacket sourcePacket(int esi, int numSymbols) {
 
         checkSourceSymbolESI(esi);
         checkNumSourceSymbols(esi, numSymbols);
@@ -158,7 +158,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
-    public EncodingPacket getRepairPacket(int esi) {
+    public EncodingPacket repairPacket(int esi) {
 
         checkRepairSymbolESI(esi);
 
@@ -172,7 +172,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     @Override
-    public EncodingPacket getRepairPacket(int esi, int numSymbols) {
+    public EncodingPacket repairPacket(int esi, int numSymbols) {
 
         checkRepairSymbolESI(esi);
         checkNumRepairSymbols(esi, numSymbols);
@@ -422,7 +422,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         public EncodingPacket next() {
 
             try {
-                return encoder.getGenericEncodingPacket(nextESI);
+                return encoder.encodingPacket(nextESI);
             }
             finally {
                 this.nextESI++;

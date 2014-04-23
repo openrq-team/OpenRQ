@@ -40,6 +40,27 @@ import net.fec.openrq.util.parsing.Parsed;
  * This class represents FEC parameters as defined in RFC 6330 as the <i>Encoded FEC Object Transmission Information
  * (OTI)</i>, which contains the <i>Encoded Common FEC OTI</i> and the <i>Encoded Scheme-specific FEC OTI</i>.
  * <p>
+ * The FEC parameters consist of:
+ * <dl>
+ * <dt><b>Data length</b></dt>
+ * <dd>The length of the source data in number of bytes. Since encoded data may contain extra padding bytes, this value
+ * allows a decoder to infer the original source data length.</dd>
+ * <dt><b>Symbol size</b></dt>
+ * <dd>The size of a symbol in number of bytes. This value represents the size of an encoding symbol (source or repair),
+ * except the size of the last source symbol, which may be smaller.</dd>
+ * <dt><b>Number of source blocks</b></dt>
+ * <dd>The number of source blocks into which the source data is partitioned. Each source block is encoded/decoded
+ * independently, and not every one is divided into the same number of source symbols.</dd>
+ * <dt><b>Number of sub-block per source block</b></dt>
+ * <dd>The number of sub-blocks per source block into which the source data is partitioned. This value influences the
+ * level of <i>uniform interleaving</i> used before encoding a source block. A value of 1 means no interleaving is used,
+ * and a higher value means more interleaving per source block. Interleaving refers to a burst-error correction
+ * technique in FEC codes.</dd>
+ * <dt><b>Symbol alignment</b></dt>
+ * <dd>This value has no relevance to the user of OpenRQ, since it is fixed to a value of 1. This parameter exists here
+ * only for compliance to the RFC 6330.</dd>
+ * </dl>
+ * <p>
  * Methods are provided to write instances of this class to arrays of bytes, {@link ByteBuffer} objects,
  * {@link DataOutput} objects and {@link WritableByteChannel} objects. Additionally, static methods are provided to
  * parse/read instances of this class from arrays of bytes, {@code ByteBuffer} objects, {@link DataInput} objects and
@@ -189,7 +210,7 @@ public final class FECParameters {
     /**
      * Returns a new instance, given specific FEC parameters.
      * <p>
-     * <b>Note:</b> <i>the number of sub-blocks will be equal to 1, which effectively means that data interleaving is
+     * <b>Note:</b> <i>The number of sub-blocks will be equal to 1, which effectively means that data interleaving is
      * disabled. Additionally, the symbol alignment parameter "Al" is internally obtained.</i>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
@@ -214,7 +235,7 @@ public final class FECParameters {
     /**
      * Returns a new instance, given specific FEC parameters.
      * <p>
-     * <b>Note:</b> <i>the symbol alignment parameter "Al" is internally obtained.</i>
+     * <b>Note:</b> <i>The symbol alignment parameter "Al" is internally obtained.</i>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
      * ParameterChecker.areValidFECParameters(dataLen, symbolSize, numSourceBlocks, numSubBlocks, Al)}, and an
@@ -257,7 +278,7 @@ public final class FECParameters {
      * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
      * limited amount of memory in an efficient way.
      * <p>
-     * <b>Note:</b> <i>the symbol alignment parameter "Al" is internally obtained.</i>
+     * <b>Note:</b> <i>The symbol alignment parameter "Al" is internally obtained.</i>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidDerivingParameters
      * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)}, and an
@@ -322,7 +343,7 @@ public final class FECParameters {
      * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
      * limited amount of memory in an efficient way.
      * <p>
-     * <b>Note:</b> <i>the symbol alignment parameter "Al" is internally obtained.</i>
+     * <b>Note:</b> <i>The symbol alignment parameter "Al" is internally obtained.</i>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidDerivingParameters
      * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)}, and an
@@ -445,6 +466,9 @@ public final class FECParameters {
 
     /**
      * Returns the length of the source data in number of bytes.
+     * <p>
+     * Since encoded data may contain extra padding bytes, this value allows a decoder to infer the original source data
+     * length.
      * 
      * @return the length of the source data in number of bytes
      */
@@ -455,6 +479,9 @@ public final class FECParameters {
 
     /**
      * Returns the size of a symbol in number of bytes.
+     * <p>
+     * This value represents the size of an encoding symbol (source or repair), except the size of the last source
+     * symbol, which may be smaller.
      * 
      * @return the size of a symbol in number of bytes
      */
@@ -465,6 +492,9 @@ public final class FECParameters {
 
     /**
      * Returns the number of source blocks into which the source data is partitioned.
+     * <p>
+     * Each source block is encoded/decoded independently, and not every one is divided into the same number of source
+     * symbols.
      * 
      * @return the number of source blocks into which the source data is partitioned
      */
@@ -475,6 +505,9 @@ public final class FECParameters {
 
     /**
      * Returns the number of sub-blocks per source block into which the source data is partitioned.
+     * <p>
+     * This value influences the level of <i>uniform interleaving</i> used before encoding a source block. A value of 1
+     * means no interleaving is used, and a higher value means more interleaving per source block.
      * 
      * @return the number of sub-blocks per source block into which the source data is partitioned
      */
@@ -485,6 +518,9 @@ public final class FECParameters {
 
     /**
      * Returns the symbol alignment value.
+     * <p>
+     * This value has no relevance to the user of OpenRQ, since it is fixed to a value of 1. This method exists only for
+     * completeness purposes.
      * 
      * @return the symbol alignment value
      */
@@ -494,9 +530,11 @@ public final class FECParameters {
     }
 
     /**
-     * Returns the total number of source symbols in which the source data is divided.
+     * Returns the total number of source symbols into which the source data is divided.
+     * <p>
+     * This is a convenience method that simply returns the result of {@code ceiling(dataLength()/symbolSize())}.
      * 
-     * @return the total number of source symbols in which the source data is divided
+     * @return the total number of source symbols into which the source data is divided
      */
     public int totalSymbols() {
 

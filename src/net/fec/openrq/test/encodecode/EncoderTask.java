@@ -269,7 +269,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
 
                     for (int sbn = 0; sbn < Z; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.sourceBlock(sbn);
                         final int numSymbols = srcBlockEnc.numberOfSourceSymbols();
 
                         for (int esi = 0; esi < numSymbols;) {
@@ -290,7 +290,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
 
                     for (int sbn = 0; sbn < Z; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.sourceBlock(sbn);
                         final List<Integer> srcSymbolESIs = generateSourceSymbolESIs(srcBlockEnc);
 
                         while (!srcSymbolESIs.isEmpty()) {
@@ -314,7 +314,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
 
                     for (int sbn = 0; sbn < Z; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.sourceBlock(sbn);
                         final Set<Integer> esis = generateRandomSymbolESIs(srcBlockEnc, rand, true);
 
                         for (int esi : esis) {
@@ -334,7 +334,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
 
                     for (int sbn = 0; sbn < Z; sbn++) {
 
-                        final SourceBlockEncoder srcBlockEnc = dataEnc.encoderForSourceBlock(sbn);
+                        final SourceBlockEncoder srcBlockEnc = dataEnc.sourceBlock(sbn);
                         final Set<Integer> esis = generateRandomSymbolESIs(srcBlockEnc, rand, false);
 
                         for (int esi : esis) {
@@ -388,7 +388,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
         final int numSymbols = getMaxNumSymbols(enc, esi);
 
         final long startNanos = System.nanoTime();
-        final EncodingPacket packet = enc.getSourcePacket(esi, numSymbols);
+        final EncodingPacket packet = enc.sourcePacket(esi, numSymbols);
         final long endNanos = System.nanoTime();
         stats.accept(endNanos - startNanos);
 
@@ -463,7 +463,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
         }
 
         final long startNanos = System.nanoTime();
-        final EncodingPacket packet = enc.getSourcePacket(esi, numSymbols);
+        final EncodingPacket packet = enc.sourcePacket(esi, numSymbols);
         final long endNanos = System.nanoTime();
         stats.accept(endNanos - startNanos);
 
@@ -489,13 +489,13 @@ public final class EncoderTask implements Summarizable<StatsType> {
         final EncodingPacket packet;
         if (esi < K) {
             final long startNanos = System.nanoTime();
-            packet = enc.getSourcePacket(esi);
+            packet = enc.sourcePacket(esi);
             final long endNanos = System.nanoTime();
             stats.accept(endNanos - startNanos);
         }
         else {
             final long startNanos = System.nanoTime();
-            packet = enc.getRepairPacket(esi);
+            packet = enc.repairPacket(esi);
             final long endNanos = System.nanoTime();
             stats.accept(endNanos - startNanos);
         }

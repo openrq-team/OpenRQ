@@ -14,7 +14,7 @@ import java.util.Objects;
  * <p>
  * This class also supports chaining of multiple {@code LongSummaryStatistics} instances.
  * <p>
- * NOTE: <b>This class was adapted from class {@code java.util.LongSummaryStatistics} in JDK8.</b>
+ * <b>Note:</b> <i>This class was adapted from class {@code java.util.LongSummaryStatistics} in JDK8.</i>
  */
 public class LongSummaryStatistics {
 

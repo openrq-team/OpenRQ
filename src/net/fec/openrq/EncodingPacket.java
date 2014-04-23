@@ -82,7 +82,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
+     * Convenience method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
      * {@link DataDecoder#parsePacket(int, int, byte[], boolean)}.
      * 
      * @param dec
@@ -111,7 +111,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
+     * Convenience method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
      * {@link DataDecoder#parsePacket(int, int, byte[], int, int, boolean)}.
      * 
      * @param dec
@@ -148,7 +148,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
+     * Convenience method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
      * {@link DataDecoder#parsePacket(int, int, ByteBuffer, boolean)}.
      * 
      * @param dec
@@ -177,7 +177,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
+     * Convenience method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
      * {@link DataDecoder#parsePacket(SerializablePacket, boolean)}.
      * 
      * @param dec
@@ -197,7 +197,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
+     * Convenience method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
      * {@link DataDecoder#parsePacket(byte[], boolean)}.
      * 
      * @param dec
@@ -217,7 +217,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
+     * Convenience method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
      * {@link DataDecoder#parsePacket(byte[], int, int, boolean)}.
      * 
      * @param dec
@@ -243,7 +243,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
+     * Convenience method for parsing from a {@link DataDecoder} object an encoding packet, as defined in method
      * {@link DataDecoder#parsePacket(ByteBuffer, boolean)}.
      * 
      * @param dec
@@ -263,7 +263,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for reading from a {@code DataInput} object and parsing from a {@link DataDecoder} object an
+     * Convenience method for reading from a {@code DataInput} object and parsing from a {@link DataDecoder} object an
      * encoding packet, as defined in method {@link DataDecoder#readPacketFrom(DataInput)}.
      * 
      * @param dec
@@ -282,7 +282,7 @@ public abstract class EncodingPacket {
     }
 
     /**
-     * Convenient method for reading from a {@code ReadableByteChannel} object and parsing from a {@link DataDecoder}
+     * Convenience method for reading from a {@code ReadableByteChannel} object and parsing from a {@link DataDecoder}
      * object an encoding packet, as defined in method {@link DataDecoder#readPacketFrom(ReadableByteChannel)}.
      * 
      * @param dec
@@ -330,7 +330,7 @@ public abstract class EncodingPacket {
     public abstract int numberOfSymbols();
 
     /**
-     * Returns the type of all the symbols in this encoding packet.
+     * Returns the type of all the symbols in this encoding packet (source or repair).
      * 
      * @return the type of all the symbols in this encoding packet
      */
@@ -344,15 +344,17 @@ public abstract class EncodingPacket {
      * position} of 0, and a {@linkplain ByteBuffer#capacity() capacity} and {@linkplain ByteBuffer#limit() limit} equal
      * to the symbols data length.
      * <p>
-     * Note that the symbols data length may not be a multiple of the symbol size (the last symbol may be smaller than
-     * the others).
+     * Note that the symbols data length may not be a multiple of the
+     * {@linkplain net.fec.openrq.parameters.FECParameters#symbolSize() symbol size} if this packet contains only source
+     * symbols (the last source symbol may be smaller than the others).
      * 
      * @return a read-only buffer with the data from the symbol(s) in this packet
      */
     public abstract ByteBuffer symbols();
 
     /**
-     * Returns the length of the symbols data in number of bytes. This value is the same as {@code symbols().remaining()}.
+     * Returns the length of the symbols data in number of bytes. This value is the same as
+     * {@code symbols().remaining()}.
      * 
      * @return the length of the symbols data in number of bytes
      */

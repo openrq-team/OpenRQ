@@ -124,7 +124,7 @@ public final class ParameterChecker {
     /**
      * Returns the maximum number of sub-blocks per source block into which a source data is divided (1).
      * <p>
-     * <b>NOTE:</b> <i>for now, interleaving is disabled.</i>
+     * <b>Note:</b> <i>For now, interleaving is disabled.</i>
      * 
      * @return the maximum number of sub-blocks per source block into which a source data is divided
      */
@@ -138,7 +138,7 @@ public final class ParameterChecker {
     /**
      * Returns the symbol alignment parameter (1).
      * <p>
-     * <b>NOTE:</b> <i>this value is fixed in this implementation of RaptorQ.</i>
+     * <b>Note:</b> <i>This value is fixed in this implementation of RaptorQ.</i>
      * 
      * @return the symbol alignment parameter
      */
@@ -294,6 +294,11 @@ public final class ParameterChecker {
                 "data length (%d) must be within [%d, %d] bytes",
                 F, F_min, F_max);
         }
+        if (Al < Al_min) {
+            return String.format(
+                "symbol aligment value (%d) must be at least %d",
+                Al, Al_min);
+        }
         if (P < Al) { // (no upper bound due to it being a max value)
             return String.format(
                 "max payload length (%d) must be at least %d %s",
@@ -303,11 +308,6 @@ public final class ParameterChecker {
             return String.format(
                 "max decoding block length (%d) must be at least 1 byte",
                 WS);
-        }
-        if (Al < Al_min) {
-            return String.format(
-                "symbol aligment value (%d) must be at least %d",
-                Al, Al_min);
         }
 
         // P must be a multiple of Al

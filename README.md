@@ -34,4 +34,4 @@ OpenRQ is intended as an erasure corrector for unreliable or noisy communication
   3. Encoded packets are collected by decoder objects at the receivers until a certain number is reached;
   4. Data is decoded from the encoding packets, resulting in the original data.
 
-**NOTE:** *The use of OpenRQ is also recommended in situations where retransmissions are costly, such as when broadcasting data to multiple destinations, or when communication links are one-way.*
+**Note:** *The use of OpenRQ is also recommended in situations where retransmissions are costly, such as when broadcasting data to multiple destinations, or when communication links are one-way.*

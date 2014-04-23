@@ -49,7 +49,7 @@
  * <li>Encoded packets are collected by decoder objects at the receivers until a certain number is reached;
  * <li>Data is decoded from the encoding packets, resulting in the original data.
  * </ol>
- * <b>NOTE:</b> <i>The use of this API is also recommended in situations where retransmissions are costly, such as when
+ * <b>Note:</b> <i>The use of this API is also recommended in situations where retransmissions are costly, such as when
  * broadcasting data to multiple destinations, or when communication links are one-way.</i>
  * <h2>How to use this API</h2>
  * <h3>Basic definitions</h3>
@@ -78,7 +78,7 @@
  * Encoders are initialized by passing source data and FEC parameters. Decoders are initialized by passing FEC
  * parameters.
  * <p>
- * <b>NOTE:</b> <i>The same FEC parameters must be passed to an encoder and a decoder in order to correctly decode the
+ * <b>Note:</b> <i>The same FEC parameters must be passed to an encoder and a decoder in order to correctly decode the
  * original source data, which usually means transmitting the parameters to a receiver before sending data, so that the
  * receiver is able to initialize a decoder that matches the sender's encoder.</i>
  * <p>

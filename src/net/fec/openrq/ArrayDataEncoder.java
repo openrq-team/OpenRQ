@@ -122,7 +122,7 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public ArraySourceBlockEncoder encoderForSourceBlock(int sbn) {
+    public ArraySourceBlockEncoder sourceBlock(int sbn) {
 
         if (sbn < 0 || sbn >= srcBlockEncoders.size()) {
             throw new IllegalArgumentException("invalid source block number");

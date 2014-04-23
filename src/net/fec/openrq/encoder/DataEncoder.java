@@ -27,8 +27,8 @@ import net.fec.openrq.parameters.FECParameters;
  * data is divided into a fixed number of source blocks, and each source block can be encoded independently.
  * <p>
  * An encoder provides a {@link SourceBlockEncoder} object per source block, and each takes care of actually encoding
- * the source data into encoding packets. These encoder objects are accessed via the method
- * {@link #encoderForSourceBlock(int)}.
+ * the source data into encoding packets. These encoder objects are accessed via the method {@link #sourceBlock(int)},
+ * or the method {@link #sourceBlockIterable()}.
  * <p>
  * The number of source blocks, the length of the source data and other parameters are specified as the
  * <em>FEC parameters</em>. The method {@link #fecParameters()} provides the associated parameters to the encoder.
@@ -79,7 +79,7 @@ public interface DataEncoder {
      * @exception IllegalArgumentException
      *                If the provided source block number is invalid
      */
-    public SourceBlockEncoder encoderForSourceBlock(int sbn);
+    public SourceBlockEncoder sourceBlock(int sbn);
 
     /**
      * Returns a new iterable over all source blocks. The resulting iterable can be iterated using a "foreach" loop.

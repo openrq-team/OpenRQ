@@ -73,18 +73,19 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the source symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * If we have
+     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * source block being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
+     * thrown:
      * <ul>
-     * <li>{@code K} as the number of source symbols into which is divided the source block being decoded,
+     * <li><b>esi</b> &ge; 0
+     * <li><b>esi</b> &lt; <b>K</b>
      * </ul>
-     * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= 0 && ESI < K)}.
-     * <p>
      * 
      * @param esi
      *            An encoding symbol identifier for a specific source symbol
      * @return {@code true} if, and only if, this decoder contains the specified source symbol
      * @exception IllegalArgumentException
-     *                If the provided encoding symbol identifier does not represent a valid source symbol
+     *                If the provided encoding symbol identifier is invalid
      * @see #numberOfSourceSymbols()
      */
     public boolean containsSourceSymbol(int esi);
@@ -93,20 +94,20 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the repair symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * If we have
+     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * source block being decoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
+     * value for the encoding symbol identifier}, then the following must be true, otherwise an
+     * {@code IllegalArgumentException} is thrown:
      * <ul>
-     * <li>{@code K} as the number of source symbols into which is divided the source block being decoded,
-     * <li>{@code MAX_ESI} as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum value for the encoding
-     * symbol identifier},
+     * <li><b>esi</b> &ge; <b>K</b>
+     * <li><b>esi</b> &le; <b>max_esi</b>
      * </ul>
-     * then the encoding symbol identifier ({@code ESI}) is only valid if {@code (ESI >= K && ESI <= MAX_ESI)}.
-     * <p>
      * 
      * @param esi
      *            An encoding symbol identifier for a specific repair symbol
      * @return {@code true} if, and only if, this decoder contains the specified repair symbol
      * @exception IllegalArgumentException
-     *                If the provided encoding symbol identifier does not represent a valid repair symbol
+     *                If the provided encoding symbol identifier is invalid
      * @see #numberOfSourceSymbols()
      */
     public boolean containsRepairSymbol(int esi);
@@ -144,12 +145,15 @@ public interface SourceBlockDecoder {
      * (source and repair) are available, then a decoding operation takes place.
      * <p>
      * The result of this method invocation is a {@link SourceBlockState} value:
-     * <ul>
-     * <li>{@code INCOMPLETE}: means that not enough encoding symbols are available for a decoding operation.
-     * <li>{@code DECODED}: means that a decoding operation took place and succeeded in decoding the source block.
-     * <li>{@code DECODING_FAILUE}: means that a decoding operation took place but failed in decoding the source block;
-     * additional encoding symbols are required for a successful decoding.
-     * </ul>
+     * <dl>
+     * <dt>{@link SourceBlockState#INCOMPLETE INCOMPLETE}:</dt>
+     * <dd>means that not enough encoding symbols are available for a decoding operation.</dd>
+     * <dt>{@link SourceBlockState#DECODED DECODED}:</dt>
+     * <dd>means that a decoding operation took place and succeeded in decoding the source block.</dd>
+     * <dt>{@link SourceBlockState#DECODING_FAILURE DECODING_FAILURE}:</dt>
+     * <dd>means that a decoding operation took place but failed in decoding the source block; additional encoding
+     * symbols are required for a successful decoding.</dd>
+     * </dl>
      * 
      * @param packet
      *            An encoding packet containing encoding symbols associated to the source block being decoded
