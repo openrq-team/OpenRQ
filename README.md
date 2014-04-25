@@ -35,3 +35,7 @@ OpenRQ is intended as an erasure corrector for unreliable or noisy communication
   4. Data is decoded from the encoding packets, resulting in the original data.
 
 **Note:** *The use of OpenRQ is also recommended in situations where retransmissions are costly, such as when broadcasting data to multiple destinations, or when communication links are one-way.*
+
+## Documentation
+
+The Javadoc files for the OpenRQ API are found [here](zemasa.github.io/OpenRQ/docs)
