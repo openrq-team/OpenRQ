@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test.encodecode;
+package net.fec.openrq;
 
 
 import java.io.IOException;
@@ -33,16 +33,16 @@ import net.fec.openrq.EncodingPacket;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.test.util.summary.LongSummaryStatistics;
-import net.fec.openrq.test.util.summary.Summarizable;
 import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.summary.LongSummaryStatistics;
+import net.fec.openrq.util.summary.Summarizable;
 
 
 /**
  */
-public final class EncoderTask implements Summarizable<StatsType> {
+final class EncoderTask implements Summarizable<StatsType> {
 
-    public static enum Type {
+    static enum Type {
 
         SOURCE_SYMBOLS_ONLY_SEQUENTIAL,
         SOURCE_SYMBOLS_ONLY_RANDOM,
@@ -50,12 +50,12 @@ public final class EncoderTask implements Summarizable<StatsType> {
         ANY_SYMBOL_RANDOM;
     }
 
-    public static interface DataEncoderProvider {
+    static interface DataEncoderProvider {
 
         public DataEncoder newEncoder();
     }
 
-    public static final class Builder {
+    static final class Builder {
 
         private final DataEncoderProvider encProvider;
         private final WritableByteChannel writable;
@@ -66,7 +66,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
         private int numIterations;
 
 
-        public Builder(DataEncoderProvider encProvider, WritableByteChannel writable, Type type) {
+        Builder(DataEncoderProvider encProvider, WritableByteChannel writable, Type type) {
 
             checkProvider(encProvider);
             checkWritable(writable);
@@ -81,46 +81,46 @@ public final class EncoderTask implements Summarizable<StatsType> {
             defNumIterations();
         }
 
-        public Builder extraSymbols(int extra) {
+        Builder extraSymbols(int extra) {
 
             checkExtraSymbols(extra, type);
             this.extraSymbols = extra;
             return this;
         }
 
-        public Builder defExtraSymbols() {
+        Builder defExtraSymbols() {
 
             this.extraSymbols = Defaults.EXTRA_SYMBOLS;
             return this;
         }
 
-        public Builder maxSymbolsPerPacket(int maxSymbols) {
+        Builder maxSymbolsPerPacket(int maxSymbols) {
 
             checkMaxSymbolsPerPacket(maxSymbols, type);
             this.maxSymbolsPerPacket = maxSymbols;
             return this;
         }
 
-        public Builder defMaxSymbolsPerPacket() {
+        Builder defMaxSymbolsPerPacket() {
 
             this.maxSymbolsPerPacket = Defaults.MAX_SYMBOLS_PER_PACKET;
             return this;
         }
 
-        public Builder numIterations(int numIters) {
+        Builder numIterations(int numIters) {
 
             checkNumIterations(numIters);
             this.numIterations = numIters;
             return this;
         }
 
-        public Builder defNumIterations() {
+        Builder defNumIterations() {
 
             this.numIterations = Defaults.NUM_ITERATIONS;
             return this;
         }
 
-        public EncoderTask build() {
+        EncoderTask build() {
 
             return new EncoderTask(
                 encProvider,
@@ -142,7 +142,7 @@ public final class EncoderTask implements Summarizable<StatsType> {
      * @param numIterations
      * @return
      */
-    public static EncoderTask newEncoderTask(
+    static EncoderTask newEncoderTask(
         DataEncoderProvider encProvider,
         WritableByteChannel writable,
         Type type,

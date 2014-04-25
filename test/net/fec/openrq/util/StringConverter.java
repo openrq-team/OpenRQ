@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test.util.summary;
-
-
-import java.util.Map;
-import java.util.concurrent.Callable;
-
-import net.fec.openrq.test.util.StringConverter;
-
+package net.fec.openrq.util;
 
 /**
- * @param <E>
+ * @param <T>
+ *            Any type
  */
-public interface Summarizable<E extends StringConverter<LongSummaryStatistics>> extends
-    Callable<Map<E, LongSummaryStatistics>> {
+public interface StringConverter<T> {
 
-    /* no new methods */
+    public String toString(T object);
 }

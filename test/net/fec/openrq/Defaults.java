@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test.encodecode;
+package net.fec.openrq;
 
 /**
  */
-public final class Defaults {
+final class Defaults {
 
-    public static final int EXTRA_SYMBOLS = 0;
-    public static final int MAX_SYMBOLS_PER_PACKET = 1;
-    public static final int NUM_ITERATIONS = 100; // 10_000;
+    static final int EXTRA_SYMBOLS = 0;
+    static final int MAX_SYMBOLS_PER_PACKET = 1;
+    static final int NUM_ITERATIONS = 100; // 10_000;
 
 
     private Defaults() {

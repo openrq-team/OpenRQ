@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test.encodecode;
+package net.fec.openrq;
 
 
 import java.util.concurrent.TimeUnit;
 
-import net.fec.openrq.test.util.StringConverter;
-import net.fec.openrq.test.util.summary.LongSummaryStatistics;
+import net.fec.openrq.util.StringConverter;
+import net.fec.openrq.util.summary.LongSummaryStatistics;
 
 
 /**
  */
-public enum StatsType implements StringConverter<LongSummaryStatistics> {
+enum StatsType implements StringConverter<LongSummaryStatistics> {
 
     ENCODER_INIT_TIME {
 

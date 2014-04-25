@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test;
+package net.fec.openrq;
 
 
-import static net.fec.openrq.test.encodecode.EncoderTask.Type.ANY_SYMBOL_RANDOM;
-import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM;
-import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONLY_RANDOM;
-import static net.fec.openrq.test.encodecode.EncoderTask.Type.SOURCE_SYMBOLS_ONLY_SEQUENTIAL;
+import static net.fec.openrq.EncoderTask.Type.ANY_SYMBOL_RANDOM;
+import static net.fec.openrq.EncoderTask.Type.SOURCE_PLUS_REPAIR_SYMBOLS_RANDOM;
+import static net.fec.openrq.EncoderTask.Type.SOURCE_SYMBOLS_ONLY_RANDOM;
+import static net.fec.openrq.EncoderTask.Type.SOURCE_SYMBOLS_ONLY_SEQUENTIAL;
 
 import java.io.IOException;
 import java.nio.channels.Pipe;
@@ -36,17 +36,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.fec.openrq.OpenRQ;
+import net.fec.openrq.DecoderTask.DecodedDataChecker;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.parameters.FECParameters;
-import net.fec.openrq.test.encodecode.DecoderTask;
-import net.fec.openrq.test.encodecode.DecoderTask.DecodedDataChecker;
-import net.fec.openrq.test.encodecode.Defaults;
-import net.fec.openrq.test.encodecode.EncoderTask;
-import net.fec.openrq.test.encodecode.StatsType;
-import net.fec.openrq.test.util.summary.LongSummaryStatistics;
-import net.fec.openrq.test.util.summary.Summaries;
 import net.fec.openrq.util.arithmetic.ExtraMath;
+import net.fec.openrq.util.summary.LongSummaryStatistics;
+import net.fec.openrq.util.summary.Summaries;
 
 
 /**

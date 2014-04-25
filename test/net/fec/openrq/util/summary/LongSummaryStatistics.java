@@ -2,7 +2,7 @@
  * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
-package net.fec.openrq.test.util.summary;
+package net.fec.openrq.util.summary;
 
 
 import java.util.Objects;

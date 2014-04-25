@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test.encodecode;
+package net.fec.openrq;
 
 
 import java.io.IOException;
@@ -31,28 +31,28 @@ import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.test.util.summary.LongSummaryStatistics;
-import net.fec.openrq.test.util.summary.Summarizable;
 import net.fec.openrq.util.numericaltype.SizeOf;
 import net.fec.openrq.util.parsing.Parsed;
+import net.fec.openrq.util.summary.LongSummaryStatistics;
+import net.fec.openrq.util.summary.Summarizable;
 
 
 /**
  */
-public final class DecoderTask implements Summarizable<StatsType> {
+final class DecoderTask implements Summarizable<StatsType> {
 
-    public static interface DecodedDataChecker {
+    static interface DecodedDataChecker {
 
         public boolean checkData(byte[] data);
     }
 
-    public static final class Builder {
+    static final class Builder {
 
         private final DecodedDataChecker dataChecker;
         private final ReadableByteChannel readable;
 
 
-        public Builder(ReadableByteChannel readable) {
+        Builder(ReadableByteChannel readable) {
 
             checkReadable(readable);
             this.dataChecker = null;
@@ -60,7 +60,7 @@ public final class DecoderTask implements Summarizable<StatsType> {
             defNumIterations();
         }
 
-        public Builder(DecodedDataChecker dataChecker, ReadableByteChannel readable) {
+        Builder(DecodedDataChecker dataChecker, ReadableByteChannel readable) {
 
             checkDataChecker(dataChecker);
             checkReadable(readable);
@@ -73,19 +73,19 @@ public final class DecoderTask implements Summarizable<StatsType> {
         private int numIters;
 
 
-        public Builder numIterations(int iters) {
+        Builder numIterations(int iters) {
 
             this.numIters = iters;
             return this;
         }
 
-        public Builder defNumIterations() {
+        Builder defNumIterations() {
 
             this.numIters = Defaults.NUM_ITERATIONS;
             return this;
         }
 
-        public DecoderTask build() {
+        DecoderTask build() {
 
             return new DecoderTask(dataChecker, readable, numIters);
         }
@@ -97,7 +97,7 @@ public final class DecoderTask implements Summarizable<StatsType> {
      * @param numIterations
      * @return
      */
-    public static DecoderTask newDecoderTask(ReadableByteChannel readable, int numIterations) {
+    static DecoderTask newDecoderTask(ReadableByteChannel readable, int numIterations) {
 
         checkReadable(readable);
         checkNumIterations(numIterations);
@@ -110,7 +110,7 @@ public final class DecoderTask implements Summarizable<StatsType> {
      * @param numIterations
      * @return
      */
-    public static DecoderTask newDecoderTask(
+    static DecoderTask newDecoderTask(
         DecodedDataChecker dataChecker,
         ReadableByteChannel readable,
         int numIterations)

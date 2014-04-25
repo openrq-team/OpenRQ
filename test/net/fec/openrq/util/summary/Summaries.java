@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.test.util.summary;
+package net.fec.openrq.util.summary;
 
 
 import java.io.PrintStream;
@@ -21,7 +21,7 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.fec.openrq.test.util.StringConverter;
+import net.fec.openrq.util.StringConverter;
 
 
 /**
