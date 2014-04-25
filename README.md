@@ -38,4 +38,4 @@ OpenRQ is intended as an erasure corrector for unreliable or noisy communication
 
 ## Documentation
 
-The Javadoc files for the OpenRQ API are found [here](zemasa.github.io/OpenRQ/docs)
+The Javadoc files for the OpenRQ API are found [here](http://zemasa.github.io/OpenRQ/docs)
