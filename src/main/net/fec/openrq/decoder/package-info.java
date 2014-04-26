@@ -13,23 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.util.parsing;
-
 /**
+ * This package contains RaptorQ decoder related classes. Please refer to the documentation of the
+ * <a href="{@docRoot}/net/fec/openrq/package-summary.html#package_description">
+ * net.fec.openrq
+ * </a> package for more details.
  */
-public final class ParsingFailureException extends RuntimeException {
-
-    private static final long serialVersionUID = 1L;
-
-
-    /**
-     * Constructs a new exception with the provided reason message.
-     * 
-     * @param reason
-     *            A message detailing the reason for the exception
-     */
-    public ParsingFailureException(String reason) {
-
-        super(reason);
-    }
-}
+package net.fec.openrq.decoder;

@@ -22,9 +22,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
 import net.fec.openrq.EncodingPacket;
+import net.fec.openrq.Parsed;
 import net.fec.openrq.SerializablePacket;
 import net.fec.openrq.parameters.FECParameters;
-import net.fec.openrq.util.parsing.Parsed;
 
 
 /**

@@ -13,8 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.fec.openrq;
+
 /**
- * This package contains RaptorQ decoder related classes. Please refer to the documentation of the
- * {@link net.fec.openrq} package for more details.
+ * Thrown when trying to access the value of an {@linkplain Parsed#isValid() invalid} {@link Parsed} instance.
  */
-package net.fec.openrq.decoder;
+public final class ParsingFailureException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
+
+    /**
+     * Constructs a new exception with the provided reason message.
+     * 
+     * @param reason
+     *            A message detailing the reason for the exception
+     */
+    public ParsingFailureException(String reason) {
+
+        super(reason);
+    }
+}

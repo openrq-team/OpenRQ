@@ -31,9 +31,9 @@ import java.nio.ReadOnlyBufferException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
+import net.fec.openrq.Parsed;
 import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.numericaltype.SizeOf;
-import net.fec.openrq.util.parsing.Parsed;
 
 
 /**

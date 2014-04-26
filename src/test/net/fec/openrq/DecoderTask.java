@@ -32,7 +32,6 @@ import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.numericaltype.SizeOf;
-import net.fec.openrq.util.parsing.Parsed;
 import net.fec.openrq.util.summary.LongSummaryStatistics;
 import net.fec.openrq.util.summary.Summarizable;
 

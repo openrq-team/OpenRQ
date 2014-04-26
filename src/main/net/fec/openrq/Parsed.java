@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.util.parsing;
+package net.fec.openrq;
 
 
 import java.util.Objects;
