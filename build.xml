@@ -41,7 +41,7 @@
         <javadoc destdir="${docs.dir}"
                  classpath="." source="1.7"
                  access="public"
-                 doctitle="OpenRQ v${version} API"
+                 doctitle="OpenRQ API ${version}"
                  splitindex="true" author="true" use="true"
                  noindex="false" nonavbar="false" notree="false"
                  nodeprecated="false" nodeprecatedlist="false">
