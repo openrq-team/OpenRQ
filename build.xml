@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="jar" name="OpenRQ">
+
+
+    <property name="version" value="1.0"/>
+    <property name="mainsrc.dir" value="./src/main"/>
+    <property name="testsrc.dir" value="./src/test"/>
+    <property name="compiled.dir" value="./bin"/>
+    <property name="docs.dir" value="./docs"/>
+    <property name="mainjar.file" value="openrq-${version}.jar"/>
+    <property name="testjar.file" value="openrq-test-${version}.jar"/>
+    <property name="maintest.class" value="net.fec.openrq.TestRunner"/>
+
+
+    <target name="clean" description="remove compiled files">
+
+        <delete dir="${compiled.dir}"/>
+
+    </target>
+
+
+    <target name="cleanall" depends="clean"
+            description="remove compiled, javadoc and jar files">
+
+        <delete dir="${docs.dir}"/>
+        <delete file="${mainjar.file}"/>
+        <delete file="${testjar.file}"/>
+
+    </target>
+
+
+    <target name="compile"
+            description="compile the main Java classes">
+
+        <mkdir dir="${compiled.dir}"/>
+        <javac srcdir="${mainsrc.dir}" destdir="${compiled.dir}"
+               includeAntRuntime="false"/>
+
+    </target>
+
+
+    <target name="compiletest" depends="compile"
+            description="compile the main and test Java classes">
+
+        <javac srcdir="${testsrc.dir}" destdir="${compiled.dir}"
+               includeAntRuntime="false"/>
+
+    </target>
+
+
+    <target name="javadoc"
+            description="generates the Javadoc files for the public API">
+
+        <javadoc destdir="${docs.dir}"
+                 classpath="." source="1.7"
+                 access="public"
+                 doctitle="OpenRQ API ${version}"
+                 splitindex="true" author="true" use="true"
+                 noindex="false" nonavbar="false" notree="false"
+                 nodeprecated="false" nodeprecatedlist="false">
+
+            <fileset dir="${mainsrc.dir}" defaultexcludes="yes">
+                <exclude name="**/util/**"/>
+            </fileset>
+            <link href="http://download.oracle.com/javase/7/docs/api/"/>
+
+        </javadoc>
+
+    </target>
+
+
+    <target name="jar" depends="compile"
+            description="compiles the main Java classes and packs them into a Jar file">
+
+        <jar destfile="./${mainjar.file}" basedir="${compiled.dir}"/>
+
+    </target>
+
+
+    <target name="jartest" depends="compiletest"
+            description="compiles the main and test Java classes and packs them into an executable Jar file">
+
+        <jar destfile="./${testjar.file}" basedir="${compiled.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${maintest.class}"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+        </jar>
+
+    </target>
+
+
+</project>
