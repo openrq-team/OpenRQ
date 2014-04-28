@@ -15,9 +15,25 @@
  */
 package net.fec.openrq.util.array;
 
+
+import java.lang.reflect.Array;
+
+
 /**
  */
 public final class ArrayUtils {
+
+    /**
+     * @param clazz
+     * @param length
+     * @return a new array from a specific class with the specified length
+     */
+    public static <T> T[] newArray(Class<T> clazz, int length) {
+
+        @SuppressWarnings("unchecked")
+        final T[] array = (T[])Array.newInstance(clazz, length);
+        return array;
+    }
 
     /**
      * @param arrOff
@@ -25,7 +41,7 @@ public final class ArrayUtils {
      * @param length
      * @exception IndexOutOfBoundsException
      */
-    public static final void checkArrayBounds(int arrOff, int arrLen, int length) {
+    public static void checkArrayBounds(int arrOff, int arrLen, int length) {
 
         // retrieved from java.nio.Buffer class
         if ((arrOff | arrLen | (arrOff + arrLen) | (length - (arrOff + arrLen))) < 0) {
@@ -34,7 +50,7 @@ public final class ArrayUtils {
     }
 
     // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
-    private static final String getArrayBoundsMsg(int off, int len, int arrLength) {
+    private static String getArrayBoundsMsg(int off, int len, int arrLength) {
 
         return "region off = " + off + "; region length = " + len + "; array length = " + arrLength;
     }
@@ -44,7 +60,7 @@ public final class ArrayUtils {
      * @param length
      * @exception IndexOutOfBoundsException
      */
-    public static final void checkIndexRange(int index, int length) {
+    public static void checkIndexRange(int index, int length) {
 
         if (index < 0 || index >= length) {
             throw new IndexOutOfBoundsException(getIndexRangeMsg(index, length));
@@ -52,7 +68,7 @@ public final class ArrayUtils {
     }
 
     // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
-    private static final String getIndexRangeMsg(int index, int length) {
+    private static String getIndexRangeMsg(int index, int length) {
 
         return "index = " + index + "; length = " + length;
     }

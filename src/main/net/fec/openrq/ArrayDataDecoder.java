@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
+import net.fec.openrq.DataUtils.SBDFactory;
 import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.parameters.FECParameters;
@@ -28,6 +29,7 @@ import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.parameters.ParameterIO;
 import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.collection.ImmutableList;
 import net.fec.openrq.util.numericaltype.SizeOf;
 
 
@@ -52,57 +54,27 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     private final byte[] array;
     private final FECParameters fecParams;
-    private final SourceBlockDecoder[] srcBlockDecoders;
+    private final ImmutableList<ArraySourceBlockDecoder> srcBlockDecoders;
 
 
-    private ArrayDataDecoder(byte[] array, FECParameters fecParams, int extraSymbols) {
+    private ArrayDataDecoder(byte[] array, FECParameters fecParams, final int extraSymbols) {
 
         this.array = array;
         this.fecParams = fecParams;
-        this.srcBlockDecoders = partitionData(this, array, fecParams, extraSymbols);
-    }
+        this.srcBlockDecoders = DataUtils.partitionDecData(
+            ArraySourceBlockDecoder.class,
+            fecParams,
+            new SBDFactory<ArraySourceBlockDecoder>() {
 
-    private static SourceBlockDecoder[] partitionData(
-        ArrayDataDecoder dataDecoder,
-        byte[] array,
-        FECParameters fecParams,
-        int extraSymbols)
-    {
+                @Override
+                public ArraySourceBlockDecoder newSBD(int off, int sbn, int K) {
 
-        final int Kt = fecParams.totalSymbols();
-        final int Z = fecParams.numberOfSourceBlocks();
-
-        // (KL, KS, ZL, ZS) = Partition[Kt, Z]
-        final Partition KZ = new Partition(Kt, Z);
-        final int KL = KZ.get(1);
-        final int KS = KZ.get(2);
-        final int ZL = KZ.get(3);
-
-        // partitioned source blocks
-        final SourceBlockDecoder[] srcBlockDecoders = new ArraySourceBlockDecoder[Z];
-
-        /*
-         * The object MUST be partitioned into Z = ZL + ZS contiguous source blocks.
-         * Each source block contains a region of the data array, except the last source block
-         * which may also contain extra padding.
-         */
-
-        final int T = fecParams.symbolSize();
-        // source block number (index)
-        int sbn;
-        int off;
-
-        for (sbn = 0, off = 0; sbn < ZL; sbn++, off += KL * T) { // first ZL
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(
-                dataDecoder, array, off, fecParams, sbn, KL, extraSymbols);
-        }
-
-        for (; sbn < Z; sbn++, off += KS * T) {// last ZS
-            srcBlockDecoders[sbn] = ArraySourceBlockDecoder.newDecoder(
-                dataDecoder, array, off, fecParams, sbn, KS, extraSymbols);
-        }
-
-        return srcBlockDecoders;
+                    return ArraySourceBlockDecoder.newDecoder(
+                        ArrayDataDecoder.this, ArrayDataDecoder.this.array, off,
+                        ArrayDataDecoder.this.fecParams,
+                        sbn, K, extraSymbols);
+                }
+            });
     }
 
     @Override
@@ -144,11 +116,11 @@ public final class ArrayDataDecoder implements DataDecoder {
     @Override
     public SourceBlockDecoder decoderForSourceBlock(int sbn) {
 
-        if (sbn < 0 || sbn >= srcBlockDecoders.length) {
+        if (sbn < 0 || sbn >= srcBlockDecoders.size()) {
             throw new IllegalArgumentException("invalid source block number");
         }
 
-        return srcBlockDecoders[sbn];
+        return srcBlockDecoders.get(sbn); // list is random access
     }
 
     /**
@@ -267,7 +239,7 @@ public final class ArrayDataDecoder implements DataDecoder {
         }
 
         final int T = symbolSize();
-        final int K = srcBlockDecoders[sbn].numberOfSourceSymbols();
+        final int K = srcBlockDecoders.get(sbn).numberOfSourceSymbols();
         final int numSymbols = ExtraMath.ceilDiv(symbLen, T); // account for smaller last symbol
         if (numSymbols == 0) {
             return Parsed.invalid("there is no symbols data");

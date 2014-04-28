@@ -16,13 +16,11 @@
 package net.fec.openrq;
 
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
+import net.fec.openrq.DataUtils.SBEFactory;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
+import net.fec.openrq.util.collection.ImmutableList;
 
 
 /**
@@ -43,7 +41,7 @@ public final class ArrayDataEncoder implements DataEncoder {
     private final byte[] array;
     private final int offset;
     private final FECParameters fecParams;
-    private final List<ArraySourceBlockEncoder> srcBlockEncoders;
+    private final ImmutableList<ArraySourceBlockEncoder> srcBlockEncoders;
 
 
     private ArrayDataEncoder(byte[] array, int offset, FECParameters fecParams) {
@@ -53,48 +51,25 @@ public final class ArrayDataEncoder implements DataEncoder {
 
         this.fecParams = fecParams;
 
-        this.srcBlockEncoders = Arrays.asList(partitionData(this, array, offset, fecParams));
-    }
+        this.srcBlockEncoders = DataUtils.partitionEncData(
+            ArraySourceBlockEncoder.class,
+            fecParams,
+            offset,
+            new SBEFactory<ArraySourceBlockEncoder>() {
 
-    private static ArraySourceBlockEncoder[] partitionData(
-        ArrayDataEncoder dataEncoder,
-        byte[] array,
-        int offset,
-        FECParameters fecParams)
-    {
+                @Override
+                public ArraySourceBlockEncoder newSBE(
+                    int off,
+                    int sbn,
+                    int K)
+                {
 
-        final int Kt = fecParams.totalSymbols();
-        final int Z = fecParams.numberOfSourceBlocks();
-
-        // (KL, KS, ZL, ZS) = Partition[Kt, Z]
-        final Partition KZ = new Partition(Kt, Z);
-        final int KL = KZ.get(1);
-        final int KS = KZ.get(2);
-        final int ZL = KZ.get(3);
-
-        // partitioned source blocks
-        final ArraySourceBlockEncoder[] srcBlockEncoders = new ArraySourceBlockEncoder[Z];
-
-        /*
-         * The object MUST be partitioned into Z = ZL + ZS contiguous source blocks.
-         * Each source block contains a region of the data array, except the last source block
-         * which may also contain extra padding.
-         */
-
-        final int T = fecParams.symbolSize();
-        // source block number (index)
-        int sbn;
-        int off;
-
-        for (sbn = 0, off = offset; sbn < ZL; sbn++, off += KL * T) { // first ZL
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(dataEncoder, array, off, fecParams, sbn, KL);
-        }
-
-        for (; sbn < Z; sbn++, off += KS * T) {// last ZS
-            srcBlockEncoders[sbn] = ArraySourceBlockEncoder.newEncoder(dataEncoder, array, off, fecParams, sbn, KS);
-        }
-
-        return srcBlockEncoders;
+                    return ArraySourceBlockEncoder.newEncoder(
+                        ArrayDataEncoder.this, ArrayDataEncoder.this.array, off,
+                        ArrayDataEncoder.this.fecParams,
+                        sbn, K);
+                }
+            });
     }
 
     @Override
@@ -132,9 +107,9 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public Iterable<SourceBlockEncoder> sourceBlockIterable() {
+    public Iterable<? extends SourceBlockEncoder> sourceBlockIterable() {
 
-        return Collections.<SourceBlockEncoder>unmodifiableList(srcBlockEncoders);
+        return srcBlockEncoders;
     }
 
     /**
