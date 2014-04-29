@@ -16,7 +16,7 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.DataUtils.SBEFactory;
+import net.fec.openrq.DataUtils.SourceBlockSupplier;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
@@ -38,8 +38,9 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
 
-    private final byte[] array;
-    private final int offset;
+    private final byte[] array; // to return to the user
+    private final int offset;   // to return to the user
+
     private final FECParameters fecParams;
     private final ImmutableList<ArraySourceBlockEncoder> srcBlockEncoders;
 
@@ -51,14 +52,14 @@ public final class ArrayDataEncoder implements DataEncoder {
 
         this.fecParams = fecParams;
 
-        this.srcBlockEncoders = DataUtils.partitionEncData(
+        this.srcBlockEncoders = DataUtils.partitionData(
             ArraySourceBlockEncoder.class,
             fecParams,
             offset,
-            new SBEFactory<ArraySourceBlockEncoder>() {
+            new SourceBlockSupplier<ArraySourceBlockEncoder>() {
 
                 @Override
-                public ArraySourceBlockEncoder newSBE(
+                public ArraySourceBlockEncoder get(
                     int off,
                     int sbn,
                     int K)

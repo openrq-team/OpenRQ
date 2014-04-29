@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
-import net.fec.openrq.DataUtils.SBDFactory;
+import net.fec.openrq.DataUtils.SourceBlockSupplier;
 import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.parameters.FECParameters;
@@ -47,30 +47,30 @@ public final class ArrayDataDecoder implements DataDecoder {
             throw new IllegalArgumentException("negative number of extra symbols");
         }
 
-        final byte[] array = new byte[(int)fecParams.dataLength()];
-        return new ArrayDataDecoder(array, fecParams, extraSymbols);
+        final byte[] dataArray = new byte[(int)fecParams.dataLength()];
+        return new ArrayDataDecoder(dataArray, fecParams, extraSymbols);
     }
 
 
-    private final byte[] array;
+    private final byte[] dataArray;
     private final FECParameters fecParams;
     private final ImmutableList<ArraySourceBlockDecoder> srcBlockDecoders;
 
 
-    private ArrayDataDecoder(byte[] array, FECParameters fecParams, final int extraSymbols) {
+    private ArrayDataDecoder(byte[] dataArray, FECParameters fecParams, final int extraSymbols) {
 
-        this.array = array;
+        this.dataArray = dataArray;
         this.fecParams = fecParams;
-        this.srcBlockDecoders = DataUtils.partitionDecData(
+        this.srcBlockDecoders = DataUtils.partitionData(
             ArraySourceBlockDecoder.class,
             fecParams,
-            new SBDFactory<ArraySourceBlockDecoder>() {
+            new SourceBlockSupplier<ArraySourceBlockDecoder>() {
 
                 @Override
-                public ArraySourceBlockDecoder newSBD(int off, int sbn, int K) {
+                public ArraySourceBlockDecoder get(int off, int sbn, int K) {
 
                     return ArraySourceBlockDecoder.newDecoder(
-                        ArrayDataDecoder.this, ArrayDataDecoder.this.array, off,
+                        ArrayDataDecoder.this, ArrayDataDecoder.this.dataArray, off,
                         ArrayDataDecoder.this.fecParams,
                         sbn, K, extraSymbols);
                 }
@@ -124,13 +124,15 @@ public final class ArrayDataDecoder implements DataDecoder {
     }
 
     /**
-     * Returns an array of bytes containing the source data.
+     * Returns an array of bytes containing the source data. Use method {@link #isDataDecoded()} to check if the data is
+     * complete.
      * 
      * @return an array of bytes containing the source data
+     * @see #isDataDecoded()
      */
     public byte[] dataArray() {
 
-        return array;
+        return dataArray;
     }
 
     @Override
