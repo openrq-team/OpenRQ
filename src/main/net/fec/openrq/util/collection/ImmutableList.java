@@ -1,6 +1,3 @@
-/*
- * Copyright Faculdade de Ci�ncias da Universidade de Lisboa
- */
 package net.fec.openrq.util.collection;
 
 
