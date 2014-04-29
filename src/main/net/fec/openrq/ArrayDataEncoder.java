@@ -100,11 +100,12 @@ public final class ArrayDataEncoder implements DataEncoder {
     @Override
     public ArraySourceBlockEncoder sourceBlock(int sbn) {
 
-        if (sbn < 0 || sbn >= srcBlockEncoders.size()) {
+        try {
+            return srcBlockEncoders.get(sbn); // list is random access
+        }
+        catch (IndexOutOfBoundsException e) {
             throw new IllegalArgumentException("invalid source block number");
         }
-
-        return srcBlockEncoders.get(sbn); // list is random access
     }
 
     @Override

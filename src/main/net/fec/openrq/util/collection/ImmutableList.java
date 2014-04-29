@@ -1,5 +1,5 @@
 /*
- * Copyright Faculdade de Ciências da Universidade de Lisboa
+ * Copyright Faculdade de Ciï¿½ncias da Universidade de Lisboa
  */
 package net.fec.openrq.util.collection;
 
@@ -173,7 +173,6 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
         this.elements = elements;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public E get(int index) {
 
@@ -181,7 +180,9 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
             throw new IndexOutOfBoundsException();
         }
 
-        return (E)elements[index];
+        @SuppressWarnings("unchecked")
+        final E el = (E)elements[index];
+        return el;
     }
 
     @Override

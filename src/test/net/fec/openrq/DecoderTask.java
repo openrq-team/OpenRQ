@@ -176,7 +176,7 @@ final class DecoderTask implements Summarizable<StatsType> {
             final int Z = dataDec.numberOfSourceBlocks();
 
             for (int sbn = 0; sbn < Z; sbn++) {
-                final SourceBlockDecoder srcBlockDec = dataDec.decoderForSourceBlock(sbn);
+                final SourceBlockDecoder srcBlockDec = dataDec.sourceBlock(sbn);
                 final int totalSymbols = srcBlockDec.numberOfSourceSymbols() + extraSymbols;
 
                 for (int i = 0; i < totalSymbols;) {
