@@ -36,7 +36,7 @@ import net.fec.openrq.parameters.FECParameters;
  * <p>
  * A decoder provides methods for parsing/reading encoding packets from various formats. The parsed/read encoding
  * packets must then be forwarded to the right {@link SourceBlockDecoder} object, which takes care of decoding a
- * specific source block. These decoder objects are accessed via the method {@link #decoderForSourceBlock(int)}.
+ * specific source block. These decoder objects are accessed via the method {@link #sourceBlock(int)}.
  * <p>
  * The number of source blocks, the length of the source data and other parameters are specified as the
  * <em>FEC parameters</em>. The method {@link #fecParameters()} provides the associated parameters to the decoder.
@@ -93,7 +93,7 @@ public interface DataDecoder {
      *            A source block number
      * @return a decoder object for a specific source block
      */
-    public SourceBlockDecoder decoderForSourceBlock(int sbn);
+    public SourceBlockDecoder sourceBlock(int sbn);
 
     /**
      * Parses an encoding packet from the given source block number, encoding symbol identifier of the first symbol, and

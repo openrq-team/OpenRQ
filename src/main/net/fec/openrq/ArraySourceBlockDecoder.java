@@ -89,7 +89,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         this.Kprime = SystematicIndices.ceil(K);
         this.symbolOverhead = extraSymbols;
 
-        this.repairSymbols = new LinkedHashSet<EncodingSymbol>(); // stores the receiving ordering
+        this.repairSymbols = new LinkedHashSet<>(); // stores the receiving ordering
         this.receivedSourceSymbols = new BitSet(K);
     }
 

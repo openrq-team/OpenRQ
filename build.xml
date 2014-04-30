@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+Copyright 2014 Jose Lopes
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
 <project default="jar" name="OpenRQ">
 
 
     <property name="version" value="1.0"/>
     <property name="mainsrc.dir" value="./src/main"/>
+    <property name="testsrc.dir" value="./src/test"/>
     <property name="compiled.dir" value="./bin"/>
     <property name="docs.dir" value="./docs"/>
     <property name="mainjar.file" value="openrq-${version}.jar"/>
+    <property name="testjar.file" value="openrq-test-${version}.jar"/>
+    <property name="maintest.class" value="net.fec.openrq.TestRunner"/>
 
 
     <target name="clean" description="remove compiled files">
@@ -21,15 +39,25 @@
 
         <delete dir="${docs.dir}"/>
         <delete file="${mainjar.file}"/>
+        <delete file="${testjar.file}"/>
 
     </target>
 
 
-    <target name="compile"
+    <target name="compile" depends="clean"
             description="compile the main Java classes">
 
         <mkdir dir="${compiled.dir}"/>
         <javac srcdir="${mainsrc.dir}" destdir="${compiled.dir}"
+               includeAntRuntime="false"/>
+
+    </target>
+
+
+    <target name="compiletest" depends="compile"
+            description="compile the main and test Java classes">
+
+        <javac srcdir="${testsrc.dir}" destdir="${compiled.dir}"
                includeAntRuntime="false"/>
 
     </target>
@@ -60,6 +88,19 @@
             description="compiles the main Java classes and packs them into a Jar file">
 
         <jar destfile="./${mainjar.file}" basedir="${compiled.dir}"/>
+
+    </target>
+
+
+    <target name="jartest" depends="compiletest"
+            description="compiles the main and test Java classes and packs them into an executable Jar file">
+
+        <jar destfile="./${testjar.file}" basedir="${compiled.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${maintest.class}"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+        </jar>
 
     </target>
 

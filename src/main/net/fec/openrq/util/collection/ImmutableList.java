@@ -1,6 +1,3 @@
-/*
- * Copyright Faculdade de Ciências da Universidade de Lisboa
- */
 package net.fec.openrq.util.collection;
 
 
@@ -23,6 +20,42 @@ import java.util.RandomAccess;
 public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
 
     /**
+     * Returns an immutable list with the provided elements. The returned list keeps a reference to the provided array
+     * of elements, so make sure the array is not modifiable.
+     * 
+     * @param elements
+     *            The elements to be placed in an immutable list
+     * @return an immutable list of the provided elements
+     * @exception NullPointerException
+     *                If {@code elements} is {@code null}
+     */
+    @SafeVarargs
+    public static <T> ImmutableList<T> of(T... elements) {
+
+        return new ImmutableList<>(elements);
+    }
+
+    /**
+     * Returns an immutable list with the provided elements. The returned list keeps a reference to the provided array
+     * of elements, so make sure the array is not modifiable. Additionally, this method does not permit {@code null}
+     * elements and will throw a {@code NullPointerException} if any {@code null} element is found.
+     * 
+     * @param elements
+     *            The elements to be placed in an immutable list
+     * @return an immutable list of the provided elements
+     * @exception NullPointerException
+     *                If {@code elements} is {@code null}, or any specific element is {@code null}
+     */
+    @SafeVarargs
+    public static <T> ImmutableList<T> ofNonNull(T... elements) {
+
+        for (T el : elements) {
+            Objects.requireNonNull(el);
+        }
+        return new ImmutableList<>(elements);
+    }
+
+    /**
      * Returns an immutable list with the provided elements. The returned list does not keep a reference to the provided
      * array of elements.
      * 
@@ -33,7 +66,7 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
      *                If {@code elements} is {@code null}
      */
     @SafeVarargs
-    public static <T> ImmutableList<T> newList(T... elements) {
+    public static <T> ImmutableList<T> copyOf(T... elements) {
 
         return new ImmutableList<>(Arrays.copyOf(elements, elements.length));
     }
@@ -50,7 +83,7 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
      *                If {@code elements} is {@code null}, or any specific element is {@code null}
      */
     @SafeVarargs
-    public static <T> ImmutableList<T> newNullFreeList(T... elements) {
+    public static <T> ImmutableList<T> copyOfNonNull(T... elements) {
 
         final T[] copy = Arrays.copyOf(elements, elements.length);
         for (T el : copy) {
@@ -71,7 +104,7 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
      * @exception ConcurrentModificationException
      *                If the method detects a modification in the provided collection while copying its elements
      */
-    public static <T> ImmutableList<T> copy(Collection<T> collection) {
+    public static <T> ImmutableList<T> copyOf(Collection<T> collection) {
 
         final int size = collection.size();
         final Object[] elements = new Object[size];
@@ -105,7 +138,7 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
      * @exception ConcurrentModificationException
      *                If the method detects a modification in the provided collection while copying its elements
      */
-    public static <T> ImmutableList<T> copyNullFree(Collection<T> collection) {
+    public static <T> ImmutableList<T> copyOfNonNull(Collection<T> collection) {
 
         final int size = collection.size();
         final Object[] elements = new Object[size];
@@ -137,7 +170,6 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
         this.elements = elements;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public E get(int index) {
 
@@ -145,7 +177,9 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
             throw new IndexOutOfBoundsException();
         }
 
-        return (E)elements[index];
+        @SuppressWarnings("unchecked")
+        final E el = (E)elements[index];
+        return el;
     }
 
     @Override
