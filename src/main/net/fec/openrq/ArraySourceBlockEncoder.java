@@ -96,6 +96,19 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         return dataEncoder.fecParameters();
     }
 
+    // TODO maybe make this thread safe?
+    // use only this method for access to the intermediate symbols
+    private byte[][] getIntermediateSymbols() {
+
+        byte[][] is = intermediateSymbols;
+        if (is == null) {
+            is = generateIntermediateSymbols();
+            intermediateSymbols = is;
+        }
+
+        return is;
+    }
+
     @Override
     public ArrayDataEncoder dataEncoder() {
 
@@ -162,11 +175,6 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         checkRepairSymbolESI(esi);
 
-        // check if we've got the intermediate symbols already
-        if (intermediateSymbols == null) { // TODO maybe make this thread safe?
-            intermediateSymbols = generateIntermediateSymbols();
-        }
-
         // return the repair packet
         return EncodingPacket.newRepairPacket(sbn, esi, getRepairSymbol(esi).transportData(), 1);
     }
@@ -176,11 +184,6 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         checkRepairSymbolESI(esi);
         checkNumRepairSymbols(esi, numSymbols);
-
-        // check if we've got the intermediate symbols already
-        if (intermediateSymbols == null) { // TODO maybe make this thread safe?
-            intermediateSymbols = generateIntermediateSymbols();
-        }
 
         // retrieve repair symbols data
         final ByteBuffer symbols = ByteBuffer.allocate(numSymbols * fecParameters().symbolSize());
@@ -272,7 +275,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // generate the repair symbol data
         final int T = fecParameters().symbolSize();
-        byte[] enc_data = LinearSystem.enc(Kprime, intermediateSymbols, new Tuple(Kprime, isi), T);
+        byte[] enc_data = LinearSystem.enc(Kprime, getIntermediateSymbols(), new Tuple(Kprime, isi), T);
 
         // TODO should we store the repair symbols generated?
         return EncodingSymbol.newRepairSymbol(esi, enc_data);
