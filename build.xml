@@ -20,20 +20,20 @@ limitations under the License.
     </description>
 
     <property name="version" value="1.0"/>
-	
-	<property name="top.src_dir" location="src"/>
-	<property name="top.bin_dir" location="bin"/>
-	
+    
+    <property name="top.src_dir" location="src"/>
+    <property name="top.bin_dir" location="bin"/>
+    
     <property name="main.src_dir" location="${top.src_dir}/main"/>
     <property name="main.bin_dir" location="${top.bin_dir}/main"/>
     <property name="main.jar_file" location="openrq-${version}.jar"/>
-	
-	<property name="benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
-	<property name="benchmark.bin_dir" location="${top.bin_dir}/test/benchmark"/>
-	<property name="benchmark.jar_file" location="openrq-${version}-benchmark.jar"/>
-	
+    
+    <property name="benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
+    <property name="benchmark.bin_dir" location="${top.bin_dir}/test/benchmark"/>
+    <property name="benchmark.jar_file" location="openrq-${version}-benchmark.jar"/>
+    
     <property name="docs_dir" location="docs"/>
-	
+    
 
     <target name="clean" description="Remove binary files.">
 
@@ -57,7 +57,7 @@ limitations under the License.
 
         <mkdir dir="${main.bin_dir}"/>
         <javac srcdir="${main.src_dir}" destdir="${main.bin_dir}"
-		       classpath=".:"
+               classpath=".:"
                includeAntRuntime="false"/>
 
     </target>
@@ -91,27 +91,27 @@ limitations under the License.
 
     </target>
 
-	
-	<import file="lib/test/benchmark/jmh-build.xml"/>
-	
-	<!-- overriden private target from jmh-build.xml -->
-	<target name="-init-jmh-properties">
-	    
-	    <property name="jmh.src_dir" location="${benchmark.src_dir}"/>
+    
+    <import file="lib/test/benchmark/jmh-build.xml"/>
+    
+    <!-- overriden private target from jmh-build.xml -->
+    <target name="-init-jmh-properties">
+        
+        <property name="jmh.src_dir" location="${benchmark.src_dir}"/>
         <property name="jmh.bin_dir" location="${benchmark.bin_dir}"/>
         <property name="jmh.jar_file" location="${benchmark.jar_file}"/>
-		<property name="jmh.extrabin_dir" location="${main.bin_dir}"/>
-		
-	</target>
-	
+        <property name="jmh.extrabin_dir" location="${main.bin_dir}"/>
+        
+    </target>
+    
 
-    <target name="-benchmark" depends="compile,-jmh-jar"/>	
-	<target name="benchmark"
-	        description="Compile the main and benchmark Java classes and pack them into an executable Jar file.">
-	
-	    <subant target="-benchmark" buildpath="." failonerror="true"/>
-		
-	</target>
+    <target name="-benchmark" depends="compile,-jmh-jar"/>    
+    <target name="benchmark"
+            description="Compile the main and benchmark Java classes and pack them into an executable Jar file.">
+    
+        <subant target="-benchmark" buildpath="." failonerror="true"/>
+        
+    </target>
 
 
 </project>
