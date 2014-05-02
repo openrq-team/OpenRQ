@@ -25,12 +25,12 @@ questions.
 
 <project name="jmh-ant">
     <description>
-	    Ant build file for building self-contained JMH Jar.
-		This script is intended to be imported from a top-level script.
+        Ant build file for building self-contained JMH Jar.
+        This script is intended to be imported from a top-level script.
     </description>
 
     <!-- 
-	    When this file is imported the basedir property is ignored,
+        When this file is imported the basedir property is ignored,
         so this hack is required to retrieve it.
     -->
     <dirname property="jmh-ant.basedir" file="${ant.file.jmh-ant}"/>
@@ -41,15 +41,15 @@ questions.
     <property name="joptsimple.jar" location="${jmh-ant.basedir}/jopt-simple-4.6.jar"/>
     <property name="commonsmath.jar" location="${jmh-ant.basedir}/commons-math3-3.2.jar"/>
 
-	<!-- private target to be overriden in importing script -->
+    <!-- private target to be overriden in importing script -->
     <target name="-init-jmh-properties">
-	
-	    <echo>The following properties may or must be defined ([&lt;prop&gt;] means optional):
-		jmh.src_dir        : path to the source files to be compiled along with JMH
-		jmh.bin_dir        : path to the compiled files (JMH included)
-		jmh.jar_file       : path to the resulting self-contained executable Jar
-		[jmh.extrabin_dir] : extra directory containing class files to be included in the build
-		</echo>
+    
+        <echo>The following properties may or must be defined ([&lt;prop&gt;] means optional):
+        jmh.src_dir        : path to the source files to be compiled along with JMH
+        jmh.bin_dir        : path to the compiled files (JMH included)
+        jmh.jar_file       : path to the resulting self-contained executable Jar
+        [jmh.extrabin_dir] : extra directory containing class files to be included in the build
+        </echo>
         <fail message="Must define jmh properties.">
             <condition>
                 <not>
@@ -61,19 +61,19 @@ questions.
                 </not>
             </condition>
         </fail>
-		
+        
     </target>
-	
+    
 
-	<!-- private target to be called by importing script -->
+    <!-- private target to be called by importing script -->
     <target name="-jmh-jar" depends="-init-jmh-properties,-simple-jar,-extra-jar">
-	
-	    <delete dir="${jmh.bin_dir}"/>
-	
-	</target>
-	
-	
-	<!--
+    
+        <delete dir="${jmh.bin_dir}"/>
+    
+    </target>
+    
+    
+    <!--
         The workflow is as follows:
           - Compile the benchmarks with JMH and JMH Annotation processor in classpath.
               * Annotation processors will run and generate synthetic code.
@@ -86,47 +86,47 @@ questions.
               * Filter out META-INF/services/ to disable JMH processors for the future
     -->
 
-	<target name="-compile-with-jmh">
-	    
-		<delete dir="${jmh.bin_dir}"/>
+    <target name="-compile-with-jmh">
+        
+        <delete dir="${jmh.bin_dir}"/>
         <mkdir dir="${jmh.bin_dir}"/>
-		
+        
         <javac srcdir="${jmh.src_dir}" destdir="${jmh.bin_dir}"
-		       classpath="${jmh-core.jar}:${jmh-generator-annprocess.jar}:${jmh.extrabin_dir}"
-			   includeAntRuntime="false"/>
-			   
-	</target>
+               classpath="${jmh-core.jar}:${jmh-generator-annprocess.jar}:${jmh.extrabin_dir}"
+               includeAntRuntime="false"/>
+               
+    </target>
 
-	<target name="-simple-jar" depends="-compile-with-jmh" unless="jmh.extrabin_dir">
-	    
-		<delete file="${jmh.jar_file}"/>
-		<jar jarfile="${jmh.jar_file}" basedir="${jmh.bin_dir}">
+    <target name="-simple-jar" depends="-compile-with-jmh" unless="jmh.extrabin_dir">
+        
+        <delete file="${jmh.jar_file}"/>
+        <jar jarfile="${jmh.jar_file}" basedir="${jmh.bin_dir}">
             <manifest>
                 <attribute name="Main-Class" value="org.openjdk.jmh.Main"/>
             </manifest>
-			
+            
             <zipfileset src="${jmh-core.jar}" excludes="**/META-INF/services/**" />
             <zipfileset src="${joptsimple.jar}" />
             <zipfileset src="${commonsmath.jar}" />
         </jar>
-		
-	</target>
+        
+    </target>
 
-	<target name="-extra-jar" depends="-compile-with-jmh" if="jmh.extrabin_dir">
-	
-	    <delete file="${jmh.jar_file}"/>
-	    <jar jarfile="${jmh.jar_file}" basedir="${jmh.bin_dir}">
-		    <fileset dir="${jmh.extrabin_dir}"/>
-			
+    <target name="-extra-jar" depends="-compile-with-jmh" if="jmh.extrabin_dir">
+    
+        <delete file="${jmh.jar_file}"/>
+        <jar jarfile="${jmh.jar_file}" basedir="${jmh.bin_dir}">
+            <fileset dir="${jmh.extrabin_dir}"/>
+            
             <manifest>
                 <attribute name="Main-Class" value="org.openjdk.jmh.Main"/>
             </manifest>
-			
+            
             <zipfileset src="${jmh-core.jar}" excludes="**/META-INF/services/**" />
             <zipfileset src="${joptsimple.jar}" />
             <zipfileset src="${commonsmath.jar}" />
         </jar>
-	
-	</target>
+    
+    </target>
     
 </project>
