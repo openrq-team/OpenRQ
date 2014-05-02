@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 
 import net.fec.openrq.decoder.SourceBlockDecoder;
@@ -386,5 +387,12 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         // add this repair symbol to the set of received repair symbols
         repairSymbols.add(repair);
+    }
+
+    // ============================= TEST_CODE ============================= //
+
+    static SourceBlockState forceDecode(ArraySourceBlockDecoder decoder) {
+
+        return decoder.decode();
     }
 }

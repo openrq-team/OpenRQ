@@ -14,59 +14,59 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<project default="jar" name="OpenRQ">
-
+<project default="jar" name="OpenRQ" basedir=".">
+    <description>
+        Ant build file for building OpenRQ binary, javadoc and jar files.
+    </description>
 
     <property name="version" value="1.0"/>
-    <property name="mainsrc.dir" value="./src/main"/>
-    <property name="testsrc.dir" value="./src/test"/>
-    <property name="compiled.dir" value="./bin"/>
-    <property name="docs.dir" value="./docs"/>
-    <property name="mainjar.file" value="openrq-${version}.jar"/>
-    <property name="testjar.file" value="openrq-test-${version}.jar"/>
-    <property name="maintest.class" value="net.fec.openrq.TestRunner"/>
+	
+	<property name="top.src_dir" location="src"/>
+	<property name="top.bin_dir" location="bin"/>
+	
+    <property name="main.src_dir" location="${top.src_dir}/main"/>
+    <property name="main.bin_dir" location="${top.bin_dir}/main"/>
+    <property name="main.jar_file" location="openrq-${version}.jar"/>
+	
+	<property name="benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
+	<property name="benchmark.bin_dir" location="${top.bin_dir}/test/benchmark"/>
+	<property name="benchmark.jar_file" location="openrq-${version}-benchmark.jar"/>
+	
+    <property name="docs_dir" location="docs"/>
+	
 
+    <target name="clean" description="Remove binary files.">
 
-    <target name="clean" description="remove compiled files">
-
-        <delete dir="${compiled.dir}"/>
+        <delete dir="${top.bin_dir}"/>
 
     </target>
 
 
     <target name="cleanall" depends="clean"
-            description="remove compiled, javadoc and jar files">
+            description="Remove binary, Javadoc and Jar files.">
 
-        <delete dir="${docs.dir}"/>
-        <delete file="${mainjar.file}"/>
-        <delete file="${testjar.file}"/>
+        <delete dir="${docs_dir}"/>
+        <delete file="${main.jar_file}"/>
+        <delete file="${benchmark.jar_file}"/>
 
     </target>
 
 
     <target name="compile" depends="clean"
-            description="compile the main Java classes">
+            description="Compile the main Java classes.">
 
-        <mkdir dir="${compiled.dir}"/>
-        <javac srcdir="${mainsrc.dir}" destdir="${compiled.dir}"
-               includeAntRuntime="false"/>
-
-    </target>
-
-
-    <target name="compiletest" depends="compile"
-            description="compile the main and test Java classes">
-
-        <javac srcdir="${testsrc.dir}" destdir="${compiled.dir}"
+        <mkdir dir="${main.bin_dir}"/>
+        <javac srcdir="${main.src_dir}" destdir="${main.bin_dir}"
+		       classpath=".:"
                includeAntRuntime="false"/>
 
     </target>
 
 
     <target name="javadoc"
-            description="generates the Javadoc files for the public API">
+            description="Generate the Javadoc files for the public API.">
 
-        <javadoc destdir="${docs.dir}"
+        <javadoc destdir="${docs_dir}"
                  classpath="." source="1.7"
                  access="public"
                  doctitle="OpenRQ API ${version}"
@@ -74,7 +74,7 @@ limitations under the License.
                  noindex="false" nonavbar="false" notree="false"
                  nodeprecated="false" nodeprecatedlist="false">
 
-            <fileset dir="${mainsrc.dir}" defaultexcludes="yes">
+            <fileset dir="${main.src_dir}" defaultexcludes="yes">
                 <exclude name="**/util/**"/>
             </fileset>
             <link href="http://download.oracle.com/javase/7/docs/api/"/>
@@ -85,24 +85,33 @@ limitations under the License.
 
 
     <target name="jar" depends="compile"
-            description="compiles the main Java classes and packs them into a Jar file">
+            description="Compile the main Java classes and pack them into a Jar file.">
 
-        <jar destfile="./${mainjar.file}" basedir="${compiled.dir}"/>
-
-    </target>
-
-
-    <target name="jartest" depends="compiletest"
-            description="compiles the main and test Java classes and packs them into an executable Jar file">
-
-        <jar destfile="./${testjar.file}" basedir="${compiled.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="${maintest.class}"/>
-                <attribute name="Class-Path" value="."/>
-            </manifest>
-        </jar>
+        <jar destfile="${main.jar_file}" basedir="${main.bin_dir}"/>
 
     </target>
+
+	
+	<import file="lib/test/benchmark/jmh-build.xml"/>
+	
+	<!-- overriden private target from jmh-build.xml -->
+	<target name="-init-jmh-properties">
+	    
+	    <property name="jmh.src_dir" location="${benchmark.src_dir}"/>
+        <property name="jmh.bin_dir" location="${benchmark.bin_dir}"/>
+        <property name="jmh.jar_file" location="${benchmark.jar_file}"/>
+		<property name="jmh.extrabin_dir" location="${main.bin_dir}"/>
+		
+	</target>
+	
+
+    <target name="-benchmark" depends="compile,-jmh-jar"/>	
+	<target name="benchmark"
+	        description="Compile the main and benchmark Java classes and pack them into an executable Jar file.">
+	
+	    <subant target="-benchmark" buildpath="." failonerror="true"/>
+		
+	</target>
 
 
 </project>
