@@ -20,17 +20,6 @@ limitations under the License.
     </description>
 
     <property name="version" value="1.0"/>
-<<<<<<< HEAD
-    <property name="mainsrc.dir" value="./src/main"/>
-    <property name="compiled.dir" value="./bin"/>
-    <property name="docs.dir" value="./docs"/>
-    <property name="mainjar.file" value="openrq-${version}.jar"/>
-
-
-    <target name="clean" description="remove compiled files">
-
-        <delete dir="${compiled.dir}"/>
-=======
 	
 	<property name="top.src_dir" location="src"/>
 	<property name="top.bin_dir" location="bin"/>
@@ -49,7 +38,6 @@ limitations under the License.
     <target name="clean" description="Remove binary files.">
 
         <delete dir="${top.bin_dir}"/>
->>>>>>> development
 
     </target>
 
@@ -57,14 +45,9 @@ limitations under the License.
     <target name="cleanall" depends="clean"
             description="Remove binary, Javadoc and Jar files.">
 
-<<<<<<< HEAD
-        <delete dir="${docs.dir}"/>
-        <delete file="${mainjar.file}"/>
-=======
         <delete dir="${docs_dir}"/>
         <delete file="${main.jar_file}"/>
         <delete file="${benchmark.jar_file}"/>
->>>>>>> development
 
     </target>
 
@@ -72,8 +55,6 @@ limitations under the License.
     <target name="compile" depends="clean"
             description="Compile the main Java classes.">
 
-<<<<<<< HEAD
-=======
         <mkdir dir="${main.bin_dir}"/>
         <javac srcdir="${main.src_dir}" destdir="${main.bin_dir}"
 		       classpath=".:"
@@ -82,7 +63,6 @@ limitations under the License.
     </target>
 
 
->>>>>>> development
     <target name="javadoc"
             description="Generate the Javadoc files for the public API.">
 
@@ -111,8 +91,6 @@ limitations under the License.
 
     </target>
 
-<<<<<<< HEAD
-=======
 	
 	<import file="lib/test/benchmark/jmh-build.xml"/>
 	
@@ -135,6 +113,5 @@ limitations under the License.
 		
 	</target>
 
->>>>>>> development
 
 </project>
