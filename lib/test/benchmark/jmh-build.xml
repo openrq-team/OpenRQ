@@ -66,11 +66,7 @@ questions.
     
 
     <!-- private target to be called by importing script -->
-    <target name="-jmh-jar" depends="-init-jmh-properties,-simple-jar,-extra-jar">
-    
-        <delete dir="${jmh.bin_dir}"/>
-    
-    </target>
+    <target name="-jmh-jar" depends="-init-jmh-properties,-simple-jar,-extra-jar"/>
     
     
     <!--
