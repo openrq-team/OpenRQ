@@ -23,6 +23,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
@@ -30,28 +31,27 @@ import net.fec.openrq.parameters.ParameterChecker;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
-import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
 
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5)
-@Fork(1)
+@Warmup(iterations = 5)
+@Measurement(iterations = 10)
+@Fork(2)
 @BenchmarkMode(Mode.AverageTime)
 @State(Scope.Benchmark)
 public class SourceBlockDecodingTest {
 
     // adjust these values for variable tests
     private static final int F = 9_999;
-    private static final int K = 1000;
+    private static final int K = 250;
     private static final int EXTRA_SYMBOLS = 0;
     private static final long RANDOM_SEED = 5687047556870475L;
     private static final boolean PREFER_SOURCE_SYMBOLS = false;
@@ -71,7 +71,9 @@ public class SourceBlockDecodingTest {
                                             OpenRQ.newDecoder(fecParams, EXTRA_SYMBOLS).sourceBlock(0);
 
         for (int esi : esis) {
-            dec.putEncodingPacket(enc.encodingPacket(esi));
+            if (dec.putEncodingPacket(enc.encodingPacket(esi)) == SourceBlockState.DECODING_FAILURE) {
+                throw new IllegalStateException("decoding failed, try using a different set of symbols");
+            }
         }
         return dec;
     }
@@ -125,12 +127,5 @@ public class SourceBlockDecodingTest {
     public void test() {
 
         ArraySourceBlockDecoder.forceDecode(dec);
-    }
-
-    @TearDown(Level.Trial)
-    public void printParams() {
-
-        System.out.println("F =" + F + "; K = " + K + "; overhead = " + EXTRA_SYMBOLS +
-                           "; seed = " + RANDOM_SEED + "; PREFER_SOURCE = " + PREFER_SOURCE_SYMBOLS);
     }
 }
