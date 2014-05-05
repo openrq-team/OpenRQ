@@ -42,9 +42,9 @@ import org.openjdk.jmh.annotations.Warmup;
 
 
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-//@Warmup(iterations = 5)
-//@Measurement(iterations = 10)
-//@Fork(2)
+@Warmup(iterations = 5)
+@Measurement(iterations = 10)
+@Fork(2)
 @BenchmarkMode(Mode.AverageTime)
 @State(Scope.Benchmark)
 public class SourceBlockDecodingTest {
