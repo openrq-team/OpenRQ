@@ -471,7 +471,7 @@ final class LinearSystem {
          */
 
         // maps the index of a row to an object Row (which stores that row's characteristics)
-        Map<Integer, Row> rows = new HashMap<Integer, Row>();
+        Map<Integer, Row> rows = new HashMap<Integer, Row>(M + 1, 1.0f);
 
         // go through all matrix rows counting non-zeros
         for (int row = 0; row < M; row++)
@@ -479,11 +479,12 @@ final class LinearSystem {
 
             int nonZeros = 0, degree = 0;
             boolean isHDPC = false;
+            int noCols = L - u;
 
-            Set<Integer> nodes = new HashSet<Integer>();
+            Set<Integer> nodes = new HashSet<Integer>(noCols);
 
             // check all columns for non-zeros
-            for (int col = 0; col < L - u; col++)
+            for (int col = 0; col < noCols; col++)
             {
                 if (A[row][col] == 0) { // branch prediction
                     continue;
@@ -580,7 +581,7 @@ final class LinearSystem {
                  */
 
                 // allocate memory
-                Map<Integer, Set<Integer>> graph = new HashMap<Integer, Set<Integer>>();
+                Map<Integer, Set<Integer>> graph = new HashMap<Integer, Set<Integer>>(L - u - i + 1, 1.0f);
 
                 // lets go through all the rows... (yet again!)
                 for (Row row : rows.values())
@@ -604,7 +605,7 @@ final class LinearSystem {
                         { // it isn't
 
                             // allocate memory for its neighbours
-                            Set<Integer> edges = new HashSet<Integer>();
+                            Set<Integer> edges = new HashSet<Integer>(L - u - i + 1, 1.0f);
 
                             // add node 2 to its neighbours
                             edges.add(node2);
@@ -624,7 +625,7 @@ final class LinearSystem {
                         { // it isn't
 
                             // allocate memory for its neighbours
-                            Set<Integer> edges = new HashSet<Integer>();
+                            Set<Integer> edges = new HashSet<Integer>(L - u - i + 1, 1.0f);
 
                             // add node 1 to its neighbours
                             edges.add(node1);
@@ -656,7 +657,7 @@ final class LinearSystem {
                 Set<Integer> greatestComponent = null;
 
                 // which nodes have already been used (either in visited or in toVisit)
-                Set<Integer> used = new HashSet<Integer>();
+                Set<Integer> used = new HashSet<Integer>(L - u - i + 1, 1.0f);
 
                 // iterates the nodes in the graph
                 Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
@@ -677,7 +678,7 @@ final class LinearSystem {
                     Integer[] edges = (Integer[])node.getValue().toArray(new Integer[node.getValue().size()]);
 
                     // allocate memory for the set of visited nodes
-                    visited = new HashSet<Integer>();
+                    visited = new HashSet<Integer>(L - u - i);
 
                     // the set of nodes we must still visit
                     List<Integer> toVisit = new LinkedList<Integer>();
@@ -909,7 +910,7 @@ final class LinearSystem {
             {
                 int nonZeros = 0;
                 int line = row.position;
-                Set<Integer> nodes = new HashSet<Integer>();
+                Set<Integer> nodes = new HashSet<Integer>(L - u - i);
 
                 // check all columns for non-zeros
                 for (int col = i; col < L - u; col++)

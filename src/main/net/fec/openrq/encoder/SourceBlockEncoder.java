@@ -30,10 +30,11 @@ import net.fec.openrq.parameters.ParameterChecker;
  * encoded data) form the <em>encoding symbols</em>. The encoding symbols are transmitted inside encoding packets to a
  * RaptorQ decoder (as specified in RFC 6330).
  * <p>
- * A source block can be encoded independently by an instance of this interface, and the block is identified by a source
- * block number, which is carried inside an encoding packet. The method {@link #sourceBlockNumber()} provides the source
- * block number that identifies the source block being encoded. Additionally, the number of source symbols into which
- * the source block is divided is given by the method {@link #numberOfSourceSymbols()}.
+ * A source block can be encoded by an instance of this interface, independently from other source blocks, and the block
+ * is identified by a source block number, which is carried inside an encoding packet. The method
+ * {@link #sourceBlockNumber()} provides the source block number that identifies the source block being encoded.
+ * Additionally, the number of source symbols into which the source block is divided is given by the method
+ * {@link #numberOfSourceSymbols()}.
  * <p>
  * The method {@link #encodingPacket(int)} returns an encoding packet with a specific encoding symbol. The methods
  * {@link #sourcePacketsIterable()} and {@link #repairPacketsIterable(int)} return iterable objects that iterate over
@@ -124,9 +125,9 @@ public interface SourceBlockEncoder {
 
         /**
          * Returns the resulting iterable over encoding packets based on the currently defined properties. Each iterated
-         * encoding packet contains a single encoding symbols within.
+         * encoding packet contains a single encoding symbol within.
          * <p>
-         * <b>Note:</b> <i>The iterator from the resulting iterable will not support the
+         * <b>Note:</b> <i>The iterator from the resulting iterable will <b>not</b> support the
          * {@linkplain java.util.Iterator#remove() remove()} method.</i>
          * 
          * @return the resulting iterable over encoding packets
@@ -324,6 +325,13 @@ public interface SourceBlockEncoder {
     /**
      * Returns an iterable over all source packets, each packet containing one source symbol.
      * <p>
+     * The resulting iterable can iterated using a "foreach" loop:
+     * 
+     * <pre>
+     * for (EncodingPacket packet : iterable) {
+     *   // process packet...
+     * }</pre>
+     * <p>
      * Calling this method is the same as calling:
      * 
      * <pre>
@@ -333,11 +341,19 @@ public interface SourceBlockEncoder {
      * </pre>
      * 
      * @return an iterable over all source packets
+     * @see #newIterableBuilder()
      */
     public Iterable<EncodingPacket> sourcePacketsIterable();
 
     /**
      * Returns an iterable over a number of repair packets, each packet containing one repair symbol.
+     * <p>
+     * The resulting iterable can iterated using a "foreach" loop:
+     * 
+     * <pre>
+     * for (EncodingPacket packet : iterable) {
+     *   // process packet...
+     * }</pre>
      * <p>
      * Calling this method is the same as calling:
      * 
@@ -361,6 +377,7 @@ public interface SourceBlockEncoder {
      * @return an iterable over a number of repair packets
      * @exception IllegalArgumentException
      *                If the number of repair packets is invalid
+     * @see #newIterableBuilder()
      */
     public Iterable<EncodingPacket> repairPacketsIterable(int numRepairPackets);
 }

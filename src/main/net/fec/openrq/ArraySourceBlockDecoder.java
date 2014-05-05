@@ -143,13 +143,18 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     @Override
     public Set<Integer> missingSourceSymbols() {
 
-        // linked hash set preserves insertion ordering (while not being sorted)
-        Set<Integer> missingSourceSymbols = new LinkedHashSet<>();
+        if (isSourceBlockDecoded()) {
+            return Collections.emptySet();
+        }
+        else {
+            // linked hash set preserves insertion ordering (while not being sorted)
+            final Set<Integer> missingSourceSymbols = new LinkedHashSet<>(K - receivedSourceSymbols.cardinality());
 
-        for (int i = receivedSourceSymbols.nextClearBit(0); i < K; i = receivedSourceSymbols.nextClearBit(i + 1))
-            missingSourceSymbols.add(i);
+            for (int i = receivedSourceSymbols.nextClearBit(0); i < K; i = receivedSourceSymbols.nextClearBit(i + 1))
+                missingSourceSymbols.add(i);
 
-        return missingSourceSymbols;
+            return missingSourceSymbols;
+        }
     }
 
     @Override
