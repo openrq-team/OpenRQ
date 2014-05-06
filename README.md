@@ -8,6 +8,8 @@ OpenRQ offers a rich open source Java API to developers who wish to incorporate 
 
 ---
 
-#### [Installing instructions](https://github.com/zemasa/OpenRQ/wiki/Installing)
-#### [Useful background definitions](https://github.com/zemasa/OpenRQ/wiki/Terminology)
-#### [Javadoc files](http://zemasa.github.io/OpenRQ/docs)
+### [OpenRQ Wiki](https://github.com/zemasa/OpenRQ/wiki)
+
+- [Installing instructions](https://github.com/zemasa/OpenRQ/wiki/Installing)
+- [Javadoc files](http://zemasa.github.io/OpenRQ/docs)
+- [Terminology](https://github.com/zemasa/OpenRQ/wiki/Terminology)
