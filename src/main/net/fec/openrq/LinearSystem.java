@@ -678,7 +678,7 @@ final class LinearSystem {
                     Integer[] edges = (Integer[])node.getValue().toArray(new Integer[node.getValue().size()]);
 
                     // allocate memory for the set of visited nodes
-                    visited = new HashSet<Integer>(L - u - i);
+                    visited = new HashSet<Integer>(L - u - i + 1, 1.0f);
 
                     // the set of nodes we must still visit
                     List<Integer> toVisit = new LinkedList<Integer>();
@@ -910,7 +910,7 @@ final class LinearSystem {
             {
                 int nonZeros = 0;
                 int line = row.position;
-                Set<Integer> nodes = new HashSet<Integer>(L - u - i);
+                Set<Integer> nodes = new HashSet<Integer>(L - u - i + 1, 1.0f);
 
                 // check all columns for non-zeros
                 for (int col = i; col < L - u; col++)
