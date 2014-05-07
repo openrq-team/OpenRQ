@@ -50,7 +50,7 @@ questions.
         jmh.jar_file       : path to the resulting self-contained executable Jar
         [jmh.extrabin_dir] : extra directory containing class files to be included in the build
         </echo>
-        <fail message="Must define jmh properties.">
+        <fail message="Must define JMH properties.">
             <condition>
                 <not>
                     <and>
@@ -66,7 +66,7 @@ questions.
     
 
     <!-- private target to be called by importing script -->
-    <target name="-jmh-jar" depends="-init-jmh-properties,-simple-jar,-extra-jar"/>
+    <target name="-jmh-jar" depends="-init-jmh-properties,-simple-jmh-jar,-extra-jmh-jar"/>
     
     
     <!--
@@ -93,7 +93,7 @@ questions.
                
     </target>
 
-    <target name="-simple-jar" depends="-compile-with-jmh" unless="jmh.extrabin_dir">
+    <target name="-simple-jmh-jar" depends="-compile-with-jmh" unless="jmh.extrabin_dir">
         
         <delete file="${jmh.jar_file}"/>
         <jar jarfile="${jmh.jar_file}" basedir="${jmh.bin_dir}">
@@ -108,7 +108,7 @@ questions.
         
     </target>
 
-    <target name="-extra-jar" depends="-compile-with-jmh" if="jmh.extrabin_dir">
+    <target name="-extra-jmh-jar" depends="-compile-with-jmh" if="jmh.extrabin_dir">
     
         <delete file="${jmh.jar_file}"/>
         <jar jarfile="${jmh.jar_file}" basedir="${jmh.bin_dir}">
