@@ -33,12 +33,12 @@ limitations under the License.
     <property name="functional.src_dir" location="${top.src_dir}/test/functional"/>
     <property name="functional.bin_dir" location="${top.bin_dir}/test/functional"/>
     <property name="functional.jar_file" location="openrq-${version}-functional-test.jar"/>
-    <property name="functional.script_file" location="${top.lib_dir}/test/functional/junit-build.xml"/>
+    <property name="functional.script_file" location="${top.lib_dir}/test/functional/build.xml"/>
     
     <property name="benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
     <property name="benchmark.bin_dir" location="${top.bin_dir}/test/benchmark"/>
     <property name="benchmark.jar_file" location="openrq-${version}-benchmark-test.jar"/>
-    <property name="benchmark.script_file" location="${top.lib_dir}/test/benchmark/jmh-build.xml"/>
+    <property name="benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
     
     <property name="docs_dir" location="docs"/>
     
@@ -106,19 +106,20 @@ limitations under the License.
     <import file="${functional.script_file}"/>
     
     <!-- overriden private target from junit-build.xml -->
-    <target name="-init-junit-properties">
+    <target name="-init-functional-properties">
         
-        <property name="junit.src_dir" location="${functional.src_dir}"/>
-        <property name="junit.bin_dir" location="${functional.bin_dir}"/>
-        <property name="junit.jar_file" location="${functional.jar_file}"/>
-        <property name="junit.extrabin_dir" location="${main.bin_dir}"/>
+        <property name="func.src_dir" location="${functional.src_dir}"/>
+        <property name="func.bin_dir" location="${functional.bin_dir}"/>
+        <property name="func.jar_file" location="${functional.jar_file}"/>
+        <property name="func.extrabin_dir" location="${main.bin_dir}"/>
         
     </target>
     
-    <target name="-functional" depends="compile,-junit-jar"/>
+    <target name="-functional" depends="compile,-functional-jar"/>
 
     <target name="functional"
-            description="Compile the main and functional Java classes and pack them into an executable Jar file.">
+            description="Compile the main Java classes and the functional test classes,
+    	                 and pack them into an executable Jar file.">
     
         <subant target="-functional" buildpath="." failonerror="true"/>
         
@@ -129,19 +130,20 @@ limitations under the License.
     <import file="${benchmark.script_file}"/>
     
     <!-- overriden private target from junit-build.xml -->
-    <target name="-init-jmh-properties">
+    <target name="-init-benchmark-properties">
         
-        <property name="jmh.src_dir" location="${benchmark.src_dir}"/>
-        <property name="jmh.bin_dir" location="${benchmark.bin_dir}"/>
-        <property name="jmh.jar_file" location="${benchmark.jar_file}"/>
-        <property name="jmh.extrabin_dir" location="${main.bin_dir}"/>
+        <property name="bench.src_dir" location="${benchmark.src_dir}"/>
+        <property name="bench.bin_dir" location="${benchmark.bin_dir}"/>
+        <property name="bench.jar_file" location="${benchmark.jar_file}"/>
+        <property name="bench.extrabin_dir" location="${main.bin_dir}"/>
         
     </target>
     
-    <target name="-benchmark" depends="compile,-jmh-jar"/>
+    <target name="-benchmark" depends="compile,-benchmark-jar"/>
 
     <target name="benchmark"
-            description="Compile the main and benchmark Java classes and pack them into an executable Jar file.">
+            description="Compile the main Java classes and the benchmark test classes,
+    	                 and pack them into an executable Jar file.">
     
         <subant target="-benchmark" buildpath="." failonerror="true"/>
         

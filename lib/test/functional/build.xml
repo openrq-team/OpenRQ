@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<project name="junit-ant">
+<project name="functional-ant">
     <description>
         Ant build file for building self-contained JUnit Jar.
         This script is intended to be imported from a top-level script.
@@ -25,27 +25,27 @@ limitations under the License.
         When this file is imported the basedir property is ignored,
         so this hack is required to retrieve it.
     -->
-    <dirname property="junit-ant.basedir" file="${ant.file.junit-ant}"/>
+    <dirname property="functional-ant.basedir" file="${ant.file.functional-ant}"/>
 
-    <property name="junit-core.jar" location="${junit-ant.basedir}/junit-4.11.jar"/>
-    <property name="hamcrest-core.jar" location="${junit-ant.basedir}/hamcrest-core-1.3.jar"/>
+    <property name="junit-core.jar" location="${functional-ant.basedir}/junit-4.11.jar"/>
+    <property name="hamcrest-core.jar" location="${functional-ant.basedir}/hamcrest-core-1.3.jar"/>
 
     <!-- private target to be overriden in importing script -->
-    <target name="-init-junit-properties">
+    <target name="-init-functional-properties">
     
         <echo>The following properties may or must be defined ([&lt;prop&gt;] means optional):
-        junit.src_dir        : path to the source files to be compiled along with JUnit
-        junit.bin_dir        : path to the compiled files (JUnit included)
-        junit.jar_file       : path to the resulting self-contained executable Jar
-        [junit.extrabin_dir] : extra directory containing class files to be included in the build
+    	func.src_dir        : path to the source files to be compiled along with the functional testing tool
+    	func.bin_dir        : path to the location of the compiled files
+    	func.jar_file       : path to the resulting self-contained executable Jar
+        [func.extrabin_dir] : extra directory containing class files to be included in the build
         </echo>
-        <fail message="Must define JUnit properties.">
+        <fail message="Must define functional test properties.">
             <condition>
                 <not>
                     <and>
-                        <isset property="junit.src_dir"/>
-                        <isset property="junit.bin_dir"/>
-                        <isset property="junit.jar_file"/>
+                        <isset property="func.src_dir"/>
+                        <isset property="func.bin_dir"/>
+                        <isset property="func.jar_file"/>
                     </and>
                 </not>
             </condition>
@@ -55,23 +55,23 @@ limitations under the License.
     
 
     <!-- private target to be called by importing script -->
-    <target name="-junit-jar" depends="-init-junit-properties,-simple-junit-jar,-extra-junit-jar"/>
+    <target name="-functional-jar" depends="-init-functional-properties,-simple-func-jar,-extra-func-jar"/>
 
     <target name="-compile-with-junit">
         
-        <delete dir="${junit.bin_dir}"/>
-        <mkdir dir="${junit.bin_dir}"/>
+        <delete dir="${func.bin_dir}"/>
+        <mkdir dir="${func.bin_dir}"/>
         
-        <javac srcdir="${junit.src_dir}" destdir="${junit.bin_dir}"
-               classpath="${junit-core.jar}:${hamcrest-core.jar}:${junit.extrabin_dir}"
+        <javac srcdir="${func.src_dir}" destdir="${func.bin_dir}"
+               classpath="${junit-core.jar}:${hamcrest-core.jar}:${func.extrabin_dir}"
                includeAntRuntime="false"/>
                
     </target>
 
-    <target name="-simple-junit-jar" depends="-compile-with-junit" unless="junit.extrabin_dir">
+    <target name="-simple-func-jar" depends="-compile-with-junit" unless="func.extrabin_dir">
         
-        <delete file="${junit.jar_file}"/>
-        <jar jarfile="${junit.jar_file}" basedir="${junit.bin_dir}">
+        <delete file="${func.jar_file}"/>
+        <jar jarfile="${func.jar_file}" basedir="${func.bin_dir}">
             <manifest>
                 <attribute name="Main-Class" value="org.junit.runner.JUnitCore"/>
             </manifest>
@@ -82,11 +82,11 @@ limitations under the License.
         
     </target>
 
-    <target name="-extra-junit-jar" depends="-compile-with-junit" if="junit.extrabin_dir">
+    <target name="-extra-func-jar" depends="-compile-with-junit" if="func.extrabin_dir">
     
-        <delete file="${junit.jar_file}"/>
-        <jar jarfile="${junit.jar_file}" basedir="${junit.bin_dir}">
-            <fileset dir="${junit.extrabin_dir}"/>
+        <delete file="${func.jar_file}"/>
+        <jar jarfile="${func.jar_file}" basedir="${func.bin_dir}">
+            <fileset dir="${func.extrabin_dir}"/>
             
             <manifest>
                 <attribute name="Main-Class" value="org.junit.runner.JUnitCore"/>
