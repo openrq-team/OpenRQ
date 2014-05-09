@@ -73,6 +73,109 @@ public final class ArrayUtils {
         return "index = " + index + "; length = " + length;
     }
 
+
+    /**
+     * Provides empty array instances.
+     */
+    public static final class EmptyArrayOf {
+
+        private static final byte[] BYTES = new byte[0];
+        private static final char[] CHARS = new char[0];
+        private static final short[] SHORTS = new short[0];
+        private static final int[] INTS = new int[0];
+        private static final long[] LONGS = new long[0];
+        private static final float[] FLOATS = new float[0];
+        private static final double[] DOUBLES = new double[0];
+        private static final Object[] OBJECTS = new Object[0];
+
+
+        /**
+         * Returns an empty array of bytes.
+         * 
+         * @return an empty array of bytes
+         */
+        public static byte[] bytes() {
+
+            return BYTES;
+        }
+
+        /**
+         * Returns an empty array of chars.
+         * 
+         * @return an empty array of chars
+         */
+        public static char[] chars() {
+
+            return CHARS;
+        }
+
+        /**
+         * Returns an empty array of shorts.
+         * 
+         * @return an empty array of shorts
+         */
+        public static short[] shorts() {
+
+            return SHORTS;
+        }
+
+        /**
+         * Returns an empty array of ints.
+         * 
+         * @return an empty array of ints
+         */
+        public static int[] ints() {
+
+            return INTS;
+        }
+
+        /**
+         * Returns an empty array of longs.
+         * 
+         * @return an empty array of longs
+         */
+        public static long[] longs() {
+
+            return LONGS;
+        }
+
+        /**
+         * Returns an empty array of floats.
+         * 
+         * @return an empty array of floats
+         */
+        public static float[] floats() {
+
+            return FLOATS;
+        }
+
+        /**
+         * Returns an empty array of doubles.
+         * 
+         * @return an empty array of doubles
+         */
+        public static double[] doubles() {
+
+            return DOUBLES;
+        }
+
+        /**
+         * Returns an empty array of objects.
+         * 
+         * @param <T>
+         *            The container type of the array
+         * @return an empty array of objects
+         */
+        public static <T> T[] objects() {
+
+            @SuppressWarnings("unchecked")
+            final T[] array = (T[])OBJECTS;
+            return array;
+        }
+
+    }
+
+
     private ArrayUtils() {
 
         // not instantiable

@@ -21,8 +21,10 @@ import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
 
+import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.arithmetic.ExtraMath;
+import net.fec.openrq.util.array.ArrayUtils;
 
 
 /**
@@ -209,6 +211,27 @@ final class TestingCommon {
         private boolean isCachedPrime(int n) {
 
             return !bitset.get(n / 2);
+        }
+    }
+
+    /**
+     * Returns dummy values of multiple classes.
+     */
+    static final class Dummy {
+
+        static final long F = 1L;
+        static final int T = 1;
+        static final int Z = 1;
+
+
+        static FECParameters fecParameters() {
+
+            return FECParameters.newParameters(F, T, Z);
+        }
+
+        static byte[] data() {
+
+            return ArrayUtils.EmptyArrayOf.bytes();
         }
     }
 
