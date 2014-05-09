@@ -541,4 +541,11 @@ public final class FECParameters {
         // safe cast because F and T are valid, which prevents integer overflow
         return (int)ExtraMath.ceilDiv(dataLength(), symbolSize());
     }
+
+    @Override
+    public String toString() {
+
+        // TEST_CODE
+        return "FEC Parameters:{F=" + dataLength() + ", T=" + symbolSize() + ", Z=" + numberOfSourceBlocks() + "}";
+    }
 }

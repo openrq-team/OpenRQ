@@ -44,18 +44,17 @@ questions.
     <!-- private target to be overriden in importing script -->
     <target name="-init-benchmark-properties">
     
-        <echo>The following properties may or must be defined ([&lt;prop&gt;] means optional):
-        bench.src_dir        : path to the source files to be compiled along with the benchmark testing tool
-        bench.bin_dir        : path to the location of the compiled files
-        bench.jar_file       : path to the resulting self-contained executable Jar
-        [bench.extrabin_dir] : extra directory containing class files to be included in the build
+        <echo>The following properties must be defined:
+        bench.src_dirs  : collon or semi-collon separated list of directories containing the source files
+        bench.build_dir : path to the location of the compiled files
+        bench.jar_file  : path to the resulting self-contained executable Jar
         </echo>
         <fail message="Must define benchmark test properties.">
             <condition>
                 <not>
                     <and>
-                        <isset property="bench.src_dir"/>
-                        <isset property="bench.bin_dir"/>
+                        <isset property="bench.src_dirs"/>
+                        <isset property="bench.build_dir"/>
                         <isset property="bench.jar_file"/>
                     </and>
                 </not>
@@ -63,10 +62,6 @@ questions.
         </fail>
         
     </target>
-    
-
-    <!-- private target to be called by importing script -->
-    <target name="-benchmark-jar" depends="-init-benchmark-properties,-simple-bench-jar,-extra-bench-jar"/>
     
     
     <!--
@@ -84,19 +79,20 @@ questions.
 
     <target name="-compile-with-jmh">
         
-        <delete dir="${bench.bin_dir}"/>
-        <mkdir dir="${bench.bin_dir}"/>
+        <delete dir="${bench.build_dir}"/>
+        <mkdir dir="${bench.build_dir}"/>
         
-        <javac srcdir="${bench.src_dir}" destdir="${bench.bin_dir}"
-               classpath="${jmh-core.jar}:${jmh-generator-annprocess.jar}:${bench.extrabin_dir}"
+        <javac srcdir="${bench.src_dirs}" destdir="${bench.build_dir}"
+               classpath=".:${jmh-core.jar}:${jmh-generator-annprocess.jar}"
                includeAntRuntime="false"/>
                
     </target>
 
-    <target name="-simple-bench-jar" depends="-compile-with-jmh" unless="bench.extrabin_dir">
-        
+    <!-- private target to be called by importing script -->
+    <target name="-benchmark-jar" depends="-init-benchmark-properties,-compile-with-jmh">
+    
         <delete file="${bench.jar_file}"/>
-        <jar jarfile="${bench.jar_file}" basedir="${bench.bin_dir}">
+        <jar jarfile="${bench.jar_file}" basedir="${bench.build_dir}">
             <manifest>
                 <attribute name="Main-Class" value="org.openjdk.jmh.Main"/>
             </manifest>
@@ -105,24 +101,7 @@ questions.
             <zipfileset src="${joptsimple.jar}" />
             <zipfileset src="${commonsmath.jar}" />
         </jar>
-        
-    </target>
 
-    <target name="-extra-bench-jar" depends="-compile-with-jmh" if="bench.extrabin_dir">
-    
-        <delete file="${bench.jar_file}"/>
-        <jar jarfile="${bench.jar_file}" basedir="${bench.bin_dir}">
-            <fileset dir="${bench.extrabin_dir}"/>
-            
-            <manifest>
-                <attribute name="Main-Class" value="org.openjdk.jmh.Main"/>
-            </manifest>
-            
-            <zipfileset src="${jmh-core.jar}" excludes="**/META-INF/services/**" />
-            <zipfileset src="${joptsimple.jar}" />
-            <zipfileset src="${commonsmath.jar}" />
-        </jar>
-    
     </target>
     
 </project>

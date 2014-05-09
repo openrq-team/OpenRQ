@@ -63,6 +63,70 @@ public final class ExtraMath {
         }
     }
 
+    /**
+     * Returns the (modular in case of overflow) integer power.
+     * 
+     * @param base
+     *            The power base
+     * @param exp
+     *            The power exponent
+     * @return base^^exp
+     * @exception If
+     *                the exponent is negative or if both base and exponent are equal to zero
+     */
+    public static int integerPow(int base, int exp) {
+
+        if (exp < 0) throw new IllegalArgumentException("exponent must be non-negative");
+        if (base == 0) {
+            if (exp == 0) throw new IllegalArgumentException("0^^0 is undefined");
+            return 0;
+        }
+
+        // exponentiation by squaring
+
+        int result = 1;
+        while (exp != 0)
+        {
+            if ((exp & 1) == 1) {
+                result *= base;
+            }
+            exp >>= 1;
+            base *= base;
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the (modular in case of overflow) long integer power.
+     * 
+     * @param base
+     *            The power base
+     * @param exp
+     *            The power exponent
+     * @return base^^exp
+     * @exception If
+     *                the exponent is negative or if both base and exponent are equal to zero
+     */
+    public static int integerPow(long base, long exp) {
+
+        if (exp < 0) throw new IllegalArgumentException("exponent must be non-negative");
+
+        // exponentiation by squaring
+
+        int result = 1;
+        while (exp != 0)
+        {
+            if ((exp & 1) == 1) {
+                result *= base;
+            }
+            exp >>= 1;
+            base *= base;
+        }
+
+        return result;
+    }
+
     private ExtraMath() {
 
         // not instantiable

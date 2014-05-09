@@ -1,4 +1,6 @@
 package net.fec.openrq;
+
+
 /*
  * Copyright 2014 Jose Lopes
  * 
@@ -21,7 +23,9 @@ import org.junit.runners.Suite.SuiteClasses;
 
 
 @RunWith(Suite.class)
-@SuiteClasses({})
+@SuiteClasses({
+               DataIntegrityCheckTest.class
+})
 public class AllTests {
 
     // placeholder class for inclusion of remaining test classes

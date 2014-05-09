@@ -18,7 +18,6 @@ package net.fec.openrq;
 
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 
-import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
-import net.fec.openrq.parameters.ParameterChecker;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -52,7 +50,6 @@ public class SourceBlockDecodingTest {
     private static final int F = 9_999;
     private static final int K = 250;
     private static final int EXTRA_SYMBOLS = 0;
-    private static final long RANDOM_SEED = 5687047556870475L;
     private static final boolean PREFER_SOURCE_SYMBOLS = false;
 
 
@@ -60,10 +57,10 @@ public class SourceBlockDecodingTest {
 
         // force single source block
         final FECParameters fecParams = FECParameters.newParameters(F, ceilDiv(F, K), 1);
-        final Random rand = new Random(RANDOM_SEED);
+        final Random rand = TestingCommon.newSeededRandom();
 
-        final byte[] data = generateRandomData(rand, F);
-        final Set<Integer> esis = generateRandomSymbolESIs(rand, K + EXTRA_SYMBOLS, PREFER_SOURCE_SYMBOLS);
+        final byte[] data = TestingCommon.randomBytes(F, rand);
+        final Set<Integer> esis = randomESIs(rand);
         final SourceBlockEncoder enc = OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
 
         final ArraySourceBlockDecoder dec = (ArraySourceBlockDecoder) /* safe cast */
@@ -77,39 +74,15 @@ public class SourceBlockDecodingTest {
         return dec;
     }
 
-    private static byte[] generateRandomData(Random rand, int size) {
+    private static Set<Integer> randomESIs(Random rand) {
 
-        final byte[] data = new byte[size];
-        rand.nextBytes(data);
-        return data;
-    }
-
-    private static Set<Integer> generateRandomSymbolESIs(Random rand, int numSymbols, boolean preferSourceSymbols) {
-
-        final int maxESI = ParameterChecker.maxEncodingSymbolID();
-
-        final Set<Integer> esis = new LinkedHashSet<>(); // preserve randomized ordering
-
-        if (preferSourceSymbols) {
-            while (esis.size() < numSymbols) {
-                // exponential distribution with mean K/2
-                final int esi = (int)((-K / 2D) * Math.log(1 - rand.nextDouble()));
-                // repeat sampling if a repeated ESI is obtained
-                esis.add(Math.min(esi, maxESI));
-            }
+        final int numSymbols = K + EXTRA_SYMBOLS;
+        if (PREFER_SOURCE_SYMBOLS) {
+            return TestingCommon.randomSrcRepESIs(rand, numSymbols, K);
         }
         else {
-            // Floyd's Algorithm for random sampling (uniform over all possible ESIs)
-            for (int i = maxESI - numSymbols; i < maxESI; i++) {
-                // try to add a random index between 0 and i (inclusive)
-                if (!esis.add(rand.nextInt(i + 1))) {
-                    // if already present, choose index i, which is surely not present yet
-                    esis.add(i);
-                }
-            }
+            return TestingCommon.randomAnyESIs(rand, numSymbols);
         }
-
-        return esis;
     }
 
 
@@ -127,7 +100,8 @@ public class SourceBlockDecodingTest {
 
         ArraySourceBlockDecoder.forceDecode(dec);
     }
-    
+
+    // for CPU/memory profiling
     public static void main(String[] args) {
 
         final ArraySourceBlockDecoder dec = newRandomSBDecoder();

@@ -33,18 +33,17 @@ limitations under the License.
     <!-- private target to be overriden in importing script -->
     <target name="-init-functional-properties">
     
-        <echo>The following properties may or must be defined ([&lt;prop&gt;] means optional):
-    	func.src_dir        : path to the source files to be compiled along with the functional testing tool
-    	func.bin_dir        : path to the location of the compiled files
-    	func.jar_file       : path to the resulting self-contained executable Jar
-        [func.extrabin_dir] : extra directory containing class files to be included in the build
+        <echo>The following properties must be defined:
+        func.src_dirs  : collon or semi-collon separated list of directories containing the source files
+        func.build_dir : path to the location of the compiled files
+        func.jar_file  : path to the resulting self-contained executable Jar
         </echo>
         <fail message="Must define functional test properties.">
             <condition>
                 <not>
                     <and>
-                        <isset property="func.src_dir"/>
-                        <isset property="func.bin_dir"/>
+                        <isset property="func.src_dirs"/>
+                        <isset property="func.build_dir"/>
                         <isset property="func.jar_file"/>
                     </and>
                 </not>
@@ -52,50 +51,31 @@ limitations under the License.
         </fail>
         
     </target>
-    
-
-    <!-- private target to be called by importing script -->
-    <target name="-functional-jar" depends="-init-functional-properties,-simple-func-jar,-extra-func-jar"/>
 
     <target name="-compile-with-junit">
         
-        <delete dir="${func.bin_dir}"/>
-        <mkdir dir="${func.bin_dir}"/>
+        <delete dir="${func.build_dir}"/>
+        <mkdir dir="${func.build_dir}"/>
         
-        <javac srcdir="${func.src_dir}" destdir="${func.bin_dir}"
-               classpath="${junit-core.jar}:${hamcrest-core.jar}:${func.extrabin_dir}"
+        <javac srcdir="${func.src_dirs}" destdir="${func.build_dir}"
+               classpath=".:${junit-core.jar}:${hamcrest-core.jar}"
                includeAntRuntime="false"/>
                
     </target>
 
-    <target name="-simple-func-jar" depends="-compile-with-junit" unless="func.extrabin_dir">
-        
+    <!-- private target to be called by importing script -->
+    <target name="-functional-jar" depends="-init-functional-properties,-compile-with-junit">
+    
         <delete file="${func.jar_file}"/>
-        <jar jarfile="${func.jar_file}" basedir="${func.bin_dir}">
+        <jar jarfile="${func.jar_file}" basedir="${func.build_dir}">
             <manifest>
                 <attribute name="Main-Class" value="org.junit.runner.JUnitCore"/>
             </manifest>
-            
-            <zipfileset src="${junit-core.jar}" />
-            <zipfileset src="${hamcrest-core.jar}" />
-        </jar>
-        
-    </target>
 
-    <target name="-extra-func-jar" depends="-compile-with-junit" if="func.extrabin_dir">
-    
-        <delete file="${func.jar_file}"/>
-        <jar jarfile="${func.jar_file}" basedir="${func.bin_dir}">
-            <fileset dir="${func.extrabin_dir}"/>
-            
-            <manifest>
-                <attribute name="Main-Class" value="org.junit.runner.JUnitCore"/>
-            </manifest>
-            
             <zipfileset src="${junit-core.jar}" />
             <zipfileset src="${hamcrest-core.jar}" />
         </jar>
-    
+
     </target>
     
 </project>
