@@ -29,34 +29,228 @@ import org.junit.runner.RunWith;
 @RunWith(Enclosed.class)
 public final class OpenRQClassExceptionTest {
 
+    private static FECParameters variableDummyParams(int dataLength) {
+
+        return FECParameters.newParameters(dataLength, TestingCommon.Dummy.T, TestingCommon.Dummy.Z);
+    }
+
+
     public static final class NewEncoder {
 
-        @Test(expected = NullPointerException.class)
-        public void testNullData() {
+        @Test
+        public void testNoExceptions() {
 
-            OpenRQ.newEncoder(null, TestingCommon.Dummy.fecParameters());
+            final byte[] data = TestingCommon.Dummy.data();
+            final FECParameters fecParams = TestingCommon.Dummy.fecParameters();
+
+            OpenRQ.newEncoder(data, fecParams);
         }
 
         @Test(expected = NullPointerException.class)
-        public void testNullFECParams() {
+        public void test_NPE_data() {
 
-            OpenRQ.newEncoder(TestingCommon.Dummy.data(), null);
+            final byte[] data = null;
+            final FECParameters fecParams = TestingCommon.Dummy.fecParameters();
+
+            OpenRQ.newEncoder(data, fecParams);
+        }
+
+        @Test(expected = NullPointerException.class)
+        public void test_NPE_params() {
+
+            final byte[] data = TestingCommon.Dummy.data();
+            final FECParameters fecParams = null;
+
+            OpenRQ.newEncoder(data, fecParams);
         }
 
         @Test(expected = IllegalArgumentException.class)
-        public void testIllegalFECParams() {
+        public void test_IAE() {
 
-            OpenRQ.newEncoder(TestingCommon.Dummy.data(),
-                FECParameters.newParameters(Integer.MAX_VALUE + 1,
-                    TestingCommon.Dummy.T, TestingCommon.Dummy.Z));
+            final byte[] data = TestingCommon.Dummy.data();
+            final int dataLength = Integer.MAX_VALUE + 1;
+            final FECParameters fecParams = variableDummyParams(dataLength);
+
+            OpenRQ.newEncoder(data, fecParams);
         }
 
         @Test(expected = IndexOutOfBoundsException.class)
-        public void testLargerDataLength() {
+        public void test_IOOBE() {
 
-            OpenRQ.newEncoder(new byte[1],
-                FECParameters.newParameters(2,
-                    TestingCommon.Dummy.T, TestingCommon.Dummy.Z));
+            final byte[] data = new byte[1];
+            final int dataLength = 2;
+            final FECParameters fecParams = variableDummyParams(dataLength);
+
+            OpenRQ.newEncoder(data, fecParams);
+        }
+    }
+
+    public static final class NewEncoderOffset {
+
+        @Test
+        public void testNoExceptions() {
+
+            final byte[] data = TestingCommon.Dummy.data();
+            final int offset = 0;
+            final FECParameters fecParams = TestingCommon.Dummy.fecParameters();
+
+            OpenRQ.newEncoder(data, offset, fecParams);
+        }
+
+        @Test(expected = NullPointerException.class)
+        public void test_NPE_data() {
+
+            final byte[] data = null;
+            final int offset = 0;
+            final FECParameters fecParams = TestingCommon.Dummy.fecParameters();
+
+            OpenRQ.newEncoder(data, offset, fecParams);
+        }
+
+        @Test(expected = NullPointerException.class)
+        public void test_NPE_params() {
+
+            final byte[] data = TestingCommon.Dummy.data();
+            final int offset = 0;
+            final FECParameters fecParams = null;
+
+            OpenRQ.newEncoder(data, offset, fecParams);
+        }
+
+        @Test(expected = IllegalArgumentException.class)
+        public void test_IAE() {
+
+            final byte[] data = TestingCommon.Dummy.data();
+            final int offset = 0;
+            final int dataLength = Integer.MAX_VALUE + 1;
+            final FECParameters fecParams = variableDummyParams(dataLength);
+
+            OpenRQ.newEncoder(data, offset, fecParams);
+        }
+
+        @Test(expected = IndexOutOfBoundsException.class)
+        public void test_IOOBE_negOffset() {
+
+            final byte[] data = TestingCommon.Dummy.data();
+            final int offset = -1;
+            final FECParameters fecParams = TestingCommon.Dummy.fecParameters();
+
+            OpenRQ.newEncoder(data, offset, fecParams);
+        }
+
+        @Test(expected = IndexOutOfBoundsException.class)
+        public void test_IOOBE_largeOffset() {
+
+            final byte[] data = new byte[1];
+            final int offset = 1;
+            final int dataLength = 1;
+            final FECParameters fecParams = variableDummyParams(dataLength);
+
+            OpenRQ.newEncoder(data, offset, fecParams);
+        }
+
+        @Test(expected = IndexOutOfBoundsException.class)
+        public void test_IOOBE_dataLength() {
+
+            final byte[] data = new byte[1];
+            final int offset = 0;
+            final int dataLength = 2;
+            final FECParameters fecParams = variableDummyParams(dataLength);
+
+            OpenRQ.newEncoder(data, offset, fecParams);
+        }
+    }
+
+    public static final class NewDecoder {
+
+        @Test
+        public void testNoExceptions() {
+
+            final FECParameters fecParams = TestingCommon.Dummy.fecParameters();
+            final int extraSymbols = 0;
+
+            OpenRQ.newDecoder(fecParams, extraSymbols);
+        }
+
+        @Test(expected = NullPointerException.class)
+        public void test_NPE() {
+
+            final FECParameters fecParams = null;
+            final int extraSymbols = 0;
+
+            OpenRQ.newDecoder(fecParams, extraSymbols);
+        }
+
+        @Test(expected = IllegalArgumentException.class)
+        public void test_IAE_dataLength() {
+
+            final int dataLength = Integer.MAX_VALUE;
+            final FECParameters fecParams = variableDummyParams(dataLength);
+            final int extraSymbols = 0;
+
+            OpenRQ.newDecoder(fecParams, extraSymbols);
+        }
+
+        @Test(expected = IllegalArgumentException.class)
+        public void test_IAE_negExtraSymbols() {
+
+            final FECParameters fecParams = TestingCommon.Dummy.fecParameters();
+            final int extraSymbols = -1;
+
+            OpenRQ.newDecoder(fecParams, extraSymbols);
+        }
+    }
+
+    public static final class MinRepairSymbols {
+
+        @Test
+        public void testNoExceptions() {
+
+            final int numSourceSymbols = 1;
+            final int extraSymbols = 0;
+            final double loss = 0D;
+
+            OpenRQ.minRepairSymbols(numSourceSymbols, extraSymbols, loss);
+        }
+
+        @Test(expected = IllegalArgumentException.class)
+        public void test_IAE_nonPosNumSourceSymbols() {
+
+            final int numSourceSymbols = 0;
+            final int extraSymbols = 0;
+            final double loss = 0D;
+
+            OpenRQ.minRepairSymbols(numSourceSymbols, extraSymbols, loss);
+        }
+
+        @Test(expected = IllegalArgumentException.class)
+        public void test_IAE_negExtraSymbols() {
+
+            final int numSourceSymbols = 1;
+            final int extraSymbols = -1;
+            final double loss = 0D;
+
+            OpenRQ.minRepairSymbols(numSourceSymbols, extraSymbols, loss);
+        }
+
+        @Test(expected = IllegalArgumentException.class)
+        public void test_IAE_negLoss() {
+
+            final int numSourceSymbols = 1;
+            final int extraSymbols = 0;
+            final double loss = -1D;
+
+            OpenRQ.minRepairSymbols(numSourceSymbols, extraSymbols, loss);
+        }
+
+        @Test(expected = IllegalArgumentException.class)
+        public void test_IAE_largeLoss() {
+
+            final int numSourceSymbols = 1;
+            final int extraSymbols = 0;
+            final double loss = 2D;
+
+            OpenRQ.minRepairSymbols(numSourceSymbols, extraSymbols, loss);
         }
     }
 }

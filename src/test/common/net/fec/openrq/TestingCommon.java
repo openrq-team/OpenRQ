@@ -16,6 +16,8 @@
 package net.fec.openrq;
 
 
+import static net.fec.openrq.util.arithmetic.ExtraMath.integerPow;
+
 import java.util.BitSet;
 import java.util.LinkedHashSet;
 import java.util.Random;
@@ -23,8 +25,6 @@ import java.util.Set;
 
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.arithmetic.ExtraMath;
-import net.fec.openrq.util.array.ArrayUtils;
 
 
 /**
@@ -86,39 +86,35 @@ final class TestingCommon {
 
     static int[] primeAndPowerDistribution(int base, int maxExponent) {
 
-        ExtraMath.integerPow(base, maxExponent); // test a power calculation to validate arguments
+        integerPow(base, maxExponent); // test a power calculation to validate arguments
         if (base <= 0) throw new IllegalArgumentException("base must be positive");
 
         final Sieve sieve = new Sieve();
 
-        // distribution.length == approx. number of primes + number of powers
-        // distribution.length == approx. 1 + 2 + ... + maxExponent + (maxExponent+1)
+        // distribution.size() == approx. number of primes + number of powers
+        // distribution.size() == approx. 1 + 2 + ... + maxExponent + (maxExponent+1)
         final LinkedHashSet<Integer> distribution = new LinkedHashSet<>(((maxExponent + 1) * (maxExponent + 2)) / 2);
 
         for (int exp = 0; exp < maxExponent; exp++) {
-            // this provides a sort of uniform distribution of primes of limited size
-            final int increment = (exp == 0) ? 1 : ((1 << (exp + 1)) - (1 << exp)) / exp;
+            // collect some primes between current and next power
+            final int currPower = integerPow(base, exp);
+            final int nextPower = integerPow(base, exp + 1);
 
-            // prepare the prime number search
-            int n = ExtraMath.integerPow(base, exp);
+            // this provides a sort of uniform distribution of primes of limited size
+            final int inc = (exp == 0) ? 1 : (nextPower - currPower) / exp;
 
             // add the current power to the distribution
-            distribution.add(n);
+            distribution.add(currPower);
 
-            // collect some primes between current and next power
-            final int fence = ExtraMath.integerPow(base, exp + 1);
-            while (n < fence) {
-                n = sieve.nextPrimeInclusive(n);
-                if (n < fence) {
-                    // add the collected prime to the distribution
-                    distribution.add(n);
-                }
-                n += increment;
+            // start the prime number search at current power
+            for (int n = sieve.nextPrimeInclusive(currPower); n < nextPower; n = sieve.nextPrimeInclusive(n + inc)) {
+                // add the collected prime to the distribution
+                distribution.add(n);
             }
         }
 
         // add the last power to the distribution
-        distribution.add(ExtraMath.integerPow(base, maxExponent));
+        distribution.add(integerPow(base, maxExponent));
 
         final int[] intDist = new int[distribution.size()];
         int idx = 0;
@@ -145,8 +141,8 @@ final class TestingCommon {
 
         Sieve() {
 
-            // we expect isPrime queries for N <= 2^^20
-            this.bitset = new BitSet(1 >> 20);
+            // we expect isPrime queries for N <= 2^^15
+            this.bitset = new BitSet(1 >> 15);
             this.last = 3;
         }
 
@@ -231,7 +227,7 @@ final class TestingCommon {
 
         static byte[] data() {
 
-            return ArrayUtils.EmptyArrayOf.bytes();
+            return new byte[(int)F];
         }
     }
 

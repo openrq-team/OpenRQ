@@ -67,18 +67,18 @@ public final class DataIntegrityCheckTest {
 
         // an estimation of how many sets of FEC parameters will be needed (not every combination is valid)
         final List<Object[]> params = new ArrayList<>((Fs.length * Ks.length * Zs.length) / 2);
-        
+
         // fill the list with FEC parameters of many combinations
         // start with the highest parameters so we can perceive immediately the maximum time per test
         for (int f = Fs.length - 1; f >= 0; f--) {
             final int F = Fs[f];
-            
+
             for (int k = Ks.length - 1; k >= 0; k--) {
                 final int K = Ks[k];
-                
+
                 for (int z = Zs.length - 1; z >= 0; z--) {
                     final int Z = Zs[z];
-                    
+
                     final int T = ExtraMath.ceilDiv(F, K);
                     if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
                         params.add(new Object[] {FECParameters.newParameters(F, T, Z)});
@@ -87,7 +87,7 @@ public final class DataIntegrityCheckTest {
             }
         }
 
-        System.out.println("Testing " + params.size() + " data integrity tests...");
+        System.out.println("Testing " + 2 * params.size() + " data integrity tests...");
         return params;
     }
 
@@ -97,7 +97,25 @@ public final class DataIntegrityCheckTest {
 
 
     @Test
-    public void checkData() {
+    public void checkDataWithSourceSymbols() {
+
+        final byte[] data = TestingCommon.randomBytes((int)fecParams.dataLength(), RAND);
+        final ArrayDataEncoder enc = OpenRQ.newEncoder(data, fecParams);
+        final ArrayDataDecoder dec = OpenRQ.newDecoder(fecParams, 0);
+
+        for (SourceBlockEncoder sbEnc : enc.sourceBlockIterable()) {
+            final SourceBlockDecoder sbDec = dec.sourceBlock(sbEnc.sourceBlockNumber());
+            for (EncodingPacket srcPacket : sbEnc.sourcePacketsIterable()) {
+                sbDec.putEncodingPacket(srcPacket);
+            }
+        }
+
+        // compare the original and decoded data
+        Assert.assertArrayEquals(data, dec.dataArray());
+    }
+
+    @Test
+    public void checkDataWithRandomSymbols() {
 
         final byte[] data = TestingCommon.randomBytes((int)fecParams.dataLength(), RAND);
         final ArrayDataEncoder enc = OpenRQ.newEncoder(data, fecParams);

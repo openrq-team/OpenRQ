@@ -311,7 +311,7 @@ public interface SourceBlockEncoder {
      * Iterable&lt;EncodingPacket&gt; iterable = newIterableBuilder().startAt(50)
      *                                                         .endAt(100)
      *                                                         .build();</pre>
-     * The resulting iterable can iterated using a "foreach" loop:
+     * The resulting iterable can be iterated using a "foreach" loop:
      * 
      * <pre>
      * for (EncodingPacket packet : iterable) {
@@ -325,7 +325,7 @@ public interface SourceBlockEncoder {
     /**
      * Returns an iterable over all source packets, each packet containing one source symbol.
      * <p>
-     * The resulting iterable can iterated using a "foreach" loop:
+     * The resulting iterable can be iterated using a "foreach" loop:
      * 
      * <pre>
      * for (EncodingPacket packet : iterable) {
@@ -348,7 +348,7 @@ public interface SourceBlockEncoder {
     /**
      * Returns an iterable over a number of repair packets, each packet containing one repair symbol.
      * <p>
-     * The resulting iterable can iterated using a "foreach" loop:
+     * The resulting iterable can be iterated using a "foreach" loop:
      * 
      * <pre>
      * for (EncodingPacket packet : iterable) {
