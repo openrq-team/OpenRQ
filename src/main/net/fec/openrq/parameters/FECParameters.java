@@ -530,6 +530,25 @@ public final class FECParameters {
     }
 
     /**
+     * Returns the value returned by {@link #dataLength()} cast to an {@code int}, unless the cast causes the data
+     * length value to overflow (when {@code dataLength() > Integer.MAX_VALUE}).
+     * 
+     * @return the value returned by {@code dataLength()} cast to an {@code int}
+     * @exception ArithmeticException
+     *                If the cast causes the data length value to overflow
+     *                (when {@code dataLength() > Integer.MAX_VALUE})
+     */
+    public int dataLengthAsInt() {
+
+        final long F = dataLength();
+        if (F > Integer.MAX_VALUE) {
+            throw new ArithmeticException("data length value does not fit inside an int");
+        }
+
+        return (int)F;
+    }
+
+    /**
      * Returns the total number of source symbols into which the source data is divided.
      * <p>
      * This is a convenience method that simply returns the result of {@code ceiling(dataLength()/symbolSize())}.
