@@ -42,7 +42,8 @@ limitations under the License.
     <property name="test-benchmark.jar_file" location="openrq-${version}-benchmark-test.jar"/>
     <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
     
-    <property name="docs_dir" location="docs"/>
+    <property name="docs.src_dir" location="${top.src_dir}/docs"/>
+    <property name="docs.build_dir" location="docs"/>
 
 
 <!-- ================ Script imports ================ -->
@@ -60,7 +61,7 @@ limitations under the License.
     <target name="cleanall" depends="clean"
             description="Remove binary, Javadoc and Jar files.">
 
-        <delete dir="${docs_dir}"/>
+        <delete dir="${docs.build_dir}"/>
         <delete file="${main.jar_file}"/>
         <delete file="${test-functional.jar_file}"/>
         <delete file="${test-benchmark.jar_file}"/>
@@ -93,7 +94,7 @@ limitations under the License.
     <target name="javadoc"
             description="Generate the Javadoc files for the public API.">
 
-        <javadoc destdir="${docs_dir}"
+        <javadoc destdir="${docs.build_dir}"
                  classpath="." source="1.7"
                  access="public"
                  doctitle="OpenRQ API ${version}"
@@ -107,6 +108,10 @@ limitations under the License.
             <link href="http://download.oracle.com/javase/7/docs/api/"/>
 
         </javadoc>
+        
+        <copy todir="${docs.build_dir}" overwrite="true">
+            <fileset dir="${docs.src_dir}"/>
+        </copy>
 
     </target>
 
