@@ -542,6 +542,47 @@ public final class FECParameters {
         return (int)ExtraMath.ceilDiv(dataLength(), symbolSize());
     }
 
+    /**
+     * Returns {@code true} if, and only if, this instance is equal to another object.
+     * <p>
+     * This instance (<b>this</b>) is equal to another object (<b>obj</b>), if and only if:
+     * <ul>
+     * <li><b>obj</b> is non-null
+     * <li>and <b>obj</b> is an instance of {@code FECParameters}
+     * <li>and <b>this</b>.{@link #dataLength()} == <b>obj</b>.{@code dataLength()}
+     * <li>and <b>this</b>.{@link #symbolSize()} == <b>obj</b>.{@code symbolSize()}
+     * <li>and <b>this</b>.{@link #numberOfSourceBlocks()} == <b>obj</b>.{@code numberOfSourceBlocks()}
+     * <li>and <b>this</b>.{@link #numberOfSubBlocks()} == <b>obj</b>.{@code numberOfSubBlocks()}
+     * <li>and <b>this</b>.{@link #symbolAlignment()} == <b>obj</b>.{@code symbolAlignment()}
+     * </ul>
+     */
+    @Override
+    public boolean equals(Object obj) {
+
+        // the first condition filters null objects, so it is always safe to call method areEqual
+        return obj instanceof FECParameters && areEqual(this, (FECParameters)obj);
+    }
+
+    // requires non-null arguments
+    private static boolean areEqual(FECParameters a, FECParameters b) {
+
+        // it is simpler to compare the OTIs, since they contain all FEC parameters within
+        return (a.commonFecOTI == b.commonFecOTI) && (a.schemeSpecFecOTI == b.schemeSpecFecOTI);
+    }
+
+    /**
+     * Returns a hash code value based on all FEC parameters in this instance.
+     */
+    @Override
+    public int hashCode() {
+
+        // it is simpler to use the OTIs, since they contain all FEC parameters within
+        final ByteBuffer buf = ByteBuffer.allocate(SizeOf.LONG + SizeOf.INT);
+        buf.putLong(commonFecOTI).putInt(schemeSpecFecOTI).rewind();
+
+        return buf.hashCode();
+    }
+
     @Override
     public String toString() {
 
