@@ -242,7 +242,7 @@ public final class ParameterChecker {
         if (Z > Kt || Z < ceilDiv(Kt, K_max)) {
             return String.format(
                 "a data length of %d bytes and a symbol size of %d bytes require a number of source blocks (%d) within [%d, %d]",
-                F, T, Z, ceilDiv(Kt, K_max), Kt);
+                F, T, Z, ceilDiv(Kt, K_max), Math.min(Z_max, Kt));
         }
 
         // sub-symbol size must be at least Al
