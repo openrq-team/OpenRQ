@@ -25,6 +25,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 @SuiteClasses({
                DataIntegrityCheckTest.class,
+               OpenRQClassTest.class,
                OpenRQClassExceptionTest.class
 })
 public class AllTests {

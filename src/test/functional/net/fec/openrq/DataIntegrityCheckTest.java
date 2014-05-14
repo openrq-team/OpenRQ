@@ -99,7 +99,7 @@ public final class DataIntegrityCheckTest {
     @Test
     public void checkDataWithSourceSymbols() {
 
-        final byte[] data = TestingCommon.randomBytes((int)fecParams.dataLength(), RAND);
+        final byte[] data = TestingCommon.randomBytes(fecParams.dataLengthAsInt(), RAND);
         final ArrayDataEncoder enc = OpenRQ.newEncoder(data, fecParams);
         final ArrayDataDecoder dec = OpenRQ.newDecoder(fecParams, 0);
 
@@ -117,7 +117,7 @@ public final class DataIntegrityCheckTest {
     @Test
     public void checkDataWithRandomSymbols() {
 
-        final byte[] data = TestingCommon.randomBytes((int)fecParams.dataLength(), RAND);
+        final byte[] data = TestingCommon.randomBytes(fecParams.dataLengthAsInt(), RAND);
         final ArrayDataEncoder enc = OpenRQ.newEncoder(data, fecParams);
         final ArrayDataDecoder dec = OpenRQ.newDecoder(fecParams, 0);
 

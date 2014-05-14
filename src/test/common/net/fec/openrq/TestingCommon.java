@@ -211,13 +211,13 @@ final class TestingCommon {
     }
 
     /**
-     * Returns dummy values of multiple classes.
+     * Returns minimal values of FEC parameters and array sizes.
      */
-    static final class Dummy {
+    static final class Minimal {
 
-        static final long F = 1L;
-        static final int T = 1;
-        static final int Z = 1;
+        static final long F = ParameterChecker.minDataLength();
+        static final int T = ParameterChecker.minSymbolSize();
+        static final int Z = ParameterChecker.minNumSourceBlocks();
 
 
         static FECParameters fecParameters() {

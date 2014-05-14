@@ -42,7 +42,7 @@ public final class ArrayDataDecoder implements DataDecoder {
             throw new IllegalArgumentException("negative number of extra symbols");
         }
 
-        final byte[] dataArray = new byte[(int)fecParams.dataLength()];
+        final byte[] dataArray = new byte[fecParams.dataLengthAsInt()];
         return new ArrayDataDecoder(dataArray, fecParams, extraSymbols);
     }
 
