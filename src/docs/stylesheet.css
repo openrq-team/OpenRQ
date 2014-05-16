@@ -11,7 +11,7 @@ body {
 }
 a:link, a:visited {
     text-decoration:underline;
-    color:#5bcc51;
+    color:#67bf5f;
 }
 a:hover, a:focus {
     text-decoration:underline;
@@ -19,7 +19,7 @@ a:hover, a:focus {
 }
 a:active {
     text-decoration:underline;
-    color:#5bcc51;
+    color:#67bf5f;
 }
 a[name] {
     color:#353833;
