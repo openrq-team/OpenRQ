@@ -18,29 +18,6 @@
  * <p>
  * The OpenRQ API provides a way to encode and decode data according to the fountain erasure code RaptorQ, as defined in
  * <a href="http://tools.ietf.org/html/rfc6330">RFC 6330</a>.
- * <h2>Useful background definitions</h2>
- * <dl>
- * <dt><b>Forward Error Correction (FEC):</b></dt>
- * <dd>A technique for the recovery of errors in data disseminated over unreliable or noisy communication channels. The
- * central idea is that the sender encodes the message in a redundant way by applying an error-correcting code, which
- * allows the receiver to repair the errors.</dd>
- * <dt><b>Erasure code:</b></dt>
- * <dd>A FEC code with the capability to recover from losses in the communications. The data is divided into K source
- * symbols, which are transformed in a larger number of N encoding symbols such that the original data can be retrieved
- * from a subset of the N encoding symbols.</dd>
- * <dt><b>Fountain code:</b></dt>
- * <dd>A class of erasure codes with two important properties:
- * <ul>
- * <li>an arbitrary number of encoding symbols can be produced on the fly, simplifying the adaptation to varying loss
- * rates;
- * <li>the data can be reconstructed with high probability from any subset of the encoding symbols (of size equal to or
- * slightly larger than the number of source symbols).
- * </ul>
- * </dd>
- * <dt><b>RaptorQ code:</b></dt>
- * <dd>The closest solution to an ideal digital fountain code. It has the capability of achieving constant per-symbol
- * encoding/decoding cost with an overhead near to zero.</dd>
- * </dl>
  * <h2>Where to use this API</h2> OpenRQ is intended as an erasure corrector for unreliable or noisy communication
  * channels. Typically, the following steps are performed:
  * <ol>
@@ -51,8 +28,9 @@
  * </ol>
  * <b>Note:</b> <i>The use of this API is also recommended in situations where retransmissions are costly, such as when
  * broadcasting data to multiple destinations, or when communication links are one-way.</i>
- * <h2>How to use this API</h2>
- * <h3>Basic definitions</h3>
+ * <h2>How to use this API</h2> This section provides an overall view of the API, explaining the terms used throughout
+ * the documentation and presenting which classes the user is supposed to use.
+ * <h3>Terminology</h3>
  * <dl>
  * <dt><b>Source data:</b></dt>
  * <dd>The data object to be encoded/decoded.</dd>
@@ -72,6 +50,9 @@
  * <dd>An object that receives source data, encodes it, and produces encoding packets for transmission.</dd>
  * <dt><b>Decoder:</b></dt>
  * <dd>An object that receives encoding packets, decodes them, and produces the original source data.</dd>
+ * <dt><b>Decoding failure</b></dt>
+ * <dd>The moment when the available encoding symbols in the decoder are not sufficient for a successful decoding of the
+ * source block.</dd>
  * </dl>
  * <h3>Initializing</h3> Encoders and decoders are initialized with the help of <i>FEC parameters</i>. These include the
  * length of the data and information on how to partition the source data into source blocks and source symbols.
@@ -111,8 +92,18 @@
  * <p>
  * Please refer to the documentation of classes {@link net.fec.openrq.decoder.DataDecoder DataDecoder} and
  * {@link net.fec.openrq.decoder.SourceBlockDecoder SourceBlockDecoder} for more details.
+ * <h3>Dealing with decoding failures</h3> Here are some strategies for handling decoding failures:
+ * <ul>
+ * <li><b>Request missing source symbols</b>. This strategy works well if there is a back channel from receivers to
+ * senders of data. Additionally, receivers may also indicate which repair symbols have been received, so that senders
+ * may transmit new ones.
+ * <li><b>Wait for more encoding symbols</b>. This strategy works well if there is no back channel (or if it would be
+ * expensive to have one) and the sender is continually transmitting encoding packets in a cyclic fashion.
+ * <li><b>Work with available data</b>. Sometimes applications, such as video streaming ones, can simply tolerate data
+ * losses (video frames for example).
  * 
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
 package net.fec.openrq;
+

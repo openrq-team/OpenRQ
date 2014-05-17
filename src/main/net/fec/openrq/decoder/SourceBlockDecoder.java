@@ -30,12 +30,12 @@ import net.fec.openrq.parameters.ParameterChecker;
  * Source data is divided into source blocks and each source block is independently encoded by a RaptorQ encoder (as
  * specified in RFC 6330). Each source block is further divided into source symbols, which together with repair symbols
  * (extra encoded data) form the <em>encoding symbols</em>. The encoding symbols are transmitted inside encoding packets
- * to an instance of this interface.
+ * to specific source blocks of the data being decoded.
  * <p>
- * A source block can be decoded independently by an instance of this interface, and the block is identified by a source
- * block number, which is carried inside an encoding packet. The method {@link #sourceBlockNumber()} provides the source
- * block number that identifies the source block being decoded. Additionally, the number of source symbols into which
- * the source block is divided is given by the method {@link #numberOfSourceSymbols()}.
+ * A source block can be decoded independently by an instance of {@code SourceBlockDecoder}, and the block is identified
+ * by a source block number, which is carried inside an encoding packet. The method {@link #sourceBlockNumber()}
+ * provides the source block number that identifies the source block being decoded. Additionally, the number of source
+ * symbols into which the source block is divided is given by the method {@link #numberOfSourceSymbols()}.
  * <p>
  * The method {@link #putEncodingPacket(EncodingPacket)} receives an encoding packet as argument and stores the encoding
  * symbols inside it for future decoding. If at the time the method is called, enough symbols are available for decoding
