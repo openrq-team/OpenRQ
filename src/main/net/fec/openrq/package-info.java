@@ -100,10 +100,10 @@
  * <li><b>Wait for more encoding symbols</b>. This strategy works well if there is no back channel (or if it would be
  * expensive to have one) and the sender is continually transmitting encoding packets in a cyclic fashion.
  * <li><b>Work with available data</b>. Sometimes applications, such as video streaming ones, can simply tolerate data
- * losses (video frames for example).
+ * losses (video frames for example). In these situations, the receiver may use the available data composed of the
+ * received source symbols so far.
  * 
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
 package net.fec.openrq;
-
