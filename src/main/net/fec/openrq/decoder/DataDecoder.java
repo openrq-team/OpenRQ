@@ -86,12 +86,20 @@ public interface DataDecoder {
     /**
      * Returns a decoder object for the source block with the provided source block number.
      * <p>
-     * Note that the provided source block number must be non-negative and less than
-     * {@linkplain #numberOfSourceBlocks() the number of source blocks}.
+     * <b><i>Bounds checking</i></b> - If we have <b>Z</b> as the number of source blocks into which is divided the the
+     * source data being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
+     * thrown:
+     * <ul>
+     * <li><b>sbn</b> &ge; 0
+     * <li><b>sbn</b> &lt; <b>Z</b>
+     * </ul>
      * 
      * @param sbn
      *            A source block number
      * @return a decoder object for a specific source block
+     * @exception IllegalArgumentException
+     *                If the provided source block number is invalid
+     * @see #numberOfSourceBlocks()
      */
     public SourceBlockDecoder sourceBlock(int sbn);
 
@@ -305,6 +313,9 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until a whole packet is read from the input, or a parsing
+     * failure is detected, or an {@code IOException} is throw.
      * 
      * @param in
      *            A {@code DataInput} object from which an encoding packet is read
@@ -317,8 +328,10 @@ public interface DataDecoder {
     public Parsed<EncodingPacket> readPacketFrom(DataInput in) throws IOException;
 
     /**
-     * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. The format of the packet data must
-     * follow the format specified by {@link EncodingPacket#writeTo(java.nio.channels.WritableByteChannel)}.
+     * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. This method blocks until a whole
+     * packet is read from the channel, or a parsing failure is detected, or an {@code IOException} is throw. The format
+     * of the packet data must follow the format specified by
+     * {@link EncodingPacket#writeTo(java.nio.channels.WritableByteChannel)}.
      * <p>
      * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
      * {@link java.nio.channels.FileChannel FileChannel}.
@@ -329,6 +342,9 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until a whole packet is read from the channel, or a parsing
+     * failure is detected, or an {@code IOException} is throw.
      * 
      * @param ch
      *            A {@code ReadableByteChannel} object from which an encoding packet is read

@@ -148,6 +148,9 @@ public final class FECParameters {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are read from the input, or a
+     * parsing failure is detected, or an {@code IOException} is throw.
      * 
      * @param in
      *            A {@code DataInput} object from which FEC parameters are read
@@ -188,6 +191,9 @@ public final class FECParameters {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are read from the channel, or a
+     * parsing failure is detected, or an {@code IOException} is throw.
      * 
      * @param ch
      *            A {@code ReadableByteChannel} object from which FEC parameters are read
@@ -427,6 +433,9 @@ public final class FECParameters {
      * <p>
      * Examples of {@code DataOutput} objects are {@link java.io.DataOutputStream DataOutputStream} and
      * {@link java.io.ObjectOutputStream ObjectOutputStream}.
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are written to the output, or an
+     * {@code IOException} is throw.
      * 
      * @param out
      *            A {@code DataOutput} object into which these FEC parameters are written
@@ -446,6 +455,9 @@ public final class FECParameters {
      * <p>
      * Examples of {@code WritableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
      * {@link java.nio.channels.FileChannel FileChannel}.
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are written to the channel, or an
+     * {@code IOException} is throw.
      * 
      * @param ch
      *            A {@code WritableByteChannel} object into which these FEC parameters are written

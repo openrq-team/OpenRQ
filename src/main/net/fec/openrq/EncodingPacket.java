@@ -428,6 +428,9 @@ public abstract class EncodingPacket {
      * <p>
      * Examples of {@code DataOutput} objects are {@link java.io.DataOutputStream DataOutputStream} and
      * {@link java.io.ObjectOutputStream ObjectOutputStream}.
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until the whole packet is written to the output, or an
+     * {@code IOException} is throw.
      * 
      * @param out
      *            A {@code DataOutput} object into which this packet is written
@@ -445,6 +448,9 @@ public abstract class EncodingPacket {
      * <p>
      * Examples of {@code WritableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
      * {@link java.nio.channels.FileChannel FileChannel}.
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until the whole packet is written to the channel, or an
+     * {@code IOException} is throw.
      * 
      * @param ch
      *            A {@code WritableByteChannel} object into which this packet is written

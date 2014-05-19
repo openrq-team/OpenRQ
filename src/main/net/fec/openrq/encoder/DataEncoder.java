@@ -68,16 +68,22 @@ public interface DataEncoder {
     public int numberOfSourceBlocks();
 
     /**
-     * Returns an encoder object for a specific source block identified by the given source block number.
+     * Returns an encoder object for the source block with the provided source block number.
      * <p>
-     * Note that the provided source block number must be non-negative and less than
-     * {@linkplain #numberOfSourceBlocks() the number of source blocks}.
+     * <b><i>Bounds checking</i></b> - If we have <b>Z</b> as the number of source blocks into which is divided the the
+     * source data being encoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
+     * thrown:
+     * <ul>
+     * <li><b>sbn</b> &ge; 0
+     * <li><b>sbn</b> &lt; <b>Z</b>
+     * </ul>
      * 
      * @param sbn
      *            A source block number
      * @return an encoder object for a specific source block
      * @exception IllegalArgumentException
      *                If the provided source block number is invalid
+     * @see #numberOfSourceBlocks()
      */
     public SourceBlockEncoder sourceBlock(int sbn);
 
