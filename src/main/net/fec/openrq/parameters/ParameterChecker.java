@@ -46,9 +46,9 @@ public final class ParameterChecker {
     // =========== F -> "transfer length of the object, in octets" ========== //
 
     /**
-     * Returns the minimum source data length in number of bytes (1).
+     * Returns the minimum source data length, in number of bytes (1).
      * 
-     * @return the minimum source data length in number of bytes
+     * @return the minimum source data length, in number of bytes
      */
     public static long minDataLength() {
 
@@ -56,21 +56,35 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns the maximum source data length in number of bytes (946_270_874_880L).
+     * Returns the maximum source data length, in number of bytes (946_270_874_880L).
      * 
-     * @return the maximum source data length in number of bytes
+     * @return the maximum source data length, in number of bytes
      */
     public static long maxDataLength() {
 
         return F_max;
     }
 
+    /**
+     * Returns {@code true} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
+     * {@linkplain #maxDataLength() maxDataLen}.
+     * 
+     * @param dataLen
+     *            A source data length, in number of bytes
+     * @return {@code true} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
+     *         {@linkplain #maxDataLength() maxDataLen}
+     */
+    public static boolean isDataLengthWithinBounds(long dataLen) {
+
+        return minDataLength() <= dataLen && dataLen <= maxDataLength();
+    }
+
     // =========== T -> "symbol size, in octets" ========== //
 
     /**
-     * Returns the minimum symbol size in number of bytes (1).
+     * Returns the minimum symbol size, in number of bytes (1).
      * 
-     * @return the minimum symbol size in number of bytes
+     * @return the minimum symbol size, in number of bytes
      */
     public static int minSymbolSize() {
 
@@ -78,13 +92,27 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns the maximum symbol size in number of bytes (65535).
+     * Returns the maximum symbol size, in number of bytes (65535).
      * 
-     * @return the maximum symbol size in number of bytes
+     * @return the maximum symbol size, in number of bytes
      */
     public static int maxSymbolSize() {
 
         return T_max;
+    }
+
+    /**
+     * Returns {@code true} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
+     * {@linkplain #maxSymbolSize() maxSymbSize}.
+     * 
+     * @param symbSize
+     *            A symbol size, in number of bytes
+     * @return {@code true} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
+     *         {@linkplain #maxSymbolSize() maxSymbSize}
+     */
+    public static boolean isSymbolSizeWithinBounds(long symbSize) {
+
+        return minSymbolSize() <= symbSize && symbSize <= maxSymbolSize();
     }
 
     // =========== Z -> "number of source blocks" ========== //
@@ -109,28 +137,56 @@ public final class ParameterChecker {
         return Z_max;
     }
 
-    // =========== N -> "number of sub-blocks in each source block" ========== //
+    /**
+     * Returns {@code true} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
+     * {@linkplain #maxNumSourceBlocks() maxSrcBs}.
+     * 
+     * @param numSrcBs
+     *            A number of source blocks into which a source data is divided
+     * @return {@code true} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
+     *         {@linkplain #maxNumSourceBlocks() maxSrcBs}
+     */
+    public static boolean isNumberOfSourceBlocksWithinBounds(long numSrcBs) {
+
+        return minNumSourceBlocks() <= numSrcBs && numSrcBs <= maxNumSourceBlocks();
+    }
+
+    // =========== N -> "interleaver length, in number of sub-blocks" ========== //
 
     /**
-     * Returns the minimum number of sub-blocks per source block into which a source data is divided (1).
+     * Returns the minimum interleaver length, in number of sub-blocks per source block (1).
      * 
-     * @return the minimum number of sub-blocks per source block into which a source data is divided
+     * @return the interleaver length, in number of sub-blocks per source block
      */
-    public static int minNumSubBlocks() {
+    public static int minInterleaverLength() {
 
         return N_min;
     }
 
     /**
-     * Returns the maximum number of sub-blocks per source block into which a source data is divided (1).
+     * Returns the maximum interleaver length, in number of sub-blocks per source block (1).
      * <p>
-     * <b>Note:</b> <i>For now, interleaving is disabled.</i>
+     * <b>Note:</b> <em>For now, interleaving is disabled.</em>
      * 
-     * @return the maximum number of sub-blocks per source block into which a source data is divided
+     * @return the maximum interleaver length, in number of sub-blocks per source block
      */
-    public static int maxNumSubBlocks() {
+    public static int maxInterleaverLength() {
 
         return N_max;
+    }
+
+    /**
+     * Returns {@code true} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
+     * {@linkplain #maxInterleaverLength() maxInterLen}.
+     * 
+     * @param interLen
+     *            An interleaver length, in number of sub-blocks per source block
+     * @return {@code true} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
+     *         {@linkplain #maxInterleaverLength() maxInterLen}
+     */
+    public static boolean isInterleaverLengthWithinBounds(long interLen) {
+
+        return minInterleaverLength() <= interLen && interLen <= maxInterleaverLength();
     }
 
     // =========== Al -> "symbol alignment parameter" ========== //
@@ -138,7 +194,7 @@ public final class ParameterChecker {
     /**
      * Returns the symbol alignment parameter (1).
      * <p>
-     * <b>Note:</b> <i>This value is fixed in this implementation of RaptorQ.</i>
+     * <b>Note:</b> <em>This value is fixed in this implementation of RaptorQ.</em>
      * 
      * @return the symbol alignment parameter
      */
@@ -150,76 +206,107 @@ public final class ParameterChecker {
     // =========== F, T, Z, N, Al =========== //
 
     /**
-     * TODO document
+     * Returns {@code true} if, and only if, the provided FEC parameters are within certain bounds defined below (the
+     * existence of minimum and maximum values for the FEC parameters, along with a
+     * {@linkplain #maxNumSourceSymbolsPerBlock() maximum number of source symbols per source block}, enforces tighter
+     * bounds around combinations of the parameter values).
+     * <p>
+     * <b><u>Restrictions over domain</u></b>
+     * <p>
+     * All parameters must be within their specific bounds (refer to methods for
+     * {@linkplain #isDataLengthWithinBounds(long) data
+     * length}, {@linkplain #isSymbolSizeWithinBounds(long) symbol
+     * size}, {@linkplain #isNumberOfSourceBlocksWithinBounds(long)
+     * number of source blocks} and {@linkplain #isInterleaverLengthWithinBounds(long) interleaver length}).
+     * <p>
+     * <b><u>Restrictions over value combinations</u></b>
+     * <p>
+     * Gist: <em>"If the data length is small/large, the symbol size must be equally small/large as well."</em>
+     * <p>
+     * Let <b>maxSymbPerBlock</b> be the {@linkplain #maxNumSourceSymbolsPerBlock() maximum number of source symbols per
+     * source block}. The following item must be true:
+     * <ul>
+     * <li>{@code ceiling}(<b>dataLen</b> / <b>symbSize</b>) &le; <b>maxSymbPerBlock</b>
+     * </ul>
+     * <p>
+     * Gist:
+     * <em>"There cannot be more source blocks than source symbols; there cannot be too many source symbols per source block".</em>
+     * <p>
+     * Let <b>totalSymb</b> be the total number of symbols calculated as follows: <b>totalSymb</b> := {@code ceiling}
+     * (<b>dataLen</b> / <b>symbSize</b>). The following items must all be true:
+     * <ul>
+     * <li><b>numSrcBs</b> &le; <b>totalSymb</b>
+     * <li><b>numSrcBs</b> &ge; {@code ceiling}(<b>totalSymb</b> / <b>maxSymbPerBlock</b>)
+     * </ul>
+     * <p>
+     * The following item must be true:
+     * <ul>
+     * <li><b>interLen</b> &le; <b>symbSize</b>
+     * </ul>
      * 
      * @param dataLen
-     * @param symbolSize
-     * @param numSourceBlocks
-     * @param numSubBlocks
-     * @param sAlign
-     * @return
+     *            A source data length, in number of bytes
+     * @param symbSize
+     *            A symbol size, in number of bytes
+     * @param numSrcBs
+     *            A number of source blocks into which a source data is divided
+     * @param interLen
+     *            An interleaver length, in number of sub-blocks per source block
+     * @return {@code true} if, and only if, the provided FEC parameters are within certain bounds
      */
-    public static boolean areValidFECParameters(
-        long dataLen,
-        int symbolSize,
-        int numSourceBlocks,
-        int numSubBlocks,
-        int sAlign)
-    {
+    public static boolean areValidFECParameters(long dataLen, int symbSize, int numSrcBs, int interLen) {
 
         // empty string means parameters are all valid
-        return testFECParameters(dataLen, symbolSize, numSourceBlocks, numSubBlocks, sAlign).isEmpty();
+        return getFECParamsErrorString(dataLen, symbSize, numSrcBs, interLen).isEmpty();
     }
 
     /**
-     * TODO document
+     * Tests multiple cases and returns an error string if any FEC parameter is invalid, otherwise the method returns an
+     * empty string.
      * 
      * @param dataLen
-     * @param symbolSize
-     * @param numSourceBlocks
-     * @param numSubBlocks
-     * @param sAlign
-     * @return
+     *            A source data length, in number of bytes
+     * @param symbSize
+     *            A symbol size, in number of bytes
+     * @param numSrcBs
+     *            A number of source blocks into which a source data is divided
+     * @param interLen
+     *            An interleaver length, in number of sub-blocks per source block
+     * @return an error string if some parameter is invalid or an empty string if all parameters are valid
      */
-    public static String testFECParameters(
-        long dataLen,
-        int symbolSize,
-        int numSourceBlocks,
-        int numSubBlocks,
-        int sAlign)
-    {
+    public static String getFECParamsErrorString(long dataLen, int symbSize, int numSrcBs, int interLen) {
 
         final long F = dataLen;
-        final int T = symbolSize;
-        final int Z = numSourceBlocks;
-        final int N = numSubBlocks;
-        final int Al = sAlign;
+        final int T = symbSize;
+        final int Z = numSrcBs;
+        final int N = interLen;
+        final int Al = symbolAlignmentValue();
 
         // domain restrictions
-        if ((F < F_min) || (F_max < F)) {
+        if (!isDataLengthWithinBounds(F)) {
             return String.format(
                 "data length (%d) must be within [%d, %d] bytes",
                 F, F_min, F_max);
+        }
+        if (Al < Al_min) {
+            return String.format(
+                "symbol alignment value (%d) must be at least %d",
+                Al, Al_min);
         }
         if ((T < Al) || (T_max < T)) {
             return String.format(
                 "symbol size (%d) must be within [%d, %d] bytes",
                 T, Al, T_max);
         }
-        if ((Z < Z_min) || (Z_max < Z)) {
+        if (!isNumberOfSourceBlocksWithinBounds(Z)) {
             return String.format(
                 "number of source blocks (%d) must be within [%d, %d]",
                 Z, Z_min, Z_max);
         }
-        if ((N < N_min) || (N_max < N)) {
+        if (!isInterleaverLengthWithinBounds(N)) {
             return String.format(
-                "number of sub-blocks (%d) must be within [%d, %d]",
+                "interleaver length (%d) must be within [%d, %d]",
                 N, N_min, N_max);
-        }
-        if (Al < Al_min) {
-            return String.format(
-                "symbol alignment value (%d) must be at least %d",
-                Al, Al_min);
         }
 
         // T must be a multiple of Al
@@ -245,10 +332,10 @@ public final class ParameterChecker {
                 F, T, Z, ceilDiv(Kt, K_max), Math.min(Z_max, Kt));
         }
 
-        // sub-symbol size must be at least Al
+        // interleaver length must be at least Al
         if (N > T / Al) {
             return String.format(
-                "a symbol size of %d bytes and a symbol alignment value of %d require a number of sub-blocks (%d) at most %d",
+                "a symbol size of %d bytes and a symbol alignment value of %d require an interleaver length (%d) at most %d",
                 T, Al, N, T / Al);
         }
 
@@ -262,34 +349,39 @@ public final class ParameterChecker {
      * TODO document
      * 
      * @param dataLen
-     * @param maxPayLen
-     * @param maxDecBlock
+     * @param maxPaLen
+     * @param maxDBMem
      * @param sAlign
      * @return
      */
-    public static boolean areValidDerivingParameters(long dataLen, int maxPayLen, int maxDecBlock, int sAlign) {
+    public static boolean areValidDerivingParameters(long dataLen, int maxPaLen, int maxDBMem, int sAlign) {
 
-        return testDerivingParameters(dataLen, maxPayLen, maxDecBlock, sAlign).isEmpty();
+        return getDerivingParamsErrorString(dataLen, maxPaLen, maxDBMem, sAlign).isEmpty();
     }
 
     /**
-     * TODO document
+     * Tests multiple cases and returns an error string if any deriving parameter is invalid, otherwise the method
+     * returns an empty string.
      * 
      * @param dataLen
-     * @param maxPayLen
-     * @param maxDecBlock
+     *            A source data length, in number of bytes
+     * @param maxPaLen
+     *            A maximum size for a payload containing one encoding symbol
+     * @param maxDBMem
+     *            A maximum block size, in number of bytes that is decodable in working memory
      * @param sAlign
-     * @return
+     *            The symbol alignment parameter
+     * @return an error string if some parameter is invalid or an empty string if all parameters are valid
      */
-    public static String testDerivingParameters(long dataLen, int maxPayLen, int maxDecBlock, int sAlign) {
+    public static String getDerivingParamsErrorString(long dataLen, int maxPaLen, int maxDBMem, int sAlign) {
 
         final long F = dataLen;
-        final int P = maxPayLen;
-        final int WS = maxDecBlock;
+        final int P = maxPaLen;
+        final int WS = maxDBMem;
         final int Al = sAlign;
 
         // domain restrictions
-        if (F < F_min || F_max < F) {
+        if (!isDataLengthWithinBounds(F)) {
             return String.format(
                 "data length (%d) must be within [%d, %d] bytes",
                 F, F_min, F_max);
@@ -372,6 +464,20 @@ public final class ParameterChecker {
         return SBN_max;
     }
 
+    /**
+     * Returns {@code true} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
+     * {@linkplain #maxSourceBlockNumber() maxSBN}.
+     * 
+     * @param sbn
+     *            A source block number
+     * @return {@code true} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
+     *         {@linkplain #maxSourceBlockNumber() maxSBN}
+     */
+    public static boolean isSourceBlockNumberWithinBounds(int sbn) {
+
+        return minSourceBlockNumber() <= sbn && sbn <= maxSourceBlockNumber();
+    }
+
     // =========== encoding symbol identifier - ESI ========== //
 
     /**
@@ -394,6 +500,20 @@ public final class ParameterChecker {
         return ESI_max;
     }
 
+    /**
+     * Returns {@code true} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
+     * {@linkplain #maxEncodingSymbolID() maxESI}.
+     * 
+     * @param esi
+     *            An encoding symbol ID
+     * @return {@code true} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
+     *         {@linkplain #maxEncodingSymbolID() maxESI}
+     */
+    public static boolean isEncodingSymbolIDWithinBounds(int esi) {
+
+        return minEncodingSymbolID() <= esi && esi <= maxEncodingSymbolID();
+    }
+
     // =========== SBN, ESI =========== //
 
     /**
@@ -401,35 +521,41 @@ public final class ParameterChecker {
      * 
      * @param sbn
      * @param esi
-     * @param numSourceBlocks
+     * @param numSrcBs
      * @return
      * @exception IllegalArgumentException
-     *                If {@code numSourceBlocks} is invalid
+     *                If the number of source blocks is out of bounds
      */
-    public static boolean isValidFECPayloadID(int sbn, int esi, int numSourceBlocks) {
+    public static boolean isValidFECPayloadID(int sbn, int esi, int numSrcBs) {
 
-        return testFECPayloadID(sbn, esi, numSourceBlocks).isEmpty();
+        return getFECPayloadIDErrorString(sbn, esi, numSrcBs).isEmpty();
     }
 
     /**
-     * TODO document
+     * Tests multiple cases and returns an error string if any FEC Payload ID parameter is invalid, otherwise the method
+     * returns an empty string.
      * 
      * @param sbn
+     *            A source block number
      * @param esi
-     * @param numSourceBlocks
-     * @return
+     *            The encoding symbol identifier of the first symbol in an encoding packet
+     * @param numSrcBs
+     *            A number of source blocks into which a source data is divided
+     * @return an error string if some parameter is invalid or an empty string if all parameters are valid
+     * @exception IllegalArgumentException
+     *                If the number of source blocks is out of bounds
      */
-    public static String testFECPayloadID(int sbn, int esi, int numSourceBlocks) {
+    public static String getFECPayloadIDErrorString(int sbn, int esi, int numSrcBs) {
 
-        final int Z = numSourceBlocks;
-        if (Z < Z_min || Z > Z_max) {
+        final int Z = numSrcBs;
+        if (!isNumberOfSourceBlocksWithinBounds(Z)) {
             throw new IllegalArgumentException("invalid number of source blocks");
         }
 
         if (sbn < SBN_min || sbn > Z) {
             return String.format("source block number (%d) must be whithin [%d, %d]", sbn, SBN_min, Z);
         }
-        if (esi < ESI_min || esi > ESI_max) {
+        if (!isEncodingSymbolIDWithinBounds(esi)) {
             return String.format("encoding symbol identifier (%d) must be whithin [%d, %d]", esi, ESI_min, ESI_max);
         }
         return "";

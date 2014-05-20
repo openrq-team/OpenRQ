@@ -52,18 +52,18 @@ public interface DataDecoder {
     public FECParameters fecParameters();
 
     /**
-     * Returns the length of the source data in number of bytes. This value is the one returned by
+     * Returns the length of the source data, in number of bytes. This value is the one returned by
      * {@code this.fecParameters().dataLength()}.
      * 
-     * @return the length of the data in number of bytes
+     * @return the length of the data, in number of bytes
      */
     public long dataLength();
 
     /**
-     * Returns the size of a symbol in number of bytes. This value is the one returned by
+     * Returns the size of a symbol, in number of bytes. This value is the one returned by
      * {@code this.fecParameters().symbolSize()}.
      * 
-     * @return the size of a symbol in number of bytes
+     * @return the size of a symbol, in number of bytes
      */
     public int symbolSize();
 
@@ -86,7 +86,7 @@ public interface DataDecoder {
     /**
      * Returns a decoder object for the source block with the provided source block number.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>Z</b> as the number of source blocks into which is divided the the
+     * <b><em>Bounds checking</em></b> - If we have <b>Z</b> as the number of source blocks into which is divided the the
      * source data being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>

@@ -37,24 +37,24 @@ import net.fec.openrq.util.numericaltype.SizeOf;
 
 
 /**
- * This class represents FEC parameters as defined in RFC 6330 as the <i>Encoded FEC Object Transmission Information
- * (OTI)</i>, which contains the <i>Encoded Common FEC OTI</i> and the <i>Encoded Scheme-specific FEC OTI</i>.
+ * This class represents FEC parameters as defined in RFC 6330 as the <em>Encoded FEC Object Transmission Information
+ * (OTI)</em>, which contains the <em>Encoded Common FEC OTI</em> and the <em>Encoded Scheme-specific FEC OTI</em>.
  * <p>
  * The FEC parameters consist of:
  * <dl>
  * <dt><b>Data length</b></dt>
- * <dd>The length of the source data in number of bytes. Since encoded data may contain extra padding bytes, this value
+ * <dd>The length of the source data, in number of bytes. Since encoded data may contain extra padding bytes, this value
  * allows a decoder to infer the original source data length.</dd>
  * <dt><b>Symbol size</b></dt>
- * <dd>The size of a symbol in number of bytes. This value represents the size of an encoding symbol (source or repair),
- * except the size of the last source symbol, which may be smaller.</dd>
+ * <dd>The size of a symbol, in number of bytes. This value represents the size of an encoding symbol (source or
+ * repair), except the size of the last source symbol, which may be smaller.</dd>
  * <dt><b>Number of source blocks</b></dt>
  * <dd>The number of source blocks into which the source data is partitioned. Each source block is encoded/decoded
  * independently, and not every one is divided into the same number of source symbols.</dd>
- * <dt><b>Number of sub-block per source block</b></dt>
- * <dd>The number of sub-blocks per source block into which the source data is partitioned. This value influences the
- * level of <i>uniform interleaving</i> used before encoding a source block. A value of 1 means no interleaving is used,
- * and a higher value means more interleaving per source block. Interleaving refers to a burst-error correction
+ * <dt><b>Interleaver length</b></dt>
+ * <dd>The number of sub-blocks per source block into which the source data is interleaved. This value influences the
+ * level of <em>uniform interleaving</em> used before encoding a source block. A value of 1 means no interleaving is
+ * used, and a higher value means more interleaving per source block. Interleaving refers to a burst-error correction
  * technique in FEC codes.</dd>
  * <dt><b>Symbol alignment</b></dt>
  * <dd>This value has no relevance to the user of OpenRQ, since it is fixed to a value of 1. This parameter exists here
@@ -97,14 +97,18 @@ public final class FECParameters {
         final long F = ParameterIO.extractDataLength(commonFecOTI);
         final int T = ParameterIO.extractSymbolSize(commonFecOTI);
         final int Z = ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI);
-        final int N = ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
+        final int N = ParameterIO.extractInterleaverLength(schemeSpecFecOTI);
         final int Al = ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
 
-        if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
-            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
+        if (Al != ParameterChecker.symbolAlignmentValue()) {
+            return Parsed.invalid(String.format("symbol alignment value must be equal to %d",
+                ParameterChecker.symbolAlignmentValue()));
+        }
+        else if (!ParameterChecker.areValidFECParameters(F, T, Z, N)) {
+            return Parsed.invalid(ParameterChecker.getFECParamsErrorString(F, T, Z, N));
         }
         else {
-            return Parsed.invalid(ParameterChecker.testFECParameters(F, T, Z, N, Al));
+            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
         }
     }
 
@@ -168,14 +172,18 @@ public final class FECParameters {
         final long F = ParameterIO.extractDataLength(commonFecOTI);
         final int T = ParameterIO.extractSymbolSize(commonFecOTI);
         final int Z = ParameterIO.extractNumSourceBlocks(schemeSpecFecOTI);
-        final int N = ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
+        final int N = ParameterIO.extractInterleaverLength(schemeSpecFecOTI);
         final int Al = ParameterIO.extractSymbolAlignment(schemeSpecFecOTI);
 
-        if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
-            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
+        if (Al != ParameterChecker.symbolAlignmentValue()) {
+            return Parsed.invalid(String.format("symbol alignment value must be equal to %d",
+                ParameterChecker.symbolAlignmentValue()));
+        }
+        else if (!ParameterChecker.areValidFECParameters(F, T, Z, N)) {
+            return Parsed.invalid(ParameterChecker.getFECParamsErrorString(F, T, Z, N));
         }
         else {
-            return Parsed.invalid(ParameterChecker.testFECParameters(F, T, Z, N, Al));
+            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
         }
     }
 
@@ -216,62 +224,62 @@ public final class FECParameters {
     /**
      * Returns a new instance, given specific FEC parameters.
      * <p>
-     * <b>Note:</b> <i>The number of sub-blocks will be equal to 1, which effectively means that data interleaving is
-     * disabled. Additionally, the symbol alignment parameter "Al" is internally obtained.</i>
+     * <b>Note:</b> <em>The interleaver length will be equal to 1, which effectively means that data interleaving is
+     * disabled. Additionally, the symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
-     * ParameterChecker.areValidFECParameters(dataLen, symbolSize, numSourceBlocks, 1, Al)}, and an
+     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, 1, Al)}, and an
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * 
      * @param dataLen
-     *            The length of the source data in number of bytes
-     * @param symbolSize
-     *            The size of a symbol in number of bytes
-     * @param numSourceBlocks
+     *            The length of the source data, in number of bytes
+     * @param symbSize
+     *            The size of a symbol, in number of bytes
+     * @param numSrcBs
      *            The number of source blocks into which the source data is partitioned
      * @return a new {@code FECParameters} instance
      * @exception IllegalArgumentException
      *                If the provided FEC parameters are invalid
      */
-    public static FECParameters newParameters(long dataLen, int symbolSize, int numSourceBlocks) {
+    public static FECParameters newParameters(long dataLen, int symbSize, int numSrcBs) {
 
-        return newParameters(dataLen, symbolSize, numSourceBlocks, 1);
+        return newParameters(dataLen, symbSize, numSrcBs, 1);
     }
 
     /**
      * Returns a new instance, given specific FEC parameters.
      * <p>
-     * <b>Note:</b> <i>The symbol alignment parameter "Al" is internally obtained.</i>
+     * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
-     * ParameterChecker.areValidFECParameters(dataLen, symbolSize, numSourceBlocks, numSubBlocks, Al)}, and an
+     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, interLen, Al)}, and an
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * 
      * @param dataLen
-     *            The length of the source data in number of bytes
-     * @param symbolSize
-     *            The size of a symbol in number of bytes
-     * @param numSourceBlocks
+     *            The length of the source data, in number of bytes
+     * @param symbSize
+     *            The size of a symbol, in number of bytes
+     * @param numSrcBs
      *            The number of source blocks into which the source data is partitioned
-     * @param numSubBlocks
-     *            The number of sub-blocks per source block into which the source data is partitioned
+     * @param interLen
+     *            The interleaver length, in number of sub-blocks per source block
      * @return a new {@code FECParameters} instance
      * @exception IllegalArgumentException
      *                If the provided FEC parameters are invalid
      */
-    public static FECParameters newParameters(long dataLen, int symbolSize, int numSourceBlocks, int numSubBlocks) {
+    public static FECParameters newParameters(long dataLen, int symbSize, int numSrcBs, int interLen) {
 
         final long F = dataLen;
-        final int T = symbolSize;
-        final int Z = numSourceBlocks;
-        final int N = numSubBlocks;
+        final int T = symbSize;
+        final int Z = numSrcBs;
+        final int N = interLen;
         final int Al = ParameterChecker.symbolAlignmentValue();
 
-        if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
+        if (ParameterChecker.areValidFECParameters(F, T, Z, N)) {
             return newInstance(F, T, Z, N, Al);
         }
         else {
-            throw new IllegalArgumentException(ParameterChecker.testFECParameters(F, T, Z, N, Al));
+            throw new IllegalArgumentException(ParameterChecker.getFECParamsErrorString(F, T, Z, N));
         }
     }
 
@@ -284,25 +292,25 @@ public final class FECParameters {
      * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
      * limited amount of memory in an efficient way.
      * <p>
-     * <b>Note:</b> <i>The symbol alignment parameter "Al" is internally obtained.</i>
+     * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidDerivingParameters
      * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)}, and an
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * 
      * @param dataLen
-     *            The length of the source data in number of bytes
-     * @param maxPayLen
-     *            The maximum payload length in number of bytes
-     * @param maxDecBlock
-     *            The maximum block size in number of bytes that is decodable in working memory
+     *            The length of the source data, in number of bytes
+     * @param maxPaLen
+     *            The maximum size for a payload containing one encoding symbol
+     * @param maxDBMem
+     *            The maximum block size, in number of bytes that is decodable in working memory
      * @return a derived {@code FECParameters} instance
      */
-    public static FECParameters deriveParameters(long dataLen, int maxPayLen, int maxDecBlock) {
+    public static FECParameters deriveParameters(long dataLen, int maxPaLen, int maxDBMem) {
 
         final long F = dataLen;
-        final int P = maxPayLen;
-        final int WS = maxDecBlock;
+        final int P = maxPaLen;
+        final int WS = maxDBMem;
         final int Al = ParameterChecker.symbolAlignmentValue();
 
         if (ParameterChecker.areValidDerivingParameters(F, P, WS, Al)) {
@@ -320,7 +328,7 @@ public final class FECParameters {
             return newInstance(F, T, Z, N, Al);
         }
         else {
-            throw new IllegalArgumentException(ParameterChecker.testDerivingParameters(F, P, WS, Al));
+            throw new IllegalArgumentException(ParameterChecker.getDerivingParamsErrorString(F, P, WS, Al));
         }
     }
 
@@ -349,18 +357,18 @@ public final class FECParameters {
      * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
      * limited amount of memory in an efficient way.
      * <p>
-     * <b>Note:</b> <i>The symbol alignment parameter "Al" is internally obtained.</i>
+     * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidDerivingParameters
      * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)}, and an
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * 
      * @param dataLen
-     *            The length of the source data in number of bytes
+     *            The length of the source data, in number of bytes
      * @param maxPayLen
-     *            The maximum payload length in number of bytes
+     *            The maximum payload length, in number of bytes
      * @param maxDecBlock
-     *            The maximum block size in number of bytes that is decodable in working memory
+     *            The maximum block size, in number of bytes that is decodable in working memory
      * @return a derived {@code FECParameters} instance
      */
     public static FECParameters deriveParameters(int dataLen, int maxPayLen, int maxDecBlock) {
@@ -477,12 +485,12 @@ public final class FECParameters {
     }
 
     /**
-     * Returns the length of the source data in number of bytes.
+     * Returns the length of the source data, in number of bytes.
      * <p>
      * Since encoded data may contain extra padding bytes, this value allows a decoder to infer the original source data
      * length.
      * 
-     * @return the length of the source data in number of bytes
+     * @return the length of the source data, in number of bytes
      */
     public long dataLength() {
 
@@ -490,12 +498,12 @@ public final class FECParameters {
     }
 
     /**
-     * Returns the size of a symbol in number of bytes.
+     * Returns the size of a symbol, in number of bytes.
      * <p>
      * This value represents the size of an encoding symbol (source or repair), except the size of the last source
      * symbol, which may be smaller.
      * 
-     * @return the size of a symbol in number of bytes
+     * @return the size of a symbol, in number of bytes
      */
     public int symbolSize() {
 
@@ -516,16 +524,16 @@ public final class FECParameters {
     }
 
     /**
-     * Returns the number of sub-blocks per source block into which the source data is partitioned.
+     * Returns the interleaver length, in number of sub-blocks per source block.
      * <p>
-     * This value influences the level of <i>uniform interleaving</i> used before encoding a source block. A value of 1
-     * means no interleaving is used, and a higher value means more interleaving per source block.
+     * This value influences the level of <em>uniform interleaving</em> used before encoding a source block. A value of
+     * 1 means no interleaving is used, and a higher value means more interleaving per source block.
      * 
-     * @return the number of sub-blocks per source block into which the source data is partitioned
+     * @return the interleaver length, in number of sub-blocks per source block
      */
-    public int numberOfSubBlocks() {
+    public int interleaverLength() {
 
-        return ParameterIO.extractNumSubBlocks(schemeSpecFecOTI);
+        return ParameterIO.extractInterleaverLength(schemeSpecFecOTI);
     }
 
     /**
@@ -583,7 +591,7 @@ public final class FECParameters {
      * <li>and <b>this</b>.{@link #dataLength()} == <b>obj</b>.{@code dataLength()}
      * <li>and <b>this</b>.{@link #symbolSize()} == <b>obj</b>.{@code symbolSize()}
      * <li>and <b>this</b>.{@link #numberOfSourceBlocks()} == <b>obj</b>.{@code numberOfSourceBlocks()}
-     * <li>and <b>this</b>.{@link #numberOfSubBlocks()} == <b>obj</b>.{@code numberOfSubBlocks()}
+     * <li>and <b>this</b>.{@link #interleaverLength()} == <b>obj</b>.{@code interleaverLength()}
      * <li>and <b>this</b>.{@link #symbolAlignment()} == <b>obj</b>.{@code symbolAlignment()}
      * </ul>
      */

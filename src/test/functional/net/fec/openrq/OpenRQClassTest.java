@@ -16,9 +16,10 @@
 package net.fec.openrq;
 
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import net.fec.openrq.parameters.FECParameters;
 
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -50,7 +51,7 @@ public class OpenRQClassTest {
             final byte[] data = new byte[fecParams.dataLengthAsInt()];
             final ArrayDataEncoder ade = OpenRQ.newEncoder(data, fecParams);
 
-            Assert.assertEquals(fecParams, ade.fecParameters());
+            assertEquals(fecParams, ade.fecParameters());
         }
 
         @Test
@@ -60,7 +61,7 @@ public class OpenRQClassTest {
             final byte[] data = new byte[fecParams.dataLengthAsInt()];
             final ArrayDataEncoder ade = OpenRQ.newEncoder(data, fecParams);
 
-            Assert.assertArrayEquals(data, ade.dataArray());
+            assertArrayEquals(data, ade.dataArray());
         }
 
         @Test
@@ -70,7 +71,7 @@ public class OpenRQClassTest {
             final byte[] data = new byte[fecParams.dataLengthAsInt()];
             final ArrayDataEncoder ade = OpenRQ.newEncoder(data, fecParams);
 
-            Assert.assertEquals(0, ade.dataOffset());
+            assertEquals(0, ade.dataOffset());
         }
     }
 
@@ -84,7 +85,7 @@ public class OpenRQClassTest {
             final byte[] data = new byte[offset + fecParams.dataLengthAsInt()];
             final ArrayDataEncoder ade = OpenRQ.newEncoder(data, offset, fecParams);
 
-            Assert.assertEquals(fecParams, ade.fecParameters());
+            assertEquals(fecParams, ade.fecParameters());
         }
 
         @Test
@@ -95,7 +96,7 @@ public class OpenRQClassTest {
             final byte[] data = new byte[offset + fecParams.dataLengthAsInt()];
             final ArrayDataEncoder ade = OpenRQ.newEncoder(data, offset, fecParams);
 
-            Assert.assertArrayEquals(data, ade.dataArray());
+            assertArrayEquals(data, ade.dataArray());
         }
 
         @Test
@@ -106,7 +107,7 @@ public class OpenRQClassTest {
             final byte[] data = new byte[offset + fecParams.dataLengthAsInt()];
             final ArrayDataEncoder ade = OpenRQ.newEncoder(data, offset, fecParams);
 
-            Assert.assertEquals(offset, ade.dataOffset());
+            assertEquals(offset, ade.dataOffset());
         }
     }
 }

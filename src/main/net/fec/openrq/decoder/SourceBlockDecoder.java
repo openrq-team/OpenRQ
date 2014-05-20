@@ -73,7 +73,7 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the source symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>
@@ -94,7 +94,7 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the repair symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being decoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:

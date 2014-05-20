@@ -25,7 +25,7 @@ import net.fec.openrq.parameters.ParameterIO;
 /**
  * A serializable encoding packet.
  * <p>
- * This class serializes a <i>FEC Payload ID</i>, and an array of bytes containing encoding symbols (see class
+ * This class serializes a <em>FEC Payload ID</em>, and an array of bytes containing encoding symbols (see class
  * {@link EncodingPacket}).
  * 
  * @see EncodingPacket
@@ -42,7 +42,7 @@ public class SerializablePacket implements Serializable {
      * Constructs a new serializable encoding packet.
      * 
      * @param fecPayloadID
-     *            A <i>FEC Payload ID</i> as specified in RFC 6330
+     *            A <em>FEC Payload ID</em> as specified in RFC 6330
      * @param symbols
      *            The data from the encoding symbols in the packet
      */

@@ -56,10 +56,10 @@ public interface SourceBlockEncoder {
          * Defines the encoding symbol identifier (ESI) of the symbol in the first encoding packet. If a starting ESI is
          * not defined, then the resulting iterable starts at ESI 0.
          * <p>
-         * <b>Note:</b> <i>If the starting ESI is greater than the {@linkplain #endAt(int) ending} ESI, then the ending
-         * ESI will be set to the starting ESI.</i>
+         * <b>Note:</b> <em>If the starting ESI is greater than the {@linkplain #endAt(int) ending} ESI, then the ending
+         * ESI will be set to the starting ESI.</em>
          * <p>
-         * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+         * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
          * source block being encoded, and <b>max_esi</b> as the maximum value for the encoding symbol identifier, then
          * the following must be true, otherwise an {@code IllegalArgumentException} is thrown:
          * <ul>
@@ -96,10 +96,10 @@ public interface SourceBlockEncoder {
          * not defined, then the resulting iterable ends at the {@linkplain ParameterChecker#maxEncodingSymbolID()
          * maximum value for the ESI}.
          * <p>
-         * <b>Note:</b> <i>If the ending ESI is less than the {@linkplain #startAt(int) starting} ESI, then the starting
-         * ESI will be set to the ending ESI.</i>
+         * <b>Note:</b> <em>If the ending ESI is less than the {@linkplain #startAt(int) starting} ESI, then the starting
+         * ESI will be set to the ending ESI.</em>
          * <p>
-         * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+         * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
          * source block being encoded, and <b>max_esi</b> as the maximum value for the encoding symbol identifier, then
          * the following must be true, otherwise an {@code IllegalArgumentException} is thrown:
          * <ul>
@@ -127,8 +127,8 @@ public interface SourceBlockEncoder {
          * Returns the resulting iterable over encoding packets based on the currently defined properties. Each iterated
          * encoding packet contains a single encoding symbol within.
          * <p>
-         * <b>Note:</b> <i>The iterator from the resulting iterable will <b>not</b> support the
-         * {@linkplain java.util.Iterator#remove() remove()} method.</i>
+         * <b>Note:</b> <em>The iterator from the resulting iterable will <b>not</b> support the
+         * {@linkplain java.util.Iterator#remove() remove()} method.</em>
          * 
          * @return the resulting iterable over encoding packets
          */
@@ -164,7 +164,7 @@ public interface SourceBlockEncoder {
      * More specifically, if we have <b>sbn</b> as the source block number for the source block being encoded, then this
      * method returns an encoding packet with an encoding symbol identified by <b>&lt;sbn, esi&gt;</b>.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being encoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
@@ -189,7 +189,7 @@ public interface SourceBlockEncoder {
      * More specifically, if we have <b>sbn</b> as the source block number for the source block being encoded, then this
      * method returns an encoding packet with a source symbol identified by <b>&lt;sbn, esi&gt;</b>.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being encoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>
@@ -219,7 +219,7 @@ public interface SourceBlockEncoder {
      * <li>etc.
      * </ul>
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being encoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>
@@ -247,7 +247,7 @@ public interface SourceBlockEncoder {
      * More specifically, if we have <b>sbn</b> as the source block number for the source block being encoded, then this
      * method returns an encoding packet with a repair symbol identified by <b>&lt;sbn, esi&gt;</b>.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being encoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
@@ -278,7 +278,7 @@ public interface SourceBlockEncoder {
      * <li>etc.
      * </ul>
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being encoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
@@ -362,7 +362,7 @@ public interface SourceBlockEncoder {
      *                             .endAt(encoder.numberOfSourceSymbols() + numRepairPackets - 1)
      *                             .build();
      * </pre>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being encoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:

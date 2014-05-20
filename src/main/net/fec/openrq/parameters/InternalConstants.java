@@ -25,7 +25,7 @@ final class InternalConstants {
     static final int Kt_max = K_max * Z_max;         // "maximum number of symbols"
     static final int T_max = 65535;                  // "maximum symbol size, in octets"
     static final long F_max = (long)Kt_max * T_max;  // "maximum transfer length of the object, in octets"
-    static final int N_max = 1/* K_max */;           // "maximum number of sub-blocks in each source block"
+    static final int N_max = 1/* K_max */;           // "maximum interleaver length, in number of sub-blocks"
     // TODO enable interleaving
 
     static final int K_min = 10;  // the first K' value in the systematic indices table

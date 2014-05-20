@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 /**
- * This package contains classes that handle FEC parameters. These parameters are defined in the <i>Encoded FEC Object
- * Transmission Information</i> and the <i>FEC Payload ID</i>, in <a href="http://tools.ietf.org/html/rfc6330">RFC
+ * This package contains classes that handle FEC parameters. These parameters are defined in the <em>Encoded FEC Object
+ * Transmission Information</em> and the <em>FEC Payload ID</em>, in <a href="http://tools.ietf.org/html/rfc6330">RFC
  * 6330</a>.
  */
 package net.fec.openrq.parameters;

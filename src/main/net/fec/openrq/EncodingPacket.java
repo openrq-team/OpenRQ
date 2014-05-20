@@ -41,7 +41,7 @@ import net.fec.openrq.util.numericaltype.SizeOf;
  * inside encoding packets to be delivered to a RaptorQ decoder, as defined in RFC 6330.
  * <p>
  * Encoding packets contain either source symbols or repair symbols. Encoding packets also carry information that
- * identifies the symbols: a <i>FEC Payload ID</i> as defined in RFC 6330.
+ * identifies the symbols: a <em>FEC Payload ID</em> as defined in RFC 6330.
  * <p>
  * Instances of this class are provided by a {@link SourceBlockEncoder} object upon encoding data, and are received by a
  * {@link SourceBlockDecoder} object upon decoding data.
@@ -314,10 +314,10 @@ public abstract class EncodingPacket {
     public abstract int encodingSymbolID();
 
     /**
-     * Returns a <i>FEC Payload ID</i> as defined in RFC 6330 (concatenation of the {@linkplain #sourceBlockNumber()
+     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330 (concatenation of the {@linkplain #sourceBlockNumber()
      * source block number} and {@linkplain #encodingSymbolID() encoding symbol identifier}).
      * 
-     * @return a <i>FEC Payload ID</i> as defined in RFC 6330
+     * @return a <em>FEC Payload ID</em> as defined in RFC 6330
      */
     public abstract int fecPayloadID();
 
@@ -336,8 +336,8 @@ public abstract class EncodingPacket {
     public abstract SymbolType symbolType();
 
     /**
-     * Returns the data from the symbol(s) in this packet. The symbols have contiguous <i>encoding symbol
-     * identifiers</i>.
+     * Returns the data from the symbol(s) in this packet. The symbols have contiguous <em>encoding symbol
+     * identifiers</em>.
      * <p>
      * The returned buffer is {@linkplain ByteBuffer#isReadOnly() read-only}, has a {@linkplain ByteBuffer#position()
      * position} of 0, and a {@linkplain ByteBuffer#capacity() capacity} and {@linkplain ByteBuffer#limit() limit} equal
@@ -352,10 +352,10 @@ public abstract class EncodingPacket {
     public abstract ByteBuffer symbols();
 
     /**
-     * Returns the length of the symbols data in number of bytes. This value is the same as
+     * Returns the length of the symbols data, in number of bytes. This value is the same as
      * {@code symbols().remaining()}.
      * 
-     * @return the length of the symbols data in number of bytes
+     * @return the length of the symbols data, in number of bytes
      */
     public abstract int symbolsLength();
 

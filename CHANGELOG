@@ -6,3 +6,35 @@ Initial release.
 1.0.1
 --------
 Fixed critical bug.
+
+
+2.0
+--------
+Improved performance.
+
+Renamed in general "sub-blocks" to "interleaver length", in order to distinguish
+the name from "source blocks".
+
+Changed public method signatures:
+========================================
+= net.fec.openrq.parameters.FECParameters
+== ++ public int interleaverLength()
+== -- public int numberOfSubBlocks()
+========================================
+= net.fec.openrq.parameters.ParameterChecker
+== ++ public static int minInterleaverLength()
+== -- public static int minNumSubBlocks()
+== ++ public static int maxInterleaverLength()
+== -- public static int maxNumSubBlocks()
+== ++ public static boolean areValidFECParameters(long, int, int, int)
+== -- public static boolean areValidFECParameters(long, int, int, int, int)
+== ++ public static String getFECParamsErrorString(long, int, int, int)
+== -- public static String testValidFECParameters(long, int, int, int, int)
+== ++ public static String getDerivingParamsErrorString(long, int, int, int)
+== -- public static String testValidDerivingParameters(long, int, int, int)
+== ++ public static String getFECPayloadIDErrorString(int, int, int)
+== -- public static String testValidFECPayloadID(int, int, int)
+========================================
+= net.fec.openrq.parameters.ParameterIO
+== ++ public static int extractInterleaverLength(int)
+== -- public static int extractNumSubBlocks(int)

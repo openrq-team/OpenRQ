@@ -26,8 +26,8 @@
  * <li>Encoded packets are collected by decoder objects at the receivers until a certain number is reached;
  * <li>Data is decoded from the encoding packets, resulting in the original data.
  * </ol>
- * <b>Note:</b> <i>The use of this API is also recommended in situations where retransmissions are costly, such as when
- * broadcasting data to multiple destinations, or when communication links are one-way.</i>
+ * <b>Note:</b> <em>The use of this API is also recommended in situations where retransmissions are costly, such as when
+ * broadcasting data to multiple destinations, or when communication links are one-way.</em>
  * <h2>How to use this API</h2> This section provides an overall view of the API, explaining the terms used throughout
  * the documentation and presenting which classes the user is supposed to use.
  * <h3>Terminology</h3>
@@ -54,14 +54,14 @@
  * <dd>The moment when the available encoding symbols in the decoder are not sufficient for a successful decoding of the
  * source block.</dd>
  * </dl>
- * <h3>Initializing</h3> Encoders and decoders are initialized with the help of <i>FEC parameters</i>. These include the
+ * <h3>Initializing</h3> Encoders and decoders are initialized with the help of <em>FEC parameters</em>. These include the
  * length of the data and information on how to partition the source data into source blocks and source symbols.
  * Encoders are initialized by passing source data and FEC parameters. Decoders are initialized by passing FEC
  * parameters.
  * <p>
- * <b>Note:</b> <i>The same FEC parameters must be passed to an encoder and a decoder in order to correctly decode the
+ * <b>Note:</b> <em>The same FEC parameters must be passed to an encoder and a decoder in order to correctly decode the
  * original source data, which usually means transmitting the parameters to a receiver before sending data, so that the
- * receiver is able to initialize a decoder that matches the sender's encoder.</i>
+ * receiver is able to initialize a decoder that matches the sender's encoder.</em>
  * <p>
  * Class {@link net.fec.openrq.OpenRQ OpenRQ} is the entry point for the OpenRQ API, and provides static methods for
  * initializing encoders and decoders.

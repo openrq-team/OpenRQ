@@ -16,6 +16,8 @@
 package net.fec.openrq;
 
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +31,6 @@ import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.arithmetic.ExtraMath;
 
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -63,7 +64,6 @@ public final class DataIntegrityCheckTest {
         final int[] Ks = TestingCommon.primeAndPowerDistribution(10, 2);
         final int[] Zs = TestingCommon.primeAndPowerDistribution(2, 3);
         final int N = 1;
-        final int Al = ParameterChecker.symbolAlignmentValue();
 
         // an estimation of how many sets of FEC parameters will be needed (not every combination is valid)
         final List<Object[]> params = new ArrayList<>((Fs.length * Ks.length * Zs.length) / 2);
@@ -80,7 +80,7 @@ public final class DataIntegrityCheckTest {
                     final int Z = Zs[z];
 
                     final int T = ExtraMath.ceilDiv(F, K);
-                    if (ParameterChecker.areValidFECParameters(F, T, Z, N, Al)) {
+                    if (ParameterChecker.areValidFECParameters(F, T, Z, N)) {
                         params.add(new Object[] {FECParameters.newParameters(F, T, Z)});
                     }
                 }
@@ -111,7 +111,7 @@ public final class DataIntegrityCheckTest {
         }
 
         // compare the original and decoded data
-        Assert.assertArrayEquals(data, dec.dataArray());
+        assertArrayEquals(data, dec.dataArray());
     }
 
     @Test
@@ -146,6 +146,6 @@ public final class DataIntegrityCheckTest {
         }
 
         // compare the original and decoded data
-        Assert.assertArrayEquals(data, dec.dataArray());
+        assertArrayEquals(data, dec.dataArray());
     }
 }
