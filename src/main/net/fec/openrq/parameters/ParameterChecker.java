@@ -66,15 +66,15 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code true} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
+     * Returns {@code false} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
      * {@linkplain #maxDataLength() maxDataLen}.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
-     * @return {@code true} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
+     * @return {@code false} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
      *         {@linkplain #maxDataLength() maxDataLen}
      */
-    public static boolean isDataLengthWithinBounds(long dataLen) {
+    public static boolean isDataLengthOutOfBounds(long dataLen) {
 
         return minDataLength() <= dataLen && dataLen <= maxDataLength();
     }
@@ -102,15 +102,15 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code true} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
+     * Returns {@code false} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
      * {@linkplain #maxSymbolSize() maxSymbSize}.
      * 
      * @param symbSize
      *            A symbol size, in number of bytes
-     * @return {@code true} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
+     * @return {@code false} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
      *         {@linkplain #maxSymbolSize() maxSymbSize}
      */
-    public static boolean isSymbolSizeWithinBounds(long symbSize) {
+    public static boolean isSymbolSizeOutOfBounds(long symbSize) {
 
         return minSymbolSize() <= symbSize && symbSize <= maxSymbolSize();
     }
@@ -138,15 +138,15 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code true} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
+     * Returns {@code false} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
      * {@linkplain #maxNumSourceBlocks() maxSrcBs}.
      * 
      * @param numSrcBs
      *            A number of source blocks into which a source data is divided
-     * @return {@code true} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
+     * @return {@code false} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
      *         {@linkplain #maxNumSourceBlocks() maxSrcBs}
      */
-    public static boolean isNumberOfSourceBlocksWithinBounds(long numSrcBs) {
+    public static boolean isNumberOfSourceBlocksOutOfBounds(long numSrcBs) {
 
         return minNumSourceBlocks() <= numSrcBs && numSrcBs <= maxNumSourceBlocks();
     }
@@ -176,15 +176,15 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code true} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
+     * Returns {@code false} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
      * {@linkplain #maxInterleaverLength() maxInterLen}.
      * 
      * @param interLen
      *            An interleaver length, in number of sub-blocks per source block
-     * @return {@code true} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
+     * @return {@code false} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
      *         {@linkplain #maxInterleaverLength() maxInterLen}
      */
-    public static boolean isInterleaverLengthWithinBounds(long interLen) {
+    public static boolean isInterleaverLengthOutOfBounds(long interLen) {
 
         return minInterleaverLength() <= interLen && interLen <= maxInterleaverLength();
     }
@@ -214,10 +214,10 @@ public final class ParameterChecker {
      * <b><u>Restrictions over domain</u></b>
      * <p>
      * All parameters must be within their specific bounds (refer to methods for
-     * {@linkplain #isDataLengthWithinBounds(long) data
-     * length}, {@linkplain #isSymbolSizeWithinBounds(long) symbol
-     * size}, {@linkplain #isNumberOfSourceBlocksWithinBounds(long)
-     * number of source blocks} and {@linkplain #isInterleaverLengthWithinBounds(long) interleaver length}).
+     * {@linkplain #isDataLengthOutOfBounds(long) data
+     * length}, {@linkplain #isSymbolSizeOutOfBounds(long) symbol
+     * size}, {@linkplain #isNumberOfSourceBlocksOutOfBounds(long)
+     * number of source blocks} and {@linkplain #isInterleaverLengthOutOfBounds(long) interleaver length}).
      * <p>
      * <b><u>Restrictions over value combinations</u></b>
      * <p>
@@ -288,7 +288,7 @@ public final class ParameterChecker {
         final int Al = symbolAlignmentValue();
 
         // domain restrictions
-        if (!isDataLengthWithinBounds(F)) {
+        if (isDataLengthOutOfBounds(F)) {
             return String.format(
                 "data length (%d) must be within [%d, %d] bytes",
                 F, F_min, F_max);
@@ -303,12 +303,12 @@ public final class ParameterChecker {
                 "symbol size (%d) must be within [%d, %d] bytes",
                 T, Al, T_max);
         }
-        if (!isNumberOfSourceBlocksWithinBounds(Z)) {
+        if (isNumberOfSourceBlocksOutOfBounds(Z)) {
             return String.format(
                 "number of source blocks (%d) must be within [%d, %d]",
                 Z, Z_min, Z_max);
         }
-        if (!isInterleaverLengthWithinBounds(N)) {
+        if (isInterleaverLengthOutOfBounds(N)) {
             return String.format(
                 "interleaver length (%d) must be within [%d, %d]",
                 N, N_min, N_max);
@@ -384,7 +384,7 @@ public final class ParameterChecker {
         final int Al = symbolAlignmentValue();
 
         // domain restrictions
-        if (!isDataLengthWithinBounds(F)) {
+        if (isDataLengthOutOfBounds(F)) {
             return String.format(
                 "data length (%d) must be within [%d, %d] bytes",
                 F, F_min, F_max);
@@ -552,7 +552,7 @@ public final class ParameterChecker {
     public static String getFECPayloadIDErrorString(int sbn, int esi, int numSrcBs) {
 
         final int Z = numSrcBs;
-        if (!isNumberOfSourceBlocksWithinBounds(Z)) {
+        if (isNumberOfSourceBlocksOutOfBounds(Z)) {
             throw new IllegalArgumentException("invalid number of source blocks");
         }
 
