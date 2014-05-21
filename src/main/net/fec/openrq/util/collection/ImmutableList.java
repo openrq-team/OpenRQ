@@ -170,6 +170,12 @@ public class ImmutableList<E> extends AbstractList<E> implements RandomAccess {
         this.elements = elements;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws IndexOutOfBoundsException
+     *             {@inheritDoc}
+     */
     @Override
     public E get(int index) {
 

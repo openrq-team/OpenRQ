@@ -144,9 +144,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     public EncodingPacket sourcePacket(int esi) {
 
         checkSourceSymbolESI(esi);
-
-        final EncodingSymbol sourceSymbol = sourceSymbols[esi];
-        return EncodingPacket.newSourcePacket(sbn, esi, sourceSymbol.transportData(), 1);
+        return EncodingPacket.newSourcePacket(sbn, esi, sourceSymbols[esi].transportData(), 1);
     }
 
     @Override
@@ -174,8 +172,6 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     public EncodingPacket repairPacket(int esi) {
 
         checkRepairSymbolESI(esi);
-
-        // return the repair packet
         return EncodingPacket.newRepairPacket(sbn, esi, getRepairSymbol(esi).transportData(), 1);
     }
 
@@ -192,7 +188,6 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         }
         symbols.flip();
 
-        // return the repair packet
         return EncodingPacket.newRepairPacket(sbn, esi, symbols.asReadOnlyBuffer(), numSymbols);
     }
 

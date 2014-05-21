@@ -17,6 +17,8 @@
 package net.fec.openrq.parameters;
 
 
+import static net.fec.openrq.parameters.InternalConstants.ESI_num_bytes;
+import static net.fec.openrq.parameters.InternalConstants.common_OTI_reserved_inverse_mask;
 import net.fec.openrq.util.numericaltype.SizeOf;
 import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
@@ -162,7 +164,7 @@ public class ParameterIO {
     // For FEC Payload ID.
     private static int sourceBlockNumberShift() {
 
-        return InternalConstants.ESI_num_bytes * Byte.SIZE;
+        return ESI_num_bytes * Byte.SIZE;
     }
 
     /**
@@ -182,7 +184,7 @@ public class ParameterIO {
     private static int unsignEncodingSymbolID(int esi) {
 
         // 24-bit value
-        return UnsignedTypes.getUnsignedBytes(esi, InternalConstants.ESI_num_bytes);
+        return UnsignedTypes.getUnsignedBytes(esi, ESI_num_bytes);
     }
 
     /**
@@ -213,7 +215,15 @@ public class ParameterIO {
         final long usF = unsignDataLength(dataLen);
         final int usT = unsignSymbolSize(symbolSize);
 
-        return (usF << dataLengthShift()) | usT;
+        return (usF << dataLengthShift()) | usT; // reserved bits are all zeroes
+    }
+
+    /*
+     * Puts reserved bits to zeroes.
+     */
+    static long canonicalizeCommonFecOTI(long commonFecOTI) {
+
+        return commonFecOTI & common_OTI_reserved_inverse_mask;
     }
 
     // =========== Encoded Scheme-specific FEC OTI - Z|N|Al ========== //

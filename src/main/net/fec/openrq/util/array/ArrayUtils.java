@@ -24,41 +24,56 @@ import java.lang.reflect.Array;
 public final class ArrayUtils {
 
     /**
-     * @param clazz
+     * @param componentType
+     *            The {@code Class} object representing the component type of the new array
      * @param length
-     * @return a new array from a specific class with the specified length
+     *            The length of the new array
+     * @return a new array with a specific component type and length
+     * @exception NullPointerException
+     *                If the specified {@code componentType} parameter is null
+     * @exception IllegalArgumentException
+     *                If {@code componentType} is {@link Void#TYPE}
+     * @exception NegativeArraySizeException
+     *                If the specified {@code length} is negative
      */
-    public static <T> T[] newArray(Class<T> clazz, int length) {
+    public static <T> T[] newArray(Class<T> componentType, int length) {
 
         @SuppressWarnings("unchecked")
-        final T[] array = (T[])Array.newInstance(clazz, length);
+        final T[] array = (T[])Array.newInstance(componentType, length);
         return array;
     }
 
     /**
-     * @param arrOff
-     * @param arrLen
-     * @param length
+     * @param off
+     *            An index of the array (must be non-negative)
+     * @param len
+     *            The length of the array region (must be non-negative and no larger than {@code arrayFence - off})
+     * @param arrayFence
+     *            The proper length of the array (<b>required to be non-negative</b> - undefined result if negative)
      * @exception IndexOutOfBoundsException
+     *                If {@code off < 0 || len < 0 || len > (arrayFence - off)}
      */
-    public static void checkArrayBounds(int arrOff, int arrLen, int length) {
+    public static void checkArrayBounds(int off, int len, int arrayFence) {
 
         // retrieved from java.nio.Buffer class
-        if ((arrOff | arrLen | (arrOff + arrLen) | (length - (arrOff + arrLen))) < 0) {
-            throw new IndexOutOfBoundsException(getArrayBoundsMsg(arrOff, arrLen, length));
+        if ((off | len | (off + len) | (arrayFence - (off + len))) < 0) {
+            throw new IndexOutOfBoundsException(getArrayBoundsMsg(off, len, arrayFence));
         }
     }
 
     // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
-    private static String getArrayBoundsMsg(int off, int len, int arrLength) {
+    private static String getArrayBoundsMsg(int off, int len, int arrayFence) {
 
-        return "region off = " + off + "; region length = " + len + "; array length = " + arrLength;
+        return "region off = " + off + "; region length = " + len + "; array length = " + arrayFence;
     }
 
     /**
      * @param index
+     *            An index of anything with a length
      * @param length
+     *            The length of the object being indexed
      * @exception IndexOutOfBoundsException
+     *                If {@code index < 0 || index >= length}
      */
     public static void checkIndexRange(int index, int length) {
 

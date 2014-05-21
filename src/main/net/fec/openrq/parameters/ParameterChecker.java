@@ -221,27 +221,32 @@ public final class ParameterChecker {
      * <p>
      * <b><u>Restrictions over value combinations</u></b>
      * <p>
-     * Gist: <em>"If the data length is small/large, the symbol size must be equally small/large as well."</em>
-     * <p>
-     * Let <b>maxSymbPerBlock</b> be the {@linkplain #maxNumSourceSymbolsPerBlock() maximum number of source symbols per
-     * source block}. The following item must be true:
+     * Let:
      * <ul>
-     * <li>{@code ceiling}(<b>dataLen</b> / <b>symbSize</b>) &le; <b>maxSymbPerBlock</b>
+     * <li><b>maxSymbPerBlock</b> := {@link #maxNumSourceSymbolsPerBlock()}
+     * <li><b>maxTotalSymb</b> := <b>maxSymbPerBlock</b> &times; {@link #maxNumSourceBlocks()}
+     * <li><b>totalSymb</b> := {@code ceiling} (<b>dataLen</b> / <b>symbSize</b>)
      * </ul>
      * <p>
-     * Gist:
-     * <em>"There cannot be more source blocks than source symbols; there cannot be too many source symbols per source block".</em>
-     * <p>
-     * Let <b>totalSymb</b> be the total number of symbols calculated as follows: <b>totalSymb</b> := {@code ceiling}
-     * (<b>dataLen</b> / <b>symbSize</b>). The following items must all be true:
+     * The following items must be true:
+     * <ul>
+     * <li><em>"If the data length is too large, the symbol size must be relatively large as well."</em>
+     * <ul>
+     * <li><b>totalSymb</b> &le; <b>maxTotalSymb</b>
+     * </ul>
+     * <li>
+     * <em>"There cannot be more source blocks than source symbols."</em>
      * <ul>
      * <li><b>numSrcBs</b> &le; <b>totalSymb</b>
+     * </ul>
+     * <li><em>"There cannot be too many source symbols per source block."</em>
+     * <ul>
      * <li><b>numSrcBs</b> &ge; {@code ceiling}(<b>totalSymb</b> / <b>maxSymbPerBlock</b>)
      * </ul>
-     * <p>
-     * The following item must be true:
+     * <li><em>"The number of interleaver sub-blocks cannot exceed the symbol size."</em>
      * <ul>
      * <li><b>interLen</b> &le; <b>symbSize</b>
+     * </ul>
      * </ul>
      * 
      * @param dataLen
@@ -261,8 +266,8 @@ public final class ParameterChecker {
     }
 
     /**
-     * Tests multiple cases and returns an error string if any FEC parameter is invalid, otherwise the method returns an
-     * empty string.
+     * Tests if the FEC parameters are valid according to {@link #areValidFECParameters(long, int, int, int)}, and if so
+     * the method returns an empty string, otherwise it returns an error string indicating which parameters are invalid.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
@@ -351,34 +356,32 @@ public final class ParameterChecker {
      * @param dataLen
      * @param maxPaLen
      * @param maxDBMem
-     * @param sAlign
      * @return
      */
-    public static boolean areValidDerivingParameters(long dataLen, int maxPaLen, int maxDBMem, int sAlign) {
+    public static boolean areValidDerivingParameters(long dataLen, int maxPaLen, int maxDBMem) {
 
-        return getDerivingParamsErrorString(dataLen, maxPaLen, maxDBMem, sAlign).isEmpty();
+        return getDerivingParamsErrorString(dataLen, maxPaLen, maxDBMem).isEmpty();
     }
 
     /**
-     * Tests multiple cases and returns an error string if any deriving parameter is invalid, otherwise the method
-     * returns an empty string.
+     * Tests if the deriving parameters are valid according to {@link #areValidDerivingParameters(long, int, int)}, and
+     * if so the method returns an empty string, otherwise it returns an error string indicating which parameters are
+     * invalid.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
      * @param maxPaLen
      *            A maximum size for a payload containing one encoding symbol
      * @param maxDBMem
-     *            A maximum block size, in number of bytes that is decodable in working memory
-     * @param sAlign
-     *            The symbol alignment parameter
+     *            A maximum block size, in number of bytes, that is decodable in working memory
      * @return an error string if some parameter is invalid or an empty string if all parameters are valid
      */
-    public static String getDerivingParamsErrorString(long dataLen, int maxPaLen, int maxDBMem, int sAlign) {
+    public static String getDerivingParamsErrorString(long dataLen, int maxPaLen, int maxDBMem) {
 
         final long F = dataLen;
         final int P = maxPaLen;
         final int WS = maxDBMem;
-        final int Al = sAlign;
+        final int Al = symbolAlignmentValue();
 
         // domain restrictions
         if (!isDataLengthWithinBounds(F)) {
@@ -532,8 +535,9 @@ public final class ParameterChecker {
     }
 
     /**
-     * Tests multiple cases and returns an error string if any FEC Payload ID parameter is invalid, otherwise the method
-     * returns an empty string.
+     * Tests if the FEC Payload ID parameters are valid according to {@link #isValidFECPayloadID(int, int, int)}, and if
+     * so the method returns an empty string, otherwise it returns an error string indicating which parameters are
+     * invalid.
      * 
      * @param sbn
      *            A source block number

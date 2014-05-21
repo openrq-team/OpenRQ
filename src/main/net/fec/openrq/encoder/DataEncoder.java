@@ -70,7 +70,7 @@ public interface DataEncoder {
     /**
      * Returns an encoder object for the source block with the provided source block number.
      * <p>
-     * <b><em>Bounds checking</i></b> - If we have <b>Z</b> as the number of source blocks into which is divided the the
+     * <b><em>Bounds checking</em></b> - If we have <b>Z</b> as the number of source blocks into which is divided the the
      * source data being encoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>

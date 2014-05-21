@@ -108,7 +108,7 @@ public final class FECParameters {
             return Parsed.invalid(ParameterChecker.getFECParamsErrorString(F, T, Z, N));
         }
         else {
-            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
+            return Parsed.of(newRemoteInstance(commonFecOTI, schemeSpecFecOTI));
         }
     }
 
@@ -183,7 +183,7 @@ public final class FECParameters {
             return Parsed.invalid(ParameterChecker.getFECParamsErrorString(F, T, Z, N));
         }
         else {
-            return Parsed.of(new FECParameters(commonFecOTI, schemeSpecFecOTI));
+            return Parsed.of(newRemoteInstance(commonFecOTI, schemeSpecFecOTI));
         }
     }
 
@@ -228,8 +228,8 @@ public final class FECParameters {
      * disabled. Additionally, the symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
-     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, 1, Al)}, and an
-     * {@code IllegalArgumentException} is thrown if the parameters are invalid.
+     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, 1)}, and an {@code IllegalArgumentException}
+     * is thrown if the parameters are invalid.
      * 
      * @param dataLen
      *            The length of the source data, in number of bytes
@@ -252,7 +252,7 @@ public final class FECParameters {
      * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
-     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, interLen, Al)}, and an
+     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, interLen)}, and an
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * 
      * @param dataLen
@@ -276,7 +276,7 @@ public final class FECParameters {
         final int Al = ParameterChecker.symbolAlignmentValue();
 
         if (ParameterChecker.areValidFECParameters(F, T, Z, N)) {
-            return newInstance(F, T, Z, N, Al);
+            return newLocalInstance(F, T, Z, N, Al);
         }
         else {
             throw new IllegalArgumentException(ParameterChecker.getFECParamsErrorString(F, T, Z, N));
@@ -295,7 +295,7 @@ public final class FECParameters {
      * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidDerivingParameters
-     * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)}, and an
+     * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock)}, and an
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * 
      * @param dataLen
@@ -305,6 +305,8 @@ public final class FECParameters {
      * @param maxDBMem
      *            The maximum block size, in number of bytes that is decodable in working memory
      * @return a derived {@code FECParameters} instance
+     * @exception IllegalArgumentException
+     *                If the provided deriving parameters are invalid
      */
     public static FECParameters deriveParameters(long dataLen, int maxPaLen, int maxDBMem) {
 
@@ -313,7 +315,7 @@ public final class FECParameters {
         final int WS = maxDBMem;
         final int Al = ParameterChecker.symbolAlignmentValue();
 
-        if (ParameterChecker.areValidDerivingParameters(F, P, WS, Al)) {
+        if (ParameterChecker.areValidDerivingParameters(F, P, WS)) {
             final int T = Math.min(P, T_max);
             // interleaving is disabled for now
             final int SStimesAl = T;                     // SS * Al = T
@@ -325,10 +327,10 @@ public final class FECParameters {
             final int Z = deriveZ(Kt, N_max, WS, Al, T);
             final int N = deriveN(Kt, Z, N_max, WS, Al, T);
 
-            return newInstance(F, T, Z, N, Al);
+            return newLocalInstance(F, T, Z, N, Al);
         }
         else {
-            throw new IllegalArgumentException(ParameterChecker.getDerivingParamsErrorString(F, P, WS, Al));
+            throw new IllegalArgumentException(ParameterChecker.getDerivingParamsErrorString(F, P, WS));
         }
     }
 
@@ -376,11 +378,19 @@ public final class FECParameters {
         return deriveParameters((long)dataLen, maxPayLen, maxDecBlock);
     }
 
-    private static FECParameters newInstance(long F, int T, int Z, int N, int Al) {
+    private static FECParameters newLocalInstance(long F, int T, int Z, int N, int Al) {
 
         final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
         final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N, Al);
         return new FECParameters(commonFecOTI, schemeSpecFecOTI);
+    }
+
+    private static FECParameters newRemoteInstance(long commonFecOTI, int schemeSpecFecOTI) {
+
+        // equality comparison and hashCode use the full value of the commonFecOTI,
+        // so make sure the reserved region of the Common FEC OTI is all zeroes
+        final long canonCommonFecOTI = ParameterIO.canonicalizeCommonFecOTI(commonFecOTI);
+        return new FECParameters(canonCommonFecOTI, schemeSpecFecOTI);
     }
 
 

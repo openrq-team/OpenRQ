@@ -43,4 +43,6 @@ final class InternalConstants {
 
     static final int F_num_bytes = 5;
     static final int ESI_num_bytes = 3;
+
+    static final long common_OTI_reserved_inverse_mask = 0xFF_FF_FF_FF_FF_00_FF_FFL; // third octet is reserved bits
 }
