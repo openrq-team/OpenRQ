@@ -124,8 +124,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception IllegalArgumentException
-     *                {@inheritDoc}
-     * @see #numberOfSourceBlocks()
+     *                If the provided source block number is invalid
      */
     @Override
     public SourceBlockDecoder sourceBlock(int sbn) {
@@ -154,7 +153,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code symbols} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> parsePacket(int sbn, int esi, byte[] symbols, boolean copySymbols) {
@@ -166,9 +165,9 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception IndexOutOfBoundsException
-     *                {@inheritDoc}
+     *                If the pre-conditions on the array offset and length do not hold
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code symbols} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> parsePacket(int sbn, int esi, byte[] symbols, int off, int len, boolean copySymbols) {
@@ -180,7 +179,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code symbols} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> parsePacket(int sbn, int esi, ByteBuffer symbols, boolean copySymbols) {
@@ -192,7 +191,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code ser} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> parsePacket(SerializablePacket ser, boolean copySymbols) {
@@ -204,7 +203,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code array} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> parsePacket(byte[] array, boolean copySymbols) {
@@ -216,9 +215,9 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception IndexOutOfBoundsException
-     *                {@inheritDoc}
+     *                If the pre-conditions on the array offset and length do not hold
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code array} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> parsePacket(byte[] array, int off, int len, boolean copySymbols) {
@@ -230,7 +229,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code buffer} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> parsePacket(ByteBuffer buffer, boolean copySymbols) {
@@ -242,9 +241,9 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @throws IOException
-     *             {@inheritDoc}
+     *             If an IO error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code in} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> readPacketFrom(DataInput in) throws IOException {
@@ -256,9 +255,9 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @throws IOException
-     *             {@inheritDoc}
+     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
-     *                {@inheritDoc}
+     *                If {@code ch} is {@code null}
      */
     @Override
     public Parsed<EncodingPacket> readPacketFrom(ReadableByteChannel ch) throws IOException {

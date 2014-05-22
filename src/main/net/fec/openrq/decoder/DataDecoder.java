@@ -329,7 +329,7 @@ public interface DataDecoder {
 
     /**
      * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. The format of the packet data must follow
-     * the format specified by {@link EncodingPacket#writeTo(java.nio.channels.WritableByteChannel()}.
+     * the format specified by {@link EncodingPacket#writeTo(java.nio.channels.WritableByteChannel)}.
      * <p>
      * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
      * {@link java.nio.channels.FileChannel FileChannel}.

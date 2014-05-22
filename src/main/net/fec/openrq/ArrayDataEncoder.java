@@ -122,7 +122,7 @@ public final class ArrayDataEncoder implements DataEncoder {
      * {@inheritDoc}
      * 
      * @exception IllegalArgumentException
-     *                {@inheritDoc}
+     *                If the provided source block number is invalid
      * @see #numberOfSourceBlocks()
      */
     @Override

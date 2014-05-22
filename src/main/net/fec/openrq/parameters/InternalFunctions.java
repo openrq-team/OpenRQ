@@ -32,9 +32,9 @@ final class InternalFunctions {
     }
     
     // requires valid arguments
-    static int minWS(int KL, int n, int Al, int T) {
+    static int minWS(int maxK, int n, int Al, int T) {
         
-        return KL * (Al * ExtraMath.ceilDiv(T, Al * n));
+        return SystematicIndices.floor(maxK) * (Al * ExtraMath.ceilDiv(T, Al * n));
     }
 
     private InternalFunctions() {

@@ -32,7 +32,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
 import net.fec.openrq.Parsed;
-import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.numericaltype.SizeOf;
 
 
@@ -42,9 +41,9 @@ import net.fec.openrq.util.numericaltype.SizeOf;
  * <p>
  * The FEC parameters consist of:
  * <dl>
- * <dt><b>Data length</b></dt>
+ * <dt><b>Source data length</b></dt>
  * <dd>The length of the source data, in number of bytes. Since encoded data may contain extra padding bytes, this value
- * allows a decoder to infer the original source data length.</dd>
+ * allows a decoder to infer the real size of the decoded data.</dd>
  * <dt><b>Symbol size</b></dt>
  * <dd>The size of a symbol, in number of bytes. This value represents the size of an encoding symbol (source or
  * repair), except the size of the last source symbol, which may be smaller.</dd>
@@ -230,6 +229,11 @@ public final class FECParameters {
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
      * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, 1)}, and an {@code IllegalArgumentException}
      * is thrown if the parameters are invalid.
+     * <p>
+     * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
+     * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
+     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameter-bounds"> section on FEC parameter
+     * bounds</a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            The length of the source data, in number of bytes
@@ -254,6 +258,11 @@ public final class FECParameters {
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
      * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, interLen)}, and an
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
+     * <p>
+     * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
+     * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
+     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameter-bounds"> section on FEC parameter
+     * bounds</a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            The length of the source data, in number of bytes
@@ -286,8 +295,8 @@ public final class FECParameters {
     /**
      * Derives FEC parameters from specific deriving parameters.
      * <p>
-     * A maximum payload length is required, and affects the maximum size of an encoding symbol, which will be equal to
-     * the provided payload length.
+     * A maximum payload length is required, and affects the maximum size of an encoding symbol, which will be at most
+     * equal to the provided payload length (it may be smaller).
      * <p>
      * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
      * limited amount of memory in an efficient way.
@@ -299,11 +308,11 @@ public final class FECParameters {
      * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * 
      * @param dataLen
-     *            The length of the source data, in number of bytes
+     *            A source data length, in number of bytes
      * @param maxPaLen
-     *            The maximum size for a payload containing one encoding symbol
+     *            A maximum length, in number of bytes, for a payload containing one encoding symbol
      * @param maxDBMem
-     *            The maximum block size, in number of bytes that is decodable in working memory
+     *            A maximum size, in number of bytes, of a block decodable in working memory
      * @return a derived {@code FECParameters} instance
      * @exception IllegalArgumentException
      *                If the provided deriving parameters are invalid
@@ -318,11 +327,11 @@ public final class FECParameters {
         if (ParameterChecker.areValidDerivingParameters(F, P, WS)) {
             final int T = Math.min(P, T_max);
             // interleaving is disabled for now
-            final int SStimesAl = T;                     // SS * Al = T
+            final int SStimesAl = T;                             // SS * Al = T
 
             // safe cast because F and T are appropriately bounded
-            final int Kt = (int)ExtraMath.ceilDiv(F, T); // Kt = ceil(F/T)
-            final int N_max = T / SStimesAl;             // N_max = floor(T/(SS*Al))
+            final int Kt = ParameterChecker._totalSymbols(F, T); // Kt = ceil(F/T)
+            final int N_max = T / SStimesAl;                     // N_max = floor(T/(SS*Al))
 
             final int Z = deriveZ(Kt, N_max, WS, Al, T);
             final int N = deriveN(Kt, Z, N_max, WS, Al, T);
@@ -588,7 +597,7 @@ public final class FECParameters {
     public int totalSymbols() {
 
         // safe cast because F and T are valid, which prevents integer overflow
-        return (int)ExtraMath.ceilDiv(dataLength(), symbolSize());
+        return (int)ceilDiv(dataLength(), symbolSize());
     }
 
     /**
