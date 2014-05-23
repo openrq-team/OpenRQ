@@ -20,7 +20,7 @@ limitations under the License.
     </description>
 
 <!-- ================ Properties initialization ================ -->
-    <property name="version" value="1.0.1"/>
+    <property name="version" value="2.0"/>
     
     <property name="top.src_dir" location="src"/>
     <property name="top.build_dir" location="build"/>
