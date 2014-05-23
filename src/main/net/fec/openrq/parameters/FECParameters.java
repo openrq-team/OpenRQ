@@ -17,8 +17,8 @@
 package net.fec.openrq.parameters;
 
 
-import static net.fec.openrq.parameters.InternalConstants.T_max;
 import static net.fec.openrq.parameters.InternalFunctions.KL;
+import static net.fec.openrq.parameters.InternalFunctions.getTotalSymbols;
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 
 import java.io.DataInput;
@@ -223,17 +223,16 @@ public final class FECParameters {
     /**
      * Returns a new instance, given specific FEC parameters.
      * <p>
-     * <b>Note:</b> <em>The interleaver length will be equal to 1, which effectively means that data interleaving is
-     * disabled. Additionally, the symbol alignment parameter "Al" is internally obtained.</em>
+     * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
      * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidFECParameters
-     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, 1)}, and an {@code IllegalArgumentException}
-     * is thrown if the parameters are invalid.
+     * ParameterChecker.areValidFECParameters(dataLen, symbSize, numSrcBs, interLen)}, and an
+     * {@code IllegalArgumentException} is thrown if the parameters are invalid.
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
-     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameter-bounds"> section on FEC parameter
-     * bounds</a> in the {@link ParameterChecker} class header.
+     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameters-bounds"> section on "FEC
+     * parameters bounds"</a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            The length of the source data, in number of bytes
@@ -261,8 +260,8 @@ public final class FECParameters {
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
-     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameter-bounds"> section on FEC parameter
-     * bounds</a> in the {@link ParameterChecker} class header.
+     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameters-bounds"> section on "FEC
+     * parameters bounds"</a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            The length of the source data, in number of bytes
@@ -293,98 +292,77 @@ public final class FECParameters {
     }
 
     /**
-     * Derives FEC parameters from specific deriving parameters.
+     * Derives FEC parameters from specific deriver parameters.
      * <p>
-     * A maximum payload length is required, and affects the maximum size of an encoding symbol, which will be at most
-     * equal to the provided payload length (it may be smaller).
+     * A payload length is required. It is equivalent to the "symbol size" FEC parameter.
      * <p>
-     * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
+     * A maximum size for a block that is decodable in working memory is required. It allows the decoder to work with a
      * limited amount of memory in an efficient way.
      * <p>
      * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
-     * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidDerivingParameters
-     * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock)}, and an
-     * {@code IllegalArgumentException} is thrown if the parameters are invalid.
+     * The provided parameters are validated by invoking {@link ParameterChecker#areValidDeriverParameters
+     * ParameterChecker.areValidDeriverParameters(dataLen, payLen, maxDBMem)}, and an {@code IllegalArgumentException}
+     * is thrown if the parameters are invalid.
+     * <p>
+     * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
+     * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
+     * obtain these bounds, refer to the <a href="ParameterChecker.html#deriver-parameters-bounds"> section on "Deriver
+     * parameters bounds"</a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
-     * @param maxPaLen
-     *            A maximum length, in number of bytes, for a payload containing one encoding symbol
+     * @param payLen
+     *            A payload length, in number of bytes (equivalent to the "symbol size" FEC parameter)
      * @param maxDBMem
-     *            A maximum size, in number of bytes, of a block decodable in working memory
+     *            A maximum size, in number of bytes, for a block decodable in working memory
      * @return a derived {@code FECParameters} instance
      * @exception IllegalArgumentException
-     *                If the provided deriving parameters are invalid
+     *                If the provided deriver parameters are invalid
      */
-    public static FECParameters deriveParameters(long dataLen, int maxPaLen, int maxDBMem) {
+    public static FECParameters deriveParameters(long dataLen, int payLen, int maxDBMem) {
 
         final long F = dataLen;
-        final int P = maxPaLen;
+        final int P = payLen;
         final int WS = maxDBMem;
         final int Al = ParameterChecker.symbolAlignmentValue();
 
-        if (ParameterChecker.areValidDerivingParameters(F, P, WS)) {
-            final int T = Math.min(P, T_max);
+        if (ParameterChecker.areValidDeriverParameters(F, P, WS)) {
+            final int T = P;
             // interleaving is disabled for now
-            final int SStimesAl = T;                             // SS * Al = T
+            final int SStimesAl = T;              // SS * Al = T
 
             // safe cast because F and T are appropriately bounded
-            final int Kt = ParameterChecker._totalSymbols(F, T); // Kt = ceil(F/T)
-            final int N_max = T / SStimesAl;                     // N_max = floor(T/(SS*Al))
+            final int Kt = getTotalSymbols(F, T); // Kt = ceil(F/T)
+            final int topN = T / SStimesAl;       // topN = floor(T/(SS*Al))
 
-            final int Z = deriveZ(Kt, N_max, WS, Al, T);
-            final int N = deriveN(Kt, Z, N_max, WS, Al, T);
+            final int Z = deriveZ(Kt, WS, T, Al, topN);
+            final int N = deriveN(Kt, Z, WS, T, Al, topN);
 
             return newLocalInstance(F, T, Z, N, Al);
         }
         else {
-            throw new IllegalArgumentException(ParameterChecker.getDerivingParamsErrorString(F, P, WS));
+            throw new IllegalArgumentException(ParameterChecker.getDeriverParamsErrorString(F, P, WS));
         }
     }
 
-    private static int deriveZ(long Kt, int N_max, int WS, int Al, int T) {
+    private static int deriveZ(long Kt, int WS, int T, int Al, int topN) {
 
         // Z = ceil(Kt/KL(N_max))
-        return (int)ceilDiv(Kt, KL(N_max, WS, Al, T));
+        return (int)ceilDiv(Kt, KL(WS, T, Al, topN));
     }
 
-    private static int deriveN(long Kt, int Z, int N_max, int WS, int Al, int T) {
+    private static int deriveN(long Kt, int Z, int WS, int T, int Al, int topN) {
 
         // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
-        final int KtOverZ = (int)ceilDiv(Kt, Z);
-        int n;
-        for (n = 1; n <= N_max && KtOverZ > KL(n, WS, Al, T); n++) {/* loop */}
+        final int topK = (int)ceilDiv(Kt, Z);
+        for (int n = topN; n >= 1; n--) {
+            if (topK <= KL(WS, T, Al, n)) {
+                return n;
+            }
+        }
 
-        return n;
-    }
-
-    /**
-     * Derives FEC parameters from specific deriving parameters.
-     * <p>
-     * A maximum payload length is required, and affects the maximum size of an encoding symbol, which will be equal to
-     * the provided payload length.
-     * <p>
-     * A maximum block size that is decodable in working memory is required, and allows the decoder to work with a
-     * limited amount of memory in an efficient way.
-     * <p>
-     * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
-     * <p>
-     * The provided FEC parameters are validated by invoking {@link ParameterChecker#areValidDerivingParameters
-     * ParameterChecker.areValidDerivingParameters(dataLen, maxPayLen, maxDecBlock, Al)}, and an
-     * {@code IllegalArgumentException} is thrown if the parameters are invalid.
-     * 
-     * @param dataLen
-     *            The length of the source data, in number of bytes
-     * @param maxPayLen
-     *            The maximum payload length, in number of bytes
-     * @param maxDecBlock
-     *            The maximum block size, in number of bytes that is decodable in working memory
-     * @return a derived {@code FECParameters} instance
-     */
-    public static FECParameters deriveParameters(int dataLen, int maxPayLen, int maxDecBlock) {
-
-        return deriveParameters((long)dataLen, maxPayLen, maxDecBlock);
+        throw new RuntimeException("must never be thrown");
     }
 
     private static FECParameters newLocalInstance(long F, int T, int Z, int N, int Al) {
@@ -596,8 +574,7 @@ public final class FECParameters {
      */
     public int totalSymbols() {
 
-        // safe cast because F and T are valid, which prevents integer overflow
-        return (int)ceilDiv(dataLength(), symbolSize());
+        return getTotalSymbols(dataLength(), symbolSize());
     }
 
     /**

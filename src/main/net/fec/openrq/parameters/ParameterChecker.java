@@ -32,17 +32,21 @@ import static net.fec.openrq.parameters.InternalConstants.T_max;
 import static net.fec.openrq.parameters.InternalConstants.T_min;
 import static net.fec.openrq.parameters.InternalConstants.Z_max;
 import static net.fec.openrq.parameters.InternalConstants.Z_min;
+import static net.fec.openrq.parameters.InternalFunctions.getPossibleTotalSymbols;
+import static net.fec.openrq.parameters.InternalFunctions.getTotalSymbols;
 import static net.fec.openrq.parameters.InternalFunctions.minWS;
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 
 
 /**
  * This class provides methods for checking bounds and validating FEC and encoding packet parameters.
- * <a name="fec-parameter-bounds"> <h5>FEC parameters bounds</h5></a>
+ * <p>
+ * <a name="fec-parameters-bounds">
+ * <h5>FEC parameters bounds</h5></a>
  * <p>
  * FEC parameters have well defined bounds, and any parameter that is outside its bounds is considered invalid. It is
  * important to know these bounds in order to be able to create instances of the class {@link FECParameters}, which
- * contain only valid parameters.
+ * contain only valid values.
  * <p>
  * By default, every FEC parameter has a minimum and a maximum value. For example, the method
  * {@link #maxNumSourceBlocks()} returns the theoretical upper bound on the number of source blocks. However, these
@@ -75,10 +79,41 @@ import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
  * <li>{@link #maxAllowedInterleaverLength(int)}
  * </ul>
  * <p>
+ * <a name="deriver-parameters-bounds">
+ * <h5>Deriver parameters bounds</h5></a>
+ * <p>
+ * Parameters that derive FEC parameters, or "deriver parameters", include a <em>source data length</em>, a
+ * <em>payload length</em>, and a <em>maximum size for a block decodable in working memory</em>. The payload length
+ * parameter is equivalent to the "symbol size" FEC parameter.
+ * <p>
+ * Deriver parameters have well defined bounds, much like the FEC parameters. The source data length has the same bounds
+ * as before, as well as the payload length since it is equivalent to the symbol size.
+ * <p>
+ * By default, the source data length has theoretical {@linkplain #minDataLength() lower} and
+ * {@linkplain #maxDataLength() upper} bounds, and the same is true for the payload length; the maximum decoding block
+ * size must be positive but has no upper bound.
+ * <p>
+ * There are also conditional bounds, much like in the FEC parameters. Methods are provided for obtaining these bounds.
+ * They are summarized below for ease of access.
+ * <p>
+ * Given a <b>source data length</b> it is possible to obtain the <b>minimum allowed payload length</b>; conversely,
+ * given a <b>payload length</b> it is possible to obtain the <b>maximum allowed source data length</b>. Refer to
+ * methods for each:
+ * <p>
+ * <ul>
+ * <li>{@link #minAllowedSymbolSize(long)}
+ * <li>{@link #maxAllowedDataLength(int)}
+ * </ul>
+ * <p>
+ * Given a <b>source data length</b> and a <b>payload length</b> (a symbol size), which are valid in respect to each
+ * other, it is possible to obtain a <b>lower bound for the maximum decoding block size</b>. Refer to the method:
+ * <ul>
+ * <li>{@link #minAllowedDecodingBlockSize(long, int)}
+ * </ul>
  */
 public final class ParameterChecker {
 
-    // =========== F -> "transfer length of the object, in octets" ========== //
+    // =========== F -> "source data length, in octets" ========== //
 
     /**
      * Returns the minimum source data length, in number of bytes (1).
@@ -111,14 +146,7 @@ public final class ParameterChecker {
      */
     public static boolean isDataLengthOutOfBounds(long dataLen) {
 
-        return minDataLength() <= dataLen && dataLen <= maxDataLength();
-    }
-
-    private static void _checkDataLengthOutOfBounds(long F) {
-
-        if (isDataLengthOutOfBounds(F)) {
-            throw new IllegalArgumentException("source data length is out of bounds");
-        }
+        return !(minDataLength() <= dataLen && dataLen <= maxDataLength());
     }
 
     /**
@@ -169,14 +197,7 @@ public final class ParameterChecker {
      */
     public static boolean isSymbolSizeOutOfBounds(int symbSize) {
 
-        return minSymbolSize() <= symbSize && symbSize <= maxSymbolSize();
-    }
-
-    private static void _checkSymbolSizeOutOfBounds(int T) {
-
-        if (isSymbolSizeOutOfBounds(T)) {
-            throw new IllegalArgumentException("symbol size is out of bounds");
-        }
+        return !(minSymbolSize() <= symbSize && symbSize <= maxSymbolSize());
     }
 
     /**
@@ -227,14 +248,7 @@ public final class ParameterChecker {
      */
     public static boolean isNumSourceBlocksOutOfBounds(int numSrcBs) {
 
-        return minNumSourceBlocks() <= numSrcBs && numSrcBs <= maxNumSourceBlocks();
-    }
-
-    private static void _checkNumSourceBlocksOutOfBounds(int Z) {
-
-        if (isNumSourceBlocksOutOfBounds(Z)) {
-            throw new IllegalArgumentException("invalid number of source blocks");
-        }
+        return !(minNumSourceBlocks() <= numSrcBs && numSrcBs <= maxNumSourceBlocks());
     }
 
     /**
@@ -258,7 +272,7 @@ public final class ParameterChecker {
         _checkSymbolSizeOutOfBounds(symbSize);
         _checkDataLengthAndSymbolSizeOutOfBounds(dataLen, symbSize);
 
-        final int Kt = _totalSymbols(dataLen, symbSize);
+        final int Kt = getTotalSymbols(dataLen, symbSize);
         return _minAllowedNumSourceBlocks(Kt);
     }
 
@@ -283,7 +297,7 @@ public final class ParameterChecker {
         _checkSymbolSizeOutOfBounds(symbSize);
         _checkDataLengthAndSymbolSizeOutOfBounds(dataLen, symbSize);
 
-        final int Kt = _totalSymbols(dataLen, symbSize);
+        final int Kt = getTotalSymbols(dataLen, symbSize);
         return _maxAllowedNumSourceBlocks(Kt);
     }
 
@@ -322,7 +336,7 @@ public final class ParameterChecker {
      */
     public static boolean isInterleaverLengthOutOfBounds(int interLen) {
 
-        return minInterleaverLength() <= interLen && interLen <= maxInterleaverLength();
+        return !(minInterleaverLength() <= interLen && interLen <= maxInterleaverLength());
     }
 
     /**
@@ -356,49 +370,6 @@ public final class ParameterChecker {
 
     // =========== F, T, Z, N =========== //
 
-    // requires bounded argument
-    private static long _maxAllowedDataLength(int T) {
-
-        return Math.min(F_max, (long)T * Kt_max);
-    }
-
-    // requires bounded argument
-    private static int _minAllowedSymbolSize(long F) {
-
-        return Math.max(T_min, (int)(ceilDiv(F, Kt_max))); // downcast never overflows since dataLen is upper bounded
-    }
-
-    // requires bounded argument
-    private static int _minAllowedNumSourceBlocks(int Kt) {
-
-        return Math.max(Z_min, ceilDiv(Kt, K_max));
-    }
-
-    // requires bounded argument
-    private static int _maxAllowedNumSourceBlocks(int Kt) {
-
-        return Math.min(Z_max, Kt);
-    }
-
-    // requires individually bounded arguments
-    private static int _maxAllowedInterleaverLength(int T) {
-
-        return Math.min(N_max, T / Al);
-    }
-
-    // requires individually bounded arguments
-    private static boolean _areDataLengthAndSymbolSizeOutOfBounds(long F, int T) {
-
-        return _possibleTotalSymbols(F, T) > Kt_max;
-    }
-
-    private static void _checkDataLengthAndSymbolSizeOutOfBounds(long F, int T) {
-
-        if (_areDataLengthAndSymbolSizeOutOfBounds(F, T)) {
-            throw new IllegalArgumentException("source data length and symbol size are invalid in unison");
-        }
-    }
-
     /**
      * Returns {@code true} if, and only if, the provided FEC parameters are valid, that is, if they fall within certain
      * bounds.
@@ -409,7 +380,7 @@ public final class ParameterChecker {
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method always returns {@code true}. For information on how to obtain these bounds,
-     * refer to the <a href="#fec-parameter-bounds"> section on FEC parameter bounds</a> in the class header.
+     * refer to the <a href="#fec-parameters-bounds"> section on "FEC parameter bounds"</a> in the class header.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
@@ -471,11 +442,12 @@ public final class ParameterChecker {
         }
 
         // T must be a multiple of Al
-        if (T % Al != 0) {
-            return String.format(
-                "the symbol size (%d) must be a multiple of the symbol alignment value %d",
-                T, Al);
-        }
+        // if (T % Al != 0) {
+        // return String.format(
+        // "the symbol size (%d) must be a multiple of the symbol alignment value %d",
+        // T, Al);
+        // }
+
         // the number of symbols cannot exceed Kt_max
         if (_areDataLengthAndSymbolSizeOutOfBounds(F, T)) {
             return String.format(
@@ -485,7 +457,7 @@ public final class ParameterChecker {
         }
 
         // number of symbols
-        final int Kt = _totalSymbols(F, T);
+        final int Kt = getTotalSymbols(F, T);
 
         final int minAllowedZ = _minAllowedNumSourceBlocks(Kt);
         final int maxAllowedZ = _maxAllowedNumSourceBlocks(Kt);
@@ -513,35 +485,47 @@ public final class ParameterChecker {
     // =========== F, P', WS =========== //
 
     /**
-     * TODO document
+     * Returns {@code true} if, and only if, the provided deriver parameters are valid, that is, if they fall within
+     * certain bounds.
+     * <p>
+     * This method shouldn't be called directly. It is mainly used to test the validity of parameters when deriving
+     * {@link FECParameters} instances. If this method returns {@code false} then an exception is thrown by the deriver
+     * method.
+     * <p>
+     * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
+     * within these bounds, then this method always returns {@code true}. For information on how to obtain these bounds,
+     * refer to the <a href="#deriver-parameters-bounds"> section on "Deriver parameter bounds"</a> in the class header.
      * 
      * @param dataLen
-     * @param maxPaLen
+     *            A source data length, in number of bytes
+     * @param payLen
+     *            A payload length, in number of bytes (equivalent to the "symbol size" FEC parameter)
      * @param maxDBMem
-     * @return
+     *            A maximum size, in number of bytes, for a block decodable in working memory
+     * @return {@code true} if, and only if, the provided deriver parameters are within certain bounds
      */
-    public static boolean areValidDerivingParameters(long dataLen, int maxPaLen, int maxDBMem) {
+    public static boolean areValidDeriverParameters(long dataLen, int payLen, int maxDBMem) {
 
-        return getDerivingParamsErrorString(dataLen, maxPaLen, maxDBMem).isEmpty();
+        return getDeriverParamsErrorString(dataLen, payLen, maxDBMem).isEmpty();
     }
 
     /**
-     * Tests if the deriving parameters are valid according to {@link #areValidDerivingParameters(long, int, int)}, and
+     * Tests if the deriver parameters are valid according to {@link #areValidDeriverParameters(long, int, int)}, and
      * if so the method returns an empty string, otherwise it returns an error string indicating which parameters are
      * invalid.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
-     * @param maxPaLen
-     *            A maximum length, in number of bytes, for a payload containing one encoding symbol
+     * @param payLen
+     *            A payload length, in number of bytes (equivalent to the "symbol size" FEC parameter)
      * @param maxDBMem
-     *            A maximum size, in number of bytes, of a block decodable in working memory
+     *            A maximum size, in number of bytes, for a block decodable in working memory
      * @return an error string if some parameter is invalid or an empty string if all parameters are valid
      */
-    public static String getDerivingParamsErrorString(long dataLen, int maxPaLen, int maxDBMem) {
+    public static String getDeriverParamsErrorString(long dataLen, int payLen, int maxDBMem) {
 
         final long F = dataLen;
-        final int P = maxPaLen;
+        final int T = payLen;
         final int WS = maxDBMem;
 
         // domain restrictions
@@ -550,28 +534,29 @@ public final class ParameterChecker {
                 "by default, the data length (%d) must be within [%d, %d] bytes",
                 F, F_min, F_max);
         }
-        if (P < 1) return "by default, the max payload length must be positive";
-        if (WS < 1) return "by default, the max decoding block size must be positive";
-
-        // minimum P is minimum allowed T
-        final int minP = _minAllowedSymbolSize(F);
-        if (P < minP) {
+        if (isSymbolSizeOutOfBounds(T)) {
             return String.format(
-                "a data length of %d bytes requires a max payload length (%d) of at least %d bytes",
-                F, P, minP);
+                "by default, the payload length (%d) must be within [%d, %d] bytes",
+                T, T_min, T_max);
         }
 
-        // T is at most P but cannot exceed T_max
-        final int T = Math.min(T_max, (P / Al) * Al); // round down to the nearest multiple of Al
+        // T must be a multiple of Al
+        // if (T % Al != 0) {
+        // return String.format(
+        // "the symbol size (%d) must be a multiple of the symbol alignment value %d",
+        // T, Al);
+        // }
 
-        // number of symbols
-        final int Kt = _totalSymbols(F, T);
+        if (WS < 1) return "by default, the max decoding block size must be positive";
 
-        // the theoretical maximum number of source symbols in a source block
-        final int maxK = ceilDiv(Kt, Z_max);
+        final int minT = _minAllowedSymbolSize(F);
+        if (T < minT) {
+            return String.format(
+                "a data length of %d bytes requires a payload length (%d) of at least %d bytes",
+                F, T, minT);
+        }
 
-        // minimum WS is the inverse of the function KL
-        final int minWS = minWS(maxK, N_max, Al, T);
+        final int minWS = _minAllowedDecodingBlockSize(F, T);
         if (WS < minWS) {
             return String.format(
                 "a data length of %d bytes and a symbol size of %d bytes require a max decoding block size (%d) of at least %d bytes",
@@ -579,6 +564,31 @@ public final class ParameterChecker {
         }
 
         return "";
+    }
+
+    /**
+     * Returns a lower bound on the maximum size for a block decodable in working memory, given a source data length and
+     * symbol size.
+     * <p>
+     * <em>Note that besides being within their own bounds, both arguments must also be valid together, that is, either
+     * the source data length must be {@linkplain #maxAllowedDataLength(int) upper bounded given the symbol size}, or
+     * the symbol size must be {@linkplain #minAllowedSymbolSize(long) lower bounded given the source data length}.</em>
+     * 
+     * @param dataLen
+     *            A source data length, in number of bytes
+     * @param symbSize
+     *            A symbol size, in number of bytes
+     * @return a lower bound on the maximum size for a block decodable in working memory
+     * @exception IllegalArgumentException
+     *                If either argument is individually out of bounds, or if they are out of bounds in unison
+     */
+    public static int minAllowedDecodingBlockSize(long dataLen, int symbSize) {
+
+        _checkDataLengthOutOfBounds(dataLen);
+        _checkSymbolSizeOutOfBounds(symbSize);
+        _checkDataLengthAndSymbolSizeOutOfBounds(dataLen, symbSize);
+
+        return _minAllowedDecodingBlockSize(dataLen, symbSize);
     }
 
     // =========== source block number - SBN ========== //
@@ -604,17 +614,17 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code true} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
+     * Returns {@code false} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
      * {@linkplain #maxSourceBlockNumber() maxSBN}.
      * 
      * @param sbn
      *            A source block number
-     * @return {@code true} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
+     * @return {@code false} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
      *         {@linkplain #maxSourceBlockNumber() maxSBN}
      */
-    public static boolean isSourceBlockNumberWithinBounds(int sbn) {
+    public static boolean isSourceBlockNumberOutOfBounds(int sbn) {
 
-        return minSourceBlockNumber() <= sbn && sbn <= maxSourceBlockNumber();
+        return !(minSourceBlockNumber() <= sbn && sbn <= maxSourceBlockNumber());
     }
 
     // =========== encoding symbol identifier - ESI ========== //
@@ -640,30 +650,40 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code true} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
+     * Returns {@code false} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
      * {@linkplain #maxEncodingSymbolID() maxESI}.
      * 
      * @param esi
      *            An encoding symbol ID
-     * @return {@code true} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
+     * @return {@code false} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
      *         {@linkplain #maxEncodingSymbolID() maxESI}
      */
-    public static boolean isEncodingSymbolIDWithinBounds(int esi) {
+    public static boolean isEncodingSymbolIDOutOfBounds(int esi) {
 
-        return minEncodingSymbolID() <= esi && esi <= maxEncodingSymbolID();
+        return !(minEncodingSymbolID() <= esi && esi <= maxEncodingSymbolID());
     }
 
     // =========== SBN, ESI =========== //
 
     /**
-     * TODO document
+     * Returns {@code true} if, and only if, the FEC payload ID parameters are valid, that is, if they fall within
+     * certain bounds.
+     * <p>
+     * The source block number (SBN) must be greater than or equal to its minimum value, given by the method
+     * {@link #minSourceBlockNumber()}. The SBN must also be less than the number of source blocks.
+     * <p>
+     * The encoding symbol identifier (ESI) must not be out of bounds, meaning that the following method should return
+     * {@code false} when passing the ESI as parameter: {@link #isEncodingSymbolIDOutOfBounds(int)}.
      * 
      * @param sbn
+     *            A source block number
      * @param esi
+     *            The encoding symbol identifier of the first symbol in an encoding packet
      * @param numSrcBs
-     * @return
+     *            A number of source blocks into which a source data is divided
+     * @return {@code true} if, and only if, the provided FEC payload ID parameters are within certain bounds
      * @exception IllegalArgumentException
-     *                If the number of source blocks is out of bounds
+     *                If the number of source blocks is {@linkplain #isNumSourceBlocksOutOfBounds(int) out of bounds}
      */
     public static boolean isValidFECPayloadID(int sbn, int esi, int numSrcBs) {
 
@@ -683,16 +703,16 @@ public final class ParameterChecker {
      *            A number of source blocks into which a source data is divided
      * @return an error string if some parameter is invalid or an empty string if all parameters are valid
      * @exception IllegalArgumentException
-     *                If the number of source blocks is out of bounds
+     *                If the number of source blocks is {@linkplain #isNumSourceBlocksOutOfBounds(int) out of bounds}
      */
     public static String getFECPayloadIDErrorString(int sbn, int esi, int numSrcBs) {
 
         _checkNumSourceBlocksOutOfBounds(numSrcBs);
 
-        if (sbn < SBN_min || sbn > numSrcBs) {
+        if (sbn < SBN_min || sbn >= numSrcBs) {
             return String.format("source block number (%d) must be whithin [%d, %d]", sbn, SBN_min, numSrcBs - 1);
         }
-        if (!isEncodingSymbolIDWithinBounds(esi)) {
+        if (isEncodingSymbolIDOutOfBounds(esi)) {
             return String.format("encoding symbol identifier (%d) must be whithin [%d, %d]", esi, ESI_min, ESI_max);
         }
         return "";
@@ -710,18 +730,88 @@ public final class ParameterChecker {
         return K_max;
     }
 
-    // =========== total number of source symbols - Kt =========== //
+    // =========== private helper methods =========== //
+
+    // requires bounded argument
+    private static long _maxAllowedDataLength(int T) {
+
+        return Math.min(F_max, (long)T * Kt_max);
+    }
+
+    // requires bounded argument
+    private static int _minAllowedSymbolSize(long F) {
+
+        return Math.max(T_min, (int)(ceilDiv(F, Kt_max))); // downcast never overflows since dataLen is upper bounded
+    }
+
+    // requires bounded argument
+    private static int _minAllowedNumSourceBlocks(int Kt) {
+
+        return Math.max(Z_min, ceilDiv(Kt, K_max));
+    }
+
+    // requires bounded argument
+    private static int _maxAllowedNumSourceBlocks(int Kt) {
+
+        return Math.min(Z_max, Kt);
+    }
 
     // requires individually bounded arguments
-    private static long _possibleTotalSymbols(long F, int T) {
+    private static int _maxAllowedInterleaverLength(int T) {
 
-        return ceilDiv(F, T);
+        return Math.min(N_max, T / Al);
     }
 
     // requires individually and in unison bounded arguments
-    static int _totalSymbols(long F, int T) {
+    private static int _minAllowedDecodingBlockSize(long F, int T) {
 
-        return (int)ceilDiv(F, T); // downcast never overflows since F and T are bounded
+        // total number of symbols
+        final int Kt = getTotalSymbols(F, T);
+
+        // the theoretical minimum number of source symbols in a source block
+        final int KL = ceilDiv(Kt, Z_max);
+
+        // interleaving is disabled for now
+        final int SStimesAl = T;
+        // the maximum allowed interleaver length
+        final int topN = T / SStimesAl;
+
+        // minimum WS is the inverse of the function KL
+        return minWS(KL, T, Al, topN);
+    }
+
+    // requires individually bounded arguments
+    private static boolean _areDataLengthAndSymbolSizeOutOfBounds(long F, int T) {
+
+        return getPossibleTotalSymbols(F, T) > Kt_max;
+    }
+
+    private static void _checkDataLengthOutOfBounds(long F) {
+
+        if (isDataLengthOutOfBounds(F)) {
+            throw new IllegalArgumentException("source data length is out of bounds");
+        }
+    }
+
+    private static void _checkSymbolSizeOutOfBounds(int T) {
+
+        if (isSymbolSizeOutOfBounds(T)) {
+            throw new IllegalArgumentException("symbol size is out of bounds");
+        }
+    }
+
+    private static void _checkDataLengthAndSymbolSizeOutOfBounds(long F, int T) {
+
+        if (_areDataLengthAndSymbolSizeOutOfBounds(F, T)) {
+            throw new IllegalArgumentException("source data length and symbol size are out of bounds in unison");
+        }
+    }
+
+    private static void _checkNumSourceBlocksOutOfBounds(int Z) {
+
+        if (isNumSourceBlocksOutOfBounds(Z)) {
+            throw new IllegalArgumentException("number of source blocks is out of bounds");
+        }
     }
 
     private ParameterChecker() {
