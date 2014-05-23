@@ -37,7 +37,7 @@ public final class ExtraMath {
      */
     public static int ceilDiv(int num, int den) {
 
-        return (int)((num + (den - 1L)) / den);
+        return (int)((num + (den - 1L)) / den); // there is an implicit cast to long to prevent integer overflow
     }
 
     /**
@@ -53,7 +53,7 @@ public final class ExtraMath {
      */
     public static long ceilDiv(long num, long den) {
 
-        if (Long.MAX_VALUE - num < den - 1L) {
+        if (Long.MAX_VALUE - num < den - 1L) { // if num + (den - 1) overflows
             final BigInteger bigNum = BigInteger.valueOf(num);
             final BigInteger bigDen = BigInteger.valueOf(den);
             return bigNum.add(bigDen.subtract(BigInteger.ONE)).divide(bigDen).longValue();
@@ -61,6 +61,74 @@ public final class ExtraMath {
         else {
             return (num + (den - 1L)) / den;
         }
+    }
+
+    /**
+     * Returns the (modular in case of overflow) integer power.
+     * 
+     * @param base
+     *            The power base
+     * @param exp
+     *            The power exponent
+     * @return base^^exp
+     * @exception IllegalArgumentException
+     *                If the exponent is negative or if both base and exponent are equal to zero
+     */
+    public static int integerPow(int base, int exp) {
+
+        if (exp < 0) throw new IllegalArgumentException("exponent must be non-negative");
+        if (base == 0) {
+            if (exp == 0) throw new IllegalArgumentException("0^^0 is undefined");
+            else return 0;
+        }
+
+        // exponentiation by squaring
+
+        int result = 1;
+        while (exp != 0)
+        {
+            if ((exp & 1) == 1) {
+                result *= base;
+            }
+            exp >>= 1;
+            base *= base;
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the (modular in case of overflow) long integer power.
+     * 
+     * @param base
+     *            The power base
+     * @param exp
+     *            The power exponent
+     * @return base^^exp
+     * @exception IllegalArgumentException
+     *                If the exponent is negative or if both base and exponent are equal to zero
+     */
+    public static int integerPow(long base, long exp) {
+
+        if (exp < 0) throw new IllegalArgumentException("exponent must be non-negative");
+        if (base == 0) {
+            if (exp == 0) throw new IllegalArgumentException("0^^0 is undefined");
+            else return 0;
+        }
+
+        // exponentiation by squaring
+
+        int result = 1;
+        while (exp != 0)
+        {
+            if ((exp & 1) == 1) {
+                result *= base;
+            }
+            exp >>= 1;
+            base *= base;
+        }
+
+        return result;
     }
 
     private ExtraMath() {

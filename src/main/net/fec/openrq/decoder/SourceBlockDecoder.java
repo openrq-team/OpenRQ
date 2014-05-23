@@ -30,12 +30,12 @@ import net.fec.openrq.parameters.ParameterChecker;
  * Source data is divided into source blocks and each source block is independently encoded by a RaptorQ encoder (as
  * specified in RFC 6330). Each source block is further divided into source symbols, which together with repair symbols
  * (extra encoded data) form the <em>encoding symbols</em>. The encoding symbols are transmitted inside encoding packets
- * to an instance of this interface.
+ * to specific source blocks of the data being decoded.
  * <p>
- * A source block can be decoded independently by an instance of this interface, and the block is identified by a source
- * block number, which is carried inside an encoding packet. The method {@link #sourceBlockNumber()} provides the source
- * block number that identifies the source block being decoded. Additionally, the number of source symbols into which
- * the source block is divided is given by the method {@link #numberOfSourceSymbols()}.
+ * A source block can be decoded independently by an instance of {@code SourceBlockDecoder}, and the block is identified
+ * by a source block number, which is carried inside an encoding packet. The method {@link #sourceBlockNumber()}
+ * provides the source block number that identifies the source block being decoded. Additionally, the number of source
+ * symbols into which the source block is divided is given by the method {@link #numberOfSourceSymbols()}.
  * <p>
  * The method {@link #putEncodingPacket(EncodingPacket)} receives an encoding packet as argument and stores the encoding
  * symbols inside it for future decoding. If at the time the method is called, enough symbols are available for decoding
@@ -73,7 +73,7 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the source symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>
@@ -94,7 +94,7 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the repair symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * <b><i>Bounds checking</i></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
      * source block being decoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:

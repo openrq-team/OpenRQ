@@ -276,7 +276,7 @@ final class DataUtils {
 
         final int Z = dec.numberOfSourceBlocks();
         if (!ParameterChecker.isValidFECPayloadID(sbn, esi, Z)) {
-            return Parsed.invalid(ParameterChecker.testFECPayloadID(sbn, esi, Z));
+            return Parsed.invalid(ParameterChecker.getFECPayloadIDErrorString(sbn, esi, Z));
         }
 
         final int T = dec.symbolSize();

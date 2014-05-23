@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+Copyright 2014 Jose Lopes
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<project name="functional-ant">
+    <description>
+        Ant build file for building self-contained JUnit Jar.
+        This script is intended to be imported from a top-level script.
+    </description>
+
+    <!-- 
+        When this file is imported the basedir property is ignored,
+        so this hack is required to retrieve it.
+    -->
+    <dirname property="functional-ant.basedir" file="${ant.file.functional-ant}"/>
+
+    <property name="junit-core.jar" location="${functional-ant.basedir}/junit-4.11.jar"/>
+    <property name="hamcrest-core.jar" location="${functional-ant.basedir}/hamcrest-core-1.3.jar"/>
+
+    <!-- private target to be overriden in importing script -->
+    <target name="-init-functional-properties">
+    
+        <echo>The following properties must be defined:
+        func.src_dirs  : collon or semi-collon separated list of directories containing the source files
+        func.build_dir : path to the location of the compiled files
+        func.jar_file  : path to the resulting self-contained executable Jar
+        </echo>
+        <fail message="Must define functional test properties.">
+            <condition>
+                <not>
+                    <and>
+                        <isset property="func.src_dirs"/>
+                        <isset property="func.build_dir"/>
+                        <isset property="func.jar_file"/>
+                    </and>
+                </not>
+            </condition>
+        </fail>
+        
+    </target>
+
+    <target name="-compile-with-junit">
+        
+        <delete dir="${func.build_dir}"/>
+        <mkdir dir="${func.build_dir}"/>
+        
+        <javac srcdir="${func.src_dirs}" destdir="${func.build_dir}"
+               classpath=".:${junit-core.jar}:${hamcrest-core.jar}"
+               includeAntRuntime="false"/>
+               
+    </target>
+
+    <!-- private target to be called by importing script -->
+    <target name="-functional-jar" depends="-init-functional-properties,-compile-with-junit">
+    
+        <delete file="${func.jar_file}"/>
+        <jar jarfile="${func.jar_file}" basedir="${func.build_dir}">
+            <manifest>
+                <attribute name="Main-Class" value="org.junit.runner.JUnitCore"/>
+            </manifest>
+
+            <zipfileset src="${junit-core.jar}" />
+            <zipfileset src="${hamcrest-core.jar}" />
+        </jar>
+
+    </target>
+    
+</project>

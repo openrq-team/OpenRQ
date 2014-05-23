@@ -1,3 +1,6 @@
+package net.fec.openrq;
+
+
 /*
  * Copyright 2014 Jose Lopes
  * 
@@ -13,9 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * This package contains classes that handle FEC parameters. These parameters are defined in the <em>Encoded FEC Object
- * Transmission Information</em> and the <em>FEC Payload ID</em>, in <a href="http://tools.ietf.org/html/rfc6330">RFC
- * 6330</a>.
- */
-package net.fec.openrq.parameters;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+
+@RunWith(Suite.class)
+@SuiteClasses({
+               DataIntegrityCheckTest.class,
+               OpenRQClassTest.class,
+               OpenRQClassExceptionTest.class
+})
+public class AllTests {
+
+    // placeholder class for inclusion of remaining test classes
+}

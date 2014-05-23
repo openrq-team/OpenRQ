@@ -16,6 +16,7 @@
 package net.fec.openrq.parameters;
 
 
+import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -24,17 +25,35 @@ import net.fec.openrq.util.rq.SystematicIndices;
  */
 final class InternalFunctions {
 
-    // requires valid arguments
-    static int KL(int n, int WS, int Al, int T) {
+    // requires individually bounded arguments
+    static long getPossibleTotalSymbols(long F, int T) {
 
-        final int upper_bound = WS / (Al * ExtraMath.ceilDiv(T, Al * n));
+        return ceilDiv(F, T);
+    }
+
+    // requires individually and in unison bounded arguments
+    static int getTotalSymbols(long F, int T) {
+
+        return (int)ceilDiv(F, T); // downcast never overflows since F and T are bounded
+    }
+
+    // requires valid arguments
+    static int KL(int WS, int T, int Al, int n) {
+
+        final int upper_bound = WS / subSymbolSize(T, Al, n);
         return SystematicIndices.floor(upper_bound);
     }
-    
+
     // requires valid arguments
-    static int minWS(int KL, int n, int Al, int T) {
-        
-        return KL * (Al * ExtraMath.ceilDiv(T, Al * n));
+    static int minWS(int KL, int T, int Al, int n) {
+
+        return KL * subSymbolSize(T, Al, n);
+    }
+
+    // since interleaving is disabled, this should always return T
+    private static int subSymbolSize(int T, int Al, int n) {
+
+        return Al * ExtraMath.ceilDiv(T, Al * n);
     }
 
     private InternalFunctions() {

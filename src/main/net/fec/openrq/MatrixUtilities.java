@@ -56,7 +56,7 @@ final class MatrixUtilities {
      *            Matrix A
      * @param B
      *            Matrix B
-     * @return A�B
+     * @return A*B
      */
     static final byte[][] multiplyMatrices(byte[][] A, byte[][] B) {
 

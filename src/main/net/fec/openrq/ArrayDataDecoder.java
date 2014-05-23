@@ -33,16 +33,28 @@ import net.fec.openrq.util.collection.ImmutableList;
  */
 public final class ArrayDataDecoder implements DataDecoder {
 
+    /**
+     * @param fecParams
+     *            FEC parameters that configure the returned data decoder object
+     * @param extraSymbols
+     *            Repair symbol overhead (must be non-negative)
+     * @return a data decoder object that decodes source data into an array of bytes
+     * @exception NullPointerException
+     *                If {@code fecParams} is {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || extraSymbols < 0}
+     */
     static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
 
+        // throws NullPointerException if null fecParams
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("maximum data length exceeded");
+            throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
         if (extraSymbols < 0) {
             throw new IllegalArgumentException("negative number of extra symbols");
         }
 
-        final byte[] dataArray = new byte[(int)fecParams.dataLength()];
+        final byte[] dataArray = new byte[fecParams.dataLengthAsInt()];
         return new ArrayDataDecoder(dataArray, fecParams, extraSymbols);
     }
 
@@ -108,6 +120,12 @@ public final class ArrayDataDecoder implements DataDecoder {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception IllegalArgumentException
+     *                If the provided source block number is invalid
+     */
     @Override
     public SourceBlockDecoder sourceBlock(int sbn) {
 
@@ -131,54 +149,116 @@ public final class ArrayDataDecoder implements DataDecoder {
         return dataArray;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception NullPointerException
+     *                If {@code symbols} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> parsePacket(int sbn, int esi, byte[] symbols, boolean copySymbols) {
 
         return DataUtils.parsePacket(this, sbn, esi, symbols, copySymbols);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception IndexOutOfBoundsException
+     *                If the pre-conditions on the array offset and length do not hold
+     * @exception NullPointerException
+     *                If {@code symbols} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> parsePacket(int sbn, int esi, byte[] symbols, int off, int len, boolean copySymbols) {
 
         return DataUtils.parsePacket(this, sbn, esi, symbols, off, len, copySymbols);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception NullPointerException
+     *                If {@code symbols} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> parsePacket(int sbn, int esi, ByteBuffer symbols, boolean copySymbols) {
 
         return DataUtils.parsePacket(this, sbn, esi, symbols, copySymbols);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception NullPointerException
+     *                If {@code ser} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> parsePacket(SerializablePacket ser, boolean copySymbols) {
 
         return DataUtils.parsePacket(this, ser, copySymbols);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception NullPointerException
+     *                If {@code array} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> parsePacket(byte[] array, boolean copySymbols) {
 
         return DataUtils.parsePacket(this, array, copySymbols);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception IndexOutOfBoundsException
+     *                If the pre-conditions on the array offset and length do not hold
+     * @exception NullPointerException
+     *                If {@code array} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> parsePacket(byte[] array, int off, int len, boolean copySymbols) {
 
         return DataUtils.parsePacket(this, array, off, len, copySymbols);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception NullPointerException
+     *                If {@code buffer} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> parsePacket(ByteBuffer buffer, boolean copySymbols) {
 
         return DataUtils.parsePacket(this, buffer, copySymbols);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code DataInput} object
+     * @exception NullPointerException
+     *                If {@code in} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> readPacketFrom(DataInput in) throws IOException {
 
         return DataUtils.readPacketFrom(this, in);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     * @exception NullPointerException
+     *                If {@code ch} is {@code null}
+     */
     @Override
     public Parsed<EncodingPacket> readPacketFrom(ReadableByteChannel ch) throws IOException {
 

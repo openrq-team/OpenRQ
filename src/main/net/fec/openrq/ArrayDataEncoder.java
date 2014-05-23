@@ -16,10 +16,13 @@
 package net.fec.openrq;
 
 
+import java.util.Objects;
+
 import net.fec.openrq.DataUtils.SourceBlockSupplier;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
+import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.collection.ImmutableList;
 
 
@@ -28,13 +31,31 @@ import net.fec.openrq.util.collection.ImmutableList;
  */
 public final class ArrayDataEncoder implements DataEncoder {
 
-    static ArrayDataEncoder newEncoder(byte[] array, int offset, FECParameters fecParams) {
+    /**
+     * @param fecParams
+     *            FEC parameters that configure the returned data encoder object
+     * @param data
+     *            An array of bytes containing the source data to be encoded
+     * @param offset
+     *            The index in the array where the source data begins
+     * @return a data encoder object backed by an array of bytes
+     * @exception NullPointerException
+     *                If {@code data} or {@code fecParams} are {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
+     * @exception IndexOutOfBoundsException
+     *                If {@code offset < 0 || fecParams.dataLength() > (data.length - offset)}
+     */
+    static ArrayDataEncoder newEncoder(byte[] data, int offset, FECParameters fecParams) {
 
-        if (offset < 0 || (array.length - offset) < fecParams.dataLength()) {
-            throw new IndexOutOfBoundsException();
+        Objects.requireNonNull(data);
+        // throws NullPointerException if null fecParams
+        if (fecParams.dataLength() > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
+        ArrayUtils.checkArrayBounds(offset, fecParams.dataLengthAsInt(), data.length);
 
-        return new ArrayDataEncoder(array, offset, fecParams);
+        return new ArrayDataEncoder(data, offset, fecParams);
     }
 
 
@@ -97,6 +118,13 @@ public final class ArrayDataEncoder implements DataEncoder {
         return fecParams.numberOfSourceBlocks();
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @exception IllegalArgumentException
+     *                If the provided source block number is invalid
+     * @see #numberOfSourceBlocks()
+     */
     @Override
     public ArraySourceBlockEncoder sourceBlock(int sbn) {
 

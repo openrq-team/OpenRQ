@@ -21,7 +21,6 @@ import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.array.ArrayUtils;
 
 
 /**
@@ -79,10 +78,7 @@ public final class OpenRQ {
      */
     public static ArrayDataEncoder newEncoder(byte[] data, int offset, FECParameters fecParams) {
 
-        final long longDataLen = fecParams.dataLength();
-        if (longDataLen > Integer.MAX_VALUE) throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
-        ArrayUtils.checkArrayBounds(offset, (int)longDataLen, data.length);
-
+        // exceptions are checked inside the invoked method
         return ArrayDataEncoder.newEncoder(data, offset, fecParams);
     }
 
@@ -109,13 +105,7 @@ public final class OpenRQ {
      */
     public static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
 
-        if (fecParams.dataLength() > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
-        }
-        if (extraSymbols < 0) {
-            throw new IllegalArgumentException("negative number of extra symbols");
-        }
-
+        // exceptions are checked inside the invoked method
         return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
     }
 

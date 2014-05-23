@@ -19,54 +19,83 @@ limitations under the License.
         Ant build file for building OpenRQ binary, javadoc and jar files.
     </description>
 
+<!-- ================ Properties initialization ================ -->
     <property name="version" value="1.0.1"/>
     
     <property name="top.src_dir" location="src"/>
-    <property name="top.bin_dir" location="bin"/>
+    <property name="top.build_dir" location="build"/>
+    <property name="top.lib_dir" location="lib"/>
     
     <property name="main.src_dir" location="${top.src_dir}/main"/>
-    <property name="main.bin_dir" location="${top.bin_dir}/main"/>
+    <property name="main.build_dir" location="${top.build_dir}/main"/>
     <property name="main.jar_file" location="openrq-${version}.jar"/>
-    
-    <property name="benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
-    <property name="benchmark.bin_dir" location="${top.bin_dir}/test/benchmark"/>
-    <property name="benchmark.jar_file" location="openrq-${version}-benchmark.jar"/>
-    
-    <property name="docs_dir" location="docs"/>
-    
 
+    <property name="test-common.src_dir" location="${top.src_dir}/test/common"/>
+
+    <property name="test-functional.src_dir" location="${top.src_dir}/test/functional"/>
+    <property name="test-functional.build_dir" location="${top.build_dir}/test/functional"/>
+    <property name="test-functional.jar_file" location="openrq-${version}-functional-test.jar"/>
+    <property name="test-functional.script_file" location="${top.lib_dir}/test/functional/build.xml"/>
+    
+    <property name="test-benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
+    <property name="test-benchmark.build_dir" location="${top.build_dir}/test/benchmark"/>
+    <property name="test-benchmark.jar_file" location="openrq-${version}-benchmark-test.jar"/>
+    <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
+    
+    <property name="docs.src_dir" location="${top.src_dir}/docs"/>
+    <property name="docs.build_dir" location="docs"/>
+
+
+<!-- ================ Script imports ================ -->
+    <import file="${test-functional.script_file}"/>
+    <import file="${test-benchmark.script_file}"/>
+
+
+<!-- ================ Cleaning targets ================ -->
     <target name="clean" description="Remove binary files.">
 
-        <delete dir="${top.bin_dir}"/>
+        <delete dir="${top.build_dir}"/>
 
     </target>
-
 
     <target name="cleanall" depends="clean"
             description="Remove binary, Javadoc and Jar files.">
 
-        <delete dir="${docs_dir}"/>
+        <delete dir="${docs.build_dir}"/>
         <delete file="${main.jar_file}"/>
-        <delete file="${benchmark.jar_file}"/>
+        <delete file="${test-functional.jar_file}"/>
+        <delete file="${test-benchmark.jar_file}"/>
 
     </target>
 
 
-    <target name="compile" depends="clean"
+<!-- ================ Main targets ================ -->
+    <target name="build"
             description="Compile the main Java classes.">
 
-        <mkdir dir="${main.bin_dir}"/>
-        <javac srcdir="${main.src_dir}" destdir="${main.bin_dir}"
-               classpath=".:"
+        <delete dir="${main.build_dir}"/>
+        <mkdir dir="${main.build_dir}"/>
+        <javac srcdir="${main.src_dir}" destdir="${main.build_dir}"
+               classpath="."
                includeAntRuntime="false"/>
 
     </target>
 
+    <target name="jar" depends="build"
+            description="Compile the main Java classes and pack them into a Jar file.">
 
-    <target name="javadoc"
+        <delete file="${main.jar_file}"/>
+        <jar destfile="${main.jar_file}" basedir="${main.build_dir}"/>
+
+    </target>
+
+
+<!-- ================ Javadoc targets ================ -->
+    <target name="docs"
             description="Generate the Javadoc files for the public API.">
 
-        <javadoc destdir="${docs_dir}"
+    	<delete dir="${docs.build_dir}"/>
+        <javadoc destdir="${docs.build_dir}"
                  classpath="." source="1.7"
                  access="public"
                  doctitle="OpenRQ API ${version}"
@@ -80,36 +109,52 @@ limitations under the License.
             <link href="http://download.oracle.com/javase/7/docs/api/"/>
 
         </javadoc>
-
-    </target>
-
-
-    <target name="jar" depends="compile"
-            description="Compile the main Java classes and pack them into a Jar file.">
-
-        <jar destfile="${main.jar_file}" basedir="${main.bin_dir}"/>
-
-    </target>
-
-    
-    <import file="lib/test/benchmark/jmh-build.xml"/>
-    
-    <!-- overriden private target from jmh-build.xml -->
-    <target name="-init-jmh-properties">
         
-        <property name="jmh.src_dir" location="${benchmark.src_dir}"/>
-        <property name="jmh.bin_dir" location="${benchmark.bin_dir}"/>
-        <property name="jmh.jar_file" location="${benchmark.jar_file}"/>
-        <property name="jmh.extrabin_dir" location="${main.bin_dir}"/>
+        <copy todir="${docs.build_dir}" overwrite="true">
+            <fileset dir="${docs.src_dir}"/>
+        </copy>
+
+    </target>
+
+
+<!-- ================ Functional testing targets ================ -->
+    <!-- overriden private target from junit-build.xml -->
+    <target name="-init-functional-properties">
+        
+        <property name="func.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-functional.src_dir}"/>
+        <property name="func.build_dir" value="${test-functional.build_dir}"/>
+        <property name="func.jar_file" value="${test-functional.jar_file}"/>
         
     </target>
     
+    <!-- requires jar target to be defined in the imported script -->
+    <target name="-testfunc" depends="-functional-jar"/>
 
-    <target name="-benchmark" depends="compile,-jmh-jar"/>    
-    <target name="benchmark"
-            description="Compile the main and benchmark Java classes and pack them into an executable Jar file.">
+    <target name="testfunc"
+            description="Compile the main Java classes and the functional test classes, and pack them into an executable Jar file.">
     
-        <subant target="-benchmark" buildpath="." failonerror="true"/>
+        <subant target="-testfunc" buildpath="." failonerror="true"/>
+        
+    </target>
+
+
+<!-- ================ Benchmark testing targets ================ -->    
+    <!-- overriden private target from junit-build.xml -->
+    <target name="-init-benchmark-properties">
+        
+        <property name="bench.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-benchmark.src_dir}"/>
+        <property name="bench.build_dir" value="${test-benchmark.build_dir}"/>
+        <property name="bench.jar_file" value="${test-benchmark.jar_file}"/>
+        
+    </target>
+    
+    <!-- requires jar target to be defined in the imported script -->
+    <target name="-testbench" depends="-benchmark-jar"/>
+
+    <target name="testbench"
+            description="Compile the main Java classes and the benchmark test classes, and pack them into an executable Jar file.">
+    
+        <subant target="-testbench" buildpath="." failonerror="true"/>
         
     </target>
 

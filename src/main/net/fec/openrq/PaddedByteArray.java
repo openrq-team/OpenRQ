@@ -25,9 +25,6 @@ import net.fec.openrq.util.array.ArrayUtils;
  */
 final class PaddedByteArray {
 
-    private static final byte[] EMPTY_ARRAY = new byte[0];
-
-
     static PaddedByteArray newArray(byte[] array, int paddedLen) {
 
         return newArray(array, 0, array.length, paddedLen);
@@ -59,7 +56,7 @@ final class PaddedByteArray {
         this.paddedLen = paddedLen;
 
         if (length() == paddinglessLength()) {
-            this.padding = EMPTY_ARRAY;
+            this.padding = ArrayUtils.EmptyArrayOf.bytes();
         }
         else {
             this.padding = new byte[length() - paddinglessLength()];
