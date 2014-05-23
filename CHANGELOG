@@ -10,7 +10,7 @@ Fixed critical bug.
 
 2.0
 --------
-Improved performance.
+Improved performance slightly.
 
 Renamed in general: "sub-blocks" to "interleaver length" in order to distinguish
 the name from "source blocks".
