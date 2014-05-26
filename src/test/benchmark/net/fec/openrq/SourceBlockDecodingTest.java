@@ -48,14 +48,16 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Benchmark)
 public class SourceBlockDecodingTest {
 
+    // change this to use a larger number of source symbols
+    private static final boolean PREFER_SOURCE_SYMBOLS = false;
+
     // default parameter values
     private static final int DEF_DATA_LEN = 9_999;
     private static final int DEF_NUM_SOURCE_SYMBOLS = 250;
     private static final int DEF_EXTRA_SYMBOLS = 0;
-    private static final boolean DEF_PREFER_SOURCE_SYMBOLS = false;
 
 
-    private static ArraySourceBlockDecoder newRandomSBDecoder(int F, int K, int xtraSymbs, boolean prefSrcSymbs) {
+    private static ArraySourceBlockDecoder newRandomSBDecoder(int F, int K, int xtraSymbs) {
 
         if (F < 1) throw new IllegalArgumentException("data length must be positive");
         // F is an integer so it is already upper bounded
@@ -76,7 +78,7 @@ public class SourceBlockDecodingTest {
 
         final byte[] data = TestingCommon.randomBytes(F, rand);
         final int numESIs = K + xtraSymbs;
-        final Set<Integer> esis = randomESIs(rand, K, numESIs, prefSrcSymbs);
+        final Set<Integer> esis = randomESIs(rand, K, numESIs);
         final SourceBlockEncoder enc = OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
 
         final ArraySourceBlockDecoder dec = (ArraySourceBlockDecoder) /* safe cast */
@@ -90,9 +92,9 @@ public class SourceBlockDecodingTest {
         return dec;
     }
 
-    private static Set<Integer> randomESIs(Random rand, int K, int numESIs, boolean prefSrcSymbs) {
+    private static Set<Integer> randomESIs(Random rand, int K, int numESIs) {
 
-        if (prefSrcSymbs) {
+        if (PREFER_SOURCE_SYMBOLS) {
             return TestingCommon.randomSrcRepESIs(rand, numESIs, K);
         }
         else {
@@ -110,9 +112,6 @@ public class SourceBlockDecodingTest {
     @Param({"" + DEF_EXTRA_SYMBOLS})
     private int symbover;
 
-    @Param({"" + DEF_PREFER_SOURCE_SYMBOLS})
-    private boolean prefsrc;
-
     private ArraySourceBlockDecoder dec;
 
 
@@ -121,7 +120,6 @@ public class SourceBlockDecodingTest {
         this.datalen = DEF_DATA_LEN;
         this.srcsymbs = DEF_NUM_SOURCE_SYMBOLS;
         this.symbover = DEF_EXTRA_SYMBOLS;
-        this.prefsrc = DEF_PREFER_SOURCE_SYMBOLS;
 
         this.dec = null;
     }
@@ -129,7 +127,7 @@ public class SourceBlockDecodingTest {
     @Setup
     public void setup() {
 
-        dec = newRandomSBDecoder(datalen, srcsymbs, symbover, prefsrc);
+        dec = newRandomSBDecoder(datalen, srcsymbs, symbover);
     }
 
     @GenerateMicroBenchmark
