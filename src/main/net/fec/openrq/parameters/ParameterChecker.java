@@ -209,7 +209,7 @@ public final class ParameterChecker {
      * @exception IllegalArgumentException
      *                If the source data length is {@linkplain #isDataLengthOutOfBounds(long) out of bounds}
      */
-    public int minAllowedSymbolSize(long dataLen) {
+    public static int minAllowedSymbolSize(long dataLen) {
 
         _checkDataLengthOutOfBounds(dataLen);
         return _minAllowedSymbolSize(dataLen);
