@@ -94,14 +94,14 @@
  * {@link net.fec.openrq.decoder.SourceBlockDecoder SourceBlockDecoder} for more details.
  * <h3>Dealing with decoding failures</h3> Here are some strategies for handling decoding failures:
  * <ul>
- * <li><b>Request missing source symbols</b>. This strategy works well if there is a back channel from receivers to
+ * <li><b>Requesting missing source symbols</b>. This strategy works well if there is a back channel from receivers to
  * senders of data. Additionally, receivers may also indicate which repair symbols have been received, so that senders
  * may transmit new ones.
- * <li><b>Wait for more encoding symbols</b>. This strategy works well if there is no back channel (or if it would be
+ * <li><b>Waiting for more encoding symbols</b>. This strategy works well if there is no back channel (or if it would be
  * expensive to have one) and the sender is continually transmitting encoding packets in a cyclic fashion.
- * <li><b>Work with available data</b>. Sometimes applications, such as video streaming ones, can simply tolerate data
+ * <li><b>Working with available data</b>. Sometimes applications, such as video streaming ones, can simply tolerate data
  * losses (video frames for example). In these situations, the receiver may use the available data composed of the
- * received source symbols so far.
+ * decoded source symbols so far.
  * 
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;

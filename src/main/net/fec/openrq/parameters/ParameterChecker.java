@@ -209,7 +209,7 @@ public final class ParameterChecker {
      * @exception IllegalArgumentException
      *                If the source data length is {@linkplain #isDataLengthOutOfBounds(long) out of bounds}
      */
-    public int minAllowedSymbolSize(long dataLen) {
+    public static int minAllowedSymbolSize(long dataLen) {
 
         _checkDataLengthOutOfBounds(dataLen);
         return _minAllowedSymbolSize(dataLen);
@@ -699,18 +699,18 @@ public final class ParameterChecker {
      *            A source block number
      * @param esi
      *            The encoding symbol identifier of the first symbol in an encoding packet
-     * @param numSrcBs
+     * @param numSBs
      *            A number of source blocks into which a source data is divided
      * @return an error string if some parameter is invalid or an empty string if all parameters are valid
      * @exception IllegalArgumentException
      *                If the number of source blocks is {@linkplain #isNumSourceBlocksOutOfBounds(int) out of bounds}
      */
-    public static String getFECPayloadIDErrorString(int sbn, int esi, int numSrcBs) {
+    public static String getFECPayloadIDErrorString(int sbn, int esi, int numSBs) {
 
-        _checkNumSourceBlocksOutOfBounds(numSrcBs);
+        _checkNumSourceBlocksOutOfBounds(numSBs);
 
-        if (sbn < SBN_min || sbn >= numSrcBs) {
-            return String.format("source block number (%d) must be whithin [%d, %d]", sbn, SBN_min, numSrcBs - 1);
+        if (sbn < SBN_min || sbn >= numSBs) {
+            return String.format("source block number (%d) must be whithin [%d, %d]", sbn, SBN_min, numSBs - 1);
         }
         if (isEncodingSymbolIDOutOfBounds(esi)) {
             return String.format("encoding symbol identifier (%d) must be whithin [%d, %d]", esi, ESI_min, ESI_max);
