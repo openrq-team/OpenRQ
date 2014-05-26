@@ -1,3 +1,15 @@
+## 2.0.1
+
+Changed a method from non-static to static (backwards compatible with previous
+version).
+
+Changed public method signatures:
+(++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.parameters.ParameterChecker
+ * ++ public static int minAllowedSymbolSize()
+ * -- public int minAllowedSymbolSize()
+
+
 ## 2.0
 
 In general:
