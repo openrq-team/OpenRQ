@@ -35,11 +35,11 @@ questions.
     -->
     <dirname property="benchmark-ant.basedir" file="${ant.file.benchmark-ant}"/>
 
-    <property name="jmh-core.jar" location="${benchmark-ant.basedir}/jmh-core-0.6.jar"/>
-    <property name="jmh-generator-annprocess.jar" location="${benchmark-ant.basedir}/jmh-generator-annprocess-0.6.jar"/>
+    <property name="jmh-core.jar" location="${benchmark-ant.basedir}/jmh-core-0.7.3.jar"/>
+    <property name="jmh-generator-annprocess.jar" location="${benchmark-ant.basedir}/jmh-generator-annprocess-0.7.3.jar"/>
 
     <property name="joptsimple.jar" location="${benchmark-ant.basedir}/jopt-simple-4.6.jar"/>
-    <property name="commonsmath.jar" location="${benchmark-ant.basedir}/commons-math3-3.2.jar"/>
+    <property name="commonsmath.jar" location="${benchmark-ant.basedir}/commons-math3-3.3.jar"/>
 
     <!-- private target to be overriden in importing script -->
     <target name="-init-benchmark-properties">

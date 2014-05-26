@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
+import net.fec.openrq.parameters.ParameterChecker;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -32,6 +33,7 @@ import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -46,25 +48,39 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Benchmark)
 public class SourceBlockDecodingTest {
 
-    // adjust these values for variable tests
-    private static final int F = 9_999;
-    private static final int K = 250;
-    private static final int EXTRA_SYMBOLS = 0;
-    private static final boolean PREFER_SOURCE_SYMBOLS = false;
+    // default parameter values
+    private static final int DEF_DATA_LEN = 9_999;
+    private static final int DEF_NUM_SOURCE_SYMBOLS = 250;
+    private static final int DEF_EXTRA_SYMBOLS = 0;
+    private static final boolean DEF_PREFER_SOURCE_SYMBOLS = false;
 
 
-    private static ArraySourceBlockDecoder newRandomSBDecoder() {
+    private static ArraySourceBlockDecoder newRandomSBDecoder(int F, int K, int xtraSymbs, boolean prefSrcSymbs) {
+
+        if (F < 1) throw new IllegalArgumentException("data length must be positive");
+        // F is an integer so it is already upper bounded
+
+        if (K < 1) throw new IllegalArgumentException("num source symbols must be positive");
+        final int maxK = ParameterChecker.maxNumSourceSymbolsPerBlock();
+        if (K > maxK) throw new IllegalArgumentException("num source symbols must be at most " + maxK);
+
+        // we can only use Kt because Z = 1
+        final int minKt = ceilDiv(F, ParameterChecker.minSymbolSize());
+        if (K < minKt) throw new IllegalArgumentException("num source symbols must be at least " + minKt);
+        final int maxKt = ceilDiv(F, ParameterChecker.maxSymbolSize());
+        if (K > maxKt) throw new IllegalAccessError("num source symbols must be at most " + maxKt);
 
         // force single source block
         final FECParameters fecParams = FECParameters.newParameters(F, ceilDiv(F, K), 1);
         final Random rand = TestingCommon.newSeededRandom();
 
         final byte[] data = TestingCommon.randomBytes(F, rand);
-        final Set<Integer> esis = randomESIs(rand);
+        final int numESIs = K + xtraSymbs;
+        final Set<Integer> esis = randomESIs(rand, K, numESIs, prefSrcSymbs);
         final SourceBlockEncoder enc = OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
 
         final ArraySourceBlockDecoder dec = (ArraySourceBlockDecoder) /* safe cast */
-                                            OpenRQ.newDecoder(fecParams, EXTRA_SYMBOLS).sourceBlock(0);
+                                            OpenRQ.newDecoder(fecParams, K).sourceBlock(0);
 
         for (int esi : esis) {
             if (dec.putEncodingPacket(enc.encodingPacket(esi)) == SourceBlockState.DECODING_FAILURE) {
@@ -74,25 +90,46 @@ public class SourceBlockDecodingTest {
         return dec;
     }
 
-    private static Set<Integer> randomESIs(Random rand) {
+    private static Set<Integer> randomESIs(Random rand, int K, int numESIs, boolean prefSrcSymbs) {
 
-        final int numSymbols = K + EXTRA_SYMBOLS;
-        if (PREFER_SOURCE_SYMBOLS) {
-            return TestingCommon.randomSrcRepESIs(rand, numSymbols, K);
+        if (prefSrcSymbs) {
+            return TestingCommon.randomSrcRepESIs(rand, numESIs, K);
         }
         else {
-            return TestingCommon.randomAnyESIs(rand, numSymbols);
+            return TestingCommon.randomAnyESIs(rand, numESIs);
         }
     }
 
 
+    @Param({"" + DEF_DATA_LEN})
+    private int data_length;
+
+    @Param({"" + DEF_NUM_SOURCE_SYMBOLS})
+    private int source_symbols;
+
+    @Param({"" + DEF_EXTRA_SYMBOLS})
+    private int extra_symbols;
+
+    @Param({"" + DEF_PREFER_SOURCE_SYMBOLS})
+    private boolean prefer_source;
+
     private ArraySourceBlockDecoder dec;
 
+
+    public SourceBlockDecodingTest() {
+
+        this.data_length = DEF_DATA_LEN;
+        this.source_symbols = DEF_NUM_SOURCE_SYMBOLS;
+        this.extra_symbols = DEF_EXTRA_SYMBOLS;
+        this.prefer_source = DEF_PREFER_SOURCE_SYMBOLS;
+
+        this.dec = null;
+    }
 
     @Setup
     public void setup() {
 
-        dec = newRandomSBDecoder();
+        dec = newRandomSBDecoder(data_length, source_symbols, extra_symbols, prefer_source);
     }
 
     @GenerateMicroBenchmark
@@ -104,10 +141,11 @@ public class SourceBlockDecodingTest {
     // for CPU/memory profiling
     public static void main(String[] args) {
 
-        final ArraySourceBlockDecoder dec = newRandomSBDecoder();
+        final SourceBlockDecodingTest test = new SourceBlockDecodingTest();
+        test.setup();
         final int iters = 500;
         for (int i = 0; i < iters; i++) {
-            ArraySourceBlockDecoder.forceDecode(dec);
+            test.test();
             System.out.println(i);
         }
     }
