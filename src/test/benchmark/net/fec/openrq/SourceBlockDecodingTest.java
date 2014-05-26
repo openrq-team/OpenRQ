@@ -65,9 +65,9 @@ public class SourceBlockDecodingTest {
         if (K > maxK) throw new IllegalArgumentException("num source symbols must be at most " + maxK);
 
         // we can only use Kt because Z = 1
-        final int minKt = ceilDiv(F, ParameterChecker.minSymbolSize());
+        final int minKt = ceilDiv(F, ParameterChecker.maxSymbolSize());
         if (K < minKt) throw new IllegalArgumentException("num source symbols must be at least " + minKt);
-        final int maxKt = ceilDiv(F, ParameterChecker.maxSymbolSize());
+        final int maxKt = ceilDiv(F, ParameterChecker.minSymbolSize());
         if (K > maxKt) throw new IllegalAccessError("num source symbols must be at most " + maxKt);
 
         // force single source block
@@ -102,26 +102,26 @@ public class SourceBlockDecodingTest {
 
 
     @Param({"" + DEF_DATA_LEN})
-    private int data_length;
+    private int datalen;
 
     @Param({"" + DEF_NUM_SOURCE_SYMBOLS})
-    private int source_symbols;
+    private int srcsymbs;
 
     @Param({"" + DEF_EXTRA_SYMBOLS})
-    private int extra_symbols;
+    private int symbover;
 
     @Param({"" + DEF_PREFER_SOURCE_SYMBOLS})
-    private boolean prefer_source;
+    private boolean prefsrc;
 
     private ArraySourceBlockDecoder dec;
 
 
     public SourceBlockDecodingTest() {
 
-        this.data_length = DEF_DATA_LEN;
-        this.source_symbols = DEF_NUM_SOURCE_SYMBOLS;
-        this.extra_symbols = DEF_EXTRA_SYMBOLS;
-        this.prefer_source = DEF_PREFER_SOURCE_SYMBOLS;
+        this.datalen = DEF_DATA_LEN;
+        this.srcsymbs = DEF_NUM_SOURCE_SYMBOLS;
+        this.symbover = DEF_EXTRA_SYMBOLS;
+        this.prefsrc = DEF_PREFER_SOURCE_SYMBOLS;
 
         this.dec = null;
     }
@@ -129,7 +129,7 @@ public class SourceBlockDecodingTest {
     @Setup
     public void setup() {
 
-        dec = newRandomSBDecoder(data_length, source_symbols, extra_symbols, prefer_source);
+        dec = newRandomSBDecoder(datalen, srcsymbs, symbover, prefsrc);
     }
 
     @GenerateMicroBenchmark
