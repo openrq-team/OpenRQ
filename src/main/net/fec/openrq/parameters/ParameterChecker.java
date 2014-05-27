@@ -136,12 +136,12 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code false} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
+     * Returns {@code false} iff {@linkplain #minDataLength() minDataLen} &le; {@code dataLen} &le;
      * {@linkplain #maxDataLength() maxDataLen}.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
-     * @return {@code false} iff {@linkplain #minDataLength() minDataLen} <= <b>dataLen</b> <=
+     * @return {@code false} iff {@linkplain #minDataLength() minDataLen} &le; {@code dataLen} &le;
      *         {@linkplain #maxDataLength() maxDataLen}
      */
     public static boolean isDataLengthOutOfBounds(long dataLen) {
@@ -187,12 +187,12 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code false} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
+     * Returns {@code false} iff {@linkplain #minSymbolSize() minSymbSize} &le; {@code symbSize} &le;
      * {@linkplain #maxSymbolSize() maxSymbSize}.
      * 
      * @param symbSize
      *            A symbol size, in number of bytes
-     * @return {@code false} iff {@linkplain #minSymbolSize() minSymbSize} <= <b>symbSize</b> <=
+     * @return {@code false} iff {@linkplain #minSymbolSize() minSymbSize} &le; {@code symbSize} &le;
      *         {@linkplain #maxSymbolSize() maxSymbSize}
      */
     public static boolean isSymbolSizeOutOfBounds(int symbSize) {
@@ -238,12 +238,12 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code false} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
+     * Returns {@code false} iff {@linkplain #minNumSourceBlocks() minSrcBs} &le; {@code numSrcBs} &le;
      * {@linkplain #maxNumSourceBlocks() maxSrcBs}.
      * 
      * @param numSrcBs
      *            A number of source blocks into which a source data is divided
-     * @return {@code false} iff {@linkplain #minNumSourceBlocks() minSrcBs} <= <b>numSrcBs</b> <=
+     * @return {@code false} iff {@linkplain #minNumSourceBlocks() minSrcBs} &le; {@code numSrcBs} &le;
      *         {@linkplain #maxNumSourceBlocks() maxSrcBs}
      */
     public static boolean isNumSourceBlocksOutOfBounds(int numSrcBs) {
@@ -326,12 +326,12 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code false} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
+     * Returns {@code false} iff {@linkplain #minInterleaverLength() minInterLen} &le; {@code interLen} &le;
      * {@linkplain #maxInterleaverLength() maxInterLen}.
      * 
      * @param interLen
      *            An interleaver length, in number of sub-blocks per source block
-     * @return {@code false} iff {@linkplain #minInterleaverLength() minInterLen} <= <b>interLen</b> <=
+     * @return {@code false} iff {@linkplain #minInterleaverLength() minInterLen} &le; {@code interLen} &le;
      *         {@linkplain #maxInterleaverLength() maxInterLen}
      */
     public static boolean isInterleaverLengthOutOfBounds(int interLen) {
@@ -614,12 +614,12 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code false} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
+     * Returns {@code false} iff {@linkplain #minSourceBlockNumber() minSBN} &le; {@code sbn} &le;
      * {@linkplain #maxSourceBlockNumber() maxSBN}.
      * 
      * @param sbn
      *            A source block number
-     * @return {@code false} iff {@linkplain #minSourceBlockNumber() minSBN} <= <b>sbn</b> <=
+     * @return {@code false} iff {@linkplain #minSourceBlockNumber() minSBN} &le; {@code sbn} &le;
      *         {@linkplain #maxSourceBlockNumber() maxSBN}
      */
     public static boolean isSourceBlockNumberOutOfBounds(int sbn) {
@@ -650,12 +650,12 @@ public final class ParameterChecker {
     }
 
     /**
-     * Returns {@code false} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
+     * Returns {@code false} iff {@linkplain #minEncodingSymbolID() minESI} &le; {@code esi} &le;
      * {@linkplain #maxEncodingSymbolID() maxESI}.
      * 
      * @param esi
      *            An encoding symbol ID
-     * @return {@code false} iff {@linkplain #minEncodingSymbolID() minESI} <= <b>esi</b> <=
+     * @return {@code false} iff {@linkplain #minEncodingSymbolID() minESI} &le; {@code esi} &le;
      *         {@linkplain #maxEncodingSymbolID() maxESI}
      */
     public static boolean isEncodingSymbolIDOutOfBounds(int esi) {

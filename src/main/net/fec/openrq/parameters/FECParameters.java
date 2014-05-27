@@ -580,15 +580,15 @@ public final class FECParameters {
     /**
      * Returns {@code true} if, and only if, this instance is equal to another object.
      * <p>
-     * This instance (<b>this</b>) is equal to another object (<b>obj</b>), if and only if:
+     * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
      * <ul>
-     * <li><b>obj</b> is non-null
-     * <li>and <b>obj</b> is an instance of {@code FECParameters}
-     * <li>and <b>this</b>.{@link #dataLength()} == <b>obj</b>.{@code dataLength()}
-     * <li>and <b>this</b>.{@link #symbolSize()} == <b>obj</b>.{@code symbolSize()}
-     * <li>and <b>this</b>.{@link #numberOfSourceBlocks()} == <b>obj</b>.{@code numberOfSourceBlocks()}
-     * <li>and <b>this</b>.{@link #interleaverLength()} == <b>obj</b>.{@code interleaverLength()}
-     * <li>and <b>this</b>.{@link #symbolAlignment()} == <b>obj</b>.{@code symbolAlignment()}
+     * <li>{@code obj} is non-null
+     * <li>and {@code obj} is an instance of {@code FECParameters}
+     * <li>and {@code this}.{@link #dataLength()} == {@code obj.dataLength()}
+     * <li>and {@code this}.{@link #symbolSize()} == {@code obj.symbolSize()}
+     * <li>and {@code this}.{@link #numberOfSourceBlocks()} == {@code obj.numberOfSourceBlocks()}
+     * <li>and {@code this}.{@link #interleaverLength()} == {@code obj.interleaverLength()}
+     * <li>and {@code this}.{@link #symbolAlignment()} == {@code obj. symbolAlignment()}
      * </ul>
      */
     @Override
