@@ -23,6 +23,7 @@ import static net.fec.openrq.parameters.InternalConstants.ESI_min;
 import static net.fec.openrq.parameters.InternalConstants.F_max;
 import static net.fec.openrq.parameters.InternalConstants.F_min;
 import static net.fec.openrq.parameters.InternalConstants.K_max;
+import static net.fec.openrq.parameters.InternalConstants.K_min;
 import static net.fec.openrq.parameters.InternalConstants.Kt_max;
 import static net.fec.openrq.parameters.InternalConstants.N_max;
 import static net.fec.openrq.parameters.InternalConstants.N_min;
@@ -89,9 +90,8 @@ import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
  * Deriver parameters have well defined bounds, much like the FEC parameters. The source data length has the same bounds
  * as before, as well as the payload length since it is equivalent to the symbol size.
  * <p>
- * By default, the source data length has theoretical {@linkplain #minDataLength() lower} and
- * {@linkplain #maxDataLength() upper} bounds, and the same is true for the payload length; the maximum decoding block
- * size must be positive but has no upper bound.
+ * By default, the maximum decoding block size has a lower bound defined in method {@link #minDecodingBlockSize()}, but
+ * has no upper bound.
  * <p>
  * There are also conditional bounds, much like in the FEC parameters. Methods are provided for obtaining these bounds.
  * They are summarized below for ease of access.
@@ -101,14 +101,20 @@ import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
  * methods for each:
  * <p>
  * <ul>
- * <li>{@link #minAllowedSymbolSize(long)}
+ * <li>{@link #minAllowedPayloadLength(long)}
  * <li>{@link #maxAllowedDataLength(int)}
  * </ul>
  * <p>
- * Given a <b>source data length</b> and a <b>payload length</b> (a symbol size), which are valid in respect to each
- * other, it is possible to obtain a <b>lower bound for the maximum decoding block size</b>. Refer to the method:
+ * Given a <b>source data length</b> and a <b>payload length</b>, which are valid in respect to each other, it is
+ * possible to obtain a <b>lower bound for the maximum decoding block size</b>. Refer to the method:
  * <ul>
  * <li>{@link #minAllowedDecodingBlockSize(long, int)}
+ * </ul>
+ * <p>
+ * Given a <b>payload length</b>, within bounds, and a <b>maximum decoding block size</b>, within bounds and no less
+ * than the payload length, it is possible to obtain a <b>maximum allowed source data length</b>. Refer to the method:
+ * <ul>
+ * <li>{@link #maxAllowedDataLength(int, int)}
  * </ul>
  */
 public final class ParameterChecker {
@@ -151,6 +157,9 @@ public final class ParameterChecker {
 
     /**
      * Returns the maximum allowed data length given a symbol size.
+     * <p>
+     * The provided parameter may also be a payload length, since it is equivalent to the symbol size, therefore the
+     * same bounds apply.
      * 
      * @param symbSize
      *            A symbol size, in number of bytes
@@ -485,6 +494,142 @@ public final class ParameterChecker {
     // =========== F, P', WS =========== //
 
     /**
+     * Returns the minimum payload length, in number of bytes. This value is equivalent to the
+     * {@linkplain #minSymbolSize() minimum symbol size}.
+     * 
+     * @return the minimum payload length, in number of bytes
+     */
+    public static int minPayloadLength() {
+
+        return minSymbolSize();
+    }
+
+    /**
+     * Returns the maximum payload length, in number of bytes. This value is equivalent to the
+     * {@linkplain #maxSymbolSize() maximum symbol size}.
+     * 
+     * @return the maximum payload length, in number of bytes
+     */
+    public static int maxPayloadLength() {
+
+        return maxPayloadLength();
+    }
+
+    /**
+     * Returns {@code false} iff {@linkplain #minPayloadLength() minPayLen} &le; {@code payLen} &le;
+     * {@linkplain #maxPayloadLength() maxPayLen}.
+     * 
+     * @param payLen
+     *            A payload length, in number of bytes (equivalent to the "symbol size" FEC parameter)
+     * @return {@code false} iff {@linkplain #minPayloadLength() minPayLen} &le; {@code payLen} &le;
+     *         {@linkplain #maxPayloadLength() maxPayLen}
+     */
+    public static boolean isPayloadLengthOutOfBounds(int payLen) {
+
+        return !(minPayloadLength() <= payLen && payLen <= maxPayloadLength());
+    }
+
+    /**
+     * Returns the minimum allowed payload length given a source data length. This method is equivalent to method
+     * {@link #minAllowedSymbolSize(long)}.
+     * 
+     * @param dataLen
+     *            A source data length, in number of bytes
+     * @return the minimum allowed payload length given a source data length.
+     * @exception IllegalArgumentException
+     *                If the source data length is {@linkplain #isDataLengthOutOfBounds(long) out of bounds}
+     */
+    public static int minAllowedPayloadLength(long dataLen) {
+
+        return minAllowedSymbolSize(dataLen);
+    }
+
+    /**
+     * Returns the lowest possible bound on the maximum size for a block decodable in working memory.
+     * 
+     * @return the lowest possible bound on the maximum size for a block decodable in working memory
+     */
+    public static int minDecodingBlockSize() {
+
+        return _minAllowedDecodingBlockSize(minDataLength(), minSymbolSize());
+    }
+
+    /**
+     * Returns a lower bound on the maximum size for a block decodable in working memory, given a source data length and
+     * payload length.
+     * <p>
+     * <em>Note that besides being within their own bounds, both arguments must also be valid together, that is, either
+     * the source data length must be {@linkplain #maxAllowedDataLength(int) upper bounded given the payload length}, or
+     * the payload length must be {@linkplain #minAllowedPayloadLength(long) lower bounded given the source data length}
+     * .</em>
+     * 
+     * @param dataLen
+     *            A source data length, in number of bytes
+     * @param payLen
+     *            A payload length, in number of bytes (equivalent to the "symbol size" FEC parameter)
+     * @return a lower bound on the maximum size for a block decodable in working memory
+     * @exception IllegalArgumentException
+     *                If either argument is individually out of bounds, or if they are out of bounds in unison
+     */
+    public static int minAllowedDecodingBlockSize(long dataLen, int payLen) {
+
+        _checkDataLengthOutOfBounds(dataLen);
+        _checkPayloadLengthOutOfBounds(payLen);
+        _checkDataLengthAndPayloadLengthOutOfBounds(dataLen, payLen);
+
+        return _minAllowedDecodingBlockSize(dataLen, payLen);
+    }
+
+    /**
+     * Returns the maximum allowed data length given a payload length and a maximum size for a block decodable in
+     * working memory.
+     * <p>
+     * <b><em>Bounds checking</em></b> - The following must be true, otherwise an {@code IllegalArgumentException} is
+     * thrown:
+     * <ul>
+     * <li>{@link #isPayloadLengthOutOfBounds(int) isPayloadLengthOutOfBounds(payLen)} {@code == false}
+     * <li>{@code maxDBMem >=} {@link #minDecodingBlockSize()}
+     * <li>{@code maxDBMem >= payLen}
+     * </ul>
+     * 
+     * @param payLen
+     *            A payload length, in number of bytes (equivalent to the "symbol size" FEC parameter)
+     * @param maxDBMem
+     *            A maximum size, in number of bytes, for a block decodable in working memory
+     * @return the maximum allowed data length given a payload length and a maximum size for a block decodable in
+     *         working memory
+     * @exception IllegalArgumentException
+     *                If any argument is out of bounds (see method description)
+     */
+    public static long maxAllowedDataLength(int payLen, int maxDBMem) {
+
+        _checkPayloadLengthOutOfBounds(payLen);
+        _checkDecodingBlockSizeOutOfBounds(maxDBMem);
+        if (maxDBMem < payLen) {
+            throw new IllegalArgumentException(
+                "maximum decoding block size must be at least equal to the payload length");
+        }
+
+        final int T = payLen;
+        final int WS = maxDBMem;
+        final long boundFromT = _maxAllowedDataLength(T);
+
+        // Kt = ceil(F / T)
+        // Z = ceil(Kt / KL)
+        // ceil(Kt / KL) <= Z_max
+        // Kt / KL <= Z_max
+        // Kt <= Z_max * KL
+        // ceil(F / T) <= Z_max * KL
+        // F / T <= Z_max * KL
+        // F <= Z_max * KL * T
+
+        final int KL = InternalFunctions.KL(WS, T, Al, _topInterleaverLength(T));
+        final long boundFromWS = (long)Z_max * KL * T;
+
+        return Math.min(boundFromT, boundFromWS);
+    }
+
+    /**
      * Returns {@code true} if, and only if, the provided deriver parameters are valid, that is, if they fall within
      * certain bounds.
      * <p>
@@ -564,31 +709,6 @@ public final class ParameterChecker {
         }
 
         return "";
-    }
-
-    /**
-     * Returns a lower bound on the maximum size for a block decodable in working memory, given a source data length and
-     * symbol size.
-     * <p>
-     * <em>Note that besides being within their own bounds, both arguments must also be valid together, that is, either
-     * the source data length must be {@linkplain #maxAllowedDataLength(int) upper bounded given the symbol size}, or
-     * the symbol size must be {@linkplain #minAllowedSymbolSize(long) lower bounded given the source data length}.</em>
-     * 
-     * @param dataLen
-     *            A source data length, in number of bytes
-     * @param symbSize
-     *            A symbol size, in number of bytes
-     * @return a lower bound on the maximum size for a block decodable in working memory
-     * @exception IllegalArgumentException
-     *                If either argument is individually out of bounds, or if they are out of bounds in unison
-     */
-    public static int minAllowedDecodingBlockSize(long dataLen, int symbSize) {
-
-        _checkDataLengthOutOfBounds(dataLen);
-        _checkSymbolSizeOutOfBounds(symbSize);
-        _checkDataLengthAndSymbolSizeOutOfBounds(dataLen, symbSize);
-
-        return _minAllowedDecodingBlockSize(dataLen, symbSize);
     }
 
     // =========== source block number - SBN ========== //
@@ -769,21 +889,22 @@ public final class ParameterChecker {
         final int Kt = getTotalSymbols(F, T);
 
         // the theoretical minimum number of source symbols in a source block
-        final int KL = ceilDiv(Kt, Z_max);
-
-        // interleaving is disabled for now
-        final int SStimesAl = T;
-        // the maximum allowed interleaver length
-        final int topN = T / SStimesAl;
+        final int KL = Math.max(K_min, ceilDiv(Kt, Z_max));
 
         // minimum WS is the inverse of the function KL
-        return minWS(KL, T, Al, topN);
+        return minWS(KL, T, Al, _topInterleaverLength(T));
     }
 
     // requires individually bounded arguments
     private static boolean _areDataLengthAndSymbolSizeOutOfBounds(long F, int T) {
 
         return getPossibleTotalSymbols(F, T) > Kt_max;
+    }
+
+    // requires individually bounded arguments
+    private static boolean _areDataLengthAndPayloadLengthOutOfBounds(long F, int P) {
+
+        return _areDataLengthAndSymbolSizeOutOfBounds(F, P);
     }
 
     private static void _checkDataLengthOutOfBounds(long F) {
@@ -812,6 +933,36 @@ public final class ParameterChecker {
         if (isNumSourceBlocksOutOfBounds(Z)) {
             throw new IllegalArgumentException("number of source blocks is out of bounds");
         }
+    }
+
+    private static void _checkPayloadLengthOutOfBounds(int P) {
+
+        if (isPayloadLengthOutOfBounds(P)) {
+            throw new IllegalArgumentException("payload length is out of bounds");
+        }
+    }
+
+    private static void _checkDataLengthAndPayloadLengthOutOfBounds(long F, int P) {
+
+        if (_areDataLengthAndPayloadLengthOutOfBounds(F, P)) {
+            throw new IllegalArgumentException("source data length and payload length are out of bounds in unison");
+        }
+    }
+
+    private static void _checkDecodingBlockSizeOutOfBounds(int WS) {
+
+        if (WS < minDecodingBlockSize()) {
+            throw new IllegalArgumentException("maximum decoding block size is out of bounds");
+        }
+    }
+
+    private static int _topInterleaverLength(int T) {
+
+        // interleaving is disabled for now
+        final int SStimesAl = T;
+
+        // the maximum allowed interleaver length
+        return T / SStimesAl;
     }
 
     private ParameterChecker() {
