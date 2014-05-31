@@ -366,8 +366,6 @@ public final class FECParameters {
 
     private static FECParameters newLocalInstance(long F, int T, int Z, int N, int Al) {
 
-        System.out.println("F=" + F + ", T=" + T + ", Z=" + Z + ", N=" + N);
-        
         final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
         final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N, Al);
         return new FECParameters(commonFecOTI, schemeSpecFecOTI);
