@@ -36,6 +36,7 @@ import static net.fec.openrq.parameters.InternalConstants.Z_min;
 import static net.fec.openrq.parameters.InternalFunctions.getPossibleTotalSymbols;
 import static net.fec.openrq.parameters.InternalFunctions.getTotalSymbols;
 import static net.fec.openrq.parameters.InternalFunctions.minWS;
+import static net.fec.openrq.parameters.InternalFunctions.topInterleaverLength;
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 
 
@@ -512,7 +513,7 @@ public final class ParameterChecker {
      */
     public static int maxPayloadLength() {
 
-        return maxPayloadLength();
+        return maxSymbolSize();
     }
 
     /**
@@ -623,7 +624,7 @@ public final class ParameterChecker {
         // F / T <= Z_max * KL
         // F <= Z_max * KL * T
 
-        final int KL = InternalFunctions.KL(WS, T, Al, _topInterleaverLength(T));
+        final int KL = InternalFunctions.KL(WS, T, Al, topInterleaverLength(T));
         final long boundFromWS = (long)Z_max * KL * T;
 
         return Math.min(boundFromT, boundFromWS);
@@ -892,7 +893,7 @@ public final class ParameterChecker {
         final int KL = Math.max(K_min, ceilDiv(Kt, Z_max));
 
         // minimum WS is the inverse of the function KL
-        return minWS(KL, T, Al, _topInterleaverLength(T));
+        return minWS(KL, T, Al, topInterleaverLength(T));
     }
 
     // requires individually bounded arguments
@@ -954,15 +955,6 @@ public final class ParameterChecker {
         if (WS < minDecodingBlockSize()) {
             throw new IllegalArgumentException("maximum decoding block size is out of bounds");
         }
-    }
-
-    private static int _topInterleaverLength(int T) {
-
-        // interleaving is disabled for now
-        final int SStimesAl = T;
-
-        // the maximum allowed interleaver length
-        return T / SStimesAl;
     }
 
     private ParameterChecker() {

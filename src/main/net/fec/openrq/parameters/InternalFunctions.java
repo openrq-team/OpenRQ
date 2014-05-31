@@ -37,6 +37,17 @@ final class InternalFunctions {
         return (int)ceilDiv(F, T); // downcast never overflows since F and T are bounded
     }
 
+    // requires bounded argument
+    // since interleaving is disabled, this should always return 1
+    static int topInterleaverLength(int T) {
+
+        // interleaving is disabled for now
+        final int SStimesAl = T;
+
+        // the maximum allowed interleaver length
+        return T / SStimesAl;
+    }
+
     // requires valid arguments
     static int KL(int WS, int T, int Al, int n) {
 

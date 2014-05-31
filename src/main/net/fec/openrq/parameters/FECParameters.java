@@ -19,6 +19,7 @@ package net.fec.openrq.parameters;
 
 import static net.fec.openrq.parameters.InternalFunctions.KL;
 import static net.fec.openrq.parameters.InternalFunctions.getTotalSymbols;
+import static net.fec.openrq.parameters.InternalFunctions.topInterleaverLength;
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 
 import java.io.DataInput;
@@ -329,12 +330,10 @@ public final class FECParameters {
 
         if (ParameterChecker.areValidDeriverParameters(F, P, WS)) {
             final int T = P;
-            // interleaving is disabled for now
-            final int SStimesAl = T;              // SS * Al = T
 
             // safe cast because F and T are appropriately bounded
-            final int Kt = getTotalSymbols(F, T); // Kt = ceil(F/T)
-            final int topN = T / SStimesAl;       // topN = floor(T/(SS*Al))
+            final int Kt = getTotalSymbols(F, T);     // Kt = ceil(F/T)
+            final int topN = topInterleaverLength(T); // topN = floor(T/(SS*Al))
 
             final int Z = deriveZ(Kt, WS, T, Al, topN);
             final int N = deriveN(Kt, Z, WS, T, Al, topN);
@@ -622,6 +621,7 @@ public final class FECParameters {
     public String toString() {
 
         // TEST_CODE
-        return "FEC Parameters:{F=" + dataLength() + ", T=" + symbolSize() + ", Z=" + numberOfSourceBlocks() + "}";
+        return "FEC Parameters:{F=" + dataLength() + ", T=" + symbolSize() + ", Z=" + numberOfSourceBlocks() + ", N="
+               + interleaverLength() + "}";
     }
 }
