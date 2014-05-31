@@ -19,6 +19,7 @@ package net.fec.openrq;
 import static net.fec.openrq.util.arithmetic.ExtraMath.integerPow;
 
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
@@ -54,17 +55,12 @@ final class TestingCommon {
 
     static Set<Integer> randomAnyESIs(Random rand, int numSymbols) {
 
+        final int minESI = ParameterChecker.minEncodingSymbolID();
         final int maxESI = ParameterChecker.maxEncodingSymbolID();
         final Set<Integer> esis = new LinkedHashSet<>(); // preserve randomized ordering
 
         // Floyd's Algorithm for random sampling (uniform over all possible ESIs)
-        for (int i = maxESI - numSymbols; i < maxESI; i++) {
-            // try to add a random index between 0 and i (inclusive)
-            if (!esis.add(rand.nextInt(i + 1))) {
-                // if already present, choose index i, which is surely not present yet
-                esis.add(i);
-            }
-        }
+        randomUniformSample(esis, rand, minESI, maxESI, numSymbols);
 
         return esis;
     }
@@ -84,7 +80,31 @@ final class TestingCommon {
         return esis;
     }
 
-    static int[] primeAndPowerDistribution(int base, int maxExponent) {
+    static int[] exponentialDistribution(int base, int maxExponent) {
+
+        integerPow(base, maxExponent); // test a power calculation to validate arguments
+        if (base <= 0) throw new IllegalArgumentException("base must be positive");
+
+        final int[] distr = new int[maxExponent + 1];
+        for (int exp = 0; exp <= maxExponent; exp++) {
+            distr[exp] = integerPow(base, exp);
+        }
+        return distr;
+    }
+
+    static long[] exponentialDistribution(long base, int maxExponent) {
+
+        integerPow(base, maxExponent); // test a power calculation to validate arguments
+        if (base <= 0) throw new IllegalArgumentException("base must be positive");
+
+        final long[] distr = new long[maxExponent + 1];
+        for (int exp = 0; exp <= maxExponent; exp++) {
+            distr[exp] = integerPow(base, exp);
+        }
+        return distr;
+    }
+
+    static int[] primeExponentialDistribution(int base, int maxExponent) {
 
         integerPow(base, maxExponent); // test a power calculation to validate arguments
         if (base <= 0) throw new IllegalArgumentException("base must be positive");
@@ -122,6 +142,48 @@ final class TestingCommon {
             intDist[idx++] = value;
         }
         return intDist;
+    }
+
+    private static void randomUniformSample(Set<Integer> sink, Random rand, int begin, int end, int sampleSize) {
+
+        if (begin > end) throw new IllegalArgumentException("begin > end");
+        if (end >= 0 && begin <= end - Integer.MAX_VALUE) throw new IllegalArgumentException("end - begin overflows");
+
+        final int distrSize = 1 + (end - begin);
+        if (sampleSize > distrSize) throw new IllegalArgumentException("sample size is too large");
+
+        // Floyd's Algorithm for uniform random sampling
+        for (int i = distrSize - sampleSize; i < distrSize; i++) {
+            // try to add a random index between 0 and i (inclusive)
+            if (!sink.add(begin + rand.nextInt(i + 1))) {
+                // if already present, choose index i, which is surely not present yet
+                sink.add(begin + i);
+            }
+        }
+    }
+
+    static <C extends Collection<Integer>> C addInts(C col, int... ints) {
+
+        for (int i : ints) {
+            col.add(i);
+        }
+        return col;
+    }
+
+    static <C extends Collection<Long>> C addIntsL(C col, int... ints) {
+
+        for (int i : ints) {
+            col.add((long)i);
+        }
+        return col;
+    }
+
+    static <C extends Collection<Long>> C addLongs(C col, long... longs) {
+
+        for (long eL : longs) {
+            col.add(eL);
+        }
+        return col;
     }
 
 

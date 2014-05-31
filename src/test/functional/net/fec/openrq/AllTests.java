@@ -25,6 +25,8 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 @SuiteClasses({
                DataIntegrityCheckTest.class,
+               FECParametersBoundsTest.class,
+               DeriverParameterBoundsTest.class,
                OpenRQClassTest.class,
                OpenRQClassExceptionTest.class
 })
