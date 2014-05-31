@@ -86,12 +86,12 @@ public interface DataDecoder {
     /**
      * Returns a decoder object for the source block with the provided source block number.
      * <p>
-     * <b><em>Bounds checking</em></b> - If we have <b>Z</b> as the number of source blocks into which is divided the the
-     * source data being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
+     * <b><em>Bounds checking</em></b> - If we have {@code Z} as the number of source blocks into which is divided the
+     * the source data being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>
-     * <li><b>sbn</b> &ge; 0
-     * <li><b>sbn</b> &lt; <b>Z</b>
+     * <li>{@code sbn} &ge; 0
+     * <li>{@code sbn} &lt; {@code Z}
      * </ul>
      * 
      * @param sbn
@@ -328,7 +328,8 @@ public interface DataDecoder {
     public Parsed<EncodingPacket> readPacketFrom(DataInput in) throws IOException;
 
     /**
-     * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. The format of the packet data must follow
+     * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. The format of the packet data must
+     * follow
      * the format specified by {@link EncodingPacket#writeTo(java.nio.channels.WritableByteChannel)}.
      * <p>
      * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and

@@ -1,3 +1,38 @@
+## 3.0
+
+Fixed critical bug related to the type of the deriver parameter "maximum
+decoding block size" (breaks compatibility with previous versions).
+
+Fixed deriver parameters checking bug.
+
+Added method for obtaining the lowest bound for the "maximum decoding block
+size".
+
+Added new methods and changed parameter names from existing methods to handle
+payload lengths specifically.
+
+Added method for retrieving the maximum allowed "data length" given a "payload
+length" and a "maximum decoding block size".
+
+Changed public method signatures:
+(++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.parameters.FECParameters
+ * ++ public static FECParameters deriveParameters(long, int, long)
+ * -- public static FECParameters deriveParameters(long, int, int)
+* net.fec.openrq.parameters.ParameterChecker
+ * ++ public static long minAllowedDecodingBlockSize(long, int)
+ * -- public static int minAllowedDecodingBlockSize(long, int)
+ * ++ public static boolean areValidDeriverParameters(long, int, long)
+ * -- public static boolean areValidDeriverParameters(long, int, int)
+ * ++ public static String getDeriverParamsErrorString(long, int, long)
+ * -- public static String getDeriverParamsErrorString(long, int, int)
+ * ++ public static long minDecodingBlockSize()
+ * ++ public static int minPayloadLength()
+ * ++ public static int maxPayloadLength()
+ * ++ public static boolean isPayloadLengthOutOfBounds(int)
+ * ++ public static int minAllowedPayloadLength(long)
+ * ++ public static long maxAllowedDataLength(int, long)
+
 ## 2.0.1
 
 Changed a method from non-static to static (backwards compatible with previous
@@ -8,6 +43,7 @@ Changed public method signatures:
 * net.fec.openrq.parameters.ParameterChecker
  * ++ public static int minAllowedSymbolSize()
  * -- public int minAllowedSymbolSize()
+ * 
 
 
 ## 2.0

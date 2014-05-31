@@ -19,6 +19,7 @@ package net.fec.openrq.parameters;
 
 import static net.fec.openrq.parameters.InternalFunctions.KL;
 import static net.fec.openrq.parameters.InternalFunctions.getTotalSymbols;
+import static net.fec.openrq.parameters.InternalFunctions.topInterleaverLength;
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 
 import java.io.DataInput;
@@ -320,21 +321,19 @@ public final class FECParameters {
      * @exception IllegalArgumentException
      *                If the provided deriver parameters are invalid
      */
-    public static FECParameters deriveParameters(long dataLen, int payLen, int maxDBMem) {
+    public static FECParameters deriveParameters(long dataLen, int payLen, long maxDBMem) {
 
         final long F = dataLen;
         final int P = payLen;
-        final int WS = maxDBMem;
+        final long WS = maxDBMem;
         final int Al = ParameterChecker.symbolAlignmentValue();
 
         if (ParameterChecker.areValidDeriverParameters(F, P, WS)) {
             final int T = P;
-            // interleaving is disabled for now
-            final int SStimesAl = T;              // SS * Al = T
 
             // safe cast because F and T are appropriately bounded
-            final int Kt = getTotalSymbols(F, T); // Kt = ceil(F/T)
-            final int topN = T / SStimesAl;       // topN = floor(T/(SS*Al))
+            final int Kt = getTotalSymbols(F, T);     // Kt = ceil(F/T)
+            final int topN = topInterleaverLength(T); // topN = floor(T/(SS*Al))
 
             final int Z = deriveZ(Kt, WS, T, Al, topN);
             final int N = deriveN(Kt, Z, WS, T, Al, topN);
@@ -346,16 +345,16 @@ public final class FECParameters {
         }
     }
 
-    private static int deriveZ(long Kt, int WS, int T, int Al, int topN) {
+    private static int deriveZ(int Kt, long WS, int T, int Al, int topN) {
 
         // Z = ceil(Kt/KL(N_max))
-        return (int)ceilDiv(Kt, KL(WS, T, Al, topN));
+        return ceilDiv(Kt, KL(WS, T, Al, topN));
     }
 
-    private static int deriveN(long Kt, int Z, int WS, int T, int Al, int topN) {
+    private static int deriveN(int Kt, int Z, long WS, int T, int Al, int topN) {
 
         // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
-        final int topK = (int)ceilDiv(Kt, Z);
+        final int topK = ceilDiv(Kt, Z);
         for (int n = topN; n >= 1; n--) {
             if (topK <= KL(WS, T, Al, n)) {
                 return n;
@@ -580,15 +579,15 @@ public final class FECParameters {
     /**
      * Returns {@code true} if, and only if, this instance is equal to another object.
      * <p>
-     * This instance (<b>this</b>) is equal to another object (<b>obj</b>), if and only if:
+     * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
      * <ul>
-     * <li><b>obj</b> is non-null
-     * <li>and <b>obj</b> is an instance of {@code FECParameters}
-     * <li>and <b>this</b>.{@link #dataLength()} == <b>obj</b>.{@code dataLength()}
-     * <li>and <b>this</b>.{@link #symbolSize()} == <b>obj</b>.{@code symbolSize()}
-     * <li>and <b>this</b>.{@link #numberOfSourceBlocks()} == <b>obj</b>.{@code numberOfSourceBlocks()}
-     * <li>and <b>this</b>.{@link #interleaverLength()} == <b>obj</b>.{@code interleaverLength()}
-     * <li>and <b>this</b>.{@link #symbolAlignment()} == <b>obj</b>.{@code symbolAlignment()}
+     * <li>{@code obj} is non-null
+     * <li>and {@code obj} is an instance of {@code FECParameters}
+     * <li>and {@code this}.{@link #dataLength()} == {@code obj.dataLength()}
+     * <li>and {@code this}.{@link #symbolSize()} == {@code obj.symbolSize()}
+     * <li>and {@code this}.{@link #numberOfSourceBlocks()} == {@code obj.numberOfSourceBlocks()}
+     * <li>and {@code this}.{@link #interleaverLength()} == {@code obj.interleaverLength()}
+     * <li>and {@code this}.{@link #symbolAlignment()} == {@code obj. symbolAlignment()}
      * </ul>
      */
     @Override
@@ -622,6 +621,7 @@ public final class FECParameters {
     public String toString() {
 
         // TEST_CODE
-        return "FEC Parameters:{F=" + dataLength() + ", T=" + symbolSize() + ", Z=" + numberOfSourceBlocks() + "}";
+        return "FEC Parameters:{F=" + dataLength() + ", T=" + symbolSize() + ", Z=" + numberOfSourceBlocks() + ", N="
+               + interleaverLength() + "}";
     }
 }

@@ -73,12 +73,12 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the source symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
+     * <b><em>Bounds checking</em></b> - If we have {@code K} as the number of source symbols into which is divided the
      * source block being decoded, then the following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>
-     * <li><b>esi</b> &ge; 0
-     * <li><b>esi</b> &lt; <b>K</b>
+     * <li>{@code esi} &ge; 0
+     * <li>{@code esi} &lt; {@code K}
      * </ul>
      * 
      * @param esi
@@ -94,13 +94,13 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the repair symbol with the provided encoding symbol
      * identifier.
      * <p>
-     * <b><em>Bounds checking</em></b> - If we have <b>K</b> as the number of source symbols into which is divided the
-     * source block being decoded, and <b>max_esi</b> as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
+     * <b><em>Bounds checking</em></b> - If we have {@code K} as the number of source symbols into which is divided the
+     * source block being decoded, and {@code max_esi} as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
      * <ul>
-     * <li><b>esi</b> &ge; <b>K</b>
-     * <li><b>esi</b> &le; <b>max_esi</b>
+     * <li>{@code esi} &ge; {@code K}
+     * <li>{@code esi} &le; {@code max_esi}
      * </ul>
      * 
      * @param esi

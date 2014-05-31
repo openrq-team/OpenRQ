@@ -60,9 +60,9 @@ public final class DataIntegrityCheckTest {
     @Parameters(name = "{0}")
     public static Iterable<Object[]> getFECParams() {
 
-        final int[] Fs = TestingCommon.primeAndPowerDistribution(2, 15);
-        final int[] Ks = TestingCommon.primeAndPowerDistribution(10, 2);
-        final int[] Zs = TestingCommon.primeAndPowerDistribution(2, 3);
+        final int[] Fs = TestingCommon.primeExponentialDistribution(2, 15);
+        final int[] Ks = TestingCommon.primeExponentialDistribution(10, 2);
+        final int[] Zs = TestingCommon.primeExponentialDistribution(2, 3);
         final int N = 1;
 
         // an estimation of how many sets of FEC parameters will be needed (not every combination is valid)

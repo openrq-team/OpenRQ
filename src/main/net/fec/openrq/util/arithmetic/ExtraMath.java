@@ -108,7 +108,7 @@ public final class ExtraMath {
      * @exception IllegalArgumentException
      *                If the exponent is negative or if both base and exponent are equal to zero
      */
-    public static int integerPow(long base, long exp) {
+    public static long integerPow(long base, long exp) {
 
         if (exp < 0) throw new IllegalArgumentException("exponent must be non-negative");
         if (base == 0) {
@@ -118,7 +118,7 @@ public final class ExtraMath {
 
         // exponentiation by squaring
 
-        int result = 1;
+        long result = 1;
         while (exp != 0)
         {
             if ((exp & 1) == 1) {
