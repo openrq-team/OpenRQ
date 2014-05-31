@@ -115,7 +115,7 @@ import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
  * Given a <b>payload length</b>, within bounds, and a <b>maximum decoding block size</b>, within bounds and no less
  * than the payload length, it is possible to obtain a <b>maximum allowed source data length</b>. Refer to the method:
  * <ul>
- * <li>{@link #maxAllowedDataLength(int, int)}
+ * <li>{@link #maxAllowedDataLength(int, long)}
  * </ul>
  */
 public final class ParameterChecker {
@@ -550,7 +550,7 @@ public final class ParameterChecker {
      * 
      * @return the lowest possible bound on the maximum size for a block decodable in working memory
      */
-    public static int minDecodingBlockSize() {
+    public static long minDecodingBlockSize() {
 
         return _minAllowedDecodingBlockSize(minDataLength(), minSymbolSize());
     }
@@ -572,7 +572,7 @@ public final class ParameterChecker {
      * @exception IllegalArgumentException
      *                If either argument is individually out of bounds, or if they are out of bounds in unison
      */
-    public static int minAllowedDecodingBlockSize(long dataLen, int payLen) {
+    public static long minAllowedDecodingBlockSize(long dataLen, int payLen) {
 
         _checkDataLengthOutOfBounds(dataLen);
         _checkPayloadLengthOutOfBounds(payLen);
@@ -602,7 +602,7 @@ public final class ParameterChecker {
      * @exception IllegalArgumentException
      *                If any argument is out of bounds (see method description)
      */
-    public static long maxAllowedDataLength(int payLen, int maxDBMem) {
+    public static long maxAllowedDataLength(int payLen, long maxDBMem) {
 
         _checkPayloadLengthOutOfBounds(payLen);
         _checkDecodingBlockSizeOutOfBounds(maxDBMem);
@@ -612,7 +612,7 @@ public final class ParameterChecker {
         }
 
         final int T = payLen;
-        final int WS = maxDBMem;
+        final long WS = maxDBMem;
         final long boundFromT = _maxAllowedDataLength(T);
 
         // Kt = ceil(F / T)
@@ -650,13 +650,13 @@ public final class ParameterChecker {
      *            A maximum size, in number of bytes, for a block decodable in working memory
      * @return {@code true} if, and only if, the provided deriver parameters are within certain bounds
      */
-    public static boolean areValidDeriverParameters(long dataLen, int payLen, int maxDBMem) {
+    public static boolean areValidDeriverParameters(long dataLen, int payLen, long maxDBMem) {
 
         return getDeriverParamsErrorString(dataLen, payLen, maxDBMem).isEmpty();
     }
 
     /**
-     * Tests if the deriver parameters are valid according to {@link #areValidDeriverParameters(long, int, int)}, and
+     * Tests if the deriver parameters are valid according to {@link #areValidDeriverParameters(long, int, long)}, and
      * if so the method returns an empty string, otherwise it returns an error string indicating which parameters are
      * invalid.
      * 
@@ -668,11 +668,11 @@ public final class ParameterChecker {
      *            A maximum size, in number of bytes, for a block decodable in working memory
      * @return an error string if some parameter is invalid or an empty string if all parameters are valid
      */
-    public static String getDeriverParamsErrorString(long dataLen, int payLen, int maxDBMem) {
+    public static String getDeriverParamsErrorString(long dataLen, int payLen, long maxDBMem) {
 
         final long F = dataLen;
         final int T = payLen;
-        final int WS = maxDBMem;
+        final long WS = maxDBMem;
 
         // domain restrictions
         if (isDataLengthOutOfBounds(F)) {
@@ -693,7 +693,11 @@ public final class ParameterChecker {
         // T, Al);
         // }
 
-        if (WS < 1) return "by default, the max decoding block size must be positive";
+        final long absolMinWS = minDecodingBlockSize();
+        if (WS < absolMinWS) {
+            return String.format("by default, the max decoding block size (%d) must be at least %d bytes",
+                WS, absolMinWS);
+        }
 
         final int minT = _minAllowedSymbolSize(F);
         if (T < minT) {
@@ -702,7 +706,7 @@ public final class ParameterChecker {
                 F, T, minT);
         }
 
-        final int minWS = _minAllowedDecodingBlockSize(F, T);
+        final long minWS = _minAllowedDecodingBlockSize(F, T);
         if (WS < minWS) {
             return String.format(
                 "a data length of %d bytes and a symbol size of %d bytes require a max decoding block size (%d) of at least %d bytes",
@@ -884,16 +888,16 @@ public final class ParameterChecker {
     }
 
     // requires individually and in unison bounded arguments
-    private static int _minAllowedDecodingBlockSize(long F, int T) {
+    private static long _minAllowedDecodingBlockSize(long F, int T) {
 
         // total number of symbols
         final int Kt = getTotalSymbols(F, T);
 
         // the theoretical minimum number of source symbols in a source block
-        final int KL = Math.max(K_min, ceilDiv(Kt, Z_max));
+        final int K = Math.max(K_min, ceilDiv(Kt, Z_max));
 
         // minimum WS is the inverse of the function KL
-        return minWS(KL, T, Al, topInterleaverLength(T));
+        return minWS(K, T, Al, topInterleaverLength(T));
     }
 
     // requires individually bounded arguments
@@ -950,7 +954,7 @@ public final class ParameterChecker {
         }
     }
 
-    private static void _checkDecodingBlockSizeOutOfBounds(int WS) {
+    private static void _checkDecodingBlockSizeOutOfBounds(long WS) {
 
         if (WS < minDecodingBlockSize()) {
             throw new IllegalArgumentException("maximum decoding block size is out of bounds");

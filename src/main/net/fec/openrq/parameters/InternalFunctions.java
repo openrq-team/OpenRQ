@@ -16,6 +16,7 @@
 package net.fec.openrq.parameters;
 
 
+import static net.fec.openrq.parameters.InternalConstants.K_max;
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.rq.SystematicIndices;
@@ -49,16 +50,18 @@ final class InternalFunctions {
     }
 
     // requires valid arguments
-    static int KL(int WS, int T, int Al, int n) {
+    static int KL(long WS, int T, int Al, int n) {
 
-        final int upper_bound = WS / subSymbolSize(T, Al, n);
-        return SystematicIndices.floor(upper_bound);
+        // must cast to int after getting the minimum to avoid integer overflow
+        final int K_upper_bound = (int)Math.min(K_max, WS / subSymbolSize(T, Al, n));
+        return SystematicIndices.floor(K_upper_bound);
     }
 
     // requires valid arguments
-    static int minWS(int KL, int T, int Al, int n) {
+    static long minWS(int K, int T, int Al, int n) {
 
-        return KL * subSymbolSize(T, Al, n);
+        // must cast to long because product may exceed Integer.MAX_VALUE
+        return (long)SystematicIndices.ceil(K) * subSymbolSize(T, Al, n);
     }
 
     // since interleaving is disabled, this should always return T

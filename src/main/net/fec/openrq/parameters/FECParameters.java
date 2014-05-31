@@ -321,11 +321,11 @@ public final class FECParameters {
      * @exception IllegalArgumentException
      *                If the provided deriver parameters are invalid
      */
-    public static FECParameters deriveParameters(long dataLen, int payLen, int maxDBMem) {
+    public static FECParameters deriveParameters(long dataLen, int payLen, long maxDBMem) {
 
         final long F = dataLen;
         final int P = payLen;
-        final int WS = maxDBMem;
+        final long WS = maxDBMem;
         final int Al = ParameterChecker.symbolAlignmentValue();
 
         if (ParameterChecker.areValidDeriverParameters(F, P, WS)) {
@@ -345,16 +345,16 @@ public final class FECParameters {
         }
     }
 
-    private static int deriveZ(long Kt, int WS, int T, int Al, int topN) {
+    private static int deriveZ(int Kt, long WS, int T, int Al, int topN) {
 
         // Z = ceil(Kt/KL(N_max))
-        return (int)ceilDiv(Kt, KL(WS, T, Al, topN));
+        return ceilDiv(Kt, KL(WS, T, Al, topN));
     }
 
-    private static int deriveN(long Kt, int Z, int WS, int T, int Al, int topN) {
+    private static int deriveN(int Kt, int Z, long WS, int T, int Al, int topN) {
 
         // N is the minimum n=1, ..., N_max such that ceil(Kt/Z) <= KL(n)
-        final int topK = (int)ceilDiv(Kt, Z);
+        final int topK = ceilDiv(Kt, Z);
         for (int n = topN; n >= 1; n--) {
             if (topK <= KL(WS, T, Al, n)) {
                 return n;
@@ -366,6 +366,8 @@ public final class FECParameters {
 
     private static FECParameters newLocalInstance(long F, int T, int Z, int N, int Al) {
 
+        System.out.println("F=" + F + ", T=" + T + ", Z=" + Z + ", N=" + N);
+        
         final long commonFecOTI = ParameterIO.buildCommonFecOTI(F, T);
         final int schemeSpecFecOTI = ParameterIO.buildSchemeSpecFecOTI(Z, N, Al);
         return new FECParameters(commonFecOTI, schemeSpecFecOTI);

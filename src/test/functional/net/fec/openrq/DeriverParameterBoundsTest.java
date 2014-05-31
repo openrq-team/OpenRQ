@@ -60,15 +60,15 @@ public class DeriverParameterBoundsTest {
         addInts(Ps, exponentialDistribution(2, 16));
         addInts(Ps, maxP, maxP + 1, Integer.MAX_VALUE);
 
-        final Set<Integer> WSs = new LinkedHashSet<>();
-        addInts(WSs, Integer.MIN_VALUE, -1, 0);
-        addInts(WSs, exponentialDistribution(2, 30));
-        addInts(WSs, Integer.MAX_VALUE);
+        final Set<Long> WSs = new LinkedHashSet<>();
+        addLongs(WSs, Long.MIN_VALUE, -1, 0);
+        addLongs(WSs, exponentialDistribution(2L, 62));
+        addLongs(WSs, Long.MAX_VALUE);
 
         final List<Object[]> params = new ArrayList<>(Fs.size() * Ps.size() * WSs.size());
         for (Long F : Fs) {
             for (Integer P : Ps) {
-                for (Integer WS : WSs) {
+                for (Long WS : WSs) {
                     params.add(new Object[] {F, P, WS});
                 }
             }
@@ -86,7 +86,7 @@ public class DeriverParameterBoundsTest {
     public int P;
 
     @Parameter(2)
-    public int WS;
+    public long WS;
 
 
     @Test
