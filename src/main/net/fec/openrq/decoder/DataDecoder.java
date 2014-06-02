@@ -207,7 +207,7 @@ public interface DataDecoder {
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
      * 
-     * @param ser
+     * @param serPac
      *            A serializable packet
      * @param copySymbols
      *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
@@ -216,7 +216,7 @@ public interface DataDecoder {
      * @exception NullPointerException
      *                If {@code ser} is {@code null}
      */
-    public Parsed<EncodingPacket> parsePacket(SerializablePacket ser, boolean copySymbols);
+    public Parsed<EncodingPacket> parsePacket(SerializablePacket serPac, boolean copySymbols);
 
     /**
      * Parses an encoding packet from the given array. The format of the packet in the array must follow the format
@@ -280,7 +280,7 @@ public interface DataDecoder {
      * <p>
      * The encoding packet will be read, in the buffer, from the current {@linkplain ByteBuffer#position() position}
      * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
-     * of the buffer will be advanced to the limit.
+     * of the buffer will be advanced by the number of bytes read.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
