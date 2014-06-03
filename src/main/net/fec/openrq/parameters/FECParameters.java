@@ -32,14 +32,13 @@ import java.nio.ReadOnlyBufferException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-import net.fec.openrq.EncodingPacket;
 import net.fec.openrq.Parsed;
 import net.fec.openrq.util.numericaltype.SizeOf;
 
 
 /**
  * This class represents FEC parameters as defined in RFC 6330 as the <em>Encoded FEC Object Transmission Information
- * (OTI)</em>, which contains the <em>Encoded Common FEC OTI</em> and the <em>Encoded Scheme-specific FEC OTI</em>.
+ * (OTI)</em>, which contains the <em>Encoded Common FEC OTI</em> and the <em>Encoded Scheme-Specific FEC OTI</em>.
  * <p>
  * The FEC parameters consist of:
  * <dl>
@@ -62,10 +61,10 @@ import net.fec.openrq.util.numericaltype.SizeOf;
  * only for compliance to the RFC 6330.</dd>
  * </dl>
  * <p>
- * Methods are provided to write instances of this class to arrays of bytes, {@link ByteBuffer} objects,
- * {@link DataOutput} objects and {@link WritableByteChannel} objects. Additionally, static methods are provided to
- * parse/read instances of this class from arrays of bytes, {@code ByteBuffer} objects, {@link DataInput} objects and
- * {@link ReadableByteChannel} objects.
+ * Methods are provided to write instances of this class to arrays of bytes, {@link ByteBuffer} objects, serializable
+ * objects, {@link DataOutput} objects and {@link WritableByteChannel} objects. Additionally, static methods are
+ * provided to parse/read instances of this class from arrays of bytes, {@code ByteBuffer} objects, serializable
+ * objects, {@link DataInput} objects and {@link ReadableByteChannel} objects.
  */
 public final class FECParameters {
 
@@ -244,10 +243,10 @@ public final class FECParameters {
     }
 
     /**
-     * Parses FEC parameters from the given array. The format of the parameters in the array must follow the format
-     * specified by {@link #asArray()}.
+     * Parses FEC parameters from the given array. The parameters bytes in the array must follow the format specified by
+     * {@link #asArray()}.
      * <p>
-     * The FEC parameters will be read, in the array, from position {@code 0} inclusive to position {@code 12}
+     * The FEC parameters will be read, in the array, from position {@code 0} inclusive to position {@code array.length}
      * exclusive.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
@@ -269,11 +268,11 @@ public final class FECParameters {
     }
 
     /**
-     * Parses FEC parameters from the given array. The format of the parameters in the array must follow the format
-     * specified by {@link #asArray()}.
+     * Parses FEC parameters from the given array. The parameters bytes in the array must follow the format specified by
+     * {@link #asArray()}.
      * <p>
      * The FEC parameters will be read, in the array, from position {@code offset} inclusive to position
-     * {@code (offset + 12)} exclusive.
+     * {@code array.length} exclusive.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
@@ -285,26 +284,26 @@ public final class FECParameters {
      * @param array
      *            An array containing FEC parameters
      * @param offset
-     *            The starting index in the array (must be non-negative)
+     *            The starting index in the array (must be non-negative and less than {@code array.length})
      * @return a container object containing FEC parameters or a parsing failure reason string
      * @exception IndexOutOfBoundsException
-     *                If the pre-condition on the array offset does not hold
+     *                If the pre-conditions on the array offset do not hold
      * @exception NullPointerException
      *                If the provided array is {@code null}
      */
     public static Parsed<FECParameters> parse(byte[] array, int offset) {
 
-        if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
-        return parse(ByteBuffer.wrap(array, offset, 12));
+        if (offset < 0 || offset >= array.length) throw new IndexOutOfBoundsException();
+        return parse(ByteBuffer.wrap(array, offset, array.length - offset));
     }
 
     /**
-     * Parses FEC parameters from the given buffer. The format of the packet in the array must follow the format
-     * specified by {@link #asBuffer()}.
+     * Parses FEC parameters from the given buffer. The parameters bytes in the buffer must follow the format specified
+     * by {@link #asBuffer()}.
      * <p>
      * The FEC parameters will be read, in the buffer, from the current {@linkplain ByteBuffer#position() position}
      * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
-     * of the buffer will be advanced to the limit.
+     * of the buffer will have been advanced by 12 bytes.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
@@ -323,14 +322,21 @@ public final class FECParameters {
      */
     public static Parsed<FECParameters> parse(ByteBuffer buffer) {
 
-        final long commonFecOTI = buffer.getLong();   // 8 bytes
-        final int schemeSpecFecOTI = buffer.getInt(); // 4 bytes
+        final int required = SizeOf.LONG + SizeOf.INT;
+        if (buffer.remaining() < required) {
+            return Parsed.invalid(String.format("missing FEC parameters, requires at least %d bytes", required));
+        }
+        else {
+            final long commonFecOTI = buffer.getLong();   // 8 bytes
+            final int schemeSpecFecOTI = buffer.getInt(); // 4 bytes
 
-        return parseRemoteInstance(commonFecOTI, schemeSpecFecOTI);
+            return parseRemoteInstance(commonFecOTI, schemeSpecFecOTI);
+        }
     }
 
     /**
-     * Reads and parses FEC parameters from a {@code DataInput} object.
+     * Reads and parses FEC parameters from a {@code DataInput} object. The read parameters bytes must follow the format
+     * specified by {@link #writeTo(java.io.DataOutput)}.
      * <p>
      * Examples of {@code DataInput} objects are {@link java.io.DataInputStream DataInputStream} and
      * {@link java.io.ObjectInputStream ObjectInputStream}.
@@ -362,7 +368,8 @@ public final class FECParameters {
     }
 
     /**
-     * Reads and parses FEC parameters from a {@code ReadableByteChannel} object.
+     * Reads and parses FEC parameters from a {@code ReadableByteChannel} object. The read parameters bytes must follow
+     * the format specified by {@link #writeTo(java.nio.channels.WritableByteChannel)}.
      * <p>
      * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
      * {@link java.nio.channels.FileChannel FileChannel}.
@@ -430,51 +437,97 @@ public final class FECParameters {
     }
 
     /**
-     * Writes in the provided array starting at index zero a sequence of bytes that represent the FEC parameters.
+     * Returns a serializable object with these FEC parameters.
+     * 
+     * @return a serializable object with these FEC parameters
+     */
+    public SerializableParameters asSerializable() {
+
+        return new SerializableParameters(commonFecOTI, schemeSpecFecOTI);
+    }
+
+    /**
+     * Returns an array with these FEC parameters. The array will contain the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * 
+     * @return an array with these FEC parameters
+     */
+    public byte[] asArray() {
+
+        final byte[] array = new byte[SizeOf.LONG + SizeOf.INT];
+        writeTo(ByteBuffer.wrap(array));
+
+        return array;
+    }
+
+    /**
+     * Writes in the provided array starting at index zero these FEC parameters. The write consists of the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * The provided array must have a length of at least 12 bytes.
      * 
      * @param array
      *            An array on which the FEC parameters are written
-     * @param offset
-     *            The starting array index at which the FEC parameters are written
      * @exception IndexOutOfBoundsException
-     *                If the FEC parameters cannot be written at the given index
+     *                If the length of the array is insufficient to hold the FEC parameters
      * @exception NullPointerException
      *                If the provided array is {@code null}
      */
-    public void writeTo(byte[] array, int offset) {
+    public void writeTo(byte[] array) {
 
-        if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
-        writeTo(ByteBuffer.wrap(array, offset, 12));
+        writeTo(array, 0);
     }
 
     /**
-     * Writes in the provided array starting in a specific index a sequence of bytes that represent the FEC parameters.
+     * Writes in the provided array starting in a specific index these FEC parameters. The write consists of the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * The provided array must have at least 12 bytes between the given index and its length.
      * 
      * @param array
      *            An array on which the FEC parameters are written
      * @param offset
-     *            The starting array index at which the FEC parameters are written
+     *            The starting array index at which the FEC parameters are written (must be non-negative)
      * @exception IndexOutOfBoundsException
-     *                If the FEC parameters cannot be written at the given index
+     *                If the offset is negative or if the length of the array region starting at the offset is
+     *                insufficient to hold the FEC parameters
      * @exception NullPointerException
      *                If the provided array is {@code null}
      */
     public void writeTo(byte[] array, int offset) {
 
-        if (offset < 0 || array.length - offset < 12) throw new IndexOutOfBoundsException();
-        writeTo(ByteBuffer.wrap(array, offset, 12));
+        final int arraySize = SizeOf.LONG + SizeOf.INT;
+        if (offset < 0 || array.length - offset < arraySize) throw new IndexOutOfBoundsException();
+        writeTo(ByteBuffer.wrap(array, offset, arraySize));
     }
 
     /**
-     * Writes in the provided buffer a sequence of bytes that represent the FEC parameters.
+     * Returns a buffer with these FEC parameters. The buffer will contain the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * 
+     * @return a buffer with these FEC parameters
+     */
+    public ByteBuffer asBuffer() {
+
+        final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.LONG + SizeOf.INT);
+        writeTo(buffer);
+        buffer.flip();
+
+        return buffer;
+    }
+
+    /**
+     * Writes in the provided buffer these FEC parameters. The write consists of the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least 12 bytes
      * {@linkplain ByteBuffer#remaining() remaining}. If this method returns normally, the position of the provided
-     * buffer will have advanced by 12 bytes.
+     * buffer will have been advanced by 12 bytes.
      * 
      * @param buffer
      *            A buffer on which the FEC parameters are written
@@ -492,7 +545,9 @@ public final class FECParameters {
     }
 
     /**
-     * Writes these FEC parameters directly into the provided {@code DataOutput} object.
+     * Writes these FEC parameters directly into the provided {@code DataOutput} object. The method will write the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * Examples of {@code DataOutput} objects are {@link java.io.DataOutputStream DataOutputStream} and
      * {@link java.io.ObjectOutputStream ObjectOutputStream}.
@@ -501,7 +556,7 @@ public final class FECParameters {
      * {@code IOException} is throw.
      * 
      * @param out
-     *            A {@code DataOutput} object into which these FEC parameters are written
+     *            A {@code DataOutput} object into which the FEC parameters are written
      * @throws IOException
      *             If an IO error occurs while writing to the {@code DataOutput} object
      * @exception NullPointerException
@@ -514,7 +569,9 @@ public final class FECParameters {
     }
 
     /**
-     * Writes these FEC parameters directly into the provided {@code WritableByteChannel} object.
+     * Writes these FEC parameters directly into the provided {@code WritableByteChannel} object. The method will write
+     * the <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * Examples of {@code WritableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
      * {@link java.nio.channels.FileChannel FileChannel}.
@@ -523,7 +580,7 @@ public final class FECParameters {
      * {@code IOException} is throw.
      * 
      * @param ch
-     *            A {@code WritableByteChannel} object into which these FEC parameters are written
+     *            A {@code WritableByteChannel} object into which the FEC parameters are written
      * @throws IOException
      *             If an IO error occurs while writing to the {@code WritableByteChannel} object
      * @exception NullPointerException

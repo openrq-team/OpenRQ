@@ -314,8 +314,9 @@ public abstract class EncodingPacket {
     public abstract int encodingSymbolID();
 
     /**
-     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330 (concatenation of the {@linkplain #sourceBlockNumber()
-     * source block number} and {@linkplain #encodingSymbolID() encoding symbol identifier}).
+     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330. For the exact format, refer to the <a
+     * href="parameters/ParameterIO.html#fec-payload-id"> section on "FEC Payload ID"</a> in the {@link ParameterIO}
+     * class header.
      * 
      * @return a <em>FEC Payload ID</em> as defined in RFC 6330
      */
@@ -401,10 +402,10 @@ public abstract class EncodingPacket {
      * @param array
      *            An array on which the packet contents are written
      * @param offset
-     *            The starting array index at which the packet contents are written
+     *            The starting array index at which the packet contents are written (must be non-negative)
      * @exception IndexOutOfBoundsException
-     *                If the length of the array region starting at the provided offset is insufficient to hold the
-     *                encoding packet contents
+     *                If the offset is negative or if the length of the array region starting at the offset is
+     *                insufficient to hold the encoding packet contents
      * @exception NullPointerException
      *                If {@code array} is {@code null}
      */
@@ -424,7 +425,7 @@ public abstract class EncodingPacket {
      * <p>
      * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least
      * {@code (8 + symbolsLength())} bytes {@linkplain ByteBuffer#remaining() remaining}. If this method returns
-     * normally, the position of the provided buffer will have advanced by {@code (8 + symbolsLength())} bytes.
+     * normally, the position of the provided buffer will have been advanced by {@code (8 + symbolsLength())} bytes.
      * 
      * @param buffer
      *            A buffer on which the packet contents are written
@@ -449,7 +450,7 @@ public abstract class EncodingPacket {
      * {@code IOException} is throw.
      * 
      * @param out
-     *            A {@code DataOutput} object into which this packet is written
+     *            A {@code DataOutput} object into which the packet is written
      * @throws IOException
      *             If an IO error occurs while writing to the {@code DataOutput} object
      * @exception NullPointerException
@@ -469,7 +470,7 @@ public abstract class EncodingPacket {
      * {@code IOException} is throw.
      * 
      * @param ch
-     *            A {@code WritableByteChannel} object into which this packet is written
+     *            A {@code WritableByteChannel} object into which the packet is written
      * @throws IOException
      *             If an IO error occurs while writing to the {@code WritableByteChannel} object
      * @exception NullPointerException
@@ -547,10 +548,8 @@ public abstract class EncodingPacket {
         @Override
         public byte[] asArray() {
 
-            // cannot use the field directly because the position of the buffer will be changed
-            final ByteBuffer symbolsBuf = symbols();
             final byte[] array = new byte[SizeOf.INT + SizeOf.INT + symbolsLength()];
-            ByteBuffer.wrap(array).putInt(fecPayloadID).putInt(symbolsLength()).put(symbolsBuf);
+            writeTo(ByteBuffer.wrap(array));
 
             return array;
         }
@@ -572,10 +571,8 @@ public abstract class EncodingPacket {
         @Override
         public ByteBuffer asBuffer() {
 
-            // cannot use the field directly because the position of the buffer will be changed
-            final ByteBuffer symbolsBuf = symbols();
             final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.INT + SizeOf.INT + symbolsLength());
-            buffer.putInt(fecPayloadID).putInt(symbolsLength()).put(symbolsBuf);
+            writeTo(buffer);
             buffer.flip();
 
             return buffer;
@@ -584,6 +581,7 @@ public abstract class EncodingPacket {
         @Override
         public void writeTo(ByteBuffer buffer) {
 
+            // cannot use the field directly because the position of the buffer will be changed
             buffer.putInt(fecPayloadID);
             buffer.putInt(symbolsLength());
             buffer.put(symbols());
