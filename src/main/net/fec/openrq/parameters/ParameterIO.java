@@ -24,8 +24,50 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
 
 /**
- * This class provides methods to read/write FEC parameters from/to a specific <em>Object Transmission Information</em>,
- * and methods to read/write encoding packet parameters from/to a <em>FEC Payload ID</em>, as specified in RFC 6330.
+ * This class provides methods to read/write FEC parameters from/to a specific
+ * <em>Object Transmission Information (OTI)</em>, and methods to read/write encoding packet parameters from/to a
+ * <em>FEC Payload ID</em>, as specified in RFC 6330.
+ * <p>
+ * <a name="common-fec-oti">
+ * <h5>Common FEC Object Transmission Information</h5></a>
+ * <p>
+ * The Common FEC OTI is represented as the following 8-byte bit field:
+ * 
+ * <pre>
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |                      Source Data Length                       |
+ * +               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |               |     Zeros     |           Symbol Size         |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
+ * <a name="schemespec-fec-oti">
+ * <h5>Scheme-Specific FEC Object Transmission Information</h5></a>
+ * <p>
+ * The Scheme-Specific FEC OTI is represented as the following 4-byte bit field:
+ * 
+ * <pre>
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |   Number of   |          Interleaver          |    Symbol     |
+ * | Source Blocks |            Length             |   Alignment   |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
+ * <a name="fec-payload-id">
+ * <h5>FEC Payload ID</h5></a>
+ * <p>
+ * The FEC Payload ID is represented as the following 4-byte bit field:
+ * 
+ * <pre>
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * | Source Block  |               Encoding Symbol                 |
+ * |    Number     |                     ID                        |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * </pre>
  */
 public class ParameterIO {
 

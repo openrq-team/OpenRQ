@@ -17,6 +17,10 @@ package net.fec.openrq;
  * limitations under the License.
  */
 
+import net.fec.openrq.parameters.DeriverParametersBoundsTest;
+import net.fec.openrq.parameters.FECParametersBoundsTest;
+import net.fec.openrq.parameters.FECParametersReadWriteTest;
+
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -26,7 +30,8 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({
                DataIntegrityCheckTest.class,
                FECParametersBoundsTest.class,
-               DeriverParameterBoundsTest.class,
+               DeriverParametersBoundsTest.class,
+               FECParametersReadWriteTest.class,
                OpenRQClassTest.class,
                OpenRQClassExceptionTest.class
 })

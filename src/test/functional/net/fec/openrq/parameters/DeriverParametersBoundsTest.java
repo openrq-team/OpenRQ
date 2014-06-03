@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq;
+package net.fec.openrq.parameters;
 
 
 import static net.fec.openrq.TestingCommon.addInts;
@@ -29,8 +29,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.fec.openrq.parameters.ParameterChecker;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,10 +37,10 @@ import org.junit.runners.Parameterized.Parameters;
 
 
 /**
- * 
+ * Tests some bounds on deriver parameters.
  */
 @RunWith(Parameterized.class)
-public class DeriverParameterBoundsTest {
+public class DeriverParametersBoundsTest {
 
     @Parameters(name = "F={0}; P={1}; WS={2}")
     public static Iterable<Object[]> getFECParams() {
@@ -74,7 +72,7 @@ public class DeriverParameterBoundsTest {
             }
         }
 
-        System.out.println("Testing " + params.size() + " deriver parameters tests...");
+        System.out.println("Testing " + 3 * params.size() + " deriver parameters tests...");
         return params;
     }
 

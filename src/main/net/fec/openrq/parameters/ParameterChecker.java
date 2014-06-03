@@ -611,23 +611,7 @@ public final class ParameterChecker {
                 "maximum decoding block size must be at least equal to the payload length");
         }
 
-        final int T = payLen;
-        final long WS = maxDBMem;
-        final long boundFromT = _maxAllowedDataLength(T);
-
-        // Kt = ceil(F / T)
-        // Z = ceil(Kt / KL)
-        // ceil(Kt / KL) <= Z_max
-        // Kt / KL <= Z_max
-        // Kt <= Z_max * KL
-        // ceil(F / T) <= Z_max * KL
-        // F / T <= Z_max * KL
-        // F <= Z_max * KL * T
-
-        final int KL = InternalFunctions.KL(WS, T, Al, topInterleaverLength(T));
-        final long boundFromWS = (long)Z_max * KL * T;
-
-        return Math.min(boundFromT, boundFromWS);
+        return _maxAllowedDataLength(payLen, maxDBMem);
     }
 
     /**
@@ -898,6 +882,26 @@ public final class ParameterChecker {
 
         // minimum WS is the inverse of the function KL
         return minWS(K, T, Al, topInterleaverLength(T));
+    }
+
+    // requires individually and in unison bounded arguments
+    private static long _maxAllowedDataLength(int T, long WS) {
+
+        final long boundFromT = _maxAllowedDataLength(T);
+
+        // Kt = ceil(F / T)
+        // Z = ceil(Kt / KL)
+        // ceil(Kt / KL) <= Z_max
+        // Kt / KL <= Z_max
+        // Kt <= Z_max * KL
+        // ceil(F / T) <= Z_max * KL
+        // F / T <= Z_max * KL
+        // F <= Z_max * KL * T
+
+        final int KL = InternalFunctions.KL(WS, T, Al, topInterleaverLength(T));
+        final long boundFromWS = (long)Z_max * KL * T;
+
+        return Math.min(boundFromT, boundFromWS);
     }
 
     // requires individually bounded arguments

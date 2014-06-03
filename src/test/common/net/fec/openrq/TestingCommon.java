@@ -31,29 +31,29 @@ import net.fec.openrq.parameters.ParameterChecker;
 /**
  * Contains useful constants and utility methods for the test classes.
  */
-final class TestingCommon {
+public final class TestingCommon {
 
     private static final long RAND_SEED = 42L;
 
 
-    static Random newRandom() {
+    public static Random newRandom() {
 
         return new Random();
     }
 
-    static Random newSeededRandom() {
+    public static Random newSeededRandom() {
 
         return new Random(RAND_SEED);
     }
 
-    static byte[] randomBytes(int size, Random rand) {
+    public static byte[] randomBytes(int size, Random rand) {
 
         final byte[] bs = new byte[size];
         rand.nextBytes(bs);
         return bs;
     }
 
-    static Set<Integer> randomAnyESIs(Random rand, int numSymbols) {
+    public static Set<Integer> randomAnyESIs(Random rand, int numSymbols) {
 
         final int minESI = ParameterChecker.minEncodingSymbolID();
         final int maxESI = ParameterChecker.maxEncodingSymbolID();
@@ -65,7 +65,7 @@ final class TestingCommon {
         return esis;
     }
 
-    static Set<Integer> randomSrcRepESIs(Random rand, int numSymbols, int K) {
+    public static Set<Integer> randomSrcRepESIs(Random rand, int numSymbols, int K) {
 
         final int maxESI = ParameterChecker.maxEncodingSymbolID();
         final Set<Integer> esis = new LinkedHashSet<>(); // preserve randomized ordering
@@ -80,7 +80,7 @@ final class TestingCommon {
         return esis;
     }
 
-    static int[] exponentialDistribution(int base, int maxExponent) {
+    public static int[] exponentialDistribution(int base, int maxExponent) {
 
         integerPow(base, maxExponent); // test a power calculation to validate arguments
         if (base <= 0) throw new IllegalArgumentException("base must be positive");
@@ -92,7 +92,7 @@ final class TestingCommon {
         return distr;
     }
 
-    static long[] exponentialDistribution(long base, int maxExponent) {
+    public static long[] exponentialDistribution(long base, int maxExponent) {
 
         integerPow(base, maxExponent); // test a power calculation to validate arguments
         if (base <= 0) throw new IllegalArgumentException("base must be positive");
@@ -104,7 +104,7 @@ final class TestingCommon {
         return distr;
     }
 
-    static int[] primeExponentialDistribution(int base, int maxExponent) {
+    public static int[] primeExponentialDistribution(int base, int maxExponent) {
 
         integerPow(base, maxExponent); // test a power calculation to validate arguments
         if (base <= 0) throw new IllegalArgumentException("base must be positive");
@@ -162,7 +162,7 @@ final class TestingCommon {
         }
     }
 
-    static <C extends Collection<Integer>> C addInts(C col, int... ints) {
+    public static <C extends Collection<Integer>> C addInts(C col, int... ints) {
 
         for (int i : ints) {
             col.add(i);
@@ -170,7 +170,7 @@ final class TestingCommon {
         return col;
     }
 
-    static <C extends Collection<Long>> C addIntsL(C col, int... ints) {
+    public static <C extends Collection<Long>> C addIntsL(C col, int... ints) {
 
         for (int i : ints) {
             col.add((long)i);
@@ -178,7 +178,7 @@ final class TestingCommon {
         return col;
     }
 
-    static <C extends Collection<Long>> C addLongs(C col, long... longs) {
+    public static <C extends Collection<Long>> C addLongs(C col, long... longs) {
 
         for (long eL : longs) {
             col.add(eL);
@@ -275,19 +275,19 @@ final class TestingCommon {
     /**
      * Returns minimal values of FEC parameters and array sizes.
      */
-    static final class Minimal {
+    public static final class Minimal {
 
-        static final long F = ParameterChecker.minDataLength();
-        static final int T = ParameterChecker.minSymbolSize();
-        static final int Z = ParameterChecker.minNumSourceBlocks();
+        public static final long F = ParameterChecker.minDataLength();
+        public static final int T = ParameterChecker.minSymbolSize();
+        public static final int Z = ParameterChecker.minNumSourceBlocks();
 
 
-        static FECParameters fecParameters() {
+        public static FECParameters fecParameters() {
 
             return FECParameters.newParameters(F, T, Z);
         }
 
-        static byte[] data() {
+        public static byte[] data() {
 
             return new byte[(int)F];
         }

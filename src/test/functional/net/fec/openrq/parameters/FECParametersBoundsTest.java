@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq;
+package net.fec.openrq.parameters;
 
 
 import static net.fec.openrq.TestingCommon.addInts;
@@ -29,8 +29,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.fec.openrq.parameters.ParameterChecker;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,7 +37,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 
 /**
- * 
+ * Tests some bounds on FEC parameters.
  */
 @RunWith(Parameterized.class)
 public class FECParametersBoundsTest {
@@ -83,7 +81,7 @@ public class FECParametersBoundsTest {
             }
         }
 
-        System.out.println("Testing " + params.size() + " FEC parameters tests...");
+        System.out.println("Testing " + 4 * params.size() + " FEC parameters tests...");
         return params;
     }
 

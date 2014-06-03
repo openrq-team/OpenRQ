@@ -181,7 +181,7 @@ public abstract class EncodingPacket {
      * 
      * @param dec
      *            A {@code DataDecoder} object from which an encoding packet is parsed
-     * @param ser
+     * @param serPac
      *            A serializable packet
      * @param copySymbols
      *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
@@ -190,9 +190,9 @@ public abstract class EncodingPacket {
      * @exception NullPointerException
      *                If {@code dec} or {@code ser} are {@code null}
      */
-    public static Parsed<EncodingPacket> parsePacket(DataDecoder dec, SerializablePacket ser, boolean copySymbols) {
+    public static Parsed<EncodingPacket> parsePacket(DataDecoder dec, SerializablePacket serPac, boolean copySymbols) {
 
-        return dec.parsePacket(ser, copySymbols);
+        return dec.parsePacket(serPac, copySymbols);
     }
 
     /**
@@ -314,8 +314,9 @@ public abstract class EncodingPacket {
     public abstract int encodingSymbolID();
 
     /**
-     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330 (concatenation of the {@linkplain #sourceBlockNumber()
-     * source block number} and {@linkplain #encodingSymbolID() encoding symbol identifier}).
+     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330. For the exact format, refer to the <a
+     * href="parameters/ParameterIO.html#fec-payload-id"> section on "FEC Payload ID"</a> in the {@link ParameterIO}
+     * class header.
      * 
      * @return a <em>FEC Payload ID</em> as defined in RFC 6330
      */
@@ -367,14 +368,6 @@ public abstract class EncodingPacket {
     public abstract SerializablePacket asSerializable();
 
     /**
-     * Returns a buffer with the contents of this packet. The buffer will contain the {@linkplain #fecPayloadID() FEC
-     * payload ID}, followed by the symbols data length, followed by the symbols data itself.
-     * 
-     * @return a buffer with the contents of this packet
-     */
-    public abstract ByteBuffer asBuffer();
-
-    /**
      * Returns an array with the contents of this packet. The array will contain the {@linkplain #fecPayloadID() FEC
      * payload ID}, followed by the symbols data length, followed by the symbols data itself.
      * 
@@ -383,29 +376,25 @@ public abstract class EncodingPacket {
     public abstract byte[] asArray();
 
     /**
-     * Writes in the provided buffer the contents of this packet. The write consists of the {@linkplain #fecPayloadID()
-     * FEC payload ID}, followed by the symbols data length, followed by the symbols data itself.
+     * Writes in the provided array starting at index zero the contents of this packet. The write consists of the
+     * {@linkplain #fecPayloadID() FEC payload ID}, followed by the symbols data length, followed by the symbols data
+     * itself.
      * <p>
-     * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least
-     * {@code (8 + symbolsLength())} bytes {@linkplain ByteBuffer#remaining() remaining}. If this method returns
-     * normally, the position of the provided buffer will have advanced by {@code (8 + symbolsLength())} bytes.
+     * The provided array must have a length of at least {@code (8 + symbolsLength())} bytes.
      * 
-     * @param buffer
-     *            A buffer on which the packet contents are written
+     * @param array
+     *            An array on which the packet contents are written
+     * @exception IndexOutOfBoundsException
+     *                If the length of the array is insufficient to hold the encoding packet contents
      * @exception NullPointerException
-     *                If the {@code buffer} is {@code null}
-     * @exception ReadOnlyBufferException
-     *                If the provided buffer is read-only
-     * @exception BufferOverflowException
-     *                If the provided buffer has less than {@code (8 + symbolsLength())} bytes remaining
+     *                If {@code array} is {@code null}
      */
-    public abstract void writeTo(ByteBuffer buffer);
+    public abstract void writeTo(byte[] array);
 
     /**
      * Writes in the provided array starting in a specific index the contents of this packet. The write consists of the
      * {@linkplain #fecPayloadID() FEC payload ID}, followed by the symbols data length, followed by the symbols data
      * itself.
-     * data itself.
      * <p>
      * The provided array must have at least {@code (8 + symbolsLength())} bytes bytes between the given index and its
      * length.
@@ -413,13 +402,41 @@ public abstract class EncodingPacket {
      * @param array
      *            An array on which the packet contents are written
      * @param offset
-     *            The starting array index at which the packet contents are written
+     *            The starting array index at which the packet contents are written (must be non-negative)
+     * @exception IndexOutOfBoundsException
+     *                If the offset is negative or if the length of the array region starting at the offset is
+     *                insufficient to hold the encoding packet contents
      * @exception NullPointerException
      *                If {@code array} is {@code null}
-     * @exception IndexOutOfBoundsException
-     *                If the packet contents cannot be written at the given index
      */
     public abstract void writeTo(byte[] array, int offset);
+
+    /**
+     * Returns a buffer with the contents of this packet. The buffer will contain the {@linkplain #fecPayloadID() FEC
+     * payload ID}, followed by the symbols data length, followed by the symbols data itself.
+     * 
+     * @return a buffer with the contents of this packet
+     */
+    public abstract ByteBuffer asBuffer();
+
+    /**
+     * Writes in the provided buffer the contents of this packet. The write consists of the {@linkplain #fecPayloadID()
+     * FEC payload ID}, followed by the symbols data length, followed by the symbols data itself.
+     * <p>
+     * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least
+     * {@code (8 + symbolsLength())} bytes {@linkplain ByteBuffer#remaining() remaining}. If this method returns
+     * normally, the position of the provided buffer will have been advanced by {@code (8 + symbolsLength())} bytes.
+     * 
+     * @param buffer
+     *            A buffer on which the packet contents are written
+     * @exception ReadOnlyBufferException
+     *                If the provided buffer is read-only
+     * @exception BufferOverflowException
+     *                If the provided buffer has less than {@code (8 + symbolsLength())} bytes remaining
+     * @exception NullPointerException
+     *                If the {@code buffer} is {@code null}
+     */
+    public abstract void writeTo(ByteBuffer buffer);
 
     /**
      * Writes this packet directly into the provided {@code DataOutput} object. The method will write the
@@ -433,7 +450,7 @@ public abstract class EncodingPacket {
      * {@code IOException} is throw.
      * 
      * @param out
-     *            A {@code DataOutput} object into which this packet is written
+     *            A {@code DataOutput} object into which the packet is written
      * @throws IOException
      *             If an IO error occurs while writing to the {@code DataOutput} object
      * @exception NullPointerException
@@ -453,7 +470,7 @@ public abstract class EncodingPacket {
      * {@code IOException} is throw.
      * 
      * @param ch
-     *            A {@code WritableByteChannel} object into which this packet is written
+     *            A {@code WritableByteChannel} object into which the packet is written
      * @throws IOException
      *             If an IO error occurs while writing to the {@code WritableByteChannel} object
      * @exception NullPointerException
@@ -529,34 +546,18 @@ public abstract class EncodingPacket {
         }
 
         @Override
-        public ByteBuffer asBuffer() {
-
-            // cannot use the field directly because the position of the buffer will be changed
-            final ByteBuffer symbolsBuf = symbols();
-            final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.INT + SizeOf.INT + symbolsLength());
-            buffer.putInt(fecPayloadID).putInt(symbolsLength()).put(symbolsBuf);
-            buffer.flip();
-
-            return buffer;
-        }
-
-        @Override
         public byte[] asArray() {
 
-            // cannot use the field directly because the position of the buffer will be changed
-            final ByteBuffer symbolsBuf = symbols();
             final byte[] array = new byte[SizeOf.INT + SizeOf.INT + symbolsLength()];
-            ByteBuffer.wrap(array).putInt(fecPayloadID).putInt(symbolsLength()).put(symbolsBuf);
+            writeTo(ByteBuffer.wrap(array));
 
             return array;
         }
 
         @Override
-        public void writeTo(ByteBuffer buffer) {
+        public void writeTo(byte[] array) {
 
-            buffer.putInt(fecPayloadID);
-            buffer.putInt(symbolsLength());
-            buffer.put(symbols());
+            writeTo(array, 0);
         }
 
         @Override
@@ -565,6 +566,25 @@ public abstract class EncodingPacket {
             final int arraySize = SizeOf.INT + SizeOf.INT + symbolsLength();
             if (offset < 0 || array.length - offset < arraySize) throw new IndexOutOfBoundsException();
             writeTo(ByteBuffer.wrap(array, offset, arraySize));
+        }
+
+        @Override
+        public ByteBuffer asBuffer() {
+
+            final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.INT + SizeOf.INT + symbolsLength());
+            writeTo(buffer);
+            buffer.flip();
+
+            return buffer;
+        }
+
+        @Override
+        public void writeTo(ByteBuffer buffer) {
+
+            // cannot use the field directly because the position of the buffer will be changed
+            buffer.putInt(fecPayloadID);
+            buffer.putInt(symbolsLength());
+            buffer.put(symbols());
         }
 
         @Override

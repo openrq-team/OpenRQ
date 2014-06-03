@@ -173,7 +173,7 @@ public interface DataDecoder {
      * <p>
      * The symbols data will be read, in the buffer, from the current {@linkplain ByteBuffer#position() position}
      * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
-     * of the buffer will be advanced to the limit.
+     * of the buffer will have been advanced to the limit.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
@@ -207,7 +207,7 @@ public interface DataDecoder {
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
      * 
-     * @param ser
+     * @param serPac
      *            A serializable packet
      * @param copySymbols
      *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
@@ -216,11 +216,11 @@ public interface DataDecoder {
      * @exception NullPointerException
      *                If {@code ser} is {@code null}
      */
-    public Parsed<EncodingPacket> parsePacket(SerializablePacket ser, boolean copySymbols);
+    public Parsed<EncodingPacket> parsePacket(SerializablePacket serPac, boolean copySymbols);
 
     /**
-     * Parses an encoding packet from the given array. The format of the packet in the array must follow the format
-     * specified by {@link EncodingPacket#asArray()}.
+     * Parses an encoding packet from the given array. The packet bytes in the array must follow the format specified by
+     * {@link EncodingPacket#asArray()}.
      * <p>
      * The encoding packet will be read, in the array, from position {@code 0} inclusive to position
      * {@code array.length} exclusive.
@@ -244,8 +244,8 @@ public interface DataDecoder {
     public Parsed<EncodingPacket> parsePacket(byte[] array, boolean copySymbols);
 
     /**
-     * Parses an encoding packet from the given array. The format of the packet in the array must follow the format
-     * specified by {@link EncodingPacket#asArray()}.
+     * Parses an encoding packet from the given array. The packet bytes in the array must follow the format specified by
+     * {@link EncodingPacket#asArray()}.
      * <p>
      * The encoding packet will be read, in the array, from position {@code off} inclusive to position
      * {@code (off + len)} exclusive.
@@ -275,12 +275,12 @@ public interface DataDecoder {
     public Parsed<EncodingPacket> parsePacket(byte[] array, int off, int len, boolean copySymbols);
 
     /**
-     * Parses an encoding packet from the given buffer. The format of the packet in the array must follow the format
-     * specified by {@link EncodingPacket#asBuffer()}.
+     * Parses an encoding packet from the given buffer. The packet bytes in the buffer must follow the format specified
+     * by {@link EncodingPacket#asBuffer()}.
      * <p>
      * The encoding packet will be read, in the buffer, from the current {@linkplain ByteBuffer#position() position}
      * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
-     * of the buffer will be advanced to the limit.
+     * of the buffer will have been advanced by the number of bytes read.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
@@ -301,8 +301,8 @@ public interface DataDecoder {
     public Parsed<EncodingPacket> parsePacket(ByteBuffer buffer, boolean copySymbols);
 
     /**
-     * Reads and parses an encoding packet from a {@code DataInput} object. The format of the packet data must follow
-     * the format specified by {@link EncodingPacket#writeTo(java.io.DataOutput)}.
+     * Reads and parses an encoding packet from a {@code DataInput} object. The read packet bytes must follow the format
+     * specified by {@link EncodingPacket#writeTo(java.io.DataOutput)}.
      * <p>
      * Examples of {@code DataInput} objects are {@link java.io.DataInputStream DataInputStream} and
      * {@link java.io.ObjectInputStream ObjectInputStream}.
@@ -328,8 +328,7 @@ public interface DataDecoder {
     public Parsed<EncodingPacket> readPacketFrom(DataInput in) throws IOException;
 
     /**
-     * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. The format of the packet data must
-     * follow
+     * Reads and parses an encoding packet from a {@code ReadableByteChannel} object. The read packet bytes must follow
      * the format specified by {@link EncodingPacket#writeTo(java.nio.channels.WritableByteChannel)}.
      * <p>
      * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
