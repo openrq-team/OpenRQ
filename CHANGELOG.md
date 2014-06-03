@@ -3,6 +3,10 @@
 Turned "net.fec.openrq.decoder.SourceBlockDecoder" thread safe, and added
 method to retrieve the latest source block state (decoded/decoding failure).
 
+Added classes:
+* net.fec.openrq.decoder.SBDInfo
+* net.fec.openrq.decoder.SerializableSBDInfo
+
 Changed public method signatures:
 (++/-- mean new/old methods, xx means deleted method)
 * net.fec.openrq.decoder.SourceBlockDecoder
