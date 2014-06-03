@@ -361,7 +361,9 @@ public abstract class EncodingPacket {
     public abstract int symbolsLength();
 
     /**
-     * Returns a serializable object with the contents of this packet.
+     * Returns a serializable object with the contents of this packet. The serializable object will contain the
+     * {@linkplain #fecPayloadID() FEC payload ID}, followed by the symbols data length, followed by the symbols data
+     * itself.
      * 
      * @return a serializable object with the contents of this packet
      */
@@ -396,7 +398,7 @@ public abstract class EncodingPacket {
      * {@linkplain #fecPayloadID() FEC payload ID}, followed by the symbols data length, followed by the symbols data
      * itself.
      * <p>
-     * The provided array must have at least {@code (8 + symbolsLength())} bytes bytes between the given index and its
+     * The provided array must have at least {@code (8 + symbolsLength())} bytes between the given index and its
      * length.
      * 
      * @param array
@@ -425,7 +427,7 @@ public abstract class EncodingPacket {
      * <p>
      * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least
      * {@code (8 + symbolsLength())} bytes {@linkplain ByteBuffer#remaining() remaining}. If this method returns
-     * normally, the position of the provided buffer will have been advanced by {@code (8 + symbolsLength())} bytes.
+     * normally, the position of the provided buffer will have been advanced by the same amount.
      * 
      * @param buffer
      *            A buffer on which the packet contents are written

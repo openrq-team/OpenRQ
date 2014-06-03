@@ -1,3 +1,13 @@
+## 3.2
+
+Turned "net.fec.openrq.decoder.SourceBlockDecoder" thread safe, and added
+method to retrieve the latest source block state (decoded/decoding failure).
+
+Changed public method signatures:
+(++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.decoder.SourceBlockDecoder
+ * ++ public SourceBlockState latestState()
+
 ## 3.1
 
 Added new methods for reading/writing FEC parameters. They now mimic those

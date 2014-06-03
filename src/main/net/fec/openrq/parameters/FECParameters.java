@@ -437,7 +437,9 @@ public final class FECParameters {
     }
 
     /**
-     * Returns a serializable object with these FEC parameters.
+     * Returns a serializable object with these FEC parameters. The serializable object will contain the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * 
      * @return a serializable object with these FEC parameters
      */
@@ -527,7 +529,7 @@ public final class FECParameters {
      * <p>
      * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least 12 bytes
      * {@linkplain ByteBuffer#remaining() remaining}. If this method returns normally, the position of the provided
-     * buffer will have been advanced by 12 bytes.
+     * buffer will have been advanced by the same amount.
      * 
      * @param buffer
      *            A buffer on which the FEC parameters are written

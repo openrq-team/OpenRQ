@@ -56,9 +56,9 @@ public interface SourceBlockDecoder {
     public DataDecoder dataDecoder();
 
     /**
-     * Returns the source block number for the source block being decoded.
+     * Returns the identifier of the source block being decoded.
      * 
-     * @return the source block number for the source block being decoded
+     * @return the identifier of the source block being decoded
      */
     public int sourceBlockNumber();
 
