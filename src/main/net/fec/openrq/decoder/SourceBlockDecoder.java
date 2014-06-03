@@ -94,6 +94,8 @@ public interface SourceBlockDecoder {
      * Returns {@code true} if, and only if, this decoder contains the repair symbol with the provided encoding symbol
      * identifier.
      * <p>
+     * The method returns {@code false} when the source block is already {@linkplain #isSourceBlockDecoded decoded}.
+     * <p>
      * <b><em>Bounds checking</em></b> - If we have {@code K} as the number of source symbols into which is divided the
      * source block being decoded, and {@code max_esi} as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
@@ -120,6 +122,27 @@ public interface SourceBlockDecoder {
      * @see #containsSourceSymbol(int)
      */
     public boolean isSourceBlockDecoded();
+
+    /**
+     * Returns the latest state of this decoder. This state is updated by calling the method
+     * {@link #putEncodingPacket(EncodingPacket)}.
+     * <p>
+     * The result of this method invocation is a {@link SourceBlockState} value:
+     * <dl>
+     * <dt>{@link SourceBlockState#INCOMPLETE INCOMPLETE}:</dt>
+     * <dd>means that not enough encoding symbols are available for a decoding operation.</dd>
+     * <dt>{@link SourceBlockState#DECODED DECODED}:</dt>
+     * <dd>means that a decoding operation took place and succeeded in decoding the source block.</dd>
+     * <dt>{@link SourceBlockState#DECODING_FAILURE DECODING_FAILURE}:</dt>
+     * <dd>means that a decoding operation took place but failed in decoding the source block; additional encoding
+     * symbols are required for a successful decoding.</dd>
+     * </dl>
+     * <p>
+     * The latest state of a newly created decoder is always {@code INCOMPLETE}.
+     * 
+     * @return the latest state of this decoder
+     */
+    public SourceBlockState latestState();
 
     /**
      * Returns a set of integers containing the encoding symbol identifiers of the missing source symbols from the

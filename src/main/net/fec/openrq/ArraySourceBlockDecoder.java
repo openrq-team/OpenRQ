@@ -20,15 +20,19 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.collection.BitSetIterators;
 import net.fec.openrq.util.rq.SystematicIndices;
 
 
@@ -60,18 +64,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
     private final int sbn;
     private final int K;
-    private final int Kprime;
-    private final int symbolOverhead;
-
-    /*
-     * TODO
-     * For now we don't keep an explicit decoded state to simplify things
-     * but later we may have to do it in order to avoid re-decoding if we
-     * receive a repeated source/repair symbol.
-     */
-
-    private Set<EncodingSymbol> repairSymbols; // TODO free memory when decoded
-    private BitSet receivedSourceSymbols;
+    private final SymbolsState symbolsState;
 
 
     private ArraySourceBlockDecoder(
@@ -87,11 +80,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         this.sbn = sbn;
         this.K = K;
-        this.Kprime = SystematicIndices.ceil(K);
-        this.symbolOverhead = extraSymbols;
-
-        this.repairSymbols = new LinkedHashSet<>(); // stores the receiving ordering
-        this.receivedSourceSymbols = new BitSet(K);
+        this.symbolsState = new SymbolsState(K, extraSymbols);
     }
 
     private FECParameters fecParameters() {
@@ -121,54 +110,73 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     public boolean containsSourceSymbol(int esi) {
 
         checkSourceSymbolESI(esi);
-        return receivedSourceSymbols.get(esi);
+        symbolsState.lock();
+        try {
+            return symbolsState.containsSourceSymbol(esi);
+        }
+        finally {
+            symbolsState.unlock();
+        }
     }
 
     @Override
     public boolean containsRepairSymbol(int esi) {
 
         checkRepairSymbolESI(esi);
-        for (EncodingSymbol repairSymbol : repairSymbols)
-            if (repairSymbol.esi() == esi) return true;
-
-        return false;
+        symbolsState.lock();
+        try {
+            return symbolsState.containsRepairSymbol(esi);
+        }
+        finally {
+            symbolsState.unlock();
+        }
     }
 
     @Override
     public boolean isSourceBlockDecoded() {
 
-        return (receivedSourceSymbols.cardinality() == K);
+        symbolsState.lock();
+        try {
+            return symbolsState.isSourceBlockDecoded();
+        }
+        finally {
+            symbolsState.unlock();
+        }
+    }
+
+    @Override
+    public SourceBlockState latestState() {
+
+        symbolsState.lock();
+        try {
+            return symbolsState.sourceBlockState();
+        }
+        finally {
+            symbolsState.unlock();
+        }
     }
 
     @Override
     public Set<Integer> missingSourceSymbols() {
 
-        if (isSourceBlockDecoded()) {
-            return Collections.emptySet();
+        symbolsState.lock();
+        try {
+            return getMissingSourceSymbols();
         }
-        else {
-            // linked hash set preserves insertion ordering (while not being sorted)
-            final Set<Integer> missingSourceSymbols = new LinkedHashSet<>(K - receivedSourceSymbols.cardinality());
-
-            for (int i = receivedSourceSymbols.nextClearBit(0); i < K; i = receivedSourceSymbols.nextClearBit(i + 1))
-                missingSourceSymbols.add(i);
-
-            return missingSourceSymbols;
+        finally {
+            symbolsState.unlock();
         }
     }
 
     @Override
     public Set<Integer> availableRepairSymbols() {
 
-        if (isSourceBlockDecoded()) {
-            return Collections.emptySet();
+        symbolsState.lock();
+        try {
+            return getAvailableRepairSymbols();
         }
-        else {
-            final Set<Integer> repairESIs = new LinkedHashSet<>();
-            for (EncodingSymbol repair : repairSymbols) {
-                repairESIs.add(repair.esi());
-            }
-            return repairESIs;
+        finally {
+            symbolsState.unlock();
         }
     }
 
@@ -180,35 +188,46 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             throw new IllegalArgumentException("source block number does not match the expected");
         }
 
-        /*
-         * TODO deal with repeated symbols and avoid doing replacing
-         * already existing data (first symbol data stays)
-         */
+        symbolsState.lock();
+        try {
+            if (!symbolsState.isSourceBlockDecoded()) { // do nothing if already decoded
+                final ByteBuffer symbols = packet.symbols();
+                final int esi = packet.encodingSymbolID();
+                boolean putNewSymbol = false;
 
-        // put source symbol data
-        final ByteBuffer symbols = packet.symbols();
-        int esi = packet.encodingSymbolID();
-        if (packet.symbolType() == SymbolType.SOURCE) {
-            for (int i = 0; i < packet.numberOfSymbols(); i++) {
-                putSourceData(esi + i, symbols);
-            }
-        }
-        else { // packet.symbolType() == SymbolType.REPAIR
-            for (int i = 0; i < packet.numberOfSymbols(); i++) {
-                putRepairData(esi + i, symbols);
-            }
-        }
+                // put symbol data
+                switch (packet.symbolType()) {
+                    case SOURCE:
+                        for (int i = 0; i < packet.numberOfSymbols(); i++) {
+                            putNewSymbol |= putSourceData(esi + i, symbols);
+                        }
+                    break;
 
-        // do we have all source symbols?
-        if (isSourceBlockDecoded()) {
-            return SourceBlockState.DECODED;
+                    case REPAIR:
+                        for (int i = 0; i < packet.numberOfSymbols(); i++) {
+                            putNewSymbol |= putRepairData(esi + i, symbols);
+                        }
+                    break;
+
+                    default:
+                        throw new AssertionError("unknown enum value");
+                }
+
+                // 1. don't bother if no new symbols were added
+                // 2. the addition of a source block may have decoded the source block
+                // 3. enough (source/repair) symbols may have been received for a decode to start
+                if (putNewSymbol &&
+                    !symbolsState.isSourceBlockDecoded() &&
+                    symbolsState.haveEnoughSymbolsToDecode())
+                {
+                    decode();
+                }
+            }
+
+            return symbolsState.sourceBlockState();
         }
-        // check if we have enough symbols to decode
-        else if (receivedSourceSymbols.cardinality() + repairSymbols.size() >= K + symbolOverhead) {
-            return decode();
-        }
-        else {
-            return SourceBlockState.INCOMPLETE;
+        finally {
+            symbolsState.unlock();
         }
     }
 
@@ -226,34 +245,78 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         }
     }
 
-    private SourceBlockState decode() {
+    /*
+     * ===== Requires locked symbolsState! =====
+     */
+    private Set<Integer> getMissingSourceSymbols() {
 
-        // generate intermediate symbols -- watch out for decoding failure
-        byte[][] intermediate_symbols = generateIntermediateSymbols();
-        if (intermediate_symbols == null) {
-            return SourceBlockState.DECODING_FAILURE;
+        if (symbolsState.isSourceBlockDecoded()) {
+            return Collections.emptySet();
         }
+        else {
+            final int numMissing = symbolsState.numMissingSourceSymbols();
 
-        /*
-         * with the intermediate symbols calculated, one can recover
-         * every missing source symbol
-         */
+            // linked hash set preserves insertion ordering (while not being sorted)
+            final Set<Integer> missingSourceSymbols = new LinkedHashSet<>(numMissing);
+            for (Integer esi : symbolsState.missingSourceSymbols()) {
+                missingSourceSymbols.add(esi);
+            }
 
-        // recover missing source symbols
-        for (int esi : missingSourceSymbols()) {
-            byte[] sourceSymbol = LinearSystem.enc(
-                Kprime, intermediate_symbols, new Tuple(Kprime, esi), fecParameters().symbolSize());
-
-            // write to data buffer
-            putSourceData(esi, sourceSymbol, 0);
+            return missingSourceSymbols;
         }
-
-        return SourceBlockState.DECODED;
     }
 
+    /*
+     * ===== Requires locked symbolsState! =====
+     */
+    private Set<Integer> getAvailableRepairSymbols() {
+
+        if (symbolsState.isSourceBlockDecoded()) {
+            return Collections.emptySet();
+        }
+        else {
+            // linked hash set preserves insertion ordering (while not being sorted)
+            return new LinkedHashSet<>(symbolsState.repairSymbolsESIs());
+        }
+    }
+
+    /*
+     * ===== Requires locked symbolsState! =====
+     */
+    private void decode() {
+
+        // generate intermediate symbols -- watch out for decoding failure
+        final byte[][] intermediate_symbols = generateIntermediateSymbols();
+
+        if (intermediate_symbols == null) {
+            symbolsState.setSourceBlockDecodingFailure();
+        }
+        else {
+            /*
+             * with the intermediate symbols calculated, one can recover
+             * every missing source symbol
+             */
+
+            final int Kprime = SystematicIndices.ceil(K);
+
+            // recover missing source symbols
+            for (int esi : missingSourceSymbols()) {
+                byte[] sourceSymbol = LinearSystem.enc(
+                    Kprime, intermediate_symbols, new Tuple(Kprime, esi), fecParameters().symbolSize());
+
+                // write to data buffer
+                putSourceData(esi, sourceSymbol, 0);
+            }
+        }
+    }
+
+    /*
+     * ===== Requires locked symbolsState! =====
+     */
     private final byte[][] generateIntermediateSymbols() {
 
         // constraint matrix parameters
+        final int Kprime = SystematicIndices.ceil(K);
         int Ki = SystematicIndices.getKIndex(Kprime);
         int S = SystematicIndices.S(Ki);
         int H = SystematicIndices.H(Ki);
@@ -261,7 +324,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         int T = fecParameters().symbolSize();
 
         // number of extra repair symbols to be used for the decoding process
-        int overhead = repairSymbols.size() - (K - receivedSourceSymbols.cardinality());
+        int overhead = symbolsState.numRepairSymbols() - symbolsState.numMissingSourceSymbols();
 
         // number of rows in the decoding matrix
         int M = L + overhead;
@@ -280,8 +343,9 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         byte[][] D = new byte[M][T];
 
         // populate D with the received source symbols
-        for (int i = receivedSourceSymbols.nextSetBit(0); i >= 0; i = receivedSourceSymbols.nextSetBit(i + 1))
-            data.getBytes(i * T, D[S + H + i]);
+        for (int isi : symbolsState.receivedSourceSymbols()) {
+            data.getBytes(isi * T, D[S + H + isi]);
+        }
 
         /*
          * for every repair symbol received
@@ -289,7 +353,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
          * - populate D accordingly
          */
 
-        Iterator<EncodingSymbol> repair_symbol = repairSymbols.iterator();
+        Iterator<EncodingSymbol> repair_symbol = symbolsState.repairSymbols().iterator();
 
         // identify missing source symbols and replace their lines with "repair lines"
         for (Integer missing_ESI : missingSourceSymbols()) {
@@ -347,14 +411,18 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         }
     }
 
+    /*
+     * ===== Requires locked symbolsState! =====
+     */
     // requires valid ESI
-    private void putSourceData(int esi, ByteBuffer symbolData) {
+    private boolean putSourceData(int esi, ByteBuffer symbolData) {
 
         final int T = fecParameters().symbolSize(); // TODO handle last symbol size (no padding)
         final int bufPos = symbolData.position();
 
-        if (receivedSourceSymbols.get(esi)) { // if already received, just advance the buffer position
+        if (symbolsState.containsSourceSymbol(esi)) { // if already received, just advance the buffer position
             symbolData.position(bufPos + T);
+            return false;
         }
         else {
             if (symbolData.hasArray()) { // avoid array allocation and copy
@@ -368,36 +436,224 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
                 symbolData.get(arr); // this also advances the buffer position
                 data.putBytes(esi * T, arr);
             }
-            receivedSourceSymbols.set(esi); // mark the symbol as received
+
+            symbolsState.addSourceSymbol(esi);
+            return true;
         }
     }
 
+    /*
+     * ===== Requires locked symbolsState! =====
+     */
     // requires valid ESI
     private void putSourceData(int esi, byte[] symbolData, int off) {
 
-        if (!receivedSourceSymbols.get(esi)) { // if already received, do nothing
+        if (!symbolsState.containsSourceSymbol(esi)) { // if already received, do nothing
             final int T = fecParameters().symbolSize(); // TODO handle last symbol size (no padding)
             data.putBytes(esi * T, symbolData, off, T);
-            receivedSourceSymbols.set(esi); // mark the symbol as received
+            symbolsState.addSourceSymbol(esi);
         }
     }
 
+    /*
+     * ===== Requires locked symbolsState! =====
+     */
     // requires valid ESI
-    private void putRepairData(int esi, ByteBuffer symbolData) {
+    private boolean putRepairData(int esi, ByteBuffer symbolData) {
 
-        // generate repair symbol (cannot avoid copy)
-        final byte[] repairData = new byte[fecParameters().symbolSize()];
-        symbolData.get(repairData); // this also advances buffer position
-        final EncodingSymbol repair = EncodingSymbol.newRepairSymbol(esi, repairData);
+        final int T = fecParameters().symbolSize();
+        final int bufPos = symbolData.position();
 
-        // add this repair symbol to the set of received repair symbols
-        repairSymbols.add(repair);
+        if (symbolsState.containsRepairSymbol(esi)) { // if already received, just advance the buffer position
+            symbolData.position(bufPos + T);
+            return false;
+        }
+        else {
+            // generate repair symbol (cannot avoid copy)
+            final byte[] repairData = new byte[T];
+            symbolData.get(repairData); // this also advances buffer position
+            final EncodingSymbol repair = EncodingSymbol.newRepairSymbol(esi, repairData);
+
+            // add this repair symbol to the set of received repair symbols
+            symbolsState.addRepairSymbol(repair);
+            return true;
+        }
     }
+
+
+    private static final class SymbolsState {
+
+        private SourceBlockState sbState;
+
+        private final BitSet sourceSymbolsBitSet;
+        private final Iterable<Integer> missingSourceSymbols;
+        private final Iterable<Integer> receivedSourceSymbols;
+
+        private final Map<Integer, EncodingSymbol> repairSymbols;
+
+        private final int K;
+        private final int symbolOverhead;
+
+        private final Lock symbolsStateLock;
+
+
+        SymbolsState(int K, int symbolOverhead) {
+
+            this.sbState = SourceBlockState.INCOMPLETE;
+
+            this.sourceSymbolsBitSet = new BitSet(K);
+
+            this.repairSymbols = new LinkedHashMap<>(); // preserved receiving ordering
+            this.missingSourceSymbols = new MissingSourceSymbolsIterable(sourceSymbolsBitSet, K);
+            this.receivedSourceSymbols = new ReceivedSourceSymbolsIterable(sourceSymbolsBitSet);
+
+            this.K = K;
+            this.symbolOverhead = symbolOverhead;
+
+            this.symbolsStateLock = new ReentrantLock(false); // non-fair lock
+        }
+
+        // Always call this method before accessing the symbols state!
+        void lock() {
+
+            symbolsStateLock.lock();
+        }
+
+        // Always call this method after using the symbols state!
+        void unlock() {
+
+            symbolsStateLock.unlock();
+        }
+
+        SourceBlockState sourceBlockState() {
+
+            return sbState;
+        }
+
+        void setSourceBlockDecodingFailure() {
+
+            sbState = SourceBlockState.DECODING_FAILURE;
+        }
+
+        boolean isSourceBlockDecoded() {
+
+            return sbState == SourceBlockState.DECODED;
+        }
+
+        int numMissingSourceSymbols() {
+
+            return K - sourceSymbolsBitSet.cardinality();
+        }
+
+        // requires valid parameter
+        boolean containsSourceSymbol(int esi) {
+
+            return sourceSymbolsBitSet.get(esi);
+        }
+
+        // requires valid parameter
+        void addSourceSymbol(int esi) {
+
+            sourceSymbolsBitSet.set(esi); // mark the symbol as received
+
+            if (numMissingSourceSymbols() == 0) {
+                sbState = SourceBlockState.DECODED;
+                repairSymbols.clear(); // free memory
+            }
+        }
+
+        Iterable<Integer> missingSourceSymbols() {
+
+            return missingSourceSymbols;
+        }
+
+        Iterable<Integer> receivedSourceSymbols() {
+
+            return receivedSourceSymbols;
+        }
+
+        int numRepairSymbols() {
+
+            return repairSymbols.size();
+        }
+
+        // requires valid parameter
+        boolean containsRepairSymbol(int esi) {
+
+            return !isSourceBlockDecoded() && repairSymbols.containsKey(esi);
+        }
+
+        // requires valid parameter
+        void addRepairSymbol(EncodingSymbol repair) {
+
+            repairSymbols.put(repair.esi(), repair);
+        }
+
+        Iterable<EncodingSymbol> repairSymbols() {
+
+            return repairSymbols.values();
+        }
+
+        Set<Integer> repairSymbolsESIs() {
+
+            return repairSymbols.keySet();
+        }
+
+        boolean haveEnoughSymbolsToDecode() {
+
+            return (sourceSymbolsBitSet.cardinality() + repairSymbols.size()) >= (K + symbolOverhead);
+        }
+
+
+        private static final class MissingSourceSymbolsIterable implements Iterable<Integer> {
+
+            private final BitSet bitSet;
+            private final int K;
+
+
+            MissingSourceSymbolsIterable(BitSet bitSet, int K) {
+
+                this.bitSet = Objects.requireNonNull(bitSet);
+                this.K = K;
+            }
+
+            @Override
+            public Iterator<Integer> iterator() {
+
+                return BitSetIterators.newFalseIterator(bitSet, K);
+            }
+        }
+
+        private static final class ReceivedSourceSymbolsIterable implements Iterable<Integer> {
+
+            private final BitSet bitSet;
+
+
+            ReceivedSourceSymbolsIterable(BitSet bitSet) {
+
+                this.bitSet = bitSet;
+            }
+
+            @Override
+            public Iterator<Integer> iterator() {
+
+                return BitSetIterators.newTrueIterator(bitSet);
+            }
+        }
+    }
+
 
     // ============================= TEST_CODE ============================= //
 
     static SourceBlockState forceDecode(ArraySourceBlockDecoder decoder) {
 
-        return decoder.decode();
+        decoder.symbolsState.lock();
+        try {
+            decoder.decode();
+            return decoder.symbolsState.sourceBlockState();
+        }
+        finally {
+            decoder.symbolsState.unlock();
+        }
     }
 }
