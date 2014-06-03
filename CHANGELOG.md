@@ -1,3 +1,22 @@
+## 3.1
+
+Added new methods for reading/writing FEC parameters. They now mimic those
+found in class "net.fec.openrq.EncodingPacket" (backwards compatible with
+previous versions).
+
+Added classes:
+* net.fec.openrq.parameters.SerializableParameters
+
+Changed public method signatures:
+(++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.parameters.FECParameters
+ * ++ public static Parsed<FECParameters> parse(SerializableParameters)
+ * ++ public static Parsed<FECParameters> parse(byte[])
+ * ++ public SerializableParameters asSerializable()
+ * ++ public byte[] asArray()
+ * ++ public void writeTo(byte[])
+ * ++ public ByteBuffer asBuffer()
+
 ## 3.0
 
 Fixed critical bug related to the type of the deriver parameter "maximum
