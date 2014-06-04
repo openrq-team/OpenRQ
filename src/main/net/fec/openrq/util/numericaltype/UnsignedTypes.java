@@ -124,20 +124,42 @@ public final class UnsignedTypes {
 
     public static int getUnsignedBytes(int ubs, int numBytes) {
 
-        return (int)getUnsignedArbitrary(ubs, numBytes, SizeOf.INT);
+        return (int)getUnsignedVariableLong(ubs, numBytes, SizeOf.INT);
     }
 
     public static long getLongUnsignedBytes(long ubs, int numBytes) {
 
-        return getUnsignedArbitrary(ubs, numBytes, SizeOf.LONG);
+        return getUnsignedVariableLong(ubs, numBytes, SizeOf.LONG);
     }
 
-    private static long getUnsignedArbitrary(long ubs, int numBytes, int maxNumBytes) {
+    private static long getUnsignedVariableLong(long ubs, int numBytes, int maxNumBytes) {
 
-        if (numBytes < 0 || numBytes >= maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
+        if (numBytes < 0 || numBytes > maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
 
         final long mask = (1L << (numBytes * Byte.SIZE)) - 1L;
         return ubs & mask;
+    }
+
+    public static byte[] getUnsignedBytesAsArray(int ubs, int numBytes) {
+
+        return getUnsignedVariableArray(ubs, numBytes, SizeOf.INT);
+    }
+
+    public static byte[] getLongUnsignedBytesAsArray(long ubs, int numBytes) {
+
+        return getUnsignedVariableArray(ubs, numBytes, SizeOf.LONG);
+    }
+
+    private static byte[] getUnsignedVariableArray(long ubs, int numBytes, int maxNumBytes) {
+
+        if (numBytes < 0 || numBytes > maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
+
+        final byte[] bytes = new byte[numBytes];
+        for (int n = 1; n <= numBytes; n++) {
+            bytes[n - 1] = (byte)(ubs >>> ((numBytes - n) * Byte.SIZE));
+        }
+
+        return bytes;
     }
 
     public static int readUnsignedBytes(ByteBuffer buffer, int numBytes) {
@@ -152,7 +174,7 @@ public final class UnsignedTypes {
 
     private static long readUnsignedArbitrary(ByteBuffer buffer, int numBytes, int maxNumBytes) {
 
-        if (numBytes < 0 || numBytes >= maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
+        if (numBytes < 0 || numBytes > maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
 
         long ret = 0L;
         if (buffer.order() == ByteOrder.BIG_ENDIAN) {
@@ -181,7 +203,7 @@ public final class UnsignedTypes {
 
     private static void writeUnsignedArbitrary(long ubs, ByteBuffer buffer, int numBytes, int maxNumBytes) {
 
-        if (numBytes < 0 || numBytes >= maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
+        if (numBytes < 0 || numBytes > maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
 
         if (buffer.order() == ByteOrder.BIG_ENDIAN) {
             for (int n = numBytes - 1; n >= 0; n--) {

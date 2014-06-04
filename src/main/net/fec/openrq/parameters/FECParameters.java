@@ -590,9 +590,7 @@ public final class FECParameters {
      */
     public void writeTo(WritableByteChannel ch) throws IOException {
 
-        final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.LONG + SizeOf.INT);
-        writeTo(buffer);
-        buffer.flip();
+        final ByteBuffer buffer = asBuffer();
         while (buffer.hasRemaining()) {
             ch.write(buffer);
         }

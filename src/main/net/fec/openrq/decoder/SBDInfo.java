@@ -18,16 +18,21 @@ package net.fec.openrq.decoder;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
 
 /**
@@ -157,7 +162,10 @@ public final class SBDInfo {
      */
     public byte[] asArray() {
 
-        return null;
+        final byte[] array = new byte[getEncodedByteSize()];
+        writeTo(ByteBuffer.wrap(array));
+
+        return array;
     }
 
     /**
@@ -217,7 +225,7 @@ public final class SBDInfo {
      */
     public void writeTo(byte[] array, int offset) {
 
-        final int arraySize = getEncodedArraySize();
+        final int arraySize = getEncodedByteSize();
         if (offset < 0 || array.length - offset < arraySize) throw new IndexOutOfBoundsException();
         writeTo(ByteBuffer.wrap(array, offset, arraySize));
     }
@@ -240,7 +248,7 @@ public final class SBDInfo {
      */
     public ByteBuffer asBuffer() {
 
-        final ByteBuffer buffer = ByteBuffer.allocate(getEncodedArraySize());
+        final ByteBuffer buffer = ByteBuffer.allocate(getEncodedByteSize());
         writeTo(buffer);
         buffer.flip();
 
@@ -266,23 +274,147 @@ public final class SBDInfo {
      * this method returns normally, the position of the provided buffer will have been advanced by the same amount.
      * 
      * @param buffer
-     *            A buffer on which the packet contents are written
+     *            A buffer on which the information is written
      * @exception ReadOnlyBufferException
      *                If the provided buffer is read-only
      * @exception BufferOverflowException
-     *                If the provided buffer has less than {@code (8 + symbolsLength())} bytes remaining
+     *                If the provided buffer has less than {@code (7 + NUM_MISSING_BYTES + NUM_AVAILABLE_BYTES)} bytes
+     *                remaining
      * @exception NullPointerException
      *                If the {@code buffer} is {@code null}
      */
     public void writeTo(ByteBuffer buffer) {
 
-        
+        Objects.requireNonNull(buffer);
+
+        // 1 byte for the SBN
+        UnsignedTypes.writeUnsignedByte(sbn, buffer);
+
+        // 1 byte for the source block state
+        UnsignedTypes.writeUnsignedByte(stateToByte(state), buffer);
+
+        // 2 bytes for the number of missing source symbols, and 2 bytes for each symbol ESI
+        UnsignedTypes.writeUnsignedShort(missingSourceSymbols.size(), buffer);
+        for (int esi : missingSourceSymbols) {
+            UnsignedTypes.writeUnsignedShort(esi, buffer);
+        }
+
+        // 3 bytes for the number of available repair symbols, and 3 bytes for each symbol ESI
+        UnsignedTypes.writeUnsignedBytes(availableRepairSymbols.size(), buffer, SizeOf.UNSIGNED_3_BYTES);
+        for (int esi : availableRepairSymbols) {
+            UnsignedTypes.writeUnsignedBytes(esi, buffer, SizeOf.UNSIGNED_3_BYTES);
+        }
     }
 
-    private int getEncodedArraySize() {
+    /**
+     * Writes this information encoded in a compact format directly into the provided {@code DataOutput} object.
+     * <p>
+     * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
+     * corresponding to the {@linkplain #state() latest state of the source block}, followed by
+     * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
+     * {@linkplain #missingSourceSymbols() missing source symbols}, followed by {@code NUM_AVAILABLE_BYTES}, followed by
+     * the list of the ESIs of the {@linkplain #availableRepairSymbols() available repair symbols}.
+     * <p>
+     * Examples of {@code DataOutput} objects are {@link java.io.DataOutputStream DataOutputStream} and
+     * {@link java.io.ObjectOutputStream ObjectOutputStream}.
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is written to the output, or an
+     * {@code IOException} is throw.
+     * 
+     * @param out
+     *            A {@code DataOutput} object into which the information is written
+     * @throws IOException
+     *             If an IO error occurs while writing to the {@code DataOutput} object
+     * @exception NullPointerException
+     *                If {@code out} is {@code null}
+     */
+    public void writeTo(DataOutput out) throws IOException {
+
+        // 1 byte for the SBN
+        out.writeByte((byte)sbn);
+
+        // 1 byte for the source block state
+        out.writeByte(stateToByte(state));
+
+        // 2 bytes for the number of missing source symbols, and 2 bytes for each symbol ESI
+        out.writeShort((short)missingSourceSymbols.size());
+        for (int esi : missingSourceSymbols) {
+            out.writeShort((short)esi);
+        }
+
+        // 3 bytes for the number of available repair symbols, and 3 bytes for each symbol ESI
+        out.write(UnsignedTypes.getUnsignedBytesAsArray(availableRepairSymbols.size(), SizeOf.UNSIGNED_3_BYTES));
+        for (int esi : availableRepairSymbols) {
+            out.write(UnsignedTypes.getUnsignedBytesAsArray(esi, SizeOf.UNSIGNED_3_BYTES));
+        }
+    }
+
+    /**
+     * Writes this information encoded in a compact format directly into the provided {@code WritableByteChannel}
+     * object.
+     * <p>
+     * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
+     * corresponding to the {@linkplain #state() latest state of the source block}, followed by
+     * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
+     * {@linkplain #missingSourceSymbols() missing source symbols}, followed by {@code NUM_AVAILABLE_BYTES}, followed by
+     * the list of the ESIs of the {@linkplain #availableRepairSymbols() available repair symbols}.
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is written to the channel, or
+     * an {@code IOException} is throw.
+     * 
+     * @param ch
+     *            A {@code WritableByteChannel} object into which the information is written
+     * @throws IOException
+     *             If an IO error occurs while writing to the {@code WritableByteChannel} object
+     * @exception NullPointerException
+     *                If {@code ch} is {@code null}
+     */
+    public void writeTo(WritableByteChannel ch) throws IOException {
+
+        final ByteBuffer buffer = asBuffer();
+        while (buffer.hasRemaining()) {
+            ch.write(buffer);
+        }
+    }
+
+    private int getEncodedByteSize() {
 
         final int numMissBytes = SizeOf.SHORT * missingSourceSymbols.size();
         final int numAvaBytes = SizeOf.UNSIGNED_3_BYTES * availableRepairSymbols.size();
         return SizeOf.BYTE + SizeOf.BYTE + SizeOf.SHORT + numMissBytes + SizeOf.UNSIGNED_3_BYTES + numAvaBytes;
+    }
+
+
+    private static final Map<SourceBlockState, Byte> STATE_BYTE_VALUES;
+    private static final Map<Byte, SourceBlockState> BYTE_STATE_VALUES;
+    static {
+        final byte incomplete = 1;
+        final byte decoded = 2;
+        final byte decodingFailure = 3;
+
+        STATE_BYTE_VALUES = new EnumMap<>(SourceBlockState.class);
+        BYTE_STATE_VALUES = new HashMap<>(4, 1.0f);
+
+        STATE_BYTE_VALUES.put(SourceBlockState.INCOMPLETE, incomplete);
+        BYTE_STATE_VALUES.put(incomplete, SourceBlockState.INCOMPLETE);
+
+        STATE_BYTE_VALUES.put(SourceBlockState.DECODED, decoded);
+        BYTE_STATE_VALUES.put(decoded, SourceBlockState.DECODED);
+
+        STATE_BYTE_VALUES.put(SourceBlockState.DECODING_FAILURE, decodingFailure);
+        BYTE_STATE_VALUES.put(decodingFailure, SourceBlockState.DECODING_FAILURE);
+    }
+
+
+    // throws NullPointerException if an invalid state is passed as argument
+    private static byte stateToByte(SourceBlockState state) {
+
+        return STATE_BYTE_VALUES.get(state);
+    }
+
+    // returns null if an invalid byte is passed as argument
+    private static SourceBlockState byteToState(byte b) {
+
+        return BYTE_STATE_VALUES.get(b);
     }
 }
