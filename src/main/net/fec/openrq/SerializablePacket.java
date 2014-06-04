@@ -45,6 +45,8 @@ public class SerializablePacket implements Serializable {
      *            A <em>FEC Payload ID</em> as specified in RFC 6330
      * @param symbols
      *            The data from the encoding symbols in the packet
+     * @exception NullPointerException
+     *                If {@code symbols} is {@code null}
      */
     public SerializablePacket(int fecPayloadID, byte[] symbols) {
 

@@ -233,7 +233,7 @@ public interface DataDecoder {
      * </ul>
      * 
      * @param array
-     *            An array containing an encoding packet
+     *            An array of bytes containing an encoding packet
      * @param copySymbols
      *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
      *            reference to the array
@@ -258,7 +258,7 @@ public interface DataDecoder {
      * </ul>
      * 
      * @param array
-     *            An array containing an encoding packet
+     *            An array of bytes containing an encoding packet
      * @param off
      *            The starting index in the array (must be non-negative)
      * @param len

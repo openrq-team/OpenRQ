@@ -24,6 +24,7 @@ import static net.fec.openrq.parameters.InternalConstants.F_max;
 import static net.fec.openrq.parameters.InternalConstants.F_min;
 import static net.fec.openrq.parameters.InternalConstants.K_max;
 import static net.fec.openrq.parameters.InternalConstants.K_min;
+import static net.fec.openrq.parameters.InternalConstants.K_prime_min;
 import static net.fec.openrq.parameters.InternalConstants.Kt_max;
 import static net.fec.openrq.parameters.InternalConstants.N_max;
 import static net.fec.openrq.parameters.InternalConstants.N_min;
@@ -830,6 +831,16 @@ public final class ParameterChecker {
     // =========== number of source symbols - K =========== //
 
     /**
+     * Returns the minimum number of source symbols in a source block (1).
+     * 
+     * @return the minimum number of source symbols in a source block
+     */
+    public static int minNumSourceSymbolsPerBlock() {
+
+        return K_min;
+    }
+
+    /**
      * Returns the maximum number of source symbols in a source block (56_403).
      * 
      * @return the maximum number of source symbols in a source block
@@ -837,6 +848,43 @@ public final class ParameterChecker {
     public static int maxNumSourceSymbolsPerBlock() {
 
         return K_max;
+    }
+
+    /**
+     * Returns {@code false} iff {@linkplain #minNumSourceSymbolsPerBlock() minNumSrcSymbs} &le; {@code numSrcSymbs}
+     * &le; {@linkplain #maxNumSourceSymbolsPerBlock() maxNumSrcSymbs}.
+     * 
+     * @param numSrcSymbs
+     *            The number of source symbols in a source block
+     * @return {@code false} iff {@linkplain #minNumSourceSymbolsPerBlock() minNumSrcSymbs} &le; {@code numSrcSymbs}
+     *         &le; {@linkplain #maxNumSourceSymbolsPerBlock() maxNumSrcSymbs}
+     */
+    public static boolean isNumSourceSymbolsPerBlockOutOfBounds(int numSrcSymbs) {
+
+        return !(minNumSourceSymbolsPerBlock() <= numSrcSymbs && numSrcSymbs <= maxNumSourceSymbolsPerBlock());
+    }
+
+    /**
+     * Returns the total number of possible repair symbols in a source block, given the number of source symbols in the
+     * block.
+     * 
+     * @param numSrcSymbs
+     *            The number of source symbols in a source block
+     * @return the total number of possible repair symbols in a source block, given the number of source symbols in the
+     *         block
+     * @exception IllegalArgumentException
+     *                If the number of source symbols is {@linkplain #isNumSourceSymbolsPerBlockOutOfBounds(int) out of
+     *                bounds}
+     */
+    public static int numRepairSymbolsPerBlock(int numSrcSymbs) {
+
+        _checkNumSourceSymbolsPerBlockOutOfBounds(numSrcSymbs);
+
+        final int minESI = minEncodingSymbolID();
+        final int maxESI = maxEncodingSymbolID();
+        final int totalSymbs = 1 + maxESI - minESI;
+
+        return totalSymbs - numSrcSymbs;
     }
 
     // =========== private helper methods =========== //
@@ -877,11 +925,11 @@ public final class ParameterChecker {
         // total number of symbols
         final int Kt = getTotalSymbols(F, T);
 
-        // the theoretical minimum number of source symbols in a source block
-        final int K = Math.max(K_min, ceilDiv(Kt, Z_max));
+        // the theoretical minimum number of source symbols in an extended source block
+        final int Kprime = Math.max(K_prime_min, ceilDiv(Kt, Z_max));
 
         // minimum WS is the inverse of the function KL
-        return minWS(K, T, Al, topInterleaverLength(T));
+        return minWS(Kprime, T, Al, topInterleaverLength(T));
     }
 
     // requires individually and in unison bounded arguments
@@ -962,6 +1010,13 @@ public final class ParameterChecker {
 
         if (WS < minDecodingBlockSize()) {
             throw new IllegalArgumentException("maximum decoding block size is out of bounds");
+        }
+    }
+
+    private static void _checkNumSourceSymbolsPerBlockOutOfBounds(int K) {
+
+        if (isNumSourceSymbolsPerBlockOutOfBounds(K)) {
+            throw new IllegalArgumentException("number of source symbols per block is out of bounds");
         }
     }
 

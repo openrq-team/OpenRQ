@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -31,6 +32,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import net.fec.openrq.Parsed;
+import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.numericaltype.SizeOf;
 import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
@@ -41,8 +45,8 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
  * <p>
  * When a back communication channel is available from a receiver to a sender of data, information about a specific
  * source block may be useful in determining how the source block is encoded by the sender. For example, such
- * information may contain a list with the identifiers of the missing source symbols at the receiver, so that a sender
- * may transmit those missing symbols.
+ * information may contain a list with the identifiers of the missing source symbols at the receiver, so that the sender
+ * can know which symbols it needs to transmit.
  * <p>
  * This class offers the following information:
  * <ul>
@@ -61,13 +65,246 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
  */
 public final class SBDInfo {
 
+    /**
+     * @param sbn
+     * @param state
+     * @param missingSourceSymbols
+     * @param availableRepairSymbols
+     * @return a new SBDInfo
+     */
+    static SBDInfo newInfo(
+        int sbn,
+        SourceBlockState state,
+        Set<Integer> missingSourceSymbols,
+        Set<Integer> availableRepairSymbols)
+    {
+
+        return new SBDInfo(
+            sbn,
+            state,
+            Collections.unmodifiableSet(new LinkedHashSet<>(missingSourceSymbols)),
+            Collections.unmodifiableSet(new LinkedHashSet<>(availableRepairSymbols)));
+    }
+
+    /**
+     * Parses source block decoder information from the given serializable object.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
+     * </ul>
+     * 
+     * @param serInfo
+     *            A serializable object containing source block decoder information
+     * @return a container object containing a {@code SBFInfo} instance or a parsing failure reason string
+     * @exception NullPointerException
+     *                If {@code serInfo} is {@code null}
+     */
+    public static Parsed<SBDInfo> parse(SerializableSBDInfo serInfo) {
+
+        return parse(serInfo.sourceBlockDecoderInfo());
+    }
+
+    /**
+     * Parses source block decoder information from the given array. The information bytes in the array must follow the
+     * format specified by {@link #asArray()}.
+     * <p>
+     * The information will be read, in the array, from position {@code 0} inclusive to position {@code array.length}
+     * exclusive.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
+     * </ul>
+     * 
+     * @param array
+     *            An array of bytes containing source block decoder information
+     * @return a container object containing source block decoder information or a parsing failure reason string
+     * @exception NullPointerException
+     *                If the provided array is {@code null}
+     */
+    public static Parsed<SBDInfo> parse(byte[] array) {
+
+        return parse(array, 0, array.length);
+    }
+
+    /**
+     * Parses source block decoder information from the given array. The information bytes in the array must follow the
+     * format specified by {@link #asArray()}.
+     * <p>
+     * The information will be read, in the array, from position {@code off} inclusive to position {@code (off + len)}
+     * exclusive.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
+     * </ul>
+     * 
+     * @param array
+     *            An array of bytes containing source block decoder information
+     * @param off
+     *            The starting index in the array (must be non-negative)
+     * @param len
+     *            The length of the information (must be non-negative and no larger than {@code array.length - off})
+     * @return a container object containing source block decoder information or a parsing failure reason string
+     * @exception IndexOutOfBoundsException
+     *                If the pre-conditions on the array offset and length do not hold
+     * @exception NullPointerException
+     *                If the provided array is {@code null}
+     */
+    public static Parsed<SBDInfo> parse(byte[] array, int off, int len) {
+
+        ArrayUtils.checkArrayBounds(off, len, array.length);
+        return parse(ByteBuffer.wrap(array, off, len));
+    }
+
+    /**
+     * Parses source block decoder information from the given buffer. The information bytes in the buffer must follow
+     * the format specified by {@link #asBuffer()}.
+     * <p>
+     * The information will be read, in the buffer, from the current {@linkplain ByteBuffer#position() position}
+     * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
+     * of the buffer will have been advanced by the number of bytes read.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
+     * </ul>
+     * 
+     * @param buffer
+     *            A buffer containing source block decoder information
+     * @return a container object containing source block decoder information or a parsing failure reason string
+     * @exception NullPointerException
+     *                If the provided buffer is {@code null}
+     */
+    public static Parsed<SBDInfo> parse(ByteBuffer buffer) {
+
+        try {
+            final int sbn = readSBN(buffer);
+            final SourceBlockState state = readState(buffer);
+
+            /*
+             * ================= number of missing source symbols =================
+             * range: [0, maxSrcSymbs]
+             */
+            if (buffer.remaining() < SizeOf.SHORT) {
+                return Parsed.invalid("number of missing source symbols is missing");
+            }
+            // 2 bytes for the number of missing source symbols
+            final int numMiss = UnsignedTypes.readUnsignedShort(buffer);
+
+            if (numMiss < 0 || numMiss > maxSrcSymbs) {
+                return Parsed.invalid("number of missing source symbols is out of bounds");
+            }
+
+            /*
+             * ================= missing source symbols =================
+             * range of each ESI: [minESI, maxSrcESI]
+             */
+            int rem = buffer.remaining();
+            if (rem < (numMiss * SizeOf.SHORT)) { // product never overflows
+                return Parsed.invalid(String.format(
+                    "missing source symbols data is incomplete, required %d bytes but only %d bytes are available",
+                    (numMiss * SizeOf.SHORT), rem));
+            }
+
+            final Set<Integer> missing = new LinkedHashSet<>(numMiss);
+
+            for (int n = 0; n < numMiss; n++) {
+                // 2 bytes for each missing source symbol ESI
+                final int esi = UnsignedTypes.readUnsignedShort(buffer);
+
+                if (esi < minESI || esi > maxSrcESI) {
+                    return Parsed.invalid("missing source symbol identifier is out of bounds");
+                }
+                if (!missing.add(esi)) {
+                    return Parsed.invalid("found repeated missing source symbol identifier");
+                }
+            }
+
+            /*
+             * ================= number of available repair symbols =================
+             * range: [0, maxRepSymbs]
+             */
+            if (buffer.remaining() < SizeOf.SHORT) {
+                return Parsed.invalid("number of available repair symbols is missing");
+            }
+            // 2 bytes for the number of available repair symbols
+            final int numAvail = UnsignedTypes.readUnsignedShort(buffer);
+
+            if (numAvail < 0 || numAvail > maxRepSymbs) {
+                return Parsed.invalid("number of available repair symbols is out of bounds");
+            }
+
+            /*
+             * ================= available repair symbols =================
+             * range of each ESI: [minRepESI, maxESI]
+             */
+            rem = buffer.remaining();
+            if (rem < (numAvail * SizeOf.SHORT)) { // product never overflows
+                return Parsed.invalid(String.format(
+                    "available repair symbols data is incomplete, required %d bytes but only %d bytes are available",
+                    (numAvail * SizeOf.SHORT), rem));
+            }
+
+            final Set<Integer> available = new LinkedHashSet<>(numAvail);
+
+            for (int n = 0; n < numAvail; n++) {
+                // 2 bytes for each available repair symbol ESI
+                final int esi = UnsignedTypes.readUnsignedShort(buffer);
+
+                if (esi < minRepESI || esi > maxESI) {
+                    return Parsed.invalid("available repair symbol identifier is out of bounds");
+                }
+                if (!available.add(esi)) {
+                    return Parsed.invalid("found repeated available repair symbol identifier");
+                }
+            }
+
+            /*
+             * ================= all values are correct =================
+             */
+            return newRemoteInfo(sbn, state, missing, available);
+        }
+        catch (InternalParsingException e) {
+            return Parsed.invalid(e.getMessage());
+        }
+    }
+
+    private static Parsed<SBDInfo> newRemoteInfo(
+        int sbn,
+        SourceBlockState state,
+        Set<Integer> missingSourceSymbols,
+        Set<Integer> availableRepairSymbols)
+    {
+
+        return Parsed.of(
+            new SBDInfo(
+                sbn,
+                state,
+                Collections.unmodifiableSet(missingSourceSymbols),
+                Collections.unmodifiableSet(availableRepairSymbols)));
+    }
+
+
     private final int sbn;
     private final SourceBlockState state;
     private final Set<Integer> missingSourceSymbols;
     private final Set<Integer> availableRepairSymbols;
 
 
-    SBDInfo(
+    /*
+     * Requires unmodifiable sets!
+     */
+    private SBDInfo(
         int sbn,
         SourceBlockState state,
         Set<Integer> missingSourceSymbols,
@@ -76,8 +313,8 @@ public final class SBDInfo {
 
         this.sbn = sbn;
         this.state = Objects.requireNonNull(state);
-        this.missingSourceSymbols = new LinkedHashSet<>(missingSourceSymbols);
-        this.availableRepairSymbols = new LinkedHashSet<>(availableRepairSymbols);
+        this.missingSourceSymbols = Objects.requireNonNull(missingSourceSymbols);
+        this.availableRepairSymbols = Objects.requireNonNull(availableRepairSymbols);
     }
 
     /**
@@ -112,8 +349,8 @@ public final class SBDInfo {
     }
 
     /**
-     * Returns a set of integers containing the encoding symbol identifiers of the missing source symbols from the
-     * source block being decoded.
+     * Returns an unmodifiable set of integers containing the encoding symbol identifiers of the missing source symbols
+     * from the source block being decoded.
      * 
      * @return a set of encoding symbol identifiers of missing source symbols
      */
@@ -123,14 +360,34 @@ public final class SBDInfo {
     }
 
     /**
-     * Returns a set of integers containing the encoding symbol identifiers of the available repair symbols for
-     * decoding.
+     * Returns an unmodifiable set of integers containing the encoding symbol identifiers of the available repair
+     * symbols for decoding.
      * 
      * @return a set of encoding symbol identifiers of available repair symbols
      */
     public Set<Integer> availableRepairSymbols() {
 
         return availableRepairSymbols;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        return obj instanceof SBDInfo && areEqual(this, (SBDInfo)obj);
+    }
+
+    private static boolean areEqual(SBDInfo info1, SBDInfo info2) {
+
+        return info1.sbn == info2.sbn &&
+               info1.state.equals(info2.state) &&
+               info1.missingSourceSymbols.equals(info2.missingSourceSymbols) &&
+               info1.availableRepairSymbols.equals(info2.availableRepairSymbols);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return 0;
     }
 
     /**
@@ -287,17 +544,9 @@ public final class SBDInfo {
 
         Objects.requireNonNull(buffer);
 
-        // 1 byte for the SBN
-        UnsignedTypes.writeUnsignedByte(sbn, buffer);
-
-        // 1 byte for the source block state
-        UnsignedTypes.writeUnsignedByte(stateToByte(state), buffer);
-
-        // 2 bytes for the number of missing source symbols, and 2 bytes for each symbol ESI
-        UnsignedTypes.writeUnsignedShort(missingSourceSymbols.size(), buffer);
-        for (int esi : missingSourceSymbols) {
-            UnsignedTypes.writeUnsignedShort(esi, buffer);
-        }
+        writeSBN(sbn, buffer);
+        writeState(state, buffer);
+        writeMissingSourceSymbols(missingSourceSymbols, buffer);
 
         // 3 bytes for the number of available repair symbols, and 3 bytes for each symbol ESI
         UnsignedTypes.writeUnsignedBytes(availableRepairSymbols.size(), buffer, SizeOf.UNSIGNED_3_BYTES);
@@ -330,17 +579,9 @@ public final class SBDInfo {
      */
     public void writeTo(DataOutput out) throws IOException {
 
-        // 1 byte for the SBN
-        out.writeByte((byte)sbn);
-
-        // 1 byte for the source block state
-        out.writeByte(stateToByte(state));
-
-        // 2 bytes for the number of missing source symbols, and 2 bytes for each symbol ESI
-        out.writeShort((short)missingSourceSymbols.size());
-        for (int esi : missingSourceSymbols) {
-            out.writeShort((short)esi);
-        }
+        writeSBN(sbn, out);
+        writeState(state, out);
+        writeMissingSourceSymbols(missingSourceSymbols, out);
 
         // 3 bytes for the number of available repair symbols, and 3 bytes for each symbol ESI
         out.write(UnsignedTypes.getUnsignedBytesAsArray(availableRepairSymbols.size(), SizeOf.UNSIGNED_3_BYTES));
@@ -385,6 +626,10 @@ public final class SBDInfo {
     }
 
 
+    /*
+     * -------------------------- state/byte methods --------------------------
+     */
+
     private static final Map<SourceBlockState, Byte> STATE_BYTE_VALUES;
     private static final Map<Byte, SourceBlockState> BYTE_STATE_VALUES;
     static {
@@ -416,5 +661,150 @@ public final class SBDInfo {
     private static SourceBlockState byteToState(byte b) {
 
         return BYTE_STATE_VALUES.get(b);
+    }
+
+    /*
+     * -------------------------- Write/Read methods --------------------------
+     */
+
+    /*
+     * ========================== SBN ==========================
+     * 1 byte
+     * range: [0, 255]
+     */
+
+    private static void writeSBN(int sbn, ByteBuffer buf) {
+
+        UnsignedTypes.writeUnsignedByte(sbn, buf);
+    }
+
+    private static void writeSBN(int sbn, DataOutput out) throws IOException {
+
+        out.writeByte((byte)sbn);
+    }
+
+    private static int readSBN(ByteBuffer buf) throws InternalParsingException {
+
+        if (buf.remaining() < SizeOf.BYTE) {
+            throw new InternalParsingException("source block number is missing");
+        }
+
+        final int sbn = UnsignedTypes.readUnsignedByte(buf);
+        return checkSBN(sbn);
+    }
+
+    private static int readSBN(DataInput in) throws IOException, InternalParsingException {
+
+        final int sbn = UnsignedTypes.getUnsignedByte(in.readByte());
+        return checkSBN(sbn);
+    }
+
+    private static int checkSBN(int sbn) throws InternalParsingException {
+
+        if (ParameterChecker.isSourceBlockNumberOutOfBounds(sbn)) {
+            throw new InternalParsingException("source block number is out of bounds");
+        }
+        return sbn;
+    }
+
+    /*
+     * ========================== state ==========================
+     * 1 byte
+     * values: {1, 2, 3}
+     */
+
+    private static void writeState(SourceBlockState state, ByteBuffer buf) {
+
+        UnsignedTypes.writeUnsignedByte(stateToByte(state), buf);
+    }
+
+    private static void writeState(SourceBlockState state, DataOutput out) throws IOException {
+
+        out.writeByte(stateToByte(state));
+    }
+
+    private static SourceBlockState readState(ByteBuffer buf) throws InternalParsingException {
+
+        if (buf.remaining() < SizeOf.BYTE) {
+            throw new InternalParsingException("source block state is missing");
+        }
+
+        final SourceBlockState state = byteToState(buf.get());
+        return checkState(state);
+    }
+
+    private static SourceBlockState readState(DataInput in) throws IOException, InternalParsingException {
+
+        final SourceBlockState state = byteToState(in.readByte());
+        return checkState(state);
+    }
+
+    private static SourceBlockState checkState(SourceBlockState state) throws InternalParsingException {
+
+        if (state == null) {
+            throw new InternalParsingException("invalid source block state");
+        }
+        return state;
+    }
+
+
+    // ========================== useful ESI bounds ==========================
+    private static final int minESI = ParameterChecker.minEncodingSymbolID();
+
+    private static final int maxSrcSymbs = ParameterChecker.maxNumSourceSymbolsPerBlock();
+    private static final int maxSrcESI = maxSrcSymbs - 1 - minESI;
+
+    private static final int minSrcSymbs = ParameterChecker.minNumSourceSymbolsPerBlock();
+    private static final int minRepESI = minESI + minSrcSymbs;
+    private static final int maxRepSymbs = ParameterChecker.numRepairSymbolsPerBlock(minSrcSymbs);
+
+    private static final int maxESI = ParameterChecker.maxEncodingSymbolID();
+
+
+    /*
+     * ========================== missing source symbols ==========================
+     * 2 bytes for the number of symbols, and 2 bytes for each symbol ESI
+     * range of number: [0, maxSrcSymbs]
+     * range of each ESI: [minESI, maxSrcESI]
+     */
+
+    private static void writeMissingSourceSymbols(Set<Integer> missing, ByteBuffer buf) {
+
+        UnsignedTypes.writeUnsignedShort(missing.size(), buf);
+        for (int esi : missing) {
+            UnsignedTypes.writeUnsignedShort(esi, buf);
+        }
+    }
+
+    private static void writeMissingSourceSymbols(Set<Integer> missing, DataOutput out) throws IOException {
+
+        out.writeShort((short)missing.size());
+        for (int esi : missing) {
+            out.writeShort((short)esi);
+        }
+    }
+
+    private static Set<Integer> readMissingSourceSymbols(ByteBuffer buf) throws InternalParsingException {
+
+    }
+
+    private static Set<Integer> readMissingSourceSymbols(DataInput in) throws IOException, InternalParsingException {
+
+    }
+
+
+    /**
+     * Internal exception used to simplify parsing code (always meant to be caught).
+     */
+    private static final class InternalParsingException extends Exception {
+
+        private static final long serialVersionUID = 1L;
+
+
+        InternalParsingException(String message) {
+
+            // non-writable stack for lower exception creation cost
+            super(message, null, false, false);
+        }
     }
 }

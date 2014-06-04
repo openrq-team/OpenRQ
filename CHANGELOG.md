@@ -3,6 +3,12 @@
 Turned "net.fec.openrq.decoder.SourceBlockDecoder" thread safe, and added
 method to retrieve the latest source block state (decoded/decoding failure).
 
+Added class for storing information about a source block decoder.
+
+Added more methods for checking bounds on the number of source symbols in a
+block. Added a method for obtaining the number of repair symbols in a block
+given the number of source symbols in the block.
+
 Added classes:
 * net.fec.openrq.decoder.SBDInfo
 * net.fec.openrq.decoder.SerializableSBDInfo
@@ -11,6 +17,10 @@ Changed public method signatures:
 (++/-- mean new/old methods, xx means deleted method)
 * net.fec.openrq.decoder.SourceBlockDecoder
  * ++ public SourceBlockState latestState()
+* net.fec.openrq.parameters.ParameterChecker
+ * ++ public static int minNumSourceSymbolsPerBlock()
+ * ++ public static boolean isNumSourceSymbolsPerBlockOutOfBounds(int)
+ * ++ public static int numRepairSymbolsPerBlock(int)
 
 ## 3.1
 

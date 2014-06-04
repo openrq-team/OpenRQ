@@ -37,6 +37,8 @@ public class SerializableSBDInfo implements Serializable {
      * 
      * @param sbdInfo
      *            The information encoded as an array of bytes
+     * @exception NullPointerException
+     *                If {@code sbdInfo} is {@code null}
      */
     public SerializableSBDInfo(byte[] sbdInfo) {
 
