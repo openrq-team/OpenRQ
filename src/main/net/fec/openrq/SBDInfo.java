@@ -499,6 +499,7 @@ public final class SBDInfo {
      * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
      * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
      * </ul>
+     * <p>
      * The array will contain the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
      * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
@@ -523,6 +524,7 @@ public final class SBDInfo {
      * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
      * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
      * </ul>
+     * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
      * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
@@ -551,6 +553,7 @@ public final class SBDInfo {
      * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
      * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
      * </ul>
+     * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
      * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
@@ -585,6 +588,7 @@ public final class SBDInfo {
      * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
      * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
      * </ul>
+     * <p>
      * The buffer will contain the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
      * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
@@ -610,6 +614,7 @@ public final class SBDInfo {
      * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
      * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
      * </ul>
+     * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
      * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
@@ -643,6 +648,12 @@ public final class SBDInfo {
     /**
      * Writes this information encoded in a compact format directly into the provided {@code DataOutput} object.
      * <p>
+     * Let:
+     * <ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
+     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
+     * </ul>
+     * <p>
      * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
      * {@code NUM_MISSING_BYTES}, followed by the list of the encoding symbol identifiers (ESIs) of the
@@ -675,6 +686,12 @@ public final class SBDInfo {
     /**
      * Writes this information encoded in a compact format directly into the provided {@code WritableByteChannel}
      * object.
+     * <p>
+     * Let:
+     * <ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
+     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
+     * </ul>
      * <p>
      * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
