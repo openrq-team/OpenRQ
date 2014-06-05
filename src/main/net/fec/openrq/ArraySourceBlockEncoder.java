@@ -96,10 +96,13 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         return dataEncoder.fecParameters();
     }
 
-    // TODO maybe make this thread safe?
     // use only this method for access to the intermediate symbols
     private byte[][] getIntermediateSymbols() {
 
+        // Note: if multiple threads call this method concurrently, then
+        // no harm is done, only the fact that some threads may perform
+        // useless work
+        
         byte[][] is = intermediateSymbols;
         if (is == null) {
             is = generateIntermediateSymbols();

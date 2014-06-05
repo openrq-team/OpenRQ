@@ -54,8 +54,8 @@
  * <dd>The moment when the available encoding symbols in the decoder are not sufficient for a successful decoding of the
  * source block.</dd>
  * </dl>
- * <h3>Initializing</h3> Encoders and decoders are initialized with the help of <em>FEC parameters</em>. These include the
- * length of the data and information on how to partition the source data into source blocks and source symbols.
+ * <h3>Initializing</h3> Encoders and decoders are initialized with the help of <em>FEC parameters</em>. These include
+ * the length of the data and information on how to partition the source data into source blocks and source symbols.
  * Encoders are initialized by passing source data and FEC parameters. Decoders are initialized by passing FEC
  * parameters.
  * <p>
@@ -99,8 +99,8 @@
  * may transmit new ones.
  * <li><b>Waiting for more encoding symbols</b>. This strategy works well if there is no back channel (or if it would be
  * expensive to have one) and the sender is continually transmitting encoding packets in a cyclic fashion.
- * <li><b>Working with available data</b>. Sometimes applications, such as video streaming ones, can simply tolerate data
- * losses (video frames for example). In these situations, the receiver may use the available data composed of the
+ * <li><b>Working with available data</b>. Sometimes applications, such as video streaming ones, can simply tolerate
+ * data losses (video frames for example). In these situations, the receiver may use the available data composed of the
  * decoded source symbols so far.
  * 
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;

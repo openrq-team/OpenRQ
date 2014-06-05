@@ -26,7 +26,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.BufferOverflowException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.nio.channels.ReadableByteChannel;
@@ -257,7 +256,7 @@ public final class FECParameters {
      * </ul>
      * 
      * @param array
-     *            An array from which a {@code FECParameters} instance is read
+     *            An array of bytes containing FEC parameters
      * @return a container object containing FEC parameters or a parsing failure reason string
      * @exception NullPointerException
      *                If the provided array is {@code null}
@@ -282,7 +281,7 @@ public final class FECParameters {
      * </ul>
      * 
      * @param array
-     *            An array containing FEC parameters
+     *            An array of bytes containing FEC parameters
      * @param offset
      *            The starting index in the array (must be non-negative and less than {@code array.length})
      * @return a container object containing FEC parameters or a parsing failure reason string
@@ -313,10 +312,8 @@ public final class FECParameters {
      * </ul>
      * 
      * @param buffer
-     *            A buffer from which a {@code FECParameters} instance is read
+     *            A buffer containing FEC parameters
      * @return a container object containing FEC parameters or a parsing failure reason string
-     * @exception BufferUnderflowException
-     *                If the provided buffer has less than 12 bytes remaining
      * @exception NullPointerException
      *                If the provided buffer is {@code null}
      */
@@ -437,7 +434,9 @@ public final class FECParameters {
     }
 
     /**
-     * Returns a serializable object with these FEC parameters.
+     * Returns a serializable object with these FEC parameters. The serializable object will contain the <a
+     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
+     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * 
      * @return a serializable object with these FEC parameters
      */
@@ -527,7 +526,7 @@ public final class FECParameters {
      * <p>
      * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least 12 bytes
      * {@linkplain ByteBuffer#remaining() remaining}. If this method returns normally, the position of the provided
-     * buffer will have been advanced by 12 bytes.
+     * buffer will have been advanced by the same amount.
      * 
      * @param buffer
      *            A buffer on which the FEC parameters are written
@@ -588,9 +587,7 @@ public final class FECParameters {
      */
     public void writeTo(WritableByteChannel ch) throws IOException {
 
-        final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.LONG + SizeOf.INT);
-        writeTo(buffer);
-        buffer.flip();
+        final ByteBuffer buffer = asBuffer();
         while (buffer.hasRemaining()) {
             ch.write(buffer);
         }
@@ -703,7 +700,7 @@ public final class FECParameters {
      * <li>and {@code this}.{@link #symbolSize()} == {@code obj.symbolSize()}
      * <li>and {@code this}.{@link #numberOfSourceBlocks()} == {@code obj.numberOfSourceBlocks()}
      * <li>and {@code this}.{@link #interleaverLength()} == {@code obj.interleaverLength()}
-     * <li>and {@code this}.{@link #symbolAlignment()} == {@code obj. symbolAlignment()}
+     * <li>and {@code this}.{@link #symbolAlignment()} == {@code obj.symbolAlignment()}
      * </ul>
      */
     @Override

@@ -145,9 +145,9 @@ public interface SourceBlockEncoder {
     public DataEncoder dataEncoder();
 
     /**
-     * Returns the source block number for the source block being encoded.
+     * Returns the identifier of the source block being encoded.
      * 
-     * @return the source block number for the source block being encoded
+     * @return the identifier of the source block being encoded
      */
     public int sourceBlockNumber();
 

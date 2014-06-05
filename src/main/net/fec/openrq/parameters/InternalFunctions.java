@@ -58,10 +58,10 @@ final class InternalFunctions {
     }
 
     // requires valid arguments
-    static long minWS(int K, int T, int Al, int n) {
+    static long minWS(int Kprime, int T, int Al, int n) {
 
         // must cast to long because product may exceed Integer.MAX_VALUE
-        return (long)SystematicIndices.ceil(K) * subSymbolSize(T, Al, n);
+        return (long)SystematicIndices.ceil(Kprime) * subSymbolSize(T, Al, n);
     }
 
     // since interleaving is disabled, this should always return T

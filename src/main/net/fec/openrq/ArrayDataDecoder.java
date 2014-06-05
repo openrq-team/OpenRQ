@@ -137,6 +137,12 @@ public final class ArrayDataDecoder implements DataDecoder {
         }
     }
 
+    @Override
+    public Iterable<? extends SourceBlockDecoder> sourceBlockIterable() {
+
+        return srcBlockDecoders;
+    }
+
     /**
      * Returns an array of bytes containing the source data. Use method {@link #isDataDecoded()} to check if the data is
      * complete.

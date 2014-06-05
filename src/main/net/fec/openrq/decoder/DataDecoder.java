@@ -104,6 +104,14 @@ public interface DataDecoder {
     public SourceBlockDecoder sourceBlock(int sbn);
 
     /**
+     * Returns a new iterable over all source block decoders. The resulting iterable can be iterated using a "foreach"
+     * loop.
+     * 
+     * @return a new iterable over all source block decoders
+     */
+    public Iterable<? extends SourceBlockDecoder> sourceBlockIterable();
+
+    /**
      * Parses an encoding packet from the given source block number, encoding symbol identifier of the first symbol, and
      * symbols data.
      * <p>
@@ -233,7 +241,7 @@ public interface DataDecoder {
      * </ul>
      * 
      * @param array
-     *            An array containing an encoding packet
+     *            An array of bytes containing an encoding packet
      * @param copySymbols
      *            If {@code true}, a copy of the symbols data will be performed, otherwise the packet will keep a
      *            reference to the array
@@ -258,7 +266,7 @@ public interface DataDecoder {
      * </ul>
      * 
      * @param array
-     *            An array containing an encoding packet
+     *            An array of bytes containing an encoding packet
      * @param off
      *            The starting index in the array (must be non-negative)
      * @param len
