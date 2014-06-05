@@ -164,6 +164,16 @@ public interface SourceBlockDecoder {
     public Set<Integer> availableRepairSymbols();
 
     /**
+     * Returns current information from this decoder inside an {@code SBDInfo} object. The information will consist
+     * of the {@linkplain #sourceBlockNumber() source block number}, the {@linkplain #latestState() latest state}, the
+     * {@linkplain #missingSourceSymbols() set of identifiers of missing source symbols}, and the
+     * {@linkplain #availableRepairSymbols() set of identifiers of available repair symbols}.
+     * 
+     * @return current information from this decoder inside an {@code SBDInfo} object
+     */
+    public SBDInfo information();
+
+    /**
      * Receives an encoded packet containing encoding symbols for the source block being decoded. If enough symbols
      * (source and repair) are available, then a decoding operation takes place.
      * <p>

@@ -72,7 +72,7 @@ public final class SBDInfo {
      * @param availableRepairSymbols
      * @return a new SBDInfo
      */
-    static SBDInfo newInfo(
+    static SBDInfo newInformation(
         int sbn,
         SourceBlockState state,
         Set<Integer> missingSourceSymbols,
@@ -187,96 +187,134 @@ public final class SBDInfo {
      */
     public static Parsed<SBDInfo> parse(ByteBuffer buffer) {
 
+        Objects.requireNonNull(buffer);
+
         try {
             final int sbn = readSBN(buffer);
+
             final SourceBlockState state = readState(buffer);
 
-            /*
-             * ================= number of missing source symbols =================
-             * range: [0, maxSrcSymbs]
-             */
-            if (buffer.remaining() < SizeOf.SHORT) {
-                return Parsed.invalid("number of missing source symbols is missing");
-            }
-            // 2 bytes for the number of missing source symbols
-            final int numMiss = UnsignedTypes.readUnsignedShort(buffer);
+            final int numMiss = readNumMissingSourceSymbols(buffer);
+            final Set<Integer> missing = readMissingSourceSymbols(buffer, numMiss);
 
-            if (numMiss < 0 || numMiss > maxSrcSymbs) {
-                return Parsed.invalid("number of missing source symbols is out of bounds");
-            }
+            final int numAvail = readNumAvailableRepairSymbols(buffer);
+            final Set<Integer> available = readAvailableRepairSymbols(buffer, numAvail);
 
-            /*
-             * ================= missing source symbols =================
-             * range of each ESI: [minESI, maxSrcESI]
-             */
-            int rem = buffer.remaining();
-            if (rem < (numMiss * SizeOf.SHORT)) { // product never overflows
-                return Parsed.invalid(String.format(
-                    "missing source symbols data is incomplete, required %d bytes but only %d bytes are available",
-                    (numMiss * SizeOf.SHORT), rem));
-            }
-
-            final Set<Integer> missing = new LinkedHashSet<>(numMiss);
-
-            for (int n = 0; n < numMiss; n++) {
-                // 2 bytes for each missing source symbol ESI
-                final int esi = UnsignedTypes.readUnsignedShort(buffer);
-
-                if (esi < minESI || esi > maxSrcESI) {
-                    return Parsed.invalid("missing source symbol identifier is out of bounds");
-                }
-                if (!missing.add(esi)) {
-                    return Parsed.invalid("found repeated missing source symbol identifier");
-                }
-            }
-
-            /*
-             * ================= number of available repair symbols =================
-             * range: [0, maxRepSymbs]
-             */
-            if (buffer.remaining() < SizeOf.SHORT) {
-                return Parsed.invalid("number of available repair symbols is missing");
-            }
-            // 2 bytes for the number of available repair symbols
-            final int numAvail = UnsignedTypes.readUnsignedShort(buffer);
-
-            if (numAvail < 0 || numAvail > maxRepSymbs) {
-                return Parsed.invalid("number of available repair symbols is out of bounds");
-            }
-
-            /*
-             * ================= available repair symbols =================
-             * range of each ESI: [minRepESI, maxESI]
-             */
-            rem = buffer.remaining();
-            if (rem < (numAvail * SizeOf.SHORT)) { // product never overflows
-                return Parsed.invalid(String.format(
-                    "available repair symbols data is incomplete, required %d bytes but only %d bytes are available",
-                    (numAvail * SizeOf.SHORT), rem));
-            }
-
-            final Set<Integer> available = new LinkedHashSet<>(numAvail);
-
-            for (int n = 0; n < numAvail; n++) {
-                // 2 bytes for each available repair symbol ESI
-                final int esi = UnsignedTypes.readUnsignedShort(buffer);
-
-                if (esi < minRepESI || esi > maxESI) {
-                    return Parsed.invalid("available repair symbol identifier is out of bounds");
-                }
-                if (!available.add(esi)) {
-                    return Parsed.invalid("found repeated available repair symbol identifier");
-                }
-            }
-
-            /*
-             * ================= all values are correct =================
-             */
             return newRemoteInfo(sbn, state, missing, available);
         }
         catch (InternalParsingException e) {
             return Parsed.invalid(e.getMessage());
         }
+    }
+
+    /**
+     * Reads and parses source block decoder information from a {@code DataInput} object. The read information bytes
+     * must follow the format specified by {@link #writeTo(java.io.DataOutput)}.
+     * <p>
+     * Examples of {@code DataInput} objects are {@link java.io.DataInputStream DataInputStream} and
+     * {@link java.io.ObjectInputStream ObjectInputStream}.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
+     * </ul>
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is read from the input, or a
+     * parsing failure is detected, or an {@code IOException} is throw.
+     * 
+     * @param in
+     *            A {@code DataInput} object from which source block decoder information is read
+     * @return a container object containing source block decoder information or a parsing failure reason string
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code DataInput} object
+     * @exception NullPointerException
+     *                If {@code in} is {@code null}
+     */
+    public static Parsed<SBDInfo> parse(DataInput in) throws IOException {
+
+        Objects.requireNonNull(in);
+
+        try {
+            final int sbn = readSBN(in);
+
+            final SourceBlockState state = readState(in);
+
+            final int numMiss = readNumMissingSourceSymbols(in);
+            final Set<Integer> missing = readMissingSourceSymbols(in, numMiss);
+
+            final int numAvail = readNumAvailableRepairSymbols(in);
+            final Set<Integer> available = readAvailableRepairSymbols(in, numAvail);
+
+            return newRemoteInfo(sbn, state, missing, available);
+        }
+        catch (InternalParsingException e) {
+            return Parsed.invalid(e.getMessage());
+        }
+    }
+
+    /**
+     * Reads and parses source block decoder information from a {@code ReadableByteChannel} object. The read information
+     * bytes must follow the format specified by {@link #writeTo(java.nio.channels.WritableByteChannel)}.
+     * <p>
+     * Examples of {@code ReadableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
+     * {@link java.nio.channels.FileChannel FileChannel}.
+     * <p>
+     * The returned container object indicates if the parsing succeeded or failed:
+     * <ul>
+     * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
+     * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
+     * </ul>
+     * <p>
+     * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is read from the channel, or a
+     * parsing failure is detected, or an {@code IOException} is throw.
+     * 
+     * @param ch
+     *            A {@code ReadableByteChannel} object from which source block decoder information is read
+     * @return a container object containing source block decoder information or a parsing failure reason string
+     * @throws IOException
+     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     * @exception NullPointerException
+     *                If {@code ch} is {@code null}
+     */
+    public static Parsed<SBDInfo> parse(ReadableByteChannel ch) throws IOException {
+
+        try {
+            final ByteBuffer sbnAndStateBuf = ByteBuffer.allocate(SizeOf.BYTE + SizeOf.BYTE);
+            readFromChannel(ch, sbnAndStateBuf);
+            final int sbn = readSBN(sbnAndStateBuf);
+            final SourceBlockState state = readState(sbnAndStateBuf);
+
+            final ByteBuffer numMissBuf = ByteBuffer.allocate(SizeOf.SHORT);
+            readFromChannel(ch, numMissBuf);
+            final int numMiss = readNumMissingSourceSymbols(numMissBuf);
+            final ByteBuffer missingBuf = ByteBuffer.allocate(numMiss * SizeOf.SHORT);
+            readFromChannel(ch, missingBuf);
+            final Set<Integer> missing = readMissingSourceSymbols(missingBuf, numMiss);
+
+            final ByteBuffer numAvailBuf = ByteBuffer.allocate(SizeOf.UNSIGNED_3_BYTES);
+            readFromChannel(ch, numAvailBuf);
+            final int numAvail = readNumAvailableRepairSymbols(numAvailBuf);
+            final ByteBuffer availableBuf = ByteBuffer.allocate(numAvail * SizeOf.UNSIGNED_3_BYTES);
+            readFromChannel(ch, availableBuf);
+            final Set<Integer> available = readAvailableRepairSymbols(availableBuf, numAvail);
+
+            return newRemoteInfo(sbn, state, missing, available);
+        }
+        catch (InternalParsingException e) {
+            return Parsed.invalid(e.getMessage());
+        }
+    }
+
+    private static void readFromChannel(ReadableByteChannel ch, ByteBuffer buf) throws IOException {
+
+        final int initPos = buf.position();
+        while (buf.hasRemaining()) {
+            ch.read(buf);
+        }
+        buf.position(initPos);
     }
 
     private static Parsed<SBDInfo> newRemoteInfo(
@@ -547,12 +585,7 @@ public final class SBDInfo {
         writeSBN(sbn, buffer);
         writeState(state, buffer);
         writeMissingSourceSymbols(missingSourceSymbols, buffer);
-
-        // 3 bytes for the number of available repair symbols, and 3 bytes for each symbol ESI
-        UnsignedTypes.writeUnsignedBytes(availableRepairSymbols.size(), buffer, SizeOf.UNSIGNED_3_BYTES);
-        for (int esi : availableRepairSymbols) {
-            UnsignedTypes.writeUnsignedBytes(esi, buffer, SizeOf.UNSIGNED_3_BYTES);
-        }
+        writeAvailableRepairSymbols(availableRepairSymbols, buffer);
     }
 
     /**
@@ -579,15 +612,12 @@ public final class SBDInfo {
      */
     public void writeTo(DataOutput out) throws IOException {
 
+        Objects.requireNonNull(out);
+
         writeSBN(sbn, out);
         writeState(state, out);
         writeMissingSourceSymbols(missingSourceSymbols, out);
-
-        // 3 bytes for the number of available repair symbols, and 3 bytes for each symbol ESI
-        out.write(UnsignedTypes.getUnsignedBytesAsArray(availableRepairSymbols.size(), SizeOf.UNSIGNED_3_BYTES));
-        for (int esi : availableRepairSymbols) {
-            out.write(UnsignedTypes.getUnsignedBytesAsArray(esi, SizeOf.UNSIGNED_3_BYTES));
-        }
+        writeAvailableRepairSymbols(availableRepairSymbols, out);
     }
 
     /**
@@ -784,12 +814,165 @@ public final class SBDInfo {
         }
     }
 
-    private static Set<Integer> readMissingSourceSymbols(ByteBuffer buf) throws InternalParsingException {
+    private static int readNumMissingSourceSymbols(ByteBuffer buf) throws InternalParsingException {
 
+        if (buf.remaining() < SizeOf.SHORT) {
+            throw new InternalParsingException("number of missing source symbols is missing");
+        }
+
+        return checkNumMissing(UnsignedTypes.readUnsignedShort(buf));
     }
 
-    private static Set<Integer> readMissingSourceSymbols(DataInput in) throws IOException, InternalParsingException {
+    private static int readNumMissingSourceSymbols(DataInput in) throws IOException, InternalParsingException {
 
+        return checkNumMissing(UnsignedTypes.getUnsignedShort(in.readShort()));
+    }
+
+    private static int checkNumMissing(int numMiss) throws InternalParsingException {
+
+        if (numMiss < 0 || numMiss > maxSrcSymbs) {
+            throw new InternalParsingException("number of missing source symbols is out of bounds");
+        }
+        return numMiss;
+    }
+
+    // requires valid numMiss
+    private static Set<Integer> readMissingSourceSymbols(ByteBuffer buf, int numMiss) throws InternalParsingException {
+
+        final int rem = buf.remaining();
+        if (rem < (numMiss * SizeOf.SHORT)) { // product never overflows
+            throw new InternalParsingException(String.format(
+                "missing source symbols data is incomplete, required %d bytes but only %d bytes are available",
+                (numMiss * SizeOf.SHORT), rem));
+        }
+
+        final Set<Integer> missing = new LinkedHashSet<>(numMiss);
+        for (int n = 0; n < numMiss; n++) {
+            final int esi = UnsignedTypes.readUnsignedShort(buf);
+            addMissingSourceSymbolESI(esi, missing);
+        }
+
+        return missing;
+    }
+
+    // requires valid numMiss
+    private static Set<Integer> readMissingSourceSymbols(DataInput in, int numMiss)
+        throws IOException, InternalParsingException
+    {
+
+        final Set<Integer> missing = new LinkedHashSet<>(numMiss);
+        for (int n = 0; n < numMiss; n++) {
+            final int esi = UnsignedTypes.getUnsignedShort(in.readInt());
+            addMissingSourceSymbolESI(esi, missing);
+        }
+
+        return missing;
+    }
+
+    private static void addMissingSourceSymbolESI(int esi, Set<Integer> missing) throws InternalParsingException {
+
+        if (esi < minESI || esi > maxSrcESI) {
+            throw new InternalParsingException("missing source symbol identifier is out of bounds");
+        }
+        if (!missing.add(esi)) {
+            throw new InternalParsingException("found repeated missing source symbol identifier");
+        }
+    }
+
+    /*
+     * ========================== available repair symbols ==========================
+     * 3 bytes for the number of symbols, and 3 bytes for each symbol ESI
+     * range of number: [0, maxRepSymbs]
+     * range of each ESI: [minRepESI, maxESI]
+     */
+
+    private static void writeAvailableRepairSymbols(Set<Integer> available, ByteBuffer buf) {
+
+        UnsignedTypes.writeUnsignedBytes(available.size(), buf, SizeOf.UNSIGNED_3_BYTES);
+        for (int esi : available) {
+            UnsignedTypes.writeUnsignedBytes(esi, buf, SizeOf.UNSIGNED_3_BYTES);
+        }
+    }
+
+    private static void writeAvailableRepairSymbols(Set<Integer> available, DataOutput out) throws IOException {
+
+        out.write(UnsignedTypes.getUnsignedBytesAsArray(available.size(), SizeOf.UNSIGNED_3_BYTES));
+        for (int esi : available) {
+            out.write(UnsignedTypes.getUnsignedBytesAsArray(esi, SizeOf.UNSIGNED_3_BYTES));
+        }
+    }
+
+    private static int readNumAvailableRepairSymbols(ByteBuffer buf) throws InternalParsingException {
+
+        if (buf.remaining() < SizeOf.UNSIGNED_3_BYTES) {
+            throw new InternalParsingException("number of available repair symbols is missing");
+        }
+
+        return checkNumAvailable(UnsignedTypes.readUnsignedBytes(buf, SizeOf.UNSIGNED_3_BYTES));
+    }
+
+    private static int readNumAvailableRepairSymbols(DataInput in) throws IOException, InternalParsingException {
+
+        final byte[] _3byteArray = new byte[SizeOf.UNSIGNED_3_BYTES];
+        in.readFully(_3byteArray);
+
+        return checkNumAvailable(UnsignedTypes.getUnsignedBytes(_3byteArray, SizeOf.UNSIGNED_3_BYTES));
+    }
+
+    private static int checkNumAvailable(int numAvail) throws InternalParsingException {
+
+        if (numAvail < 0 || numAvail > maxRepSymbs) {
+            throw new InternalParsingException("number of available repair symbols is out of bounds");
+        }
+        return numAvail;
+    }
+
+    // requires valid numAvail
+    private static Set<Integer> readAvailableRepairSymbols(ByteBuffer buf, int numAvail)
+        throws InternalParsingException
+    {
+
+        final int rem = buf.remaining();
+        if (rem < (numAvail * SizeOf.UNSIGNED_3_BYTES)) { // product never overflows
+            throw new InternalParsingException(String.format(
+                "available repair symbols data is incomplete, required %d bytes but only %d bytes are available",
+                (numAvail * SizeOf.UNSIGNED_3_BYTES), rem));
+        }
+
+        final Set<Integer> available = new LinkedHashSet<>(numAvail);
+        for (int n = 0; n < numAvail; n++) {
+            final int esi = UnsignedTypes.readUnsignedBytes(buf, SizeOf.UNSIGNED_3_BYTES);
+            addAvailableRepairSymbolESI(esi, available);
+        }
+
+        return available;
+    }
+
+    // requires valid numAvail
+    private static Set<Integer> readAvailableRepairSymbols(DataInput in, int numAvail)
+        throws IOException, InternalParsingException
+    {
+
+        final byte[] _3byteArray = new byte[SizeOf.UNSIGNED_3_BYTES];
+
+        final Set<Integer> available = new LinkedHashSet<>(numAvail);
+        for (int n = 0; n < numAvail; n++) {
+            in.readFully(_3byteArray);
+            final int esi = UnsignedTypes.getUnsignedBytes(_3byteArray, SizeOf.UNSIGNED_3_BYTES);
+            addAvailableRepairSymbolESI(esi, available);
+        }
+
+        return available;
+    }
+
+    private static void addAvailableRepairSymbolESI(int esi, Set<Integer> available) throws InternalParsingException {
+
+        if (esi < minRepESI || esi > maxESI) {
+            throw new InternalParsingException("available repair symbol identifier is out of bounds");
+        }
+        if (!available.add(esi)) {
+            throw new InternalParsingException("found repeated available repair symbol identifier");
+        }
     }
 
 

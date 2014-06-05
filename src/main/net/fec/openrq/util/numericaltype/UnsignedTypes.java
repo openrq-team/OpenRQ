@@ -3,6 +3,7 @@ package net.fec.openrq.util.numericaltype;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Random;
 
 
 /**
@@ -136,8 +137,14 @@ public final class UnsignedTypes {
 
         if (numBytes < 0 || numBytes > maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
 
-        final long mask = (1L << (numBytes * Byte.SIZE)) - 1L;
-        return ubs & mask;
+        final int shift = numBytes * Byte.SIZE;
+        if (shift >= Long.SIZE) { // the shift is masked to always be under Long.SIZE
+            return ubs;
+        }
+        else {
+            final long mask = (1L << shift) - 1L;
+            return ubs & mask;
+        }
     }
 
     public static byte[] getUnsignedBytesAsArray(int ubs, int numBytes) {
@@ -160,6 +167,76 @@ public final class UnsignedTypes {
         }
 
         return bytes;
+    }
+    
+    public static int getUnsignedBytes(byte[] bytes, int numBytes) {
+
+        return getUnsignedBytes(bytes, 0, numBytes);
+    }
+
+    public static int getUnsignedBytes(byte[] bytes, int off, int numBytes) {
+
+        return (int)getUnsignedVariableLong(bytes, off, numBytes, SizeOf.INT);
+    }
+    
+    public static long getLongUnsignedBytes(byte[] bytes, int numBytes) {
+
+        return getLongUnsignedBytes(bytes, 0, numBytes);
+    }
+
+    public static long getLongUnsignedBytes(byte[] bytes, int off, int numBytes) {
+
+        return getUnsignedVariableLong(bytes, off, numBytes, SizeOf.LONG);
+    }
+
+    private static long getUnsignedVariableLong(byte[] bytes, int off, int numBytes, int maxNumBytes) {
+
+        if (numBytes < 0 || numBytes > maxNumBytes) throw new IllegalArgumentException("illegal number of bytes");
+        if (off < 0 || numBytes > bytes.length - off) throw new IndexOutOfBoundsException();
+
+        long ret = 0L;
+        for (int n = numBytes - 1, i = off; n >= 0; n--, i++) {
+            ret |= (bytes[i] & (long)UNSIGNED_BYTE_MASK) << (n * Byte.SIZE);
+        }
+
+        return ret;
+    }
+
+    public static void main(String[] args) {
+
+        final Random rand = new Random();
+
+        final int i = rand.nextInt();
+        for (int n = 0; n <= SizeOf.INT; n++) {
+            final int readI1 = getUnsignedBytes(i, n);
+
+            final byte[] bytes = getUnsignedBytesAsArray(i, n);
+            final int readI2 = getUnsignedBytes(bytes, 0, n);
+
+            if (readI1 != readI2) {
+                System.out.println("n=" + n);
+                System.out.println("i=" + i);
+                System.out.println("readI1=" + readI1);
+                System.out.println("readI2=" + readI2);
+            }
+        }
+
+        final long eL = rand.nextLong();
+        for (int n = 0; n <= SizeOf.LONG; n++) {
+            final long readEl1 = getLongUnsignedBytes(eL, n);
+
+            final byte[] bytes = getLongUnsignedBytesAsArray(eL, n);
+            final long readEl2 = getLongUnsignedBytes(bytes, 0, n);
+
+            if (readEl1 != readEl2) {
+                System.out.println("n=" + n);
+                System.out.println("eL=" + eL);
+                System.out.println("readEl1=" + readEl1);
+                System.out.println("readEl2=" + readEl2);
+            }
+        }
+
+        System.out.println("done");
     }
 
     public static int readUnsignedBytes(ByteBuffer buffer, int numBytes) {
