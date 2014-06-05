@@ -105,6 +105,27 @@ final class DataUtils {
     }
 
     /**
+     * Requires valid sbn in respect to Z.
+     * 
+     * @param fecParams
+     * @param sbn
+     * @return the number of source symbols of a source block identified by the provided source block number
+     */
+    static int getK(FECParameters fecParams, int sbn) {
+
+        final int Kt = fecParams.totalSymbols();
+        final int Z = fecParams.numberOfSourceBlocks();
+
+        // (KL, KS, ZL, ZS) = Partition[Kt, Z]
+        final Partition KZ = new Partition(Kt, Z);
+        final int KL = KZ.get(1);
+        final int KS = KZ.get(2);
+        final int ZL = KZ.get(3);
+
+        return (sbn < ZL) ? KL : KS;
+    }
+
+    /**
      * @param dec
      * @param sbn
      * @param esi

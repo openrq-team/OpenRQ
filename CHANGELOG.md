@@ -9,12 +9,16 @@ Added more methods for checking bounds on the number of source symbols in a
 block. Added a method for obtaining the number of repair symbols in a block
 given the number of source symbols in the block.
 
+Added a method for iterating over all source block decoders.
+
 Added classes:
 * net.fec.openrq.decoder.SBDInfo
 * net.fec.openrq.decoder.SerializableSBDInfo
 
 Changed public method signatures:
 (++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.decoder.DataDecoder
+ * ++ public Iterable<? extends SourceBlockDecoder> sourceBlockIterable()
 * net.fec.openrq.decoder.SourceBlockDecoder
  * ++ public SourceBlockState latestState()
 * net.fec.openrq.parameters.ParameterChecker

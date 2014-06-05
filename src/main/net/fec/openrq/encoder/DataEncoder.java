@@ -88,9 +88,10 @@ public interface DataEncoder {
     public SourceBlockEncoder sourceBlock(int sbn);
 
     /**
-     * Returns a new iterable over all source blocks. The resulting iterable can be iterated using a "foreach" loop.
+     * Returns a new iterable over all source block encoders. The resulting iterable can be iterated using a "foreach"
+     * loop.
      * 
-     * @return a new iterable over all source blocks
+     * @return a new iterable over all source block encoders
      */
     public Iterable<? extends SourceBlockEncoder> sourceBlockIterable();
 }

@@ -16,6 +16,8 @@
 package net.fec.openrq.parameters;
 
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -32,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import net.fec.openrq.Parsed;
 
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -67,7 +68,7 @@ public class FECParametersReadWriteTest {
         final SerializableParameters serParams = PARAMS.asSerializable();
         final Parsed<FECParameters> parsed = FECParameters.parse(serParams);
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 
     @Test
@@ -76,7 +77,7 @@ public class FECParametersReadWriteTest {
         final byte[] array = PARAMS.asArray();
         final Parsed<FECParameters> parsed = FECParameters.parse(array);
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 
     @Test
@@ -87,7 +88,7 @@ public class FECParametersReadWriteTest {
         PARAMS.writeTo(array);
         final Parsed<FECParameters> parsed = FECParameters.parse(array);
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
@@ -106,7 +107,7 @@ public class FECParametersReadWriteTest {
         PARAMS.writeTo(array, off);
         final Parsed<FECParameters> parsed = FECParameters.parse(array, off);
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
@@ -133,7 +134,7 @@ public class FECParametersReadWriteTest {
         final ByteBuffer buffer = PARAMS.asBuffer();
         final Parsed<FECParameters> parsed = FECParameters.parse(buffer);
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 
     @Test
@@ -145,14 +146,14 @@ public class FECParametersReadWriteTest {
         buffer.rewind();
         final Parsed<FECParameters> parsed = FECParameters.parse(buffer);
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 
     @Test(expected = ReadOnlyBufferException.class)
     public void testWriteToBufferExceptionReadOnlyBuffer() {
 
-        final ByteBuffer buffer = ByteBuffer.allocate(12).asReadOnlyBuffer();
-        PARAMS.writeTo(buffer);
+        final ByteBuffer buffer = ByteBuffer.allocate(12);
+        PARAMS.writeTo(buffer.asReadOnlyBuffer());
     }
 
     @Test(expected = BufferOverflowException.class)
@@ -162,7 +163,7 @@ public class FECParametersReadWriteTest {
         PARAMS.writeTo(buffer);
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testWriteToDataOutput() throws IOException {
 
         final PipedInputStream in = new PipedInputStream();
@@ -184,10 +185,10 @@ public class FECParametersReadWriteTest {
 
         final Parsed<FECParameters> parsed = FECParameters.readFrom(new DataInputStream(in));
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testWriteToByteChannel() throws IOException {
 
         final Pipe pipe = Pipe.open();
@@ -208,6 +209,6 @@ public class FECParametersReadWriteTest {
 
         final Parsed<FECParameters> parsed = FECParameters.readFrom(pipe.source());
 
-        Assert.assertEquals(PARAMS, parsed.value());
+        assertEquals(PARAMS, parsed.value());
     }
 }

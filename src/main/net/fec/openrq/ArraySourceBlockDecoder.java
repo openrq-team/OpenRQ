@@ -181,6 +181,22 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     }
 
     @Override
+    public SBDInfo information() {
+
+        symbolsState.lock();
+        try {
+            return SBDInfo.newInformation(
+                sbn,
+                symbolsState.sourceBlockState(),
+                getMissingSourceSymbols(),
+                getAvailableRepairSymbols());
+        }
+        finally {
+            symbolsState.unlock();
+        }
+    }
+
+    @Override
     public SourceBlockState putEncodingPacket(EncodingPacket packet) {
 
         // other than a different SBN, this method assumes a correct encoding packet

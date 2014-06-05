@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.decoder;
+package net.fec.openrq;
 
 
 import java.io.DataInput;
@@ -32,7 +32,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import net.fec.openrq.Parsed;
+import net.fec.openrq.decoder.SourceBlockState;
+import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.numericaltype.SizeOf;
@@ -66,12 +67,9 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
 public final class SBDInfo {
 
     /**
-     * @param sbn
-     * @param state
-     * @param missingSourceSymbols
-     * @param availableRepairSymbols
-     * @return a new SBDInfo
+     * Requires valid arguments and unmodifiable sets!
      */
+    @SuppressWarnings("javadoc")
     static SBDInfo newInformation(
         int sbn,
         SourceBlockState state,
@@ -82,12 +80,14 @@ public final class SBDInfo {
         return new SBDInfo(
             sbn,
             state,
-            Collections.unmodifiableSet(new LinkedHashSet<>(missingSourceSymbols)),
-            Collections.unmodifiableSet(new LinkedHashSet<>(availableRepairSymbols)));
+            Collections.unmodifiableSet(missingSourceSymbols),
+            Collections.unmodifiableSet(availableRepairSymbols));
     }
 
     /**
      * Parses source block decoder information from the given serializable object.
+     * <p>
+     * The provided FEC parameters are used to validate the information during the parsing.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
@@ -98,13 +98,15 @@ public final class SBDInfo {
      * 
      * @param serInfo
      *            A serializable object containing source block decoder information
+     * @param fecParams
+     *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing a {@code SBFInfo} instance or a parsing failure reason string
      * @exception NullPointerException
-     *                If {@code serInfo} is {@code null}
+     *                If any argument is {@code null}
      */
-    public static Parsed<SBDInfo> parse(SerializableSBDInfo serInfo) {
+    public static Parsed<SBDInfo> parse(SerializableSBDInfo serInfo, FECParameters fecParams) {
 
-        return parse(serInfo.sourceBlockDecoderInfo());
+        return parse(serInfo.sourceBlockDecoderInfo(), fecParams);
     }
 
     /**
@@ -113,6 +115,8 @@ public final class SBDInfo {
      * <p>
      * The information will be read, in the array, from position {@code 0} inclusive to position {@code array.length}
      * exclusive.
+     * <p>
+     * The provided FEC parameters are used to validate the information during the parsing.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
@@ -123,13 +127,15 @@ public final class SBDInfo {
      * 
      * @param array
      *            An array of bytes containing source block decoder information
+     * @param fecParams
+     *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @exception NullPointerException
-     *                If the provided array is {@code null}
+     *                If any argument is {@code null}
      */
-    public static Parsed<SBDInfo> parse(byte[] array) {
+    public static Parsed<SBDInfo> parse(byte[] array, FECParameters fecParams) {
 
-        return parse(array, 0, array.length);
+        return parse(array, 0, array.length, fecParams);
     }
 
     /**
@@ -138,6 +144,8 @@ public final class SBDInfo {
      * <p>
      * The information will be read, in the array, from position {@code off} inclusive to position {@code (off + len)}
      * exclusive.
+     * <p>
+     * The provided FEC parameters are used to validate the information during the parsing.
      * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
@@ -152,16 +160,18 @@ public final class SBDInfo {
      *            The starting index in the array (must be non-negative)
      * @param len
      *            The length of the information (must be non-negative and no larger than {@code array.length - off})
+     * @param fecParams
+     *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @exception IndexOutOfBoundsException
      *                If the pre-conditions on the array offset and length do not hold
      * @exception NullPointerException
-     *                If the provided array is {@code null}
+     *                If any argument is {@code null}
      */
-    public static Parsed<SBDInfo> parse(byte[] array, int off, int len) {
+    public static Parsed<SBDInfo> parse(byte[] array, int off, int len, FECParameters fecParams) {
 
         ArrayUtils.checkArrayBounds(off, len, array.length);
-        return parse(ByteBuffer.wrap(array, off, len));
+        return parse(ByteBuffer.wrap(array, off, len), fecParams);
     }
 
     /**
@@ -172,6 +182,8 @@ public final class SBDInfo {
      * inclusive to the current {@linkplain ByteBuffer#limit() limit} exclusive. If the parsing succeeds, the position
      * of the buffer will have been advanced by the number of bytes read.
      * <p>
+     * The provided FEC parameters are used to validate the information during the parsing.
+     * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
@@ -181,24 +193,27 @@ public final class SBDInfo {
      * 
      * @param buffer
      *            A buffer containing source block decoder information
+     * @param fecParams
+     *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @exception NullPointerException
-     *                If the provided buffer is {@code null}
+     *                If any argument is {@code null}
      */
-    public static Parsed<SBDInfo> parse(ByteBuffer buffer) {
+    public static Parsed<SBDInfo> parse(ByteBuffer buffer, FECParameters fecParams) {
 
         Objects.requireNonNull(buffer);
 
         try {
-            final int sbn = readSBN(buffer);
+            final int sbn = readSBN(buffer, fecParams);
+            final int K = DataUtils.getK(fecParams, sbn);
 
             final SourceBlockState state = readState(buffer);
 
-            final int numMiss = readNumMissingSourceSymbols(buffer);
-            final Set<Integer> missing = readMissingSourceSymbols(buffer, numMiss);
+            final int numMiss = readNumMissingSourceSymbols(buffer, K, state);
+            final Set<Integer> missing = readMissingSourceSymbols(buffer, numMiss, K);
 
-            final int numAvail = readNumAvailableRepairSymbols(buffer);
-            final Set<Integer> available = readAvailableRepairSymbols(buffer, numAvail);
+            final int numAvail = readNumAvailableRepairSymbols(buffer, K, state);
+            final Set<Integer> available = readAvailableRepairSymbols(buffer, numAvail, K);
 
             return newRemoteInfo(sbn, state, missing, available);
         }
@@ -214,6 +229,8 @@ public final class SBDInfo {
      * Examples of {@code DataInput} objects are {@link java.io.DataInputStream DataInputStream} and
      * {@link java.io.ObjectInputStream ObjectInputStream}.
      * <p>
+     * The provided FEC parameters are used to validate the information during the parsing.
+     * <p>
      * The returned container object indicates if the parsing succeeded or failed:
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
@@ -226,26 +243,29 @@ public final class SBDInfo {
      * 
      * @param in
      *            A {@code DataInput} object from which source block decoder information is read
+     * @param fecParams
+     *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @throws IOException
      *             If an IO error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
-     *                If {@code in} is {@code null}
+     *                If any argument is {@code null}
      */
-    public static Parsed<SBDInfo> parse(DataInput in) throws IOException {
+    public static Parsed<SBDInfo> readFrom(DataInput in, FECParameters fecParams) throws IOException {
 
         Objects.requireNonNull(in);
 
         try {
-            final int sbn = readSBN(in);
+            final int sbn = readSBN(in, fecParams);
+            final int K = DataUtils.getK(fecParams, sbn);
 
             final SourceBlockState state = readState(in);
 
-            final int numMiss = readNumMissingSourceSymbols(in);
-            final Set<Integer> missing = readMissingSourceSymbols(in, numMiss);
+            final int numMiss = readNumMissingSourceSymbols(in, K, state);
+            final Set<Integer> missing = readMissingSourceSymbols(in, numMiss, K);
 
-            final int numAvail = readNumAvailableRepairSymbols(in);
-            final Set<Integer> available = readAvailableRepairSymbols(in, numAvail);
+            final int numAvail = readNumAvailableRepairSymbols(in, K, state);
+            final Set<Integer> available = readAvailableRepairSymbols(in, numAvail, K);
 
             return newRemoteInfo(sbn, state, missing, available);
         }
@@ -273,33 +293,36 @@ public final class SBDInfo {
      * 
      * @param ch
      *            A {@code ReadableByteChannel} object from which source block decoder information is read
+     * @param fecParams
+     *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @throws IOException
      *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
-     *                If {@code ch} is {@code null}
+     *                If any argument is {@code null}
      */
-    public static Parsed<SBDInfo> parse(ReadableByteChannel ch) throws IOException {
+    public static Parsed<SBDInfo> readFrom(ReadableByteChannel ch, FECParameters fecParams) throws IOException {
 
         try {
             final ByteBuffer sbnAndStateBuf = ByteBuffer.allocate(SizeOf.BYTE + SizeOf.BYTE);
             readFromChannel(ch, sbnAndStateBuf);
-            final int sbn = readSBN(sbnAndStateBuf);
+            final int sbn = readSBN(sbnAndStateBuf, fecParams);
+            final int K = DataUtils.getK(fecParams, sbn);
             final SourceBlockState state = readState(sbnAndStateBuf);
 
             final ByteBuffer numMissBuf = ByteBuffer.allocate(SizeOf.SHORT);
             readFromChannel(ch, numMissBuf);
-            final int numMiss = readNumMissingSourceSymbols(numMissBuf);
+            final int numMiss = readNumMissingSourceSymbols(numMissBuf, K, state);
             final ByteBuffer missingBuf = ByteBuffer.allocate(numMiss * SizeOf.SHORT);
             readFromChannel(ch, missingBuf);
-            final Set<Integer> missing = readMissingSourceSymbols(missingBuf, numMiss);
+            final Set<Integer> missing = readMissingSourceSymbols(missingBuf, numMiss, K);
 
             final ByteBuffer numAvailBuf = ByteBuffer.allocate(SizeOf.UNSIGNED_3_BYTES);
             readFromChannel(ch, numAvailBuf);
-            final int numAvail = readNumAvailableRepairSymbols(numAvailBuf);
+            final int numAvail = readNumAvailableRepairSymbols(numAvailBuf, K, state);
             final ByteBuffer availableBuf = ByteBuffer.allocate(numAvail * SizeOf.UNSIGNED_3_BYTES);
             readFromChannel(ch, availableBuf);
-            final Set<Integer> available = readAvailableRepairSymbols(availableBuf, numAvail);
+            final Set<Integer> available = readAvailableRepairSymbols(availableBuf, numAvail, K);
 
             return newRemoteInfo(sbn, state, missing, available);
         }
@@ -408,6 +431,19 @@ public final class SBDInfo {
         return availableRepairSymbols;
     }
 
+    /**
+     * Returns {@code true} if, and only if, this instance is equal to another object.
+     * <p>
+     * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
+     * <ul>
+     * <li>{@code obj} is non-null
+     * <li>and {@code obj} is an instance of {@code SBDInfo}
+     * <li>and {@code this}.{@link #sourceBlockNumber()} == {@code obj.sourceBlockNumber()}
+     * <li>and {@code this}.{@link #state()}{@code .equals(obj.state())}
+     * <li>and {@code this}.{@link #missingSourceSymbols()}{@code .equals(obj.missingSourceSymbols())}
+     * <li>and {@code this}.{@link #availableRepairSymbols()}{@code .equals(obj.availableRepairSymbols())}
+     * </ul>
+     */
     @Override
     public boolean equals(Object obj) {
 
@@ -422,10 +458,26 @@ public final class SBDInfo {
                info1.availableRepairSymbols.equals(info2.availableRepairSymbols);
     }
 
+    /**
+     * Returns a hash code value based on the whole information of this instance.
+     */
     @Override
     public int hashCode() {
 
-        return 0;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + sbn;
+        result = prime * result + state.hashCode();
+        result = prime * result + missingSourceSymbols.hashCode();
+        result = prime * result + availableRepairSymbols.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+
+        return String.format("SBN: %d%nState: %s%nMissing source symbols: %s%nAvailable repair symbols: %s",
+            sbn, state, missingSourceSymbols, availableRepairSymbols);
     }
 
     /**
@@ -713,26 +765,29 @@ public final class SBDInfo {
         out.writeByte((byte)sbn);
     }
 
-    private static int readSBN(ByteBuffer buf) throws InternalParsingException {
+    private static int readSBN(ByteBuffer buf, FECParameters fecParams) throws InternalParsingException {
 
         if (buf.remaining() < SizeOf.BYTE) {
             throw new InternalParsingException("source block number is missing");
         }
 
         final int sbn = UnsignedTypes.readUnsignedByte(buf);
-        return checkSBN(sbn);
+        return checkSBN(sbn, fecParams);
     }
 
-    private static int readSBN(DataInput in) throws IOException, InternalParsingException {
+    private static int readSBN(DataInput in, FECParameters fecParams) throws IOException, InternalParsingException {
 
         final int sbn = UnsignedTypes.getUnsignedByte(in.readByte());
-        return checkSBN(sbn);
+        return checkSBN(sbn, fecParams);
     }
 
-    private static int checkSBN(int sbn) throws InternalParsingException {
+    private static int checkSBN(int sbn, FECParameters fecParams) throws InternalParsingException {
 
         if (ParameterChecker.isSourceBlockNumberOutOfBounds(sbn)) {
             throw new InternalParsingException("source block number is out of bounds");
+        }
+        if (sbn >= fecParams.numberOfSourceBlocks()) {
+            throw new InternalParsingException("source block number is too high");
         }
         return sbn;
     }
@@ -779,15 +834,8 @@ public final class SBDInfo {
 
 
     // ========================== useful ESI bounds ==========================
+
     private static final int minESI = ParameterChecker.minEncodingSymbolID();
-
-    private static final int maxSrcSymbs = ParameterChecker.maxNumSourceSymbolsPerBlock();
-    private static final int maxSrcESI = maxSrcSymbs - 1 - minESI;
-
-    private static final int minSrcSymbs = ParameterChecker.minNumSourceSymbolsPerBlock();
-    private static final int minRepESI = minESI + minSrcSymbs;
-    private static final int maxRepSymbs = ParameterChecker.numRepairSymbolsPerBlock(minSrcSymbs);
-
     private static final int maxESI = ParameterChecker.maxEncodingSymbolID();
 
 
@@ -814,30 +862,40 @@ public final class SBDInfo {
         }
     }
 
-    private static int readNumMissingSourceSymbols(ByteBuffer buf) throws InternalParsingException {
+    private static int readNumMissingSourceSymbols(ByteBuffer buf, int K, SourceBlockState state)
+        throws InternalParsingException
+    {
 
         if (buf.remaining() < SizeOf.SHORT) {
             throw new InternalParsingException("number of missing source symbols is missing");
         }
 
-        return checkNumMissing(UnsignedTypes.readUnsignedShort(buf));
+        return checkNumMissing(UnsignedTypes.readUnsignedShort(buf), K, state);
     }
 
-    private static int readNumMissingSourceSymbols(DataInput in) throws IOException, InternalParsingException {
+    private static int readNumMissingSourceSymbols(DataInput in, int K, SourceBlockState state)
+        throws IOException, InternalParsingException
+    {
 
-        return checkNumMissing(UnsignedTypes.getUnsignedShort(in.readShort()));
+        return checkNumMissing(UnsignedTypes.getUnsignedShort(in.readShort()), K, state);
     }
 
-    private static int checkNumMissing(int numMiss) throws InternalParsingException {
+    private static int checkNumMissing(int numMiss, int K, SourceBlockState state) throws InternalParsingException {
 
-        if (numMiss < 0 || numMiss > maxSrcSymbs) {
+        if (numMiss < 0 || numMiss > K) {
             throw new InternalParsingException("number of missing source symbols is out of bounds");
+        }
+        if (state == SourceBlockState.DECODED && numMiss != 0) {
+            throw new InternalParsingException(
+                "number of missing source symbols is not zero when decoder state is DECODED");
         }
         return numMiss;
     }
 
     // requires valid numMiss
-    private static Set<Integer> readMissingSourceSymbols(ByteBuffer buf, int numMiss) throws InternalParsingException {
+    private static Set<Integer> readMissingSourceSymbols(ByteBuffer buf, int numMiss, int K)
+        throws InternalParsingException
+    {
 
         final int rem = buf.remaining();
         if (rem < (numMiss * SizeOf.SHORT)) { // product never overflows
@@ -849,29 +907,31 @@ public final class SBDInfo {
         final Set<Integer> missing = new LinkedHashSet<>(numMiss);
         for (int n = 0; n < numMiss; n++) {
             final int esi = UnsignedTypes.readUnsignedShort(buf);
-            addMissingSourceSymbolESI(esi, missing);
+            addMissingSourceSymbolESI(esi, missing, K);
         }
 
         return missing;
     }
 
     // requires valid numMiss
-    private static Set<Integer> readMissingSourceSymbols(DataInput in, int numMiss)
+    private static Set<Integer> readMissingSourceSymbols(DataInput in, int numMiss, int K)
         throws IOException, InternalParsingException
     {
 
         final Set<Integer> missing = new LinkedHashSet<>(numMiss);
         for (int n = 0; n < numMiss; n++) {
-            final int esi = UnsignedTypes.getUnsignedShort(in.readInt());
-            addMissingSourceSymbolESI(esi, missing);
+            final int esi = UnsignedTypes.getUnsignedShort(in.readShort());
+            addMissingSourceSymbolESI(esi, missing, K);
         }
 
         return missing;
     }
 
-    private static void addMissingSourceSymbolESI(int esi, Set<Integer> missing) throws InternalParsingException {
+    private static void addMissingSourceSymbolESI(int esi, Set<Integer> missing, int K)
+        throws InternalParsingException
+    {
 
-        if (esi < minESI || esi > maxSrcESI) {
+        if (esi < minESI || esi >= K) {
             throw new InternalParsingException("missing source symbol identifier is out of bounds");
         }
         if (!missing.add(esi)) {
@@ -902,33 +962,47 @@ public final class SBDInfo {
         }
     }
 
-    private static int readNumAvailableRepairSymbols(ByteBuffer buf) throws InternalParsingException {
+    private static int readNumAvailableRepairSymbols(ByteBuffer buf, int K, SourceBlockState state)
+        throws InternalParsingException
+    {
 
         if (buf.remaining() < SizeOf.UNSIGNED_3_BYTES) {
             throw new InternalParsingException("number of available repair symbols is missing");
         }
 
-        return checkNumAvailable(UnsignedTypes.readUnsignedBytes(buf, SizeOf.UNSIGNED_3_BYTES));
+        return checkNumAvailable(UnsignedTypes.readUnsignedBytes(buf, SizeOf.UNSIGNED_3_BYTES), K, state);
     }
 
-    private static int readNumAvailableRepairSymbols(DataInput in) throws IOException, InternalParsingException {
+    private static int readNumAvailableRepairSymbols(DataInput in, int K, SourceBlockState state)
+        throws IOException, InternalParsingException
+    {
 
         final byte[] _3byteArray = new byte[SizeOf.UNSIGNED_3_BYTES];
         in.readFully(_3byteArray);
 
-        return checkNumAvailable(UnsignedTypes.getUnsignedBytes(_3byteArray, SizeOf.UNSIGNED_3_BYTES));
+        return checkNumAvailable(UnsignedTypes.getUnsignedBytes(_3byteArray, SizeOf.UNSIGNED_3_BYTES), K, state);
     }
 
-    private static int checkNumAvailable(int numAvail) throws InternalParsingException {
+    private static int checkNumAvailable(int numAvail, int K, SourceBlockState state)
+        throws InternalParsingException
+    {
 
-        if (numAvail < 0 || numAvail > maxRepSymbs) {
+        if (numAvail < 0 || numAvail > ParameterChecker.numRepairSymbolsPerBlock(K)) {
             throw new InternalParsingException("number of available repair symbols is out of bounds");
+        }
+        if (state == SourceBlockState.DECODED && numAvail != 0) {
+            throw new InternalParsingException(
+                "number of available repair symbols is not zero when decoder state is DECODED");
+        }
+        if (state == SourceBlockState.DECODING_FAILURE && numAvail == 0) {
+            throw new InternalParsingException(
+                "number of available repair symbols is zero when decoder state is DECODING_FAILURE");
         }
         return numAvail;
     }
 
     // requires valid numAvail
-    private static Set<Integer> readAvailableRepairSymbols(ByteBuffer buf, int numAvail)
+    private static Set<Integer> readAvailableRepairSymbols(ByteBuffer buf, int numAvail, int K)
         throws InternalParsingException
     {
 
@@ -942,14 +1016,14 @@ public final class SBDInfo {
         final Set<Integer> available = new LinkedHashSet<>(numAvail);
         for (int n = 0; n < numAvail; n++) {
             final int esi = UnsignedTypes.readUnsignedBytes(buf, SizeOf.UNSIGNED_3_BYTES);
-            addAvailableRepairSymbolESI(esi, available);
+            addAvailableRepairSymbolESI(esi, available, K);
         }
 
         return available;
     }
 
     // requires valid numAvail
-    private static Set<Integer> readAvailableRepairSymbols(DataInput in, int numAvail)
+    private static Set<Integer> readAvailableRepairSymbols(DataInput in, int numAvail, int K)
         throws IOException, InternalParsingException
     {
 
@@ -959,15 +1033,17 @@ public final class SBDInfo {
         for (int n = 0; n < numAvail; n++) {
             in.readFully(_3byteArray);
             final int esi = UnsignedTypes.getUnsignedBytes(_3byteArray, SizeOf.UNSIGNED_3_BYTES);
-            addAvailableRepairSymbolESI(esi, available);
+            addAvailableRepairSymbolESI(esi, available, K);
         }
 
         return available;
     }
 
-    private static void addAvailableRepairSymbolESI(int esi, Set<Integer> available) throws InternalParsingException {
+    private static void addAvailableRepairSymbolESI(int esi, Set<Integer> available, int K)
+        throws InternalParsingException
+    {
 
-        if (esi < minRepESI || esi > maxESI) {
+        if (esi < K || esi > maxESI) {
             throw new InternalParsingException("available repair symbol identifier is out of bounds");
         }
         if (!available.add(esi)) {

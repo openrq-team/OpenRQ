@@ -20,6 +20,7 @@ package net.fec.openrq.decoder;
 import java.util.Set;
 
 import net.fec.openrq.EncodingPacket;
+import net.fec.openrq.SBDInfo;
 import net.fec.openrq.parameters.ParameterChecker;
 
 

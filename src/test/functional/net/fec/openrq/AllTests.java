@@ -33,7 +33,8 @@ import org.junit.runners.Suite.SuiteClasses;
                DeriverParametersBoundsTest.class,
                FECParametersReadWriteTest.class,
                OpenRQClassTest.class,
-               OpenRQClassExceptionTest.class
+               OpenRQClassExceptionTest.class,
+               SBDInfoReadWriteTest.class
 })
 public class AllTests {
 
