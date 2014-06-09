@@ -24,7 +24,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +41,31 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class FECParametersBoundsTest {
 
-    @Parameters(name = "F={0}; T={1}; Z={2}; N={3}")
+    private static final class Params {
+
+        final long F;
+        final int T;
+        final int Z;
+        final int N;
+
+
+        Params(long F, int T, int Z, int N) {
+
+            this.F = F;
+            this.T = T;
+            this.Z = Z;
+            this.N = N;
+        }
+
+        @Override
+        public String toString() {
+
+            return "[F=" + F + "; T=" + T + "; Z=" + Z + "; N=" + N + "]";
+        }
+    }
+
+
+    @Parameters(name = "{0}")
     public static Iterable<Object[]> getFECParams() {
 
         final long maxF = ParameterChecker.maxDataLength();
@@ -70,77 +93,127 @@ public class FECParametersBoundsTest {
         addInts(Ns, 1);
         addInts(Ns, maxN, maxN + 1, Integer.MAX_VALUE);
 
-        final List<Object[]> params = new ArrayList<>(Fs.size() * Ts.size() * Zs.size() * Ns.size());
+        final BufferedObjects<Params> bufferedParams = new BufferedObjects<>();
+        int numCombinations = 0;
         for (Long F : Fs) {
             for (Integer T : Ts) {
                 for (Integer Z : Zs) {
                     for (Integer N : Ns) {
-                        params.add(new Object[] {F, T, Z, N});
+                        bufferedParams.add(new Params(F, T, Z, N));
+                        numCombinations += 4;
                     }
                 }
             }
         }
 
-        System.out.println("Testing " + 4 * params.size() + " FEC parameters tests...");
-        return params;
+        System.out.println("Testing " + numCombinations + " FEC parameters combinations...");
+        return bufferedParams;
     }
 
 
     @Parameter(0)
-    public long F;
-
-    @Parameter(1)
-    public int T;
-
-    @Parameter(2)
-    public int Z;
-
-    @Parameter(3)
-    public int N;
+    public List<Params> paramsList;
 
 
     @Test
     public void testDataLength() {
 
-        assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+        for (Params params : paramsList) {
+            final long F = params.F;
+            final int T = params.T;
+            final int Z = params.Z;
+            final int N = params.N;
 
-        assertTrue("F is less than its minimum", F >= ParameterChecker.minDataLength());
-        assertTrue("F is greater than its maximum", F <= ParameterChecker.maxDataLength());
-        assertFalse("F is out of bounds", ParameterChecker.isDataLengthOutOfBounds(F));
-        assertTrue("F is greater than its allowed maximum", F <= ParameterChecker.maxAllowedDataLength(T));
+            assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+
+            assertTrue(String.format("F is less than its minimum - %s", params),
+                F >= ParameterChecker.minDataLength());
+
+            assertTrue(String.format("F is greater than its maximum - %s", params),
+                F <= ParameterChecker.maxDataLength());
+
+            assertFalse(String.format("F is out of bounds - %s", params),
+                ParameterChecker.isDataLengthOutOfBounds(F));
+
+            assertTrue(String.format("F is greater than its allowed maximum - %s", params),
+                F <= ParameterChecker.maxAllowedDataLength(T));
+        }
     }
 
     @Test
     public void testSymbolSize() {
 
-        assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+        for (Params params : paramsList) {
+            final long F = params.F;
+            final int T = params.T;
+            final int Z = params.Z;
+            final int N = params.N;
 
-        assertTrue("T is less than its minimum", T >= ParameterChecker.minSymbolSize());
-        assertTrue("T is greater than its maximum", T <= ParameterChecker.maxSymbolSize());
-        assertFalse("T is out of bounds", ParameterChecker.isDataLengthOutOfBounds(T));
-        assertTrue("T is less than its allowed minimum", T >= ParameterChecker.minAllowedSymbolSize(F));
+            assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+
+            assertTrue(String.format("T is less than its minimum - %s", params),
+                T >= ParameterChecker.minSymbolSize());
+
+            assertTrue(String.format("T is greater than its maximum - %s", params),
+                T <= ParameterChecker.maxSymbolSize());
+
+            assertFalse(String.format("T is out of bounds - %s", params),
+                ParameterChecker.isDataLengthOutOfBounds(T));
+
+            assertTrue(String.format("T is less than its allowed minimum - %s", params),
+                T >= ParameterChecker.minAllowedSymbolSize(F));
+        }
     }
 
     @Test
     public void testNumSourceBlocks() {
 
-        assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+        for (Params params : paramsList) {
+            final long F = params.F;
+            final int T = params.T;
+            final int Z = params.Z;
+            final int N = params.N;
 
-        assertTrue("Z is less than its minimum", Z >= ParameterChecker.minNumSourceBlocks());
-        assertTrue("Z is greater than its maximum", Z <= ParameterChecker.maxNumSourceBlocks());
-        assertFalse("Z is out of bounds", ParameterChecker.isNumSourceBlocksOutOfBounds(Z));
-        assertTrue("Z is less than its allowed minimum", Z >= ParameterChecker.minAllowedNumSourceBlocks(F, T));
-        assertTrue("Z is greater than its allowed maximum", Z <= ParameterChecker.maxAllowedNumSourceBlocks(F, T));
+            assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+
+            assertTrue(String.format("Z is less than its minimum - %s", params),
+                Z >= ParameterChecker.minNumSourceBlocks());
+            assertTrue(String.format("Z is greater than its maximum - %s", params),
+                Z <= ParameterChecker.maxNumSourceBlocks());
+
+            assertFalse(String.format("Z is out of bounds - %s", params),
+                ParameterChecker.isNumSourceBlocksOutOfBounds(Z));
+
+            assertTrue(String.format("Z is less than its allowed minimum - %s", params),
+                Z >= ParameterChecker.minAllowedNumSourceBlocks(F, T));
+
+            assertTrue(String.format("Z is greater than its allowed maximum - %s", params),
+                Z <= ParameterChecker.maxAllowedNumSourceBlocks(F, T));
+        }
     }
 
     @Test
     public void testInterleaverLength() {
 
-        assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+        for (Params params : paramsList) {
+            final long F = params.F;
+            final int T = params.T;
+            final int Z = params.Z;
+            final int N = params.N;
 
-        assertTrue("N is less than its minimum", N >= ParameterChecker.minInterleaverLength());
-        assertTrue("N is greater than its maximum", N <= ParameterChecker.maxInterleaverLength());
-        assertFalse("N is out of bounds", ParameterChecker.isInterleaverLengthOutOfBounds(N));
-        assertTrue("N is greater than its allowed maximum", N <= ParameterChecker.maxAllowedInterleaverLength(T));
+            assumeTrue(ParameterChecker.areValidFECParameters(F, T, Z, N));
+
+            assertTrue(String.format("N is less than its minimum - %s", params),
+                N >= ParameterChecker.minInterleaverLength());
+
+            assertTrue(String.format("N is greater than its maximum - %s", params),
+                N <= ParameterChecker.maxInterleaverLength());
+
+            assertFalse(String.format("N is out of bounds - %s", params),
+                ParameterChecker.isInterleaverLengthOutOfBounds(N));
+
+            assertTrue(String.format("N is greater than its allowed maximum - %s", params),
+                N <= ParameterChecker.maxAllowedInterleaverLength(T));
+        }
     }
 }

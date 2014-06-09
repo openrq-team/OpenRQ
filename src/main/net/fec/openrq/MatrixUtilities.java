@@ -84,8 +84,16 @@ final class MatrixUtilities {
      * 
      * @param A
      *            Matrix A
+     * @param first_rowA
+     * @param first_colA
+     * @param last_rowA
+     * @param last_colA
      * @param B
      *            Matrix B
+     * @param first_rowB
+     * @param first_colB
+     * @param last_rowB
+     * @param last_colB
      * @return A*B
      */
     static byte[][] multiplyMatrices(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA,
@@ -121,11 +129,22 @@ final class MatrixUtilities {
      * 
      * @param A
      *            Matrix A
+     * @param first_rowA
+     * @param first_colA
+     * @param last_rowA
+     * @param last_colA
      * @param B
      *            Matrix B
+     * @param first_rowB
+     * @param first_colB
+     * @param last_rowB
+     * @param last_colB
      * @param C
      *            Matrix where the results should be stored.
-     * @return C
+     * @param first_rowC
+     * @param first_colC
+     * @param last_rowC
+     * @param last_colC
      */
     static void multiplyMatrices(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA,
         byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB,
@@ -158,11 +177,22 @@ final class MatrixUtilities {
      * 
      * @param A
      *            Matrix A
+     * @param first_rowA
+     * @param first_colA
+     * @param last_rowA
+     * @param last_colA
      * @param B
      *            Matrix B
+     * @param first_rowB
+     * @param first_colB
+     * @param last_rowB
+     * @param last_colB
      * @param C
      *            Matrix where the results should be stored.
-     * @return C
+     * @param first_rowC
+     * @param first_colC
+     * @param last_rowC
+     * @param last_colC
      */
     static void multiplyMatricesHack(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA,
         byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB,
@@ -201,7 +231,7 @@ final class MatrixUtilities {
      * @param line
      * @param line_length
      * @param vector
-     * @return
+     * @return a vector
      */
     static byte[] multiplyByteLineBySymbolVector(byte[] line, int line_length, byte[][] vector) {
 
@@ -231,7 +261,7 @@ final class MatrixUtilities {
      * @param line_length
      * @param d
      * @param D
-     * @return
+     * @return a vector
      */
     static byte[] multiplyByteLineBySymbolVector(byte[] line, int line_length,
         int[] d, byte[][] D) {

@@ -3,6 +3,8 @@
 /build
 /docs
 
+/src/opt
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 

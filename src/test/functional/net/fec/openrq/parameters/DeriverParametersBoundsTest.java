@@ -24,7 +24,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +40,28 @@ import org.junit.runners.Parameterized.Parameters;
  */
 @RunWith(Parameterized.class)
 public class DeriverParametersBoundsTest {
+
+    private static final class Params {
+
+        final long F;
+        final int P;
+        final long WS;
+
+
+        Params(long F, int P, long WS) {
+
+            this.F = F;
+            this.P = P;
+            this.WS = WS;
+        }
+
+        @Override
+        public String toString() {
+
+            return "[F=" + F + "; P=" + P + "; WS=" + WS + "]";
+        }
+    }
+
 
     @Parameters(name = "F={0}; P={1}; WS={2}")
     public static Iterable<Object[]> getFECParams() {
@@ -63,61 +84,95 @@ public class DeriverParametersBoundsTest {
         addLongs(WSs, exponentialDistribution(2L, 62));
         addLongs(WSs, Long.MAX_VALUE);
 
-        final List<Object[]> params = new ArrayList<>(Fs.size() * Ps.size() * WSs.size());
+        final BufferedObjects<Params> bufferedParams = new BufferedObjects<>();
+        int numCombinations = 0;
         for (Long F : Fs) {
             for (Integer P : Ps) {
                 for (Long WS : WSs) {
-                    params.add(new Object[] {F, P, WS});
+                    bufferedParams.add(new Params(F, P, WS));
+                    numCombinations += 3;
                 }
             }
         }
 
-        System.out.println("Testing " + 3 * params.size() + " deriver parameters tests...");
-        return params;
+        System.out.println("Testing " + numCombinations + " deriver parameters combinations...");
+        return bufferedParams;
     }
 
 
     @Parameter(0)
-    public long F;
-
-    @Parameter(1)
-    public int P;
-
-    @Parameter(2)
-    public long WS;
+    public List<Params> paramsList;
 
 
     @Test
     public void testDataLength() {
 
-        assumeTrue(ParameterChecker.areValidDeriverParameters(F, P, WS));
+        for (Params params : paramsList) {
+            final long F = params.F;
+            final int P = params.P;
+            final long WS = params.WS;
 
-        assertTrue("F is less than its minimum", F >= ParameterChecker.minDataLength());
-        assertTrue("F is greater than its maximum", F <= ParameterChecker.maxDataLength());
-        assertFalse("F is out of bounds", ParameterChecker.isDataLengthOutOfBounds(F));
-        assertTrue("F is greater than its allowed maximum given P", F <= ParameterChecker.maxAllowedDataLength(P));
-        assertTrue("F is greater than its allowed maximum given P and WS",
-            F <= ParameterChecker.maxAllowedDataLength(P, WS));
+            assumeTrue(ParameterChecker.areValidDeriverParameters(F, P, WS));
+
+            assertTrue(String.format("F is less than its minimum - %s", params),
+                F >= ParameterChecker.minDataLength());
+
+            assertTrue(String.format("F is greater than its maximum - %s", params),
+                F <= ParameterChecker.maxDataLength());
+
+            assertFalse(String.format("F is out of bounds - %s", params),
+                ParameterChecker.isDataLengthOutOfBounds(F));
+
+            assertTrue(String.format("F is greater than its allowed maximum given P - %s", params),
+                F <= ParameterChecker.maxAllowedDataLength(P));
+
+            assertTrue(String.format("F is greater than its allowed maximum given P and WS - %s", params),
+                F <= ParameterChecker.maxAllowedDataLength(P, WS));
+        }
     }
 
     @Test
     public void testPayloadLength() {
 
-        assumeTrue(ParameterChecker.areValidDeriverParameters(F, P, WS));
+        for (Params params : paramsList) {
+            final long F = params.F;
+            final int P = params.P;
+            final long WS = params.WS;
 
-        assertTrue("P is less than its minimum", P >= ParameterChecker.minPayloadLength());
-        assertTrue("P is greater than its maximum", P <= ParameterChecker.maxPayloadLength());
-        assertFalse("P is out of bounds", ParameterChecker.isPayloadLengthOutOfBounds(P));
-        assertTrue("P is less than its allowed minimum", P >= ParameterChecker.minAllowedPayloadLength(F));
+            assumeTrue(ParameterChecker.areValidDeriverParameters(F, P, WS));
+
+            assertTrue(String.format("P is less than its minimum - %s", params),
+                P >= ParameterChecker.minPayloadLength());
+
+            assertTrue(String.format("P is greater than its maximum - %s", params),
+                P <= ParameterChecker.maxPayloadLength());
+
+            assertFalse(String.format("P is out of bounds - %s", params),
+                ParameterChecker.isPayloadLengthOutOfBounds(P));
+
+            assertTrue(String.format("P is less than its allowed minimum - %s", params),
+                P >= ParameterChecker.minAllowedPayloadLength(F));
+        }
     }
 
     @Test
     public void testMaxDecodingBlockSize() {
 
-        assumeTrue(ParameterChecker.areValidDeriverParameters(F, P, WS));
+        for (Params params : paramsList) {
+            final long F = params.F;
+            final int P = params.P;
+            final long WS = params.WS;
 
-        assertTrue("WS is less than P", WS >= P);
-        assertTrue("WS is less than its minimum", WS >= ParameterChecker.minDecodingBlockSize());
-        assertTrue("WS is less than its allowed minimum", WS >= ParameterChecker.minAllowedDecodingBlockSize(F, P));
+            assumeTrue(ParameterChecker.areValidDeriverParameters(F, P, WS));
+
+            assertTrue(String.format("WS is less than P - %s", params),
+                WS >= P);
+
+            assertTrue(String.format("WS is less than its minimum - %s", params),
+                WS >= ParameterChecker.minDecodingBlockSize());
+
+            assertTrue(String.format("WS is less than its allowed minimum - %s", params),
+                WS >= ParameterChecker.minAllowedDecodingBlockSize(F, P));
+        }
     }
 }

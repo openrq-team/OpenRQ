@@ -222,7 +222,7 @@ final class LinearSystem {
      * Generates the constraint matrix.
      * 
      * @param Kprime
-     * @return
+     * @return a constraint matrix
      */
     static byte[][] generateConstraintMatrix(int Kprime)
     {
@@ -254,7 +254,7 @@ final class LinearSystem {
         initializeIs(constraint_matrix, S, B);
 
         /*
-         * botton half
+         * bottom half
          */
 
         // initialize I_h
@@ -295,7 +295,7 @@ final class LinearSystem {
     {
 
         // allocate memory for the indexes
-        Set<Integer> indexes = new HashSet<Integer>(Kprime);
+        Set<Integer> indexes = new HashSet<>(Kprime);
 
         // parameters
         int Ki = SystematicIndices.getKIndex(Kprime);
@@ -352,7 +352,7 @@ final class LinearSystem {
      * @param C
      * @param tuple
      * @param T
-     * @return
+     * @return an encoding symbol
      */
     static byte[] enc(int Kprime, byte[][] C, Tuple tuple, int T)
     {
@@ -408,7 +408,7 @@ final class LinearSystem {
      * @param A
      * @param D
      * @param Kprime
-     * @return
+     * @return the intermediate symbols
      * @throws SingularMatrixException
      */
     static byte[][] PInactivationDecoding(byte[][] A, byte[][] D, int Kprime)
@@ -471,7 +471,7 @@ final class LinearSystem {
          */
 
         // maps the index of a row to an object Row (which stores that row's characteristics)
-        Map<Integer, Row> rows = new HashMap<Integer, Row>(M + 1, 1.0f);
+        Map<Integer, Row> rows = new HashMap<>(M + 1, 1.0f);
 
         // go through all matrix rows counting non-zeros
         for (int row = 0; row < M; row++)
@@ -481,7 +481,7 @@ final class LinearSystem {
             boolean isHDPC = false;
             int noCols = L - u;
 
-            Set<Integer> nodes = new HashSet<Integer>(noCols);
+            Set<Integer> nodes = new HashSet<>(noCols);
 
             // check all columns for non-zeros
             for (int col = 0; col < noCols; col++)
@@ -581,7 +581,7 @@ final class LinearSystem {
                  */
 
                 // allocate memory
-                Map<Integer, Set<Integer>> graph = new HashMap<Integer, Set<Integer>>(L - u - i + 1, 1.0f);
+                Map<Integer, Set<Integer>> graph = new HashMap<>(L - u - i + 1, 1.0f);
 
                 // lets go through all the rows... (yet again!)
                 for (Row row : rows.values())
@@ -605,7 +605,7 @@ final class LinearSystem {
                         { // it isn't
 
                             // allocate memory for its neighbours
-                            Set<Integer> edges = new HashSet<Integer>(L - u - i + 1, 1.0f);
+                            Set<Integer> edges = new HashSet<>(L - u - i + 1, 1.0f);
 
                             // add node 2 to its neighbours
                             edges.add(node2);
@@ -625,7 +625,7 @@ final class LinearSystem {
                         { // it isn't
 
                             // allocate memory for its neighbours
-                            Set<Integer> edges = new HashSet<Integer>(L - u - i + 1, 1.0f);
+                            Set<Integer> edges = new HashSet<>(L - u - i + 1, 1.0f);
 
                             // add node 1 to its neighbours
                             edges.add(node1);
@@ -657,7 +657,7 @@ final class LinearSystem {
                 Set<Integer> greatestComponent = null;
 
                 // which nodes have already been used (either in visited or in toVisit)
-                Set<Integer> used = new HashSet<Integer>(L - u - i + 1, 1.0f);
+                Set<Integer> used = new HashSet<>(L - u - i + 1, 1.0f);
 
                 // iterates the nodes in the graph
                 Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
@@ -675,13 +675,13 @@ final class LinearSystem {
                     if (used.contains(initialNode)) continue;
 
                     // what are the edges of our initial node?
-                    Integer[] edges = (Integer[])node.getValue().toArray(new Integer[node.getValue().size()]);
+                    Integer[] edges = node.getValue().toArray(new Integer[node.getValue().size()]);
 
                     // allocate memory for the set of visited nodes
-                    visited = new HashSet<Integer>(L - u - i + 1, 1.0f);
+                    visited = new HashSet<>(L - u - i + 1, 1.0f);
 
                     // the set of nodes we must still visit
-                    List<Integer> toVisit = new LinkedList<Integer>();
+                    List<Integer> toVisit = new LinkedList<>();
 
                     // add the initial node to the set of used and visited nodes
                     visited.add(initialNode);
@@ -839,7 +839,7 @@ final class LinearSystem {
                 c[column] = auxIndex;
             }
             else // it is, so let's remove 'i' from the stack
-            nonZerosStack.remove((Integer)i);
+            nonZerosStack.remove(i);
 
             // swap the remaining non-zeros' columns so that they're the last columns in V
             for (int remainingNZ = nonZerosStack.size(); remainingNZ > 0; remainingNZ--)
@@ -910,7 +910,7 @@ final class LinearSystem {
             {
                 int nonZeros = 0;
                 int line = row.position;
-                Set<Integer> nodes = new HashSet<Integer>(L - u - i + 1, 1.0f);
+                Set<Integer> nodes = new HashSet<>(L - u - i + 1, 1.0f);
 
                 // check all columns for non-zeros
                 for (int col = i; col < L - u; col++)
@@ -977,16 +977,15 @@ final class LinearSystem {
          */
 
         // decoding process
-        byte[][] reorderD = new byte[L][];
+        byte[][] noOverheadD = new byte[L][];
 
         // create a copy of D
         for (int index = 0; index < L; index++)
-            reorderD[index] = D[d[index]];
+            noOverheadD[index] = D[d[index]];
 
-        // multiply D by X
         for (int row = 0; row < i; row++)
             // multiply X by D
-            D[d[row]] = MatrixUtilities.multiplyByteLineBySymbolVector(X[row], i, reorderD);
+            D[d[row]] = MatrixUtilities.multiplyByteLineBySymbolVector(X[row], i, noOverheadD);
 
         /*
          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
@@ -1073,12 +1072,15 @@ final class LinearSystem {
             }
         }
 
-        // reorder D
+        // use the already allocated matrix for the matrix C
+        final byte[][] C = noOverheadD;
+        
+        // reorder C
         for (int index = 0; index < L; index++) {
-            reorderD[c[index]] = D[d[index]];
+            C[c[index]] = D[d[index]];
         }
 
-        return reorderD;
+        return C;
 
         // allocate memory for the decoded symbols
         // byte[] C = new byte[L*symbol_size];

@@ -419,7 +419,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         try {
             return LinearSystem.PInactivationDecoding(constraint_matrix, D, Kprime);
-            // return Utilities.gaussElimination(constraint_matrix, D);
+            // return MatrixUtilities.gaussElimination(constraint_matrix, D);
         }
         catch (SingularMatrixException e) {
 
