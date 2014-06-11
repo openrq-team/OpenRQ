@@ -55,7 +55,10 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         final int arrayLen = Math.min(paddedLen, array.length - arrayOff);
         final PaddedByteArray data = PaddedByteArray.newArray(array, arrayOff, arrayLen, paddedLen);
 
-        return new ArraySourceBlockDecoder(dataDecoder, data, sbn, K, extraSymbols);
+        // the symbol overhead cannot exceed the number of repair symbols
+        final int symbolOverhead = Math.min(extraSymbols, ParameterChecker.numRepairSymbolsPerBlock(K));
+
+        return new ArraySourceBlockDecoder(dataDecoder, data, sbn, K, symbolOverhead);
     }
 
 
@@ -72,7 +75,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         PaddedByteArray data,
         int sbn,
         int K,
-        int extraSymbols)
+        int symbolOverhead)
     {
 
         this.dataDecoder = Objects.requireNonNull(dataDecoder);
@@ -80,7 +83,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         this.sbn = sbn;
         this.K = K;
-        this.symbolsState = new SymbolsState(K, extraSymbols);
+        this.symbolsState = new SymbolsState(K, symbolOverhead);
     }
 
     private FECParameters fecParameters() {
@@ -378,7 +381,8 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             int row = S + H + missing_ESI;
 
             // replace line S + H + missing_ESI with the line for encIndexes
-            Set<Integer> indexes = LinearSystem.encIndexes(Kprime, new Tuple(Kprime, repair.getISI(K)));
+            Tuple tuple = new Tuple(Kprime, repair.getISI(K));
+            Set<Integer> indexes = LinearSystem.encIndexes(Kprime, tuple);
 
             byte[] newLine = new byte[L];
 
@@ -398,7 +402,6 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
             // generate the overhead lines
             Tuple tuple = new Tuple(Kprime, repair.getISI(K));
-
             Set<Integer> indexes = LinearSystem.encIndexes(Kprime, tuple);
 
             byte[] newLine = new byte[L];

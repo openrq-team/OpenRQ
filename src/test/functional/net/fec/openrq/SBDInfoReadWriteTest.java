@@ -122,7 +122,7 @@ public class SBDInfoReadWriteTest {
         }
 
         final int KforZeroSBN = DataUtils.getK(FEC_PARAMS, 0);
-        
+
         final Set<Integer> empty = Collections.emptySet();
         final Set<Integer> zeroSrcESI = Collections.singleton(0);
         final Set<Integer> KESI = Collections.singleton(KforZeroSBN);

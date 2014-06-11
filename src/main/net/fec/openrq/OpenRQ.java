@@ -114,7 +114,7 @@ public final class OpenRQ {
      * rate.
      * 
      * @param numSourceSymbols
-     *            The number of source symbols in the source block (must be positive)
+     *            The number of source symbols in the source block (must be between 1 and 56_403)
      * @param extraSymbols
      *            Number of extra repair symbols necessary for decoding (must be non-negative)
      * @param loss
@@ -128,18 +128,21 @@ public final class OpenRQ {
         if (numSourceSymbols < 1 || numSourceSymbols > ParameterChecker.maxNumSourceSymbolsPerBlock()) {
             throw new IllegalArgumentException("invalid number of source symbols");
         }
-        if (extraSymbols < 0 || extraSymbols > ParameterChecker.maxEncodingSymbolID() - numSourceSymbols) {
+        if (extraSymbols < 0) {
             throw new IllegalArgumentException("invalid number of extra symbols");
         }
         if (loss < 0.0 || loss > 1.0) {
             throw new IllegalArgumentException("invalid network loss rate");
         }
 
+        // the symbol overhead cannot exceed the number of repair symbols
+        final int symbolOverhead = Math.min(extraSymbols, ParameterChecker.numRepairSymbolsPerBlock(numSourceSymbols));
+
         double temp_var = loss;
 
         // calculate
         temp_var *= numSourceSymbols;
-        temp_var += extraSymbols;
+        temp_var += symbolOverhead;
         temp_var /= (1 - loss);
 
         // ceil to an integer and return
