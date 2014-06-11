@@ -36,7 +36,7 @@ public final class ArrayDataDecoder implements DataDecoder {
     /**
      * @param fecParams
      *            FEC parameters that configure the returned data decoder object
-     * @param extraSymbols
+     * @param symbOver
      *            Repair symbol overhead (must be non-negative)
      * @return a data decoder object that decodes source data into an array of bytes
      * @exception NullPointerException
@@ -44,18 +44,18 @@ public final class ArrayDataDecoder implements DataDecoder {
      * @exception IllegalArgumentException
      *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || extraSymbols < 0}
      */
-    static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
+    static ArrayDataDecoder newDecoder(FECParameters fecParams, int symbOver) {
 
         // throws NullPointerException if null fecParams
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
-        if (extraSymbols < 0) {
-            throw new IllegalArgumentException("negative number of extra symbols");
+        if (symbOver < 0) {
+            throw new IllegalArgumentException("negative symbol overhead");
         }
 
         final byte[] dataArray = new byte[fecParams.dataLengthAsInt()];
-        return new ArrayDataDecoder(dataArray, fecParams, extraSymbols);
+        return new ArrayDataDecoder(dataArray, fecParams, symbOver);
     }
 
 
@@ -64,7 +64,7 @@ public final class ArrayDataDecoder implements DataDecoder {
     private final ImmutableList<ArraySourceBlockDecoder> srcBlockDecoders;
 
 
-    private ArrayDataDecoder(byte[] dataArray, FECParameters fecParams, final int extraSymbols) {
+    private ArrayDataDecoder(byte[] dataArray, FECParameters fecParams, final int symbOver) {
 
         this.dataArray = dataArray;
         this.fecParams = fecParams;
@@ -79,7 +79,7 @@ public final class ArrayDataDecoder implements DataDecoder {
                     return ArraySourceBlockDecoder.newDecoder(
                         ArrayDataDecoder.this, ArrayDataDecoder.this.dataArray, off,
                         ArrayDataDecoder.this.fecParams,
-                        sbn, K, extraSymbols);
+                        sbn, K, symbOver);
                 }
             });
     }

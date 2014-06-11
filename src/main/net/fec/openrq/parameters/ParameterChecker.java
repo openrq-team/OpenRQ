@@ -391,7 +391,7 @@ public final class ParameterChecker {
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method always returns {@code true}. For information on how to obtain these bounds,
-     * refer to the <a href="#fec-parameters-bounds"> section on "FEC parameter bounds"</a> in the class header.
+     * refer to the section on <a href="#fec-parameters-bounds"><em>FEC parameters bounds</em></a> in the class header.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
@@ -625,7 +625,8 @@ public final class ParameterChecker {
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method always returns {@code true}. For information on how to obtain these bounds,
-     * refer to the <a href="#deriver-parameters-bounds"> section on "Deriver parameter bounds"</a> in the class header.
+     * refer to the section on <a href="#deriver-parameters-bounds"><em>Deriver parameters bounds</em></a> in the class
+     * header.
      * 
      * @param dataLen
      *            A source data length, in number of bytes

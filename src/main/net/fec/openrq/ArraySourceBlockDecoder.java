@@ -48,17 +48,14 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         FECParameters fecParams,
         int sbn,
         int K,
-        int extraSymbols)
+        int symbOver)
     {
 
         final int paddedLen = K * fecParams.symbolSize();
         final int arrayLen = Math.min(paddedLen, array.length - arrayOff);
         final PaddedByteArray data = PaddedByteArray.newArray(array, arrayOff, arrayLen, paddedLen);
 
-        // the symbol overhead cannot exceed the number of repair symbols
-        final int symbolOverhead = Math.min(extraSymbols, ParameterChecker.numRepairSymbolsPerBlock(K));
-
-        return new ArraySourceBlockDecoder(dataDecoder, data, sbn, K, symbolOverhead);
+        return new ArraySourceBlockDecoder(dataDecoder, data, sbn, K, symbOver);
     }
 
 
@@ -75,7 +72,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         PaddedByteArray data,
         int sbn,
         int K,
-        int symbolOverhead)
+        int symbOver)
     {
 
         this.dataDecoder = Objects.requireNonNull(dataDecoder);
@@ -83,7 +80,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         this.sbn = sbn;
         this.K = K;
-        this.symbolsState = new SymbolsState(K, symbolOverhead);
+        this.symbolsState = new SymbolsState(K, symbOver);
     }
 
     private FECParameters fecParameters() {
@@ -233,7 +230,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
                 }
 
                 // 1. don't bother if no new symbols were added
-                // 2. the addition of a source block may have decoded the source block
+                // 2. the addition of a source symbol may have decoded the source block
                 // 3. enough (source/repair) symbols may have been received for a decode to start
                 if (putNewSymbol &&
                     !symbolsState.isSourceBlockDecoded() &&
@@ -244,6 +241,32 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             }
 
             return symbolsState.sourceBlockState();
+        }
+        finally {
+            symbolsState.unlock();
+        }
+    }
+
+    @Override
+    public int symbolOverhead() {
+
+        symbolsState.lock();
+        try {
+            return symbolsState.symbolOverhead();
+        }
+        finally {
+            symbolsState.unlock();
+        }
+    }
+
+    @Override
+    public void setSymbolOverhead(int symbOver) {
+
+        if (symbOver < 0) throw new IllegalArgumentException("symbol overhead must be non-negative");
+
+        symbolsState.lock();
+        try {
+            symbolsState.setSymbolOverhead(symbOver);
         }
         finally {
             symbolsState.unlock();
@@ -511,12 +534,12 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         private final Map<Integer, EncodingSymbol> repairSymbols;
 
         private final int K;
-        private final int symbolOverhead;
+        private int symbolOverhead;
 
         private final Lock symbolsStateLock;
 
 
-        SymbolsState(int K, int symbolOverhead) {
+        SymbolsState(int K, int symbOver) {
 
             this.sbState = SourceBlockState.INCOMPLETE;
 
@@ -527,7 +550,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             this.receivedSourceSymbols = new ReceivedSourceSymbolsIterable(sourceSymbolsBitSet);
 
             this.K = K;
-            this.symbolOverhead = symbolOverhead;
+            setSymbolOverhead(symbOver);
 
             this.symbolsStateLock = new ReentrantLock(false); // non-fair lock
         }
@@ -571,13 +594,17 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         }
 
         // requires valid parameter
+        // requires !containsSourceSymbol(repair.esi())
         void addSourceSymbol(int esi) {
 
-            sourceSymbolsBitSet.set(esi); // mark the symbol as received
+            if (!isSourceBlockDecoded()) {
+                sourceSymbolsBitSet.set(esi); // mark the symbol as received
+                sbState = SourceBlockState.INCOMPLETE;
 
-            if (numMissingSourceSymbols() == 0) {
-                sbState = SourceBlockState.DECODED;
-                repairSymbols.clear(); // free memory
+                if (numMissingSourceSymbols() == 0) {
+                    sbState = SourceBlockState.DECODED;
+                    repairSymbols.clear(); // free memory
+                }
             }
         }
 
@@ -603,9 +630,13 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         }
 
         // requires valid parameter
+        // requires !containsRepairSymbol(repair.esi())
         void addRepairSymbol(EncodingSymbol repair) {
 
-            repairSymbols.put(repair.esi(), repair);
+            if (!isSourceBlockDecoded()) {
+                repairSymbols.put(repair.esi(), repair);
+                sbState = SourceBlockState.INCOMPLETE;
+            }
         }
 
         Iterable<EncodingSymbol> repairSymbols() {
@@ -621,6 +652,18 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         boolean haveEnoughSymbolsToDecode() {
 
             return (sourceSymbolsBitSet.cardinality() + repairSymbols.size()) >= (K + symbolOverhead);
+        }
+
+        int symbolOverhead() {
+
+            return symbolOverhead;
+        }
+
+        // requires non-negative parameter
+        void setSymbolOverhead(int symbOver) {
+
+            // the symbol overhead cannot exceed the number of repair symbols
+            this.symbolOverhead = Math.min(symbOver, ParameterChecker.numRepairSymbolsPerBlock(K));
         }
 
 

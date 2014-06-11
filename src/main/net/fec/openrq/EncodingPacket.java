@@ -314,9 +314,9 @@ public abstract class EncodingPacket {
     public abstract int encodingSymbolID();
 
     /**
-     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330. For the exact format, refer to the <a
-     * href="parameters/ParameterIO.html#fec-payload-id"> section on "FEC Payload ID"</a> in the {@link ParameterIO}
-     * class header.
+     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330. For the exact format, refer to the section on
+     * <a href="parameters/ParameterIO.html#fec-payload-id"><em>FEC Payload ID</em></a> in the {@link ParameterIO} class
+     * header.
      * 
      * @return a <em>FEC Payload ID</em> as defined in RFC 6330
      */
@@ -398,8 +398,7 @@ public abstract class EncodingPacket {
      * {@linkplain #fecPayloadID() FEC payload ID}, followed by the symbols data length, followed by the symbols data
      * itself.
      * <p>
-     * The provided array must have at least {@code (8 + symbolsLength())} bytes between the given index and its
-     * length.
+     * The provided array must have at least {@code (8 + symbolsLength())} bytes between the given index and its length.
      * 
      * @param array
      *            An array on which the packet contents are written

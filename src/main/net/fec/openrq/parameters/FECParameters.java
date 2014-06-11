@@ -78,8 +78,8 @@ public final class FECParameters {
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
-     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameters-bounds"> section on "FEC
-     * parameters bounds"</a> in the {@link ParameterChecker} class header.
+     * obtain these bounds, refer to the section on <a href="ParameterChecker.html#fec-parameters-bounds"><em>FEC
+     * parameters bounds</em></a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            The length of the source data, in number of bytes
@@ -107,8 +107,8 @@ public final class FECParameters {
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
-     * obtain these bounds, refer to the <a href="ParameterChecker.html#fec-parameters-bounds"> section on "FEC
-     * parameters bounds"</a> in the {@link ParameterChecker} class header.
+     * obtain these bounds, refer to the section on <a href="ParameterChecker.html#fec-parameters-bounds">
+     * <em>FEC parameters bounds</em></a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            The length of the source data, in number of bytes
@@ -141,10 +141,11 @@ public final class FECParameters {
     /**
      * Derives FEC parameters from specific deriver parameters.
      * <p>
-     * A payload length is required. It is equivalent to the "symbol size" FEC parameter.
-     * <p>
-     * A maximum size for a block that is decodable in working memory is required. It allows the decoder to work with a
-     * limited amount of memory in an efficient way.
+     * <ul>
+     * <li>A payload length is required. It is equivalent to the "symbol size" FEC parameter.
+     * <li>A maximum size for a block that is decodable in working memory is required. It allows the decoder to work
+     * with a limited amount of memory in an efficient way.
+     * </ul>
      * <p>
      * <b>Note:</b> <em>The symbol alignment parameter "Al" is internally obtained.</em>
      * <p>
@@ -154,8 +155,8 @@ public final class FECParameters {
      * <p>
      * It is possible, a priori, to obtain lower and upper bounds for valid parameter values. If the parameters fall
      * within these bounds, then this method never throws an {@code IllegalArgumentException}. For information on how to
-     * obtain these bounds, refer to the <a href="ParameterChecker.html#deriver-parameters-bounds"> section on "Deriver
-     * parameters bounds"</a> in the {@link ParameterChecker} class header.
+     * obtain these bounds, refer to the section on <a href="ParameterChecker.html#deriver-parameters-bounds">
+     * <em>Deriver parameters bounds</em></a> in the {@link ParameterChecker} class header.
      * 
      * @param dataLen
      *            A source data length, in number of bytes
@@ -224,8 +225,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param serParams
      *            A serializable object containing FEC parameters
@@ -252,8 +252,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing FEC parameters
@@ -277,8 +276,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing FEC parameters
@@ -308,8 +306,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param buffer
      *            A buffer containing FEC parameters
@@ -342,8 +339,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are read from the input, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -375,8 +371,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are read from the channel, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -434,9 +429,9 @@ public final class FECParameters {
     }
 
     /**
-     * Returns a serializable object with these FEC parameters. The serializable object will contain the <a
-     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * Returns a serializable object with these FEC parameters. The serializable object will contain the
+     * <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * 
      * @return a serializable object with these FEC parameters
      */
@@ -446,9 +441,9 @@ public final class FECParameters {
     }
 
     /**
-     * Returns an array with these FEC parameters. The array will contain the <a
-     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * Returns an array with these FEC parameters. The array will contain the
+     * <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * 
      * @return an array with these FEC parameters
      */
@@ -461,9 +456,9 @@ public final class FECParameters {
     }
 
     /**
-     * Writes in the provided array starting at index zero these FEC parameters. The write consists of the <a
-     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * Writes in the provided array starting at index zero these FEC parameters. The write consists of the
+     * <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * The provided array must have a length of at least 12 bytes.
      * 
@@ -480,9 +475,9 @@ public final class FECParameters {
     }
 
     /**
-     * Writes in the provided array starting in a specific index these FEC parameters. The write consists of the <a
-     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * Writes in the provided array starting in a specific index these FEC parameters. The write consists of the
+     * <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * The provided array must have at least 12 bytes between the given index and its length.
      * 
@@ -504,9 +499,9 @@ public final class FECParameters {
     }
 
     /**
-     * Returns a buffer with these FEC parameters. The buffer will contain the <a
-     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * Returns a buffer with these FEC parameters. The buffer will contain the
+     * <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * 
      * @return a buffer with these FEC parameters
      */
@@ -520,9 +515,9 @@ public final class FECParameters {
     }
 
     /**
-     * Writes in the provided buffer these FEC parameters. The write consists of the <a
-     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * Writes in the provided buffer these FEC parameters. The write consists of the
+     * <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * The provided buffer must not be {@linkplain ByteBuffer#isReadOnly() read-only}, and must have at least 12 bytes
      * {@linkplain ByteBuffer#remaining() remaining}. If this method returns normally, the position of the provided
@@ -544,9 +539,9 @@ public final class FECParameters {
     }
 
     /**
-     * Writes these FEC parameters directly into the provided {@code DataOutput} object. The method will write the <a
-     * href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * Writes these FEC parameters directly into the provided {@code DataOutput} object. The method will write the
+     * <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * Examples of {@code DataOutput} objects are {@link java.io.DataOutputStream DataOutputStream} and
      * {@link java.io.ObjectOutputStream ObjectOutputStream}.
@@ -569,8 +564,8 @@ public final class FECParameters {
 
     /**
      * Writes these FEC parameters directly into the provided {@code WritableByteChannel} object. The method will write
-     * the <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the <a
-     * href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
+     * the <a href="ParameterIO.html#common-fec-oti">Common FEC OTI</a> followed by the
+     * <a href="ParameterIO.html#schemespec-fec-oti">Scheme-Specific FEC OTI</a>.
      * <p>
      * Examples of {@code WritableByteChannel} objects are {@link java.nio.channels.SocketChannel SocketChannel} and
      * {@link java.nio.channels.FileChannel FileChannel}.
@@ -695,13 +690,11 @@ public final class FECParameters {
      * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
      * <ul>
      * <li>{@code obj} is non-null
-     * <li>and {@code obj} is an instance of {@code FECParameters}
-     * <li>and {@code this}.{@link #dataLength()} == {@code obj.dataLength()}
-     * <li>and {@code this}.{@link #symbolSize()} == {@code obj.symbolSize()}
-     * <li>and {@code this}.{@link #numberOfSourceBlocks()} == {@code obj.numberOfSourceBlocks()}
-     * <li>and {@code this}.{@link #interleaverLength()} == {@code obj.interleaverLength()}
-     * <li>and {@code this}.{@link #symbolAlignment()} == {@code obj.symbolAlignment()}
-     * </ul>
+     * <li>and {@code obj} is an instance of {@code FECParameters} <li>and {@code this}.{@link #dataLength()} ==
+     * {@code obj.dataLength()} <li>and {@code this}.{@link #symbolSize()} == {@code obj.symbolSize()} <li>and
+     * {@code this}.{@link #numberOfSourceBlocks()} == {@code obj.numberOfSourceBlocks()} <li>and {@code this}.
+     * {@link #interleaverLength()} == {@code obj.interleaverLength()} <li>and {@code this}.{@link #symbolAlignment()}
+     * == {@code obj.symbolAlignment()} </ul>
      */
     @Override
     public boolean equals(Object obj) {
