@@ -113,7 +113,7 @@ public final class OpenRQ {
     /**
      * Returns a {@link DataDecoder} object that decodes source data into an array of bytes, configured according to the
      * provided FEC parameters. The symbol overhead value will be set to {@code 0}, and all source block decoders will
-     * initially be configured with that value.
+     * initially be configured with that value. The probability of decoding failure given this overhead is 1%.
      * <p>
      * For information on the symbol overhead value, refer to the section on
      * <a href="decoder/SourceBlockDecoder.html#symbol-overhead"><em>Symbol overhead</em></a> in the
@@ -137,7 +137,7 @@ public final class OpenRQ {
     /**
      * Returns a {@link DataDecoder} object that decodes source data into an array of bytes, configured according to the
      * provided FEC parameters. The symbol overhead value will be set to {@code 1}, and all source block decoders will
-     * initially be configured with that value.
+     * initially be configured with that value. The probability of decoding failure given this overhead is 0.01%.
      * <p>
      * For information on the symbol overhead value, refer to the section on
      * <a href="decoder/SourceBlockDecoder.html#symbol-overhead"><em>Symbol overhead</em></a> in the
@@ -161,7 +161,8 @@ public final class OpenRQ {
     /**
      * Returns a {@link DataDecoder} object that decodes source data into an array of bytes, configured according to the
      * provided FEC parameters. The symbol overhead value will be set to {@code 2}, and all source block decoders will
-     * initially be configured with that value.
+     * initially be configured with that value. The probability of decoding failure given this overhead is 0.0001% (one
+     * in a million chance).
      * <p>
      * For information on the symbol overhead value, refer to the section on
      * <a href="decoder/SourceBlockDecoder.html#symbol-overhead"><em>Symbol overhead</em></a> in the

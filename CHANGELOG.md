@@ -1,3 +1,20 @@
+## 3.3
+
+Clarified the meaning of "symbol overhead".
+
+Added new methods for retrieving and changing the symbol overhead value in
+a source block decoder.
+
+Changed public method signatures:
+(++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.OpenRQ
+ * ++ public static ArrayDataDecoder newDecoderWithZeroOverhead(FECParameters)
+ * ++ public static ArrayDataDecoder newDecoderWithOneOverhead(FECParameters)
+ * ++ public static ArrayDataDecoder newDecoderWithTwoOverhead(FECParameters)
+* net.fec.openrq.decoder.SourceBlockDecoder
+ * public int symbolOverhead()
+ * public void setSymbolOverhead(int)
+
 ## 3.2
 
 Turned "net.fec.openrq.decoder.SourceBlockDecoder" thread safe, and added
