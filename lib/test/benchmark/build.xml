@@ -86,7 +86,12 @@ questions.
                classpath=".:${jmh-core.jar}:${jmh-generator-annprocess.jar}"
                includeAntRuntime="false"/>
                
+        <subant target="-benchmark-post-compile" buildpath="." failonerror="true"/>
+               
     </target>
+    
+    <!-- private target to be overriden in importing script if necessary-->
+    <target name="-benchmark-post-compile"/>
 
     <!-- private target to be called by importing script -->
     <target name="-benchmark-jar" depends="-init-benchmark-properties,-compile-with-jmh">

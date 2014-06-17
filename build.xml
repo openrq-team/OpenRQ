@@ -42,6 +42,8 @@ limitations under the License.
     <property name="test-benchmark.jar_file" location="openrq-${version}-benchmark-test.jar"/>
     <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
     
+    <property name="opt.src_dir" location="${top.src_dir}/opt"/>
+    
     <property name="docs.src_dir" location="${top.src_dir}/docs"/>
     <property name="docs.build_dir" location="docs"/>
 
@@ -78,6 +80,9 @@ limitations under the License.
         <javac srcdir="${main.src_dir}" destdir="${main.build_dir}"
                classpath="."
                includeAntRuntime="false"/>
+        <copy todir="${main.build_dir}">
+            <fileset dir="${main.src_dir}" excludes="**/*.java"/>
+        </copy>
 
     </target>
 
@@ -90,11 +95,27 @@ limitations under the License.
     </target>
 
 
+<!-- ================ Optional targets ================ -->
+    <target name="buildopt"
+            description="Compile the main and optional Java classes.">
+            
+        <delete dir="${main.build_dir}"/>
+        <mkdir dir="${main.build_dir}"/>
+        <javac srcdir="${main.src_dir}:${opt.src_dir}" destdir="${main.build_dir}"
+               classpath="."
+               includeAntRuntime="false"/>
+        <copy todir="${main.build_dir}">
+            <fileset dir="${main.src_dir}" excludes="*.java"/>
+            <fileset dir="${opt.src_dir}" excludes="*.java"/>
+        </copy>
+    </target>
+
+
 <!-- ================ Javadoc targets ================ -->
     <target name="docs"
             description="Generate the Javadoc files for the public API.">
 
-    	<delete dir="${docs.build_dir}"/>
+        <delete dir="${docs.build_dir}"/>
         <javadoc destdir="${docs.build_dir}"
                  classpath="." source="1.7"
                  access="public"
@@ -118,13 +139,22 @@ limitations under the License.
 
 
 <!-- ================ Functional testing targets ================ -->
-    <!-- overriden private target from junit-build.xml -->
+    <!-- overriden private target -->
     <target name="-init-functional-properties">
         
         <property name="func.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-functional.src_dir}"/>
         <property name="func.build_dir" value="${test-functional.build_dir}"/>
         <property name="func.jar_file" value="${test-functional.jar_file}"/>
         
+    </target>
+    
+    <!-- overriden private target -->
+    <target name="-functional-post-compile">
+
+        <copy todir="${test-functional.build_dir}">
+            <fileset dir="${main.src_dir}" excludes="**/*.java"/>
+        </copy>
+
     </target>
     
     <!-- requires jar target to be defined in the imported script -->
@@ -139,13 +169,22 @@ limitations under the License.
 
 
 <!-- ================ Benchmark testing targets ================ -->    
-    <!-- overriden private target from junit-build.xml -->
+    <!-- overriden private target -->
     <target name="-init-benchmark-properties">
         
         <property name="bench.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-benchmark.src_dir}"/>
         <property name="bench.build_dir" value="${test-benchmark.build_dir}"/>
         <property name="bench.jar_file" value="${test-benchmark.jar_file}"/>
         
+    </target>
+    
+    <!-- overriden private target -->
+    <target name="-benchmark-post-compile">
+
+        <copy todir="${test-benchmark.build_dir}">
+            <fileset dir="${main.src_dir}" excludes="**/*.java"/>
+        </copy>
+
     </target>
     
     <!-- requires jar target to be defined in the imported script -->

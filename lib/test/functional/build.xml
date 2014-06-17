@@ -60,8 +60,12 @@ limitations under the License.
         <javac srcdir="${func.src_dirs}" destdir="${func.build_dir}"
                classpath=".:${junit-core.jar}:${hamcrest-core.jar}"
                includeAntRuntime="false"/>
-               
+
+        <subant target="-functional-post-compile" buildpath="." failonerror="true"/>
     </target>
+    
+    <!-- private target to be overriden in importing script if necessary-->
+    <target name="-functional-post-compile"/>
 
     <!-- private target to be called by importing script -->
     <target name="-functional-jar" depends="-init-functional-properties,-compile-with-junit">
