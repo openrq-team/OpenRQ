@@ -93,6 +93,19 @@ public final class SystematicIndices {
         throw new RuntimeException("Invalid table state");
     }
 
+    public static boolean containsKPrime(int Kprime) {
+
+        if (Kprime >= K(0) && Kprime <= K(table2.length - 1)) {
+            for (int i = 0; i < table2.length; i++) {
+                if (K(i) == Kprime) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 
     private static final int table2[][] = {
                                            {10, 254, 7, 10, 17},
