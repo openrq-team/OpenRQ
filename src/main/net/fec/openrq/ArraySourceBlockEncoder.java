@@ -23,6 +23,7 @@ import java.util.Objects;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
 import net.fec.openrq.util.rq.SystematicIndices;
 
 
@@ -102,7 +103,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         // Note: if multiple threads call this method concurrently, then
         // no harm is done, only the fact that some threads may perform
         // useless work
-        
+
         byte[][] is = intermediateSymbols;
         if (is == null) {
             is = generateIntermediateSymbols();
@@ -288,22 +289,30 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         int L = Kprime + S + H;
         int T = fecParameters().symbolSize();
 
-        // generate LxL Constraint Matrix
-        byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(Kprime); // A
-
         // allocate and initialize vector D
         byte[][] D = new byte[L][T];
         for (int row = S + H, index = 0; row < K + S + H; row++, index++)
             D[row] = sourceSymbols[index].data();
 
-        // solve system of equations
-        try {
-            return LinearSystem.PInactivationDecoding(constraint_matrix, D, Kprime);
-            // return Utilities.gaussElimination(constraint_matrix, D);
+        // first try to obtain an optimized decoder that supports Kprime
+        final IntermediateSymbolsDecoder isd = ISDManager.get(Kprime);
+        if (isd != null) {
+            return isd.decode(D);
         }
-        catch (SingularMatrixException e) {
-            throw new RuntimeException(
-                "FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
+        else { // if no optimized decoder is available, fall back to the standard decoding process
+
+            // generate LxL Constraint Matrix
+            byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(Kprime); // A
+
+            // solve system of equations
+            try {
+                return LinearSystem.PInactivationDecoding(constraint_matrix, D, Kprime);
+                // return Utilities.gaussElimination(constraint_matrix, D);
+            }
+            catch (SingularMatrixException e) {
+                throw new RuntimeException(
+                    "FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
+            }
         }
     }
 

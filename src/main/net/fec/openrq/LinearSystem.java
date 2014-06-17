@@ -423,6 +423,9 @@ final class LinearSystem {
         int P = L - W;
         int M = A.length;
 
+        // DEBUG
+        // PRINTER.println(printVarDeclar(int.class, "Kprime", String.valueOf(Kprime)));
+
         /*
          * initialize c and d vectors
          */
@@ -896,6 +899,12 @@ final class LinearSystem {
                     // decoding process - (beta * D[d[i]]) + D[d[row]]
                     product = OctectOps.betaProduct(balpha, D[d[i]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], product);
+                    // DEBUG
+                    // PRINTER.println(
+                    // printVarDeclar(byte[].class, "product",
+                    // "OctectOps.betaProduct((byte)" + balpha + ",D[" + d[i] + "])"));
+                    // PRINTER.println(
+                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[row] + "],product);");
                 }
             }
 
@@ -978,14 +987,26 @@ final class LinearSystem {
 
         // decoding process
         byte[][] noOverheadD = new byte[L][];
+        // DEBUG
+        // PRINTER.println(
+        // printVarDeclar(byte[][].class, "NOD", "new byte[" + L + "][]"));
 
         // create a copy of D
-        for (int index = 0; index < L; index++)
+        for (int index = 0; index < L; index++) {
             noOverheadD[index] = D[d[index]];
+            // DEBUG
+            // PRINTER.println(
+            // "NOD[" + index + "]=" + "D[" + d[index] + "];");
+        }
 
-        for (int row = 0; row < i; row++)
+        for (int row = 0; row < i; row++) {
             // multiply X by D
             D[d[row]] = MatrixUtilities.multiplyByteLineBySymbolVector(X[row], i, noOverheadD);
+            // DEBUG
+            // PRINTER.println(
+            // "D[" + d[row] + "]=MatrixUtilities.multiplyByteLineBySymbolVector(" +
+            // printByteArray(X[row]) + "," + i + "," + "NOD);");
+        }
 
         /*
          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
@@ -1027,6 +1048,12 @@ final class LinearSystem {
                     // decoding process - (beta * D[d[j]]) + D[d[row]]
                     byte[] product = OctectOps.betaProduct(b, D[d[j]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], product);
+                    // DEBUG
+                    // PRINTER.println(
+                    // printVarDeclar(byte[].class, "product",
+                    // "OctectOps.betaProduct((byte)" + b + ",D[" + d[j] + "])"));
+                    // PRINTER.println(
+                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[row] + "],product);");
                 }
             }
         }
@@ -1068,18 +1095,29 @@ final class LinearSystem {
                     // decoding process - D[d[j]] + (A[j][l] * D[d[l]])
                     product = OctectOps.betaProduct(beta, D[d[l]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[j]], product);
+                    // DEBUG
+                    // PRINTER.println(
+                    // printVarDeclar(byte[].class, "product",
+                    // "OctectOps.betaProduct((byte)" + beta + ",D[" + d[l] + "])"));
+                    // PRINTER.println(
+                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[j] + "],product);");
                 }
             }
         }
 
         // use the already allocated matrix for the matrix C
         final byte[][] C = noOverheadD;
-        
+
         // reorder C
         for (int index = 0; index < L; index++) {
             C[c[index]] = D[d[index]];
+            // DEBUG
+            // PRINTER.println(
+            // "NOD[" + c[index] + "]=D[" + d[index] + "];");
         }
 
+        // DEBUG
+        // PRINTER.println("return NOD;");
         return C;
 
         // allocate memory for the decoded symbols
