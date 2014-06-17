@@ -26,6 +26,7 @@ import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -139,12 +140,62 @@ public class SourceBlockDecodingTest {
     // for CPU/memory profiling
     public static void main(String[] args) {
 
-        final SourceBlockDecodingTest test = new SourceBlockDecodingTest();
-        test.setup();
-        final int iters = 500;
-        for (int i = 0; i < iters; i++) {
-            test.test();
-            System.out.println(i);
+        final IntermediateSymbolsDecoder isd = new ISD_10();
+        final int Kprime = isd.supportedKPrime();
+        final byte[][] D = {
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                            {53, -99, 65, -70, -9, -118, -2, 13, -31, -69},
+                            {-25, -82, 40, -64, 69, 12, -28, 60, 8, 79},
+                            {75, -69, 43, -15, -125, -99, -18, 70, 109, -123},
+                            {44, -75, -66, 106, 97, -86, -102, 12, 97, 23},
+                            {-67, 103, 67, -25, -36, -105, -123, 115, -103, -114},
+                            {104, 94, -120, 92, -77, 97, -8, 108, -105, 70},
+                            {32, -66, -65, -80, 17, 0, -78, 118, 84, 87},
+                            {24, -61, 15, 64, 108, -56, -29, -95, -120, -1},
+                            {-15, 16, 89, -21, 111, -68, -26, 38, 85, -33},
+                            {-67, 111, -125, -72, -106, 112, -42, -39, -7, -65}
+        };
+
+        try {
+            System.out.println("Optimized:");
+            MatrixUtilities.printMatrix(isd.decode(D));
+            
+            System.out.println();
+            System.out.println("PInactivation:");
+            final byte[][] A = LinearSystem.generateConstraintMatrix(Kprime); // A
+            MatrixUtilities.printMatrix(LinearSystem.PInactivationDecoding(A, D, Kprime));
+            
+            System.out.println();
+            System.out.println("Gaussian elimination:");
+            MatrixUtilities.printMatrix(MatrixUtilities.gaussElimination(A, D));
         }
+        catch (SingularMatrixException e) {
+            throw new RuntimeException(
+                "FATAL ERROR: Singular matrix for the encoding process. This should never happen.");
+        }
+
+        // final SourceBlockDecodingTest test = new SourceBlockDecodingTest();
+        // test.setup();
+        // final int iters = 1;
+        // for (int i = 0; i < iters; i++) {
+        // test.test();
+        // System.out.println(i);
+        // }
     }
 }
