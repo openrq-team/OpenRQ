@@ -445,4 +445,12 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
             throw new UnsupportedOperationException();
         }
     }
+
+
+    // ============================= TEST_CODE ============================= //
+
+    static void forceInterSymbolsGen(ArraySourceBlockEncoder enc) {
+
+        enc.generateIntermediateSymbols();
+    }
 }

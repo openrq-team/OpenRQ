@@ -19,11 +19,8 @@ package net.fec.openrq;
 import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
 
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import net.fec.openrq.decoder.SourceBlockState;
-import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 
@@ -46,18 +43,14 @@ import org.openjdk.jmh.annotations.Warmup;
 @Fork(2)
 @BenchmarkMode(Mode.AverageTime)
 @State(Scope.Benchmark)
-public class SourceBlockDecodingTest {
-
-    // change this to use a larger number of source symbols
-    private static final boolean PREFER_SOURCE_SYMBOLS = false;
+public class SourceBlockEncodingTest {
 
     // default parameter values
-    private static final int DEF_DATA_LEN = 9_999;
-    private static final int DEF_NUM_SOURCE_SYMBOLS = 250;
-    private static final int DEF_EXTRA_SYMBOLS = 0;
+    private static final int DEF_DATA_LEN = 1000;
+    private static final int DEF_NUM_SOURCE_SYMBOLS = 100;
 
 
-    private static ArraySourceBlockDecoder newRandomSBDecoder(int F, int K, int xtraSymbs) {
+    private static ArraySourceBlockEncoder newSBEncoder(int F, int K) {
 
         if (F < 1) throw new IllegalArgumentException("data length must be positive");
         // F is an integer so it is already upper bounded
@@ -77,29 +70,7 @@ public class SourceBlockDecodingTest {
         final Random rand = TestingCommon.newSeededRandom();
 
         final byte[] data = TestingCommon.randomBytes(F, rand);
-        final int numESIs = K + xtraSymbs;
-        final Set<Integer> esis = randomESIs(rand, K, numESIs);
-        final SourceBlockEncoder enc = OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
-
-        final ArraySourceBlockDecoder dec = (ArraySourceBlockDecoder) /* safe cast */
-                                            OpenRQ.newDecoder(fecParams, K).sourceBlock(0);
-
-        for (int esi : esis) {
-            if (dec.putEncodingPacket(enc.encodingPacket(esi)) == SourceBlockState.DECODING_FAILURE) {
-                throw new IllegalStateException("decoding failed, try using a different set of symbols");
-            }
-        }
-        return dec;
-    }
-
-    private static Set<Integer> randomESIs(Random rand, int K, int numESIs) {
-
-        if (PREFER_SOURCE_SYMBOLS) {
-            return TestingCommon.randomSrcRepESIs(rand, numESIs, K);
-        }
-        else {
-            return TestingCommon.randomAnyESIs(rand, numESIs);
-        }
+        return OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
     }
 
 
@@ -109,37 +80,33 @@ public class SourceBlockDecodingTest {
     @Param({"" + DEF_NUM_SOURCE_SYMBOLS})
     private int srcsymbs;
 
-    @Param({"" + DEF_EXTRA_SYMBOLS})
-    private int symbover;
-
-    private ArraySourceBlockDecoder dec;
+    private ArraySourceBlockEncoder enc;
 
 
-    public SourceBlockDecodingTest() {
+    public SourceBlockEncodingTest() {
 
         this.datalen = DEF_DATA_LEN;
         this.srcsymbs = DEF_NUM_SOURCE_SYMBOLS;
-        this.symbover = DEF_EXTRA_SYMBOLS;
 
-        this.dec = null;
+        this.enc = null;
     }
 
     @Setup
     public void setup() {
 
-        dec = newRandomSBDecoder(datalen, srcsymbs, symbover);
+        enc = newSBEncoder(datalen, srcsymbs);
     }
 
     @Benchmark
     public void test() {
 
-        ArraySourceBlockDecoder.forceDecode(dec);
+        ArraySourceBlockEncoder.forceInterSymbolsGen(enc);
     }
 
     // for CPU/memory profiling
     public static void main(String[] args) {
 
-        final SourceBlockDecodingTest test = new SourceBlockDecodingTest();
+        final SourceBlockEncodingTest test = new SourceBlockEncodingTest();
         test.setup();
         final int iters = 500;
         for (int i = 0; i < iters; i++) {
