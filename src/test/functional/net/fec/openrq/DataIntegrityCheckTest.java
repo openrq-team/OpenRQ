@@ -87,6 +87,8 @@ public final class DataIntegrityCheckTest {
             }
         }
 
+        System.out.printf("Testing data integrity with F=[%d, %d] K=[%d, %d] Z=[%d, %d] N=%d%n",
+            Fs[0], Fs[Fs.length - 1], Ks[0], Ks[Ks.length - 1], Zs[0], Zs[Zs.length - 1], N, N);
         System.out.println("Testing " + 2 * params.size() + " data integrity tests...");
         return params;
     }
