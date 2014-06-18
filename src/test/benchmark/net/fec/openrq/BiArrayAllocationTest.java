@@ -18,9 +18,9 @@ package net.fec.openrq;
 
 import java.util.concurrent.TimeUnit;
 
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -51,7 +51,7 @@ public class BiArrayAllocationTest {
         preAllocated = new byte[size][size];
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public byte[][] testPreAllocated() {
 
         final byte[][] preAllocated = this.preAllocated;
@@ -64,7 +64,7 @@ public class BiArrayAllocationTest {
         return preAllocated;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public byte[][] testNewlyAllocated() {
 
         final int size = this.size;
