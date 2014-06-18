@@ -1075,6 +1075,9 @@ final class LinearSystem {
 
                 // decoding process - D[d[j]] / beta
                 OctectOps.betaDivisionInPlace(D[d[j]], beta);
+                // DEBUG
+                // PRINTER.println(
+                // "OctectOps.betaDivisionInPlace(D[" + d[j] + "],(byte)" + beta + ");");
             }
 
             // "For l from 1 to j-1"

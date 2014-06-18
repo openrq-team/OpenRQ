@@ -345,6 +345,9 @@ final class MatrixUtilities {
 
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
                 OctectOps.betaDivisionInPlace(D[d[r + first_row]], beta);
+                // DEBUG
+                // PRINTER.println(
+                // "OctectOps.betaDivisionInPlace(D[" + d[r + first_row] + "],(byte)" + beta + ");");
             }
 
             for (i = 0; i < rowCount; i++) {
@@ -362,6 +365,12 @@ final class MatrixUtilities {
                     // decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
                     product = OctectOps.betaProduct(beta, D[d[r + first_row]]);
                     xorSymbolInPlace(D[d[i + first_row]], product);
+                    // DEBUG
+                    // PRINTER.println(
+                    // printVarDeclar(byte[].class, "product",
+                    // "OctectOps.betaProduct((byte)" + beta + ",D[" + d[r + first_row] + "])"));
+                    // PRINTER.println(
+                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[i + first_row] + "],product);");
                 }
             }
 
