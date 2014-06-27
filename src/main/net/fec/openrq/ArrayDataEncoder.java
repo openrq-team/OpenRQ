@@ -126,7 +126,7 @@ public final class ArrayDataEncoder implements DataEncoder {
      * @see #numberOfSourceBlocks()
      */
     @Override
-    public ArraySourceBlockEncoder sourceBlock(int sbn) {
+    public SourceBlockEncoder sourceBlock(int sbn) {
 
         try {
             return srcBlockEncoders.get(sbn); // list is random access

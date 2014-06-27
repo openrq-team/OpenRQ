@@ -280,7 +280,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         return EncodingSymbol.newRepairSymbol(esi, enc_data);
     }
 
-    private byte[][] generateIntermediateSymbols() {
+    private byte[][] initVectorD() {
 
         // source block's parameters
         int Ki = SystematicIndices.getKIndex(Kprime);
@@ -291,8 +291,17 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
         // allocate and initialize vector D
         byte[][] D = new byte[L][T];
-        for (int row = S + H, index = 0; row < K + S + H; row++, index++)
+        for (int row = S + H, index = 0; row < K + S + H; row++, index++) {
             D[row] = sourceSymbols[index].data();
+        }
+
+        return D;
+    }
+
+    private byte[][] generateIntermediateSymbols() {
+
+        // initialize the vector D with source data
+        final byte[][] D = initVectorD();
 
         // first try to obtain an optimized decoder that supports Kprime
         final IntermediateSymbolsDecoder isd = ISDManager.get(Kprime);
@@ -448,6 +457,11 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
 
     // ============================= TEST_CODE ============================= //
+
+    static byte[][] forceInitVectorD(ArraySourceBlockEncoder enc) {
+
+        return enc.initVectorD();
+    }
 
     static void forceInterSymbolsGen(ArraySourceBlockEncoder enc) {
 
