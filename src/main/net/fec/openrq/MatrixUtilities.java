@@ -19,7 +19,7 @@ package net.fec.openrq;
 
 import java.util.Arrays;
 
-import net.fec.openrq.util.rq.OctectOps;
+import net.fec.openrq.util.rq.OctetOps;
 
 
 /**
@@ -68,7 +68,7 @@ final class MatrixUtilities {
             for (int j = 0; j < C[0].length; j++) {
                 for (int k = 0; k < A[0].length; k++) {
 
-                    byte temp = OctectOps.product(A[i][k], B[k][j]);
+                    byte temp = OctetOps.product(A[i][k], B[k][j]);
 
                     C[i][j] = (byte)(C[i][j] ^ temp);
                 }
@@ -113,7 +113,7 @@ final class MatrixUtilities {
 
                 for (int k = 0; k < colsA; k++) {
 
-                    byte temp = OctectOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
+                    byte temp = OctetOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
 
                     C[i][j] = (byte)(C[i][j] ^ temp);
                 }
@@ -161,7 +161,7 @@ final class MatrixUtilities {
             for (int j = 0; j < colsC; j++) {
                 for (int k = 0; k < colsA; k++) {
 
-                    byte temp = OctectOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
+                    byte temp = OctetOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
 
                     C[i + first_rowC][j + first_colC] = (byte)(C[i + first_rowC][j + first_colC] ^ temp);
                 }
@@ -211,7 +211,7 @@ final class MatrixUtilities {
             for (int j = 0; j < colsB; j++) {
                 for (int k = 0; k < colsA; k++) {
 
-                    byte temp = OctectOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
+                    byte temp = OctetOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
 
                     tempLine[j + first_colC] = (byte)(tempLine[j + first_colC] ^ temp);
                 }
@@ -243,7 +243,7 @@ final class MatrixUtilities {
 
             for (int colRow = 0; colRow < line_length; colRow++) {
 
-                byte temp = OctectOps.product(line[colRow], vector[colRow][octet]);
+                byte temp = OctetOps.product(line[colRow], vector[colRow][octet]);
 
                 result[octet] = (byte)(result[octet] ^ temp);
             }
@@ -274,7 +274,7 @@ final class MatrixUtilities {
 
             for (int colRow = 0; colRow < line_length; colRow++) {
 
-                byte temp = OctectOps.product(line[colRow], D[d[colRow]][octet]);
+                byte temp = OctetOps.product(line[colRow], D[d[colRow]][octet]);
 
                 result[octet] = (byte)(result[octet] ^ temp);
             }
@@ -341,10 +341,10 @@ final class MatrixUtilities {
             byte beta = A[r + first_row][lead + first_col];
             if (beta != 0) {
                 for (int col = 0; col < columnCount; col++)
-                    A[r + first_row][col + first_col] = OctectOps.division(A[r + first_row][col + first_col], beta);
+                    A[r + first_row][col + first_col] = OctetOps.division(A[r + first_row][col + first_col], beta);
 
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
-                OctectOps.betaDivisionInPlace(D[d[r + first_row]], beta);
+                OctetOps.betaDivisionInPlace(D[d[r + first_row]], beta);
                 // DEBUG
                 // PRINTER.println(
                 // "OctectOps.betaDivisionInPlace(D[" + d[r + first_row] + "],(byte)" + beta + ");");
@@ -356,14 +356,14 @@ final class MatrixUtilities {
 
                 if (i != r) {
                     // U_lower[i] - (U_lower[i][lead] * U_lower[r])
-                    byte[] product = OctectOps.betaProduct(beta, A[r + first_row], first_col, columnCount);
+                    byte[] product = OctetOps.betaProduct(beta, A[r + first_row], first_col, columnCount);
 
                     for (int col = 0; col < columnCount; col++)
-                        A[i + first_row][col + first_col] = OctectOps.subtraction(A[i + first_row][col + first_col],
+                        A[i + first_row][col + first_col] = OctetOps.subtraction(A[i + first_row][col + first_col],
                             product[col]);
 
                     // decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
-                    product = OctectOps.betaProduct(beta, D[d[r + first_row]]);
+                    product = OctetOps.betaProduct(beta, D[d[r + first_row]]);
                     xorSymbolInPlace(D[d[i + first_row]], product);
                     // DEBUG
                     // PRINTER.println(
@@ -527,7 +527,7 @@ final class MatrixUtilities {
 
             // find pivot row and swap
             for (int i = row + 1; i < ROWS; i++)
-                if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row])) max = i;
+                if (OctetOps.UNSIGN(A[i][row]) > OctetOps.UNSIGN(A[max][row])) max = i;
 
             // this destroys the original matrixes... dont really need a fix, but should be kept in mind
             byte[] temp = A[row];
@@ -549,17 +549,17 @@ final class MatrixUtilities {
             // pivot within A and b
             for (int i = row + 1; i < ROWS; i++) {
 
-                byte alpha = OctectOps.division(A[i][row], A[row][row]);
+                byte alpha = OctetOps.division(A[i][row], A[row][row]);
 
-                temp = OctectOps.betaProduct(alpha, b[row]);
+                temp = OctetOps.betaProduct(alpha, b[row]);
 
                 MatrixUtilities.xorSymbolInPlace(b[i], temp);
 
                 for (int j = row; j < ROWS; j++) {
 
-                    byte aux = OctectOps.product(alpha, A[row][j]);
+                    byte aux = OctetOps.product(alpha, A[row][j]);
 
-                    A[i][j] = OctectOps.subtraction(A[i][j], aux);
+                    A[i][j] = OctetOps.subtraction(A[i][j], aux);
                 }
             }
         }
@@ -572,14 +572,14 @@ final class MatrixUtilities {
             for (int j = i + 1; j < ROWS; j++) {
 
                 // i*num_cols+j
-                byte[] temp = OctectOps.betaProduct(A[i][j], x[j], 0, num_cols);
+                byte[] temp = OctetOps.betaProduct(A[i][j], x[j], 0, num_cols);
 
                 MatrixUtilities.xorSymbolInPlace(sum, temp);
             }
 
             byte[] temp = MatrixUtilities.xorSymbol(b[i], sum);
 
-            x[i] = OctectOps.betaDivision(temp, A[i][i]);
+            x[i] = OctetOps.betaDivision(temp, A[i][i]);
             // for (int bite = 0; bite < num_cols; bite++) {
             //
             // x[(i * num_cols) + bite] = OctectOps.division(temp[bite], A[i][i]);

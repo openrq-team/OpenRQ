@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.fec.openrq.util.rq.OctectOps;
+import net.fec.openrq.util.rq.OctetOps;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -164,7 +164,7 @@ final class LinearSystem {
         }
 
         for (int row = 0; row < H; row++)
-            MT[row][Kprime + S - 1] = (byte)OctectOps.getExp(row);
+            MT[row][Kprime + S - 1] = (byte)OctetOps.getExp(row);
 
         return (MT);
     }
@@ -185,7 +185,7 @@ final class LinearSystem {
         {
             for (int col = 0; col < Kprime + S; col++)
             {
-                if (row >= col) GAMMA[row][col] = (byte)OctectOps.getExp((row - col) % 256);
+                if (row >= col) GAMMA[row][col] = (byte)OctetOps.getExp((row - col) % 256);
                 else continue;
             }
         }
@@ -498,7 +498,7 @@ final class LinearSystem {
                     nonZeros++;
 
                     // add to the degree of this row
-                    degree += OctectOps.UNSIGN(A[row][col]);
+                    degree += OctetOps.UNSIGN(A[row][col]);
 
                     nodes.add(col);
                 }
@@ -888,16 +888,16 @@ final class LinearSystem {
                      */
 
                     // division
-                    byte balpha = OctectOps.division(beta, alpha);
+                    byte balpha = OctetOps.division(beta, alpha);
 
                     // multiplication
-                    byte[] product = OctectOps.betaProduct(balpha, A[i]);
+                    byte[] product = OctetOps.betaProduct(balpha, A[i]);
 
                     // addition
                     MatrixUtilities.xorSymbolInPlace(A[row], product);
 
                     // decoding process - (beta * D[d[i]]) + D[d[row]]
-                    product = OctectOps.betaProduct(balpha, D[d[i]]);
+                    product = OctetOps.betaProduct(balpha, D[d[i]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], product);
                     // DEBUG
                     // PRINTER.println(
@@ -1046,7 +1046,7 @@ final class LinearSystem {
                     A[row][j] = 0;
 
                     // decoding process - (beta * D[d[j]]) + D[d[row]]
-                    byte[] product = OctectOps.betaProduct(b, D[d[j]]);
+                    byte[] product = OctetOps.betaProduct(b, D[d[j]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], product);
                     // DEBUG
                     // PRINTER.println(
@@ -1071,10 +1071,10 @@ final class LinearSystem {
                 byte beta = A[j][j];
 
                 // "then divide row j of A by A[j,j]."
-                OctectOps.betaDivisionInPlace(A[j], beta);
+                OctetOps.betaDivisionInPlace(A[j], beta);
 
                 // decoding process - D[d[j]] / beta
-                OctectOps.betaDivisionInPlace(D[d[j]], beta);
+                OctetOps.betaDivisionInPlace(D[d[j]], beta);
                 // DEBUG
                 // PRINTER.println(
                 // "OctectOps.betaDivisionInPlace(D[" + d[j] + "],(byte)" + beta + ");");
@@ -1091,12 +1091,12 @@ final class LinearSystem {
 
                     // multiply A[j][l] by row 'l' of A -- this would write a line of an identity matrix, so avoid
                     // product
-                    byte[] product = OctectOps.betaProduct(beta, A[l]);
+                    byte[] product = OctetOps.betaProduct(beta, A[l]);
                     // add the product to row 'j' of A
                     MatrixUtilities.xorSymbolInPlace(A[j], product);
 
                     // decoding process - D[d[j]] + (A[j][l] * D[d[l]])
-                    product = OctectOps.betaProduct(beta, D[d[l]]);
+                    product = OctetOps.betaProduct(beta, D[d[l]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[j]], product);
                     // DEBUG
                     // PRINTER.println(
@@ -1113,10 +1113,14 @@ final class LinearSystem {
 
         // reorder C
         for (int index = 0; index < L; index++) {
-            C[c[index]] = D[d[index]];
+            final int ci = c[index];
+            final int di = d[index];
+            C[ci] = D[di];
             // DEBUG
+            // if (ci != di) {
             // PRINTER.println(
-            // "NOD[" + c[index] + "]=D[" + d[index] + "];");
+            // "NOD[" + ci + "]=D[" + di + "];");
+            // }
         }
 
         // DEBUG

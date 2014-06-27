@@ -24,7 +24,7 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
 /**
  */
-public final class OctectOps {
+public final class OctetOps {
 
     public static final int UNSIGN(int b) {
 
@@ -246,7 +246,7 @@ public final class OctectOps {
     };
 
 
-    private OctectOps() {
+    private OctetOps() {
 
         // not instantiable
     }
