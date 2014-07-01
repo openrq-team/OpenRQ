@@ -17,6 +17,7 @@
 package net.fec.openrq.decoder;
 
 
+import java.io.RandomAccessFile;
 import java.util.Set;
 
 import net.fec.openrq.EncodingPacket;
@@ -72,7 +73,7 @@ import net.fec.openrq.parameters.ParameterChecker;
  * <blockquote>
  * <table summary="Probability of successful decoding for different values of symbol overhead">
  * <tr>
- * <th align="left">Overhead</th>
+ *     * <th align="left">Overhead</th>
  * <th align="left">Encoding symbols</th>
  * <th align="left">Probability</th>
  * </tr>
@@ -95,21 +96,31 @@ public interface SourceBlockDecoder {
 
     /**
      * Returns the data decoder object from which this source block decoder was retrieved.
-     * 
+     *
      * @return the data decoder object from which this source block decoder was retrieved
      */
     public DataDecoder dataDecoder();
 
+    public byte[] getData (byte[] buffer);
+
+    public int getDataLength();
+
+    public int getDataOffset();
+
+    public RandomAccessFile getTempStorage();
+
+    public String getTempStorageName();
+
     /**
      * Returns the identifier of the source block being decoded.
-     * 
+     *
      * @return the identifier of the source block being decoded
      */
     public int sourceBlockNumber();
 
     /**
      * Returns the total number of source symbols into which is divided the source block being decoded.
-     * 
+     *
      * @return the total number of source symbols into which is divided the source block being decoded
      */
     public int numberOfSourceSymbols();
@@ -123,8 +134,9 @@ public interface SourceBlockDecoder {
      * thrown:
      * <ul>
      * <li>{@code esi} &ge; 0
-     * <li>{@code esi} &lt; {@code K} </ul>
-     * 
+     * <li>{@code esi} &lt; {@code K}
+     * </ul>
+     *
      * @param esi
      *            An encoding symbol identifier for a specific source symbol
      * @return {@code true} if, and only if, this decoder contains the specified source symbol
@@ -145,8 +157,10 @@ public interface SourceBlockDecoder {
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
      * <ul>
-     * <li>{@code esi} &ge; {@code K} <li>{@code esi} &le; {@code max_esi} </ul>
-     * 
+     * <li>{@code esi} &ge; {@code K}
+     * <li>{@code esi} &le; {@code max_esi}
+     * </ul>
+     *
      * @param esi
      *            An encoding symbol identifier for a specific repair symbol
      * @return {@code true} if, and only if, this decoder contains the specified repair symbol
@@ -159,7 +173,7 @@ public interface SourceBlockDecoder {
     /**
      * Returns {@code true} if, and only if, the source block being decoded is fully decoded. A source block is
      * considered fully decoded when it contains all of its source symbols.
-     * 
+     *
      * @return {@code true} if, and only if, the source block being decoded is fully decoded
      * @see #containsSourceSymbol(int)
      */
@@ -181,7 +195,7 @@ public interface SourceBlockDecoder {
      * </dl>
      * <p>
      * The latest state of a newly created decoder is always {@code INCOMPLETE}.
-     * 
+     *
      * @return the latest state of this decoder
      */
     public SourceBlockState latestState();
@@ -189,7 +203,7 @@ public interface SourceBlockDecoder {
     /**
      * Returns a set of integers containing the encoding symbol identifiers of the missing source symbols from the
      * source block being decoded. The returned set has an iteration ordering of ascending encoding symbol identifiers.
-     * 
+     *
      * @return a set of encoding symbol identifiers of missing source symbols
      */
     public Set<Integer> missingSourceSymbols();
@@ -199,7 +213,7 @@ public interface SourceBlockDecoder {
      * decoding. If the source block is already decoded, then an immutable empty set is returned instead.
      * <p>
      * The returned set iteration follows the order by which repair symbols have been received.
-     * 
+     *
      * @return a set of encoding symbol identifiers of available repair symbols, or an immutable empty set if the source
      *         block is already decoded
      */
@@ -210,7 +224,7 @@ public interface SourceBlockDecoder {
      * of the {@linkplain #sourceBlockNumber() source block number}, the {@linkplain #latestState() latest state}, the
      * {@linkplain #missingSourceSymbols() set of identifiers of missing source symbols}, and the
      * {@linkplain #availableRepairSymbols() set of identifiers of available repair symbols}.
-     * 
+     *
      * @return current information from this decoder inside an {@code SBDInfo} object
      */
     public SBDInfo information();
@@ -229,7 +243,7 @@ public interface SourceBlockDecoder {
      * <dd>means that a decoding operation took place but failed in decoding the source block; additional encoding
      * symbols are required for a successful decoding.</dd>
      * </dl>
-     * 
+     *
      * @param packet
      *            An encoding packet containing encoding symbols associated to the source block being decoded
      * @return a {@code SourceBlockState} value indicating the result of the method invocation (see method description)
@@ -245,7 +259,7 @@ public interface SourceBlockDecoder {
      * <b>Note</b>: the repair symbol overhead never exceeds {@link ParameterChecker#numRepairSymbolsPerBlock(int)
      * ParameterChecker.numRepairSymbolsPerBlock(K)}, where {@code K} is the {@linkplain #numberOfSourceSymbols() number
      * of source symbols}.
-     * 
+     *
      * @return the current repair symbol overhead
      */
     public int symbolOverhead();
@@ -257,7 +271,7 @@ public interface SourceBlockDecoder {
      * <b>Note</b>: if the specified value exceeds {@link ParameterChecker#numRepairSymbolsPerBlock(int)
      * ParameterChecker.numRepairSymbolsPerBlock(K)}, where {@code K} is the {@linkplain #numberOfSourceSymbols() number
      * of source symbols}, then the current symbol overhead will be set to that value.
-     * 
+     *
      * @param symbOver
      *            A number of extra repair symbols (must be non-negative)
      * @exception IllegalArgumentException

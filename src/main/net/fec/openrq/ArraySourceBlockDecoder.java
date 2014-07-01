@@ -16,6 +16,8 @@
 package net.fec.openrq;
 
 
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Collections;
@@ -42,25 +44,35 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
     // requires valid arguments
     static ArraySourceBlockDecoder newDecoder(
-        ArrayDataDecoder dataDecoder,
-        byte[] array,
-        int arrayOff,
-        FECParameters fecParams,
-        int sbn,
-        int K,
-        int symbOver)
-    {
+            ArrayDataDecoder dataDecoder,
+            int arrayOff,
+            FECParameters fecParams,
+            int sbn,
+            int K,
+            int symbOver,
+            long fileID,
+            String tempStorageDir) {
 
         final int paddedLen = K * fecParams.symbolSize();
-        final int arrayLen = Math.min(paddedLen, array.length - arrayOff);
-        final PaddedByteArray data = PaddedByteArray.newArray(array, arrayOff, arrayLen, paddedLen);
+        final int arrayLen = (int) Math.min(paddedLen, fecParams.dataLength() - arrayOff);
+        ArraySourceBlockDecoder sbDecoder = null;
 
-        return new ArraySourceBlockDecoder(dataDecoder, data, sbn, K, symbOver);
+        try {
+
+            final RandomAccessFileHandle rafHandle = new RandomAccessFileHandle(new RandomAccessFile(tempStorageDir + fileID + sbn, "rws"), tempStorageDir + fileID + sbn);
+            final PaddedByteArrayDecoder data = PaddedByteArrayDecoder.newArray(rafHandle, arrayOff, arrayLen, paddedLen);
+            sbDecoder = new ArraySourceBlockDecoder(dataDecoder, data, sbn, K, symbOver);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return sbDecoder;
     }
 
 
     private final ArrayDataDecoder dataDecoder;
-    private final PaddedByteArray data;
+    private final PaddedByteArrayDecoder data;
 
     private final int sbn;
     private final int K;
@@ -68,12 +80,11 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
 
     private ArraySourceBlockDecoder(
-        ArrayDataDecoder dataDecoder,
-        PaddedByteArray data,
-        int sbn,
-        int K,
-        int symbOver)
-    {
+            ArrayDataDecoder dataDecoder,
+            PaddedByteArrayDecoder data,
+            int sbn,
+            int K,
+            int symbOver) {
 
         this.dataDecoder = Objects.requireNonNull(dataDecoder);
         this.data = Objects.requireNonNull(data);
@@ -92,6 +103,27 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     public ArrayDataDecoder dataDecoder() {
 
         return dataDecoder;
+    }
+
+    public byte[] getData(byte[] buffer) {
+
+        return data.array(buffer);
+    }
+
+    public RandomAccessFile getTempStorage() {
+        return data.tempStorage();
+    }
+
+    public String getTempStorageName() {
+        return data.tempStorageName();
+    }
+
+    public int getDataOffset() {
+        return data.arrayOffset();
+    }
+
+    public int getDataLength() {
+        return data.paddinglessLength();
     }
 
     @Override

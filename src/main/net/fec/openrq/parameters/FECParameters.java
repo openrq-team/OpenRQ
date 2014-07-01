@@ -417,6 +417,13 @@ public final class FECParameters {
         }
     }
 
+    public long getCommonFecOTI() {
+        return commonFecOTI;
+    }
+
+    public int getSchemeSpecFecOTI() {
+        return schemeSpecFecOTI;
+    }
 
     private final long commonFecOTI;
     private final int schemeSpecFecOTI;
