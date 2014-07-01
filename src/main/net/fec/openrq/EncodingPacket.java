@@ -345,7 +345,7 @@ public abstract class EncodingPacket {
      * to the symbols data length.
      * <p>
      * Note that the symbols data length may not be a multiple of the
-     * {@linkplain net.fec.openrq.parameters.FECParameters#symbolSize() symbol size} if this packet contains only source
+     * {@linkplain net.fec.openrq.openrq.parameters.FECParameters#symbolSize() symbol size} if this packet contains only source
      * symbols (the last source symbol may be smaller than the others).
      * 
      * @return a read-only buffer with the data from the symbol(s) in this packet

@@ -59,7 +59,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         for (int esi = 0, symbolOff = arrayOff; esi < K; esi++, symbolOff += T) {
             // account for padding in the last source symbol
             final int symbolLen = Math.min(T, array.length - symbolOff);
-            final PaddedByteArray symbolData = PaddedByteArray.newArray(array, symbolOff, symbolLen, T);
+            final PaddedByteArrayEncoder symbolData = PaddedByteArrayEncoder.newArray(array, symbolOff, symbolLen, T);
 
             symbols[esi] = EncodingSymbol.newSourceSymbol(esi, symbolData);
         }

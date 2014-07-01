@@ -17,6 +17,7 @@
 package net.fec.openrq.decoder;
 
 
+import java.io.RandomAccessFile;
 import java.util.Set;
 
 import net.fec.openrq.EncodingPacket;
@@ -40,76 +41,42 @@ import net.fec.openrq.parameters.ParameterChecker;
  * <p>
  * The method {@link #putEncodingPacket(EncodingPacket)} receives an encoding packet as argument and stores the encoding
  * symbols inside it for future decoding. If at the time the method is called, enough symbols are available for decoding
- * the source block (see "symbol overhead" below), then a decoding operation takes place which either succeeds or not (a
- * decoding failure).
+ * the source block, then a decoding operation takes place which either succeeds or not (a decoding failure).
  * <p>
  * Handling decoding failures is a task for the user. Typically, the user requests the sender for any missing source
  * symbols or simply waits for more encoding symbols (source or repair) to be available. The method
  * {@link #missingSourceSymbols()} returns a set with the identifiers of all missing source symbols, and the method
  * {@link #availableRepairSymbols()} returns a set with the identifiers of all available repair symbols so far.
- * <p>
- * <a name="symbol-overhead">
- * <h5>Symbol overhead</h5></a>
- * <p>
- * Imagine a source block being divided into {@code K} source symbols. Let {@code N} be the number of received encoding
- * symbols (source or repair) so far.
- * <p>
- * If all {@code K} source symbols are received then the decoding is immediate. When that is not the case, the decoder
- * will try to fill in the gaps of the missing source symbols with the received repair symbols. Whichever the case, the
- * decoder requires at least {@code N = K} encoding symbols in order to try recovering the source data.
- * <p>
- * However, {@code K} encoding symbols may not be sufficient for a successful decoding when some of those are repair
- * symbols (RaptorQ is a probabilistic code). To increase the probability of successful decoding in this case, a source
- * block decoder may be configured to start the decoding process only when it has received {@code N > K} encoding
- * symbols. The higher {@code N} is, the higher the probability. We call the {@code N - K} symbols the <b>symbol
- * overhead</b>.
- * <p>
- * The method {@link #symbolOverhead()} returns the current symbol overhead value, and the method
- * {@link #setSymbolOverhead(int)} changes that value.
- * <p>
- * Below are example symbol overhead values that allow a successful decoding with a specific probability given a number
- * of encoding symbols <em>(the probability values only apply if some of the encoding symbols are repair symbols)<em>:
- * <blockquote>
- * <table summary="Probability of successful decoding for different values of symbol overhead">
- * <tr>
- * <th align="left">Overhead</th>
- * <th align="left">Encoding symbols</th>
- * <th align="left">Probability</th>
- * </tr>
- * <tr>
- * <td><code>0</code></td>
- * <td><code>K</code></td>
- * <td>99%</td>
- * </tr>
- * <tr>
- * <td><code>1</code></td>
- * <td><code>K + 1</code></td>
- * <td>99.99%</td>
- * </tr>
- * <tr>
- * <td><code>2</code></td>
- * <td><code>K + 2</code></td>
- * <td>99.9999% <em>(one in a million chance of failure)</em> </td> </tr> </table> </blockquote>
  */
 public interface SourceBlockDecoder {
 
     /**
      * Returns the data decoder object from which this source block decoder was retrieved.
-     * 
+     *
      * @return the data decoder object from which this source block decoder was retrieved
      */
     public DataDecoder dataDecoder();
 
+    public byte[] getData (byte[] buffer);
+
+    public int getDataLength();
+
+    public int getDataOffset();
+
+    public RandomAccessFile getTempStorage();
+
+    public String getTempStorageName();
+
     /**
      * Returns the identifier of the source block being decoded.
-     * 
+     *
      * @return the identifier of the source block being decoded
      */
     public int sourceBlockNumber();
 
     /**
      * Returns the total number of source symbols into which is divided the source block being decoded.
-     * 
+     *
      * @return the total number of source symbols into which is divided the source block being decoded
      */
     public int numberOfSourceSymbols();
@@ -123,8 +90,9 @@ public interface SourceBlockDecoder {
      * thrown:
      * <ul>
      * <li>{@code esi} &ge; 0
-     * <li>{@code esi} &lt; {@code K} </ul>
-     * 
+     * <li>{@code esi} &lt; {@code K}
+     * </ul>
+     *
      * @param esi
      *            An encoding symbol identifier for a specific source symbol
      * @return {@code true} if, and only if, this decoder contains the specified source symbol
@@ -145,8 +113,10 @@ public interface SourceBlockDecoder {
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
      * <ul>
-     * <li>{@code esi} &ge; {@code K} <li>{@code esi} &le; {@code max_esi} </ul>
-     * 
+     * <li>{@code esi} &ge; {@code K}
+     * <li>{@code esi} &le; {@code max_esi}
+     * </ul>
+     *
      * @param esi
      *            An encoding symbol identifier for a specific repair symbol
      * @return {@code true} if, and only if, this decoder contains the specified repair symbol
@@ -159,7 +129,7 @@ public interface SourceBlockDecoder {
     /**
      * Returns {@code true} if, and only if, the source block being decoded is fully decoded. A source block is
      * considered fully decoded when it contains all of its source symbols.
-     * 
+     *
      * @return {@code true} if, and only if, the source block being decoded is fully decoded
      * @see #containsSourceSymbol(int)
      */
@@ -181,7 +151,7 @@ public interface SourceBlockDecoder {
      * </dl>
      * <p>
      * The latest state of a newly created decoder is always {@code INCOMPLETE}.
-     * 
+     *
      * @return the latest state of this decoder
      */
     public SourceBlockState latestState();
@@ -189,7 +159,7 @@ public interface SourceBlockDecoder {
     /**
      * Returns a set of integers containing the encoding symbol identifiers of the missing source symbols from the
      * source block being decoded. The returned set has an iteration ordering of ascending encoding symbol identifiers.
-     * 
+     *
      * @return a set of encoding symbol identifiers of missing source symbols
      */
     public Set<Integer> missingSourceSymbols();
@@ -199,7 +169,7 @@ public interface SourceBlockDecoder {
      * decoding. If the source block is already decoded, then an immutable empty set is returned instead.
      * <p>
      * The returned set iteration follows the order by which repair symbols have been received.
-     * 
+     *
      * @return a set of encoding symbol identifiers of available repair symbols, or an immutable empty set if the source
      *         block is already decoded
      */
@@ -210,7 +180,7 @@ public interface SourceBlockDecoder {
      * of the {@linkplain #sourceBlockNumber() source block number}, the {@linkplain #latestState() latest state}, the
      * {@linkplain #missingSourceSymbols() set of identifiers of missing source symbols}, and the
      * {@linkplain #availableRepairSymbols() set of identifiers of available repair symbols}.
-     * 
+     *
      * @return current information from this decoder inside an {@code SBDInfo} object
      */
     public SBDInfo information();
@@ -229,7 +199,7 @@ public interface SourceBlockDecoder {
      * <dd>means that a decoding operation took place but failed in decoding the source block; additional encoding
      * symbols are required for a successful decoding.</dd>
      * </dl>
-     * 
+     *
      * @param packet
      *            An encoding packet containing encoding symbols associated to the source block being decoded
      * @return a {@code SourceBlockState} value indicating the result of the method invocation (see method description)
@@ -245,7 +215,7 @@ public interface SourceBlockDecoder {
      * <b>Note</b>: the repair symbol overhead never exceeds {@link ParameterChecker#numRepairSymbolsPerBlock(int)
      * ParameterChecker.numRepairSymbolsPerBlock(K)}, where {@code K} is the {@linkplain #numberOfSourceSymbols() number
      * of source symbols}.
-     * 
+     *
      * @return the current repair symbol overhead
      */
     public int symbolOverhead();
@@ -257,7 +227,7 @@ public interface SourceBlockDecoder {
      * <b>Note</b>: if the specified value exceeds {@link ParameterChecker#numRepairSymbolsPerBlock(int)
      * ParameterChecker.numRepairSymbolsPerBlock(K)}, where {@code K} is the {@linkplain #numberOfSourceSymbols() number
      * of source symbols}, then the current symbol overhead will be set to that value.
-     * 
+     *
      * @param symbOver
      *            A number of extra repair symbols (must be non-negative)
      * @exception IllegalArgumentException

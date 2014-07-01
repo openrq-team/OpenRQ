@@ -36,7 +36,7 @@ public final class ArrayDataDecoder implements DataDecoder {
     /**
      * @param fecParams
      *            FEC parameters that configure the returned data decoder object
-     * @param symbOver
+     * @param extraSymbols
      *            Repair symbol overhead (must be non-negative)
      * @return a data decoder object that decodes source data into an array of bytes
      * @exception NullPointerException
@@ -44,50 +44,60 @@ public final class ArrayDataDecoder implements DataDecoder {
      * @exception IllegalArgumentException
      *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || extraSymbols < 0}
      */
-    static ArrayDataDecoder newDecoder(FECParameters fecParams, int symbOver) {
+    static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols, long fileID, String tempStorageDir) {
 
         // throws NullPointerException if null fecParams
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
-        if (symbOver < 0) {
-            throw new IllegalArgumentException("negative symbol overhead");
+        if (extraSymbols < 0) {
+            throw new IllegalArgumentException("negative number of extra symbols");
         }
 
-        final byte[] dataArray = new byte[fecParams.dataLengthAsInt()];
-        return new ArrayDataDecoder(dataArray, fecParams, symbOver);
+        //final byte[] dataArray = new byte[fecParams.dataLengthAsInt()];
+        //TODO: Per source block allocation
+        //Flip changed this June 23, 2014
+        //final byte[] dataArray = new byte[];
+        return new ArrayDataDecoder(fecParams, extraSymbols, fileID, tempStorageDir);
     }
 
 
-    private final byte[] dataArray;
+    //private final byte[] dataArray;
     private final FECParameters fecParams;
+    private final long fileID;
+    private final String tempStorageDir;
     private final ImmutableList<ArraySourceBlockDecoder> srcBlockDecoders;
 
+    private ArrayDataDecoder(FECParameters fecParams, final int extraSymbols, long fileID, String tempStorageDir) {
 
-    private ArrayDataDecoder(byte[] dataArray, FECParameters fecParams, final int symbOver) {
-
-        this.dataArray = dataArray;
         this.fecParams = fecParams;
+        this.fileID = fileID;
+        this.tempStorageDir = tempStorageDir;
         this.srcBlockDecoders = DataUtils.partitionData(
-            ArraySourceBlockDecoder.class,
-            fecParams,
-            new SourceBlockSupplier<ArraySourceBlockDecoder>() {
+                ArraySourceBlockDecoder.class,
+                fecParams,
+                new SourceBlockSupplier<ArraySourceBlockDecoder>() {
 
-                @Override
-                public ArraySourceBlockDecoder get(int off, int sbn, int K) {
+                    @Override
+                    public ArraySourceBlockDecoder get(int off, int sbn, int K) {
 
-                    return ArraySourceBlockDecoder.newDecoder(
-                        ArrayDataDecoder.this, ArrayDataDecoder.this.dataArray, off,
-                        ArrayDataDecoder.this.fecParams,
-                        sbn, K, symbOver);
-                }
-            });
+                        return ArraySourceBlockDecoder.newDecoder(
+                                ArrayDataDecoder.this, off,
+                                ArrayDataDecoder.this.fecParams,
+                                sbn, K, extraSymbols, ArrayDataDecoder.this.fileID, ArrayDataDecoder.this.tempStorageDir);
+                    }
+                });
     }
 
     @Override
     public FECParameters fecParameters() {
 
         return fecParams;
+    }
+
+    @Override
+    public String tempStorageDir() {
+        return tempStorageDir;
     }
 
     @Override
@@ -122,7 +132,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception IllegalArgumentException
      *                If the provided source block number is invalid
      */
@@ -146,18 +156,18 @@ public final class ArrayDataDecoder implements DataDecoder {
     /**
      * Returns an array of bytes containing the source data. Use method {@link #isDataDecoded()} to check if the data is
      * complete.
-     * 
+     *
      * @return an array of bytes containing the source data
      * @see #isDataDecoded()
      */
-    public byte[] dataArray() {
-
-        return dataArray;
-    }
+//    public byte[] dataArray() {
+//
+//        return dataArray;
+//    }
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception NullPointerException
      *                If {@code symbols} is {@code null}
      */
@@ -169,7 +179,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception IndexOutOfBoundsException
      *                If the pre-conditions on the array offset and length do not hold
      * @exception NullPointerException
@@ -183,7 +193,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception NullPointerException
      *                If {@code symbols} is {@code null}
      */
@@ -195,7 +205,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception NullPointerException
      *                If {@code ser} is {@code null}
      */
@@ -207,7 +217,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception NullPointerException
      *                If {@code array} is {@code null}
      */
@@ -219,7 +229,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception IndexOutOfBoundsException
      *                If the pre-conditions on the array offset and length do not hold
      * @exception NullPointerException
@@ -233,7 +243,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @exception NullPointerException
      *                If {@code buffer} is {@code null}
      */
@@ -245,7 +255,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @throws IOException
      *             If an IO error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
@@ -259,7 +269,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @throws IOException
      *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException

@@ -16,7 +16,6 @@
 
 package net.fec.openrq;
 
-
 import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.encoder.DataEncoder;
@@ -104,10 +103,10 @@ public final class OpenRQ {
      * @exception IllegalArgumentException
      *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || symbolOverhead < 0}
      */
-    public static ArrayDataDecoder newDecoder(FECParameters fecParams, int symbolOverhead) {
+    public static ArrayDataDecoder newDecoder(FECParameters fecParams, int symbolOverhead, long fileID, String tempStorageDir) {
 
         // exceptions are checked inside the invoked method
-        return ArrayDataDecoder.newDecoder(fecParams, symbolOverhead);
+        return ArrayDataDecoder.newDecoder(fecParams, symbolOverhead, fileID, tempStorageDir);
     }
 
     /**
@@ -129,9 +128,9 @@ public final class OpenRQ {
      * @exception IllegalArgumentException
      *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
      */
-    public static ArrayDataDecoder newDecoderWithZeroOverhead(FECParameters fecParams) {
+    public static ArrayDataDecoder newDecoderWithZeroOverhead(FECParameters fecParams, long fileID, String tempStorageDir) {
 
-        return newDecoder(fecParams, 0);
+        return newDecoder(fecParams, 0, fileID, tempStorageDir);
     }
 
     /**
@@ -153,9 +152,9 @@ public final class OpenRQ {
      * @exception IllegalArgumentException
      *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
      */
-    public static ArrayDataDecoder newDecoderWithOneOverhead(FECParameters fecParams) {
+    public static ArrayDataDecoder newDecoderWithOneOverhead(FECParameters fecParams, long fileID, String tempStorageDir) {
 
-        return newDecoder(fecParams, 1);
+        return newDecoder(fecParams, 1, fileID, tempStorageDir);
     }
 
     /**
@@ -178,9 +177,9 @@ public final class OpenRQ {
      * @exception IllegalArgumentException
      *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
      */
-    public static ArrayDataDecoder newDecoderWithTwoOverhead(FECParameters fecParams) {
+    public static ArrayDataDecoder newDecoderWithTwoOverhead(FECParameters fecParams, long fileID, String tempStorageDir) {
 
-        return newDecoder(fecParams, 2);
+        return newDecoder(fecParams, 2, fileID, tempStorageDir);
     }
 
     /**

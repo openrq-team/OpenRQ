@@ -63,35 +63,35 @@
  * original source data, which usually means transmitting the parameters to a receiver before sending data, so that the
  * receiver is able to initialize a decoder that matches the sender's encoder.</em>
  * <p>
- * Class {@link net.fec.openrq.OpenRQ OpenRQ} is the entry point for the OpenRQ API, and provides static methods for
+ * Class {@link net.fec.openrq.openrq.OpenRQ OpenRQ} is the entry point for the OpenRQ API, and provides static methods for
  * initializing encoders and decoders.
  * <p>
- * FEC parameters are represented by {@link net.fec.openrq.parameters.FECParameters FECParameters} instances. They
+ * FEC parameters are represented by {@link net.fec.openrq.openrq.parameters.FECParameters FECParameters} instances. They
  * provide methods for writing the parameters to a buffer or a writable channel, and static methods for parsing/reading
  * parameters from a buffer or a readable channel. Please refer to the documentation of class
- * {@link net.fec.openrq.parameters.FECParameters FECParameters} for more details.
- * <h3>Encoding data</h3> Source data encoders are represented by {@link net.fec.openrq.encoder.DataEncoder DataEncoder}
+ * {@link net.fec.openrq.openrq.parameters.FECParameters FECParameters} for more details.
+ * <h3>Encoding data</h3> Source data encoders are represented by {@link net.fec.openrq.openrq.encoder.DataEncoder DataEncoder}
  * instances. They encapsulate source data and provide a separate encoder for each source block.
  * <p>
- * Source block encoders are represented by {@link net.fec.openrq.encoder.SourceBlockEncoder SourceBlockEncoder}
+ * Source block encoders are represented by {@link net.fec.openrq.openrq.encoder.SourceBlockEncoder SourceBlockEncoder}
  * instances. They provide encoding packets that contain encoding symbols from the source block being encoded.
  * <p>
- * Encoding packets are represented by {@link net.fec.openrq.EncodingPacket EncodingPacket} instances. They provide
+ * Encoding packets are represented by {@link net.fec.openrq.openrq.EncodingPacket EncodingPacket} instances. They provide
  * methods for writing the packet to a buffer or a writable channel, and static methods for parsing/reading a packet
  * from a buffer or a readable channel.
  * <p>
- * Please refer to the documentation of classes {@link net.fec.openrq.encoder.DataEncoder DataEncoder},
- * {@link net.fec.openrq.encoder.SourceBlockEncoder SourceBlockEncoder} and {@link net.fec.openrq.EncodingPacket
+ * Please refer to the documentation of classes {@link net.fec.openrq.openrq.encoder.DataEncoder DataEncoder},
+ * {@link net.fec.openrq.openrq.encoder.SourceBlockEncoder SourceBlockEncoder} and {@link net.fec.openrq.openrq.EncodingPacket
  * EncodingPacket} for more details.
- * <h3>Decoding data</h3> Source data decoders are represented by {@link net.fec.openrq.decoder.DataDecoder DataDecoder}
+ * <h3>Decoding data</h3> Source data decoders are represented by {@link net.fec.openrq.openrq.decoder.DataDecoder DataDecoder}
  * instances. They deliver source data, as it is being decoded, and provide a separate decoder for each source block.
  * They also help parsing/reading encoding packets from buffers or readable channels.
  * <p>
- * Source block decoders are represented by {@link net.fec.openrq.decoder.SourceBlockDecoder SourceBlockDecoder}
+ * Source block decoders are represented by {@link net.fec.openrq.openrq.decoder.SourceBlockDecoder SourceBlockDecoder}
  * instances. They receive encoding packets and provide an indication of the current state of the source block.
  * <p>
- * Please refer to the documentation of classes {@link net.fec.openrq.decoder.DataDecoder DataDecoder} and
- * {@link net.fec.openrq.decoder.SourceBlockDecoder SourceBlockDecoder} for more details.
+ * Please refer to the documentation of classes {@link net.fec.openrq.openrq.decoder.DataDecoder DataDecoder} and
+ * {@link net.fec.openrq.openrq.decoder.SourceBlockDecoder SourceBlockDecoder} for more details.
  * <h3>Dealing with decoding failures</h3> Here are some strategies for handling decoding failures:
  * <ul>
  * <li><b>Requesting missing source symbols</b>. This strategy works well if there is a back channel from receivers to
@@ -106,4 +106,4 @@
  * @author Jos&#233; Lopes &lt;jlopes&#064;lasige.di.fc.ul.pt&gt;
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-package net.fec.openrq;
+package net.fec.openrq.openrq;

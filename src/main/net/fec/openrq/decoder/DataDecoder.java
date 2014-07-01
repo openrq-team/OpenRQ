@@ -46,15 +46,22 @@ public interface DataDecoder {
 
     /**
      * Returns the FEC parameters associated to this decoder.
-     * 
+     *
      * @return the FEC parameters associated to this decoder
      */
     public FECParameters fecParameters();
 
     /**
+     * Returns the random access file storage directory associated to this decoder.
+     *
+     * @return the random access file storage directory associated to this decoder
+     */
+    public String tempStorageDir();
+
+    /**
      * Returns the length of the source data, in number of bytes. This value is the one returned by
      * {@code this.fecParameters().dataLength()}.
-     * 
+     *
      * @return the length of the data, in number of bytes
      */
     public long dataLength();
@@ -62,7 +69,7 @@ public interface DataDecoder {
     /**
      * Returns the size of a symbol, in number of bytes. This value is the one returned by
      * {@code this.fecParameters().symbolSize()}.
-     * 
+     *
      * @return the size of a symbol, in number of bytes
      */
     public int symbolSize();
@@ -70,7 +77,7 @@ public interface DataDecoder {
     /**
      * Returns the number of source blocks into which the source data is partitioned. This value is the one returned by
      * {@code this.fecParameters().numberOfSourceBlocks()}.
-     * 
+     *
      * @return the number of source blocks
      */
     public int numberOfSourceBlocks();
@@ -78,7 +85,7 @@ public interface DataDecoder {
     /**
      * Returns {@code true} if, and only if, the original data is fully decoded. The original data is considered fully
      * decoded when every source block is fully decoded.
-     * 
+     *
      * @return {@code true} if, and only if, the original data is fully decoded
      */
     public boolean isDataDecoded();
@@ -93,7 +100,7 @@ public interface DataDecoder {
      * <li>{@code sbn} &ge; 0
      * <li>{@code sbn} &lt; {@code Z}
      * </ul>
-     * 
+     *
      * @param sbn
      *            A source block number
      * @return a decoder object for a specific source block
@@ -106,7 +113,7 @@ public interface DataDecoder {
     /**
      * Returns a new iterable over all source block decoders. The resulting iterable can be iterated using a "foreach"
      * loop.
-     * 
+     *
      * @return a new iterable over all source block decoders
      */
     public Iterable<? extends SourceBlockDecoder> sourceBlockIterable();
@@ -124,7 +131,7 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
-     * 
+     *
      * @param sbn
      *            The common source block number of all symbols in the packet
      * @param esi
@@ -153,7 +160,7 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
-     * 
+     *
      * @param sbn
      *            The common source block number of all symbols in the packet
      * @param esi
@@ -189,7 +196,7 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
-     * 
+     *
      * @param sbn
      *            The common source block number of all symbols in the packet
      * @param esi
@@ -214,7 +221,7 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
-     * 
+     *
      * @param serPac
      *            A serializable packet
      * @param copySymbols
@@ -239,7 +246,7 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
-     * 
+     *
      * @param array
      *            An array of bytes containing an encoding packet
      * @param copySymbols
@@ -264,7 +271,7 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
-     * 
+     *
      * @param array
      *            An array of bytes containing an encoding packet
      * @param off
@@ -296,7 +303,7 @@ public interface DataDecoder {
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
      * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
      * </ul>
-     * 
+     *
      * @param buffer
      *            A buffer containing an encoding packet
      * @param copySymbols
@@ -324,7 +331,7 @@ public interface DataDecoder {
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until a whole packet is read from the input, or a parsing
      * failure is detected, or an {@code IOException} is throw.
-     * 
+     *
      * @param in
      *            A {@code DataInput} object from which an encoding packet is read
      * @return a container object containing an encoding packet or a parsing failure reason string
@@ -351,7 +358,7 @@ public interface DataDecoder {
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until a whole packet is read from the channel, or a parsing
      * failure is detected, or an {@code IOException} is throw.
-     * 
+     *
      * @param ch
      *            A {@code ReadableByteChannel} object from which an encoding packet is read
      * @return a container object containing an encoding packet or a parsing failure reason string

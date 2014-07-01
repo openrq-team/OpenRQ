@@ -31,7 +31,7 @@ abstract class EncodingSymbol {
      * @param data
      * @return
      */
-    static EncodingSymbol newSourceSymbol(int esi, PaddedByteArray data) {
+    static EncodingSymbol newSourceSymbol(int esi, PaddedByteArrayEncoder data) {
 
         return new SourceSymbol(esi, data);
     }
@@ -96,18 +96,18 @@ abstract class EncodingSymbol {
 
     private static final class SourceSymbol extends EncodingSymbol {
 
-        private final PaddedByteArray data;
+        private final PaddedByteArrayEncoder data;
         private final ByteBuffer transportBuffer;
 
 
-        SourceSymbol(int esi, PaddedByteArray data) {
+        SourceSymbol(int esi, PaddedByteArrayEncoder data) {
 
             super(esi);
             this.data = data;
             this.transportBuffer = prepareTransportBuffer(data);
         }
 
-        private static ByteBuffer prepareTransportBuffer(PaddedByteArray data) {
+        private static ByteBuffer prepareTransportBuffer(PaddedByteArrayEncoder data) {
 
             if (data.paddinglessLength() == data.length()) {
                 // need to return a slice of the wrapped buffer,

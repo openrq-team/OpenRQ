@@ -58,7 +58,7 @@ final class ISDManager {
                     if (isValidKPrimeLine(line)) {
                         final int Kprime = Integer.parseInt(line); // should always succeed
                         if (SystematicIndices.containsKPrime(Kprime)) {
-                            final String decClassName = "net.fec.openrq." + ISD_PREFIX + Kprime;
+                            final String decClassName = "net.fec.openrq.openrq." + ISD_PREFIX + Kprime;
                             final IntermediateSymbolsDecoder isd = newISDInstance(decClassName, System.err);
                             if (isd != null) {
                                 isdsList.add(isd);
@@ -112,7 +112,7 @@ final class ISDManager {
          * Check if it implements IntermediateSymbolsDecoder
          */
         if (!IntermediateSymbolsDecoder.class.isAssignableFrom(decClass)) {
-            errStream.printf("Class %s must be a subclass of net.fec.openrq.util.rq.IntermediateSymbolsDecoder%n",
+            errStream.printf("Class %s must be a subclass of net.fec.openrq.openrq.util.rq.IntermediateSymbolsDecoder%n",
                 className);
             return null;
         }
