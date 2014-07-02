@@ -43,6 +43,7 @@ limitations under the License.
     <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
     
     <property name="opt.src_dir" location="${top.src_dir}/opt"/>
+	<property name="opt.jar_file" location="openrq-${version}-opt.jar"/>
     
     <property name="docs.src_dir" location="${top.src_dir}/docs"/>
     <property name="docs.build_dir" location="docs"/>
@@ -65,6 +66,7 @@ limitations under the License.
 
         <delete dir="${docs.build_dir}"/>
         <delete file="${main.jar_file}"/>
+    	<delete file="${opt.jar_file}"/>
         <delete file="${test-functional.jar_file}"/>
         <delete file="${test-benchmark.jar_file}"/>
 
@@ -108,6 +110,14 @@ limitations under the License.
             <fileset dir="${main.src_dir}" excludes="*.java"/>
             <fileset dir="${opt.src_dir}" excludes="*.java"/>
         </copy>
+    </target>
+
+    <target name="jaropt" depends="buildopt"
+            description="Compile the main and optional Java classes and pack them into a Jar file.">
+
+        <delete file="${opt.jar_file}"/>
+        <jar destfile="${opt.jar_file}" basedir="${main.build_dir}"/>
+
     </target>
 
 

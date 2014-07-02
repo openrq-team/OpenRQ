@@ -649,7 +649,7 @@ final class LinearSystem {
                 Set<Integer> visited = null;
 
                 /*
-                 * TODO Optmization: I already searched, and there are optimized algorithms to find connected
+                 * TODO Optimization: I already searched, and there are optimized algorithms to find connected
                  * components. Then we just find and use the best one available...
                  */
 
@@ -871,7 +871,7 @@ final class LinearSystem {
             byte alpha = A[i][i];
 
             // let's look at all rows below the chosen one
-            for (int row = i + 1; row < M; row++)				// TODO queue these row operations for when/if the row is chosen -
+            for (int row = i + 1; row < M; row++) // TODO queue these row operations for when/if the row is chosen
             // Page35@RFC6330 1st Par.
             {
                 // if it's already 0, no problem
@@ -901,10 +901,10 @@ final class LinearSystem {
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], product);
                     // DEBUG
                     // PRINTER.println(
-                    // printVarDeclar(byte[].class, "product",
-                    // "OctectOps.betaProduct((byte)" + balpha + ",D[" + d[i] + "])"));
+                    // printVarDeclar(byte[].class, "p",
+                    // "betaProduct((byte)" + balpha + ",D[" + d[i] + "])"));
                     // PRINTER.println(
-                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[row] + "],product);");
+                    // "xorSymbolInPlace(D[" + d[row] + "],p);");
                 }
             }
 
@@ -989,14 +989,14 @@ final class LinearSystem {
         byte[][] noOverheadD = new byte[L][];
         // DEBUG
         // PRINTER.println(
-        // printVarDeclar(byte[][].class, "NOD", "new byte[" + L + "][]"));
+        // printVarDeclar(byte[][].class, "E", "new byte[" + L + "][]"));
 
         // create a copy of D
         for (int index = 0; index < L; index++) {
             noOverheadD[index] = D[d[index]];
             // DEBUG
             // PRINTER.println(
-            // "NOD[" + index + "]=" + "D[" + d[index] + "];");
+            // "E[" + index + "]=" + "D[" + d[index] + "];");
         }
 
         for (int row = 0; row < i; row++) {
@@ -1004,8 +1004,8 @@ final class LinearSystem {
             D[d[row]] = MatrixUtilities.multiplyByteLineBySymbolVector(X[row], i, noOverheadD);
             // DEBUG
             // PRINTER.println(
-            // "D[" + d[row] + "]=MatrixUtilities.multiplyByteLineBySymbolVector(" +
-            // printByteArray(X[row]) + "," + i + "," + "NOD);");
+            // "D[" + d[row] + "]=multiplyByteLineBySymbolVector(" +
+            // printByteArray(X[row]) + "," + i + "," + "E);");
         }
 
         /*
@@ -1050,10 +1050,10 @@ final class LinearSystem {
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], product);
                     // DEBUG
                     // PRINTER.println(
-                    // printVarDeclar(byte[].class, "product",
-                    // "OctectOps.betaProduct((byte)" + b + ",D[" + d[j] + "])"));
+                    // printVarDeclar(byte[].class, "p",
+                    // "betaProduct((byte)" + b + ",D[" + d[j] + "])"));
                     // PRINTER.println(
-                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[row] + "],product);");
+                    // "xorSymbolInPlace(D[" + d[row] + "],p);");
                 }
             }
         }
@@ -1071,13 +1071,13 @@ final class LinearSystem {
                 byte beta = A[j][j];
 
                 // "then divide row j of A by A[j,j]."
-                OctetOps.betaDivisionInPlace(A[j], beta);
+                OctetOps.betaDivision(beta, A[j], A[j]); // in place division
 
                 // decoding process - D[d[j]] / beta
-                OctetOps.betaDivisionInPlace(D[d[j]], beta);
+                OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
                 // DEBUG
                 // PRINTER.println(
-                // "OctectOps.betaDivisionInPlace(D[" + d[j] + "],(byte)" + beta + ");");
+                // "betaDivision((byte)" + beta + ",D[" + d[j] + "],D[" + d[j] + "]);");
             }
 
             // "For l from 1 to j-1"
@@ -1100,10 +1100,10 @@ final class LinearSystem {
                     MatrixUtilities.xorSymbolInPlace(D[d[j]], product);
                     // DEBUG
                     // PRINTER.println(
-                    // printVarDeclar(byte[].class, "product",
-                    // "OctectOps.betaProduct((byte)" + beta + ",D[" + d[l] + "])"));
+                    // printVarDeclar(byte[].class, "p",
+                    // "betaProduct((byte)" + beta + ",D[" + d[l] + "])"));
                     // PRINTER.println(
-                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[j] + "],product);");
+                    // "xorSymbolInPlace(D[" + d[j] + "],p);");
                 }
             }
         }
@@ -1117,14 +1117,12 @@ final class LinearSystem {
             final int di = d[index];
             C[ci] = D[di];
             // DEBUG
-            // if (ci != di) {
             // PRINTER.println(
-            // "NOD[" + ci + "]=D[" + di + "];");
-            // }
+            // "E[" + ci + "]=D[" + di + "];");
         }
 
         // DEBUG
-        // PRINTER.println("return NOD;");
+        // PRINTER.println("return E;");
         return C;
 
         // allocate memory for the decoded symbols

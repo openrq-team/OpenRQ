@@ -340,14 +340,18 @@ final class MatrixUtilities {
 
             byte beta = A[r + first_row][lead + first_col];
             if (beta != 0) {
-                for (int col = 0; col < columnCount; col++)
+                for (int col = 0; col < columnCount; col++) {
+                    // byte / byte
                     A[r + first_row][col + first_col] = OctetOps.division(A[r + first_row][col + first_col], beta);
+                }
 
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
-                OctetOps.betaDivisionInPlace(D[d[r + first_row]], beta);
+                // byte[] / beta
+                final int dIndex = d[r + first_row];
+                OctetOps.betaDivision(beta, D[dIndex], D[dIndex]); // in place division
                 // DEBUG
                 // PRINTER.println(
-                // "OctectOps.betaDivisionInPlace(D[" + d[r + first_row] + "],(byte)" + beta + ");");
+                // "betaDivision((byte)" + beta + ",D[" + dIndex + "],D[" + dIndex + "]);");
             }
 
             for (i = 0; i < rowCount; i++) {
@@ -367,10 +371,10 @@ final class MatrixUtilities {
                     xorSymbolInPlace(D[d[i + first_row]], product);
                     // DEBUG
                     // PRINTER.println(
-                    // printVarDeclar(byte[].class, "product",
-                    // "OctectOps.betaProduct((byte)" + beta + ",D[" + d[r + first_row] + "])"));
+                    // printVarDeclar(byte[].class, "p",
+                    // "betaProduct((byte)" + beta + ",D[" + d[r + first_row] + "])"));
                     // PRINTER.println(
-                    // "MatrixUtilities.xorSymbolInPlace(D[" + d[i + first_row] + "],product);");
+                    // "xorSymbolInPlace(D[" + d[i + first_row] + "],p);");
                 }
             }
 
@@ -579,10 +583,10 @@ final class MatrixUtilities {
 
             byte[] temp = MatrixUtilities.xorSymbol(b[i], sum);
 
-            x[i] = OctetOps.betaDivision(temp, A[i][i]);
+            x[i] = OctetOps.betaDivision(A[i][i], temp);
             // for (int bite = 0; bite < num_cols; bite++) {
             //
-            // x[(i * num_cols) + bite] = OctectOps.division(temp[bite], A[i][i]);
+            // x[(i * num_cols) + bite] = OctetOps.division(temp[bite], A[i][i]);
             // }
         }
 
