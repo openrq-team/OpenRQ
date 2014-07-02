@@ -70,7 +70,7 @@ public class SourceBlockEncodingTest {
         final Random rand = TestingCommon.newSeededRandom();
 
         final byte[] data = TestingCommon.randomBytes(F, rand);
-        return OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
+        return (ArraySourceBlockEncoder)OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
     }
 
 

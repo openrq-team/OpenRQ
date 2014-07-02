@@ -26,32 +26,32 @@ import net.fec.openrq.util.numericaltype.UnsignedTypes;
  */
 public final class OctetOps {
 
-    public static final int UNSIGN(int b) {
+    public static int UNSIGN(int b) {
 
         return UnsignedTypes.getUnsignedByte(b);
     }
 
-    public static final int getExp(int i) {
+    public static int getExp(int i) {
 
         return OCT_EXP[i];
     }
 
-    public static final int getLog(int i) {
+    public static int getLog(int i) {
 
         return OCT_LOG[i];
     }
 
-    public static final byte addition(byte u, byte v) {
+    public static byte addition(byte u, byte v) {
 
         return (byte)(u ^ v);
     }
 
-    public static final byte subtraction(byte u, byte v) {
+    public static byte subtraction(byte u, byte v) {
 
         return addition(u, v);
     }
 
-    public static final byte division(byte u, byte v) {
+    public static byte division(byte u, byte v) {
 
         // if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
 
@@ -64,123 +64,113 @@ public final class OctetOps {
         }
     }
 
-    public static final byte product(byte u, byte v) {
+    public static byte product(byte u, byte v) {
 
         if (u == 0 || v == 0) return 0;
 
         return (byte)getExp(getLog(UNSIGN(u - 1)) + getLog(UNSIGN(v - 1)));
     }
 
-    public static final byte alphaPower(int i) {
+    public static byte alphaPower(int i) {
 
         return (byte)getExp(i);
     }
 
-    public static final byte[] betaProduct(byte beta, byte[] U) {
+    public static byte[] betaProduct(byte beta, byte[] vector) {
 
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
-        if (beta == 1) return Arrays.copyOf(U, U.length);
-
-        byte[] betaProduct = new byte[U.length];
-
-        if (beta == 0) return (betaProduct);
-
-        for (int i = 0; i < U.length; i++)
-            betaProduct[i] = product(beta, U[i]);
-
-        return betaProduct;
+        return betaProduct(beta, vector, 0, vector.length);
     }
 
-    public static final byte[] betaDivision(byte[] U, byte beta) {
+    public static byte[] betaProduct(byte beta, byte[] vector, int vecPos, int length) {
 
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
-        if (beta == 1) return Arrays.copyOf(U, U.length);
-
-        byte[] betaDivision = new byte[U.length];
-
-        for (int i = 0; i < U.length; i++)
-            betaDivision[i] = division(U[i], beta);
-
-        return betaDivision;
-    }
-
-    public static final void betaProductInPlace(byte beta, byte[] U) {
-
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
-        if (beta == 1) return;
-
-        if (beta == 0) {
-            Arrays.fill(U, (byte)0);
-            return;
+        if (beta == 1) { // if multiplied by one, simply return the source vector data
+            return Arrays.copyOfRange(vector, vecPos, vecPos + length);
         }
-
-        for (int i = 0; i < U.length; i++)
-            U[i] = product(beta, U[i]);
-    }
-
-    public static final void betaDivisionInPlace(byte[] U, byte beta) {
-
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
-        if (beta == 1) return;
-
-        for (int i = 0; i < U.length; i++)
-            U[i] = division(U[i], beta);
-    }
-
-    // betas com posicoes
-    public static final byte[] betaProduct(byte beta, byte[] U, int pos, int length) {
-
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
-        byte[] betaProduct = new byte[length];
-
-        if (beta == 0) return (betaProduct);
-
-        for (int i = 0; i < length; i++)
-            betaProduct[i] = product(beta, U[i + pos]);
-
-        return betaProduct;
-    }
-
-    public static final byte[] betaDivision(byte[] U, int pos, int length, byte beta) {
-
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
-        byte[] betaDivision = new byte[length];
-
-        for (int i = 0; i < length; i++)
-            betaDivision[i] = division(U[i + pos], beta);
-
-        return betaDivision;
-    }
-
-    public static final void betaProductInPlace(byte beta, byte[] U, int pos, int length) {
-
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
-
-        if (beta == 1) return;
-
-        if (beta == 0) {
-            Arrays.fill(U, pos, pos + length, (byte)0);
-            return;
+        else {
+            final byte[] result = new byte[length];
+            if (beta != 0) { // if multiplied by zero, simply return the unfilled result (with all zeros)
+                betaProduct(beta, vector, vecPos, result, 0, length);
+            }
+            return result;
         }
-
-        for (int i = 0; i < length; i++)
-            U[i + pos] = product(beta, U[i + pos]);
     }
 
-    public static final void betaDivisionInPlace(byte[] U, byte beta, int pos, int length) {
+    public static void betaProduct(byte beta, byte[] vector, byte[] result) {
 
-        // if(U == null || U.length == 0) throw new IllegalArgumentException("Array must be initialized/allocated.");
+        betaProduct(beta, vector, 0, result, 0, result.length);
+    }
 
-        if (beta == 1) return;
+    public static void betaProduct(byte beta, byte[] vector, int vecPos, byte[] result, int length) {
 
-        for (int i = 0; i < length; i++)
-            U[i + pos] = division(U[i + pos], beta);
+        betaProduct(beta, vector, vecPos, result, 0, length);
+    }
+
+    public static void betaProduct(byte beta, byte[] vector, byte[] result, int resPos, int length) {
+
+        betaProduct(beta, vector, 0, result, resPos, length);
+    }
+
+    public static void betaProduct(byte beta, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
+
+        if (beta == 1) { // if multiplied by one, simply copy the source vector data and return
+            System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
+        }
+        else {
+            final int resEnd = resPos + length;
+            if (beta == 0) { // if multiplied by zero, simply fill the result with zeros and return
+                Arrays.fill(result, resPos, resEnd, (byte)0); // uses from and to indexes
+            }
+            else {
+                for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
+                    result[rr] = product(beta, vector[vv]);
+                }
+            }
+        }
+    }
+
+    public static byte[] betaDivision(byte beta, byte[] vector) {
+
+        return betaDivision(beta, vector, 0, vector.length);
+    }
+
+    public static byte[] betaDivision(byte beta, byte[] vector, int vecPos, int length) {
+
+        if (beta == 1) { // if divided by one, simply return the source vector data
+            return Arrays.copyOfRange(vector, vecPos, vecPos + length);
+        }
+        else {
+            final byte[] result = new byte[length];
+            betaDivision(beta, vector, vecPos, result, 0, length);
+            return result;
+        }
+    }
+
+    public static void betaDivision(byte beta, byte[] vector, byte[] result) {
+
+        betaDivision(beta, vector, 0, result, 0, result.length);
+    }
+
+    public static void betaDivision(byte beta, byte[] vector, int vecPos, byte[] result, int length) {
+
+        betaDivision(beta, vector, vecPos, result, 0, length);
+    }
+
+    public static void betaDivision(byte beta, byte[] vector, byte[] result, int resPos, int length) {
+
+        betaDivision(beta, vector, 0, result, resPos, length);
+    }
+
+    public static void betaDivision(byte beta, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
+
+        if (beta == 1) { // if divided by one, simply copy the source vector data and return
+            System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
+        }
+        else {
+            final int resEnd = resPos + length;
+            for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
+                result[rr] = division(vector[vv], beta);
+            }
+        }
     }
 
 
