@@ -1015,11 +1015,12 @@ final class LinearSystem {
         // This multiplies X by A and stores the product in X (this destroys X)
         // Utilities.multiplyMatricesHack(X, 0, 0, i, i, A, 0, 0, i, L, X, 0, 0, i, L);
 
-        byte[][] XA = MatrixUtilities.multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
+        // A can be safely re-assigned because the product matrix has the same dimensions of A
+        A = MatrixUtilities.multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
 
         // copy the product X to A
-        for (int row = 0; row < i; row++)
-            A[row] = XA[row];
+        // for (int row = 0; row < i; row++)
+        // A[row] = XA[row];
 
         /*
          * Fourth phase

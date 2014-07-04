@@ -67,6 +67,8 @@ public final class OctetOps {
     public static byte product(byte u, byte v) {
 
         if (u == 0 || v == 0) return 0;
+        if (u == 1) return v;
+        if (v == 1) return u;
 
         return (byte)getExp(getLog(UNSIGN(u - 1)) + getLog(UNSIGN(v - 1)));
     }

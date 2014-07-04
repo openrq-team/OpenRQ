@@ -8,4 +8,4 @@
 # An implementation of an optimized decoder must be a subclass of
 # net.fec.openrq.util.rq.IntermediateSymbolsDecoder
 # and must have a name with the following format: "ISD_{K'}.class"
-# with the K' value supported by the implementation
+# with the K' value supported by the implementation.
