@@ -53,8 +53,7 @@ public final class OctetOps {
 
     public static byte division(byte u, byte v) {
 
-        // if(v == 0) throw new IllegalArgumentException("Denominator cannot be 0.");
-
+        if (v == 0) throw new ArithmeticException("cannot divide by zero");
         if (u == 0) return 0;
         else {
 
