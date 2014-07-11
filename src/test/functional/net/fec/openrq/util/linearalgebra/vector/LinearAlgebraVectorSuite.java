@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq;
+package net.fec.openrq.util.linearalgebra.vector;
 
 
-import net.fec.openrq.suites.LinearAlgebraSuite;
-import net.fec.openrq.suites.ParametersBoundsSuite;
-import net.fec.openrq.suites.ReadWriteSuite;
+import net.fec.openrq.util.linearalgebra.vector.dense.BasicVectorTest;
+import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedVectorTest;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -27,13 +26,10 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-               LinearAlgebraSuite.class,
-               ParametersBoundsSuite.class,
-               OpenRQClassTest.class,
-               DataIntegrityCheckTest.class,
-               ReadWriteSuite.class
+               BasicVectorTest.class,
+               CompressedVectorTest.class
 })
-public class AllTests {
+public class LinearAlgebraVectorSuite {
 
     // placeholder class for inclusion of remaining test classes
 }

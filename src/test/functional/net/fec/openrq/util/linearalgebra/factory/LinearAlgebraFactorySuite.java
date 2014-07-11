@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq;
+package net.fec.openrq.util.linearalgebra.factory;
 
-
-import net.fec.openrq.suites.LinearAlgebraSuite;
-import net.fec.openrq.suites.ParametersBoundsSuite;
-import net.fec.openrq.suites.ReadWriteSuite;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -27,13 +23,12 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-               LinearAlgebraSuite.class,
-               ParametersBoundsSuite.class,
-               OpenRQClassTest.class,
-               DataIntegrityCheckTest.class,
-               ReadWriteSuite.class
+               Basic1DFactoryTest.class,
+               Basic2DFactoryTest.class,
+               CCSFactoryTest.class,
+               CRSFactoryTest.class
 })
-public class AllTests {
+public class LinearAlgebraFactorySuite {
 
     // placeholder class for inclusion of remaining test classes
 }

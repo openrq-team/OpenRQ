@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq;
+package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import net.fec.openrq.suites.LinearAlgebraSuite;
-import net.fec.openrq.suites.ParametersBoundsSuite;
-import net.fec.openrq.suites.ReadWriteSuite;
+import net.fec.openrq.util.linearalgebra.matrix.dense.Basic1DMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.dense.Basic2DMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSourcesTest;
+import net.fec.openrq.util.linearalgebra.matrix.sparse.CCSMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSMatrixTest;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -27,13 +29,13 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-               LinearAlgebraSuite.class,
-               ParametersBoundsSuite.class,
-               OpenRQClassTest.class,
-               DataIntegrityCheckTest.class,
-               ReadWriteSuite.class
+               Basic1DMatrixTest.class,
+               Basic2DMatrixTest.class,
+               MatrixSourcesTest.class,
+               CCSMatrixTest.class,
+               CRSMatrixTest.class
 })
-public class AllTests {
+public class LinearAlgebraMatrixSuite {
 
     // placeholder class for inclusion of remaining test classes
 }
