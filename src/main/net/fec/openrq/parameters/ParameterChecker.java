@@ -821,10 +821,10 @@ public final class ParameterChecker {
         _checkNumSourceBlocksOutOfBounds(numSBs);
 
         if (sbn < SBN_min || sbn >= numSBs) {
-            return String.format("source block number (%d) must be whithin [%d, %d]", sbn, SBN_min, numSBs - 1);
+            return String.format("source block number (%d) must be within [%d, %d]", sbn, SBN_min, numSBs - 1);
         }
         if (isEncodingSymbolIDOutOfBounds(esi)) {
-            return String.format("encoding symbol identifier (%d) must be whithin [%d, %d]", esi, ESI_min, ESI_max);
+            return String.format("encoding symbol identifier (%d) must be within [%d, %d]", esi, ESI_min, ESI_max);
         }
         return "";
     }
@@ -867,23 +867,51 @@ public final class ParameterChecker {
 
     /**
      * Returns the total number of possible repair symbols in a source block, given the number of source symbols in the
-     * block.
+     * block, starting at the initial repair symbol identifier.
      * 
      * @param numSrcSymbs
      *            The number of source symbols in a source block
      * @return the total number of possible repair symbols in a source block, given the number of source symbols in the
-     *         block
+     *         block, starting at the initial repair symbol identifier
      * @exception IllegalArgumentException
      *                If the number of source symbols is {@linkplain #isNumSourceSymbolsPerBlockOutOfBounds(int) out of
      *                bounds}
      */
     public static int numRepairSymbolsPerBlock(int numSrcSymbs) {
 
+        final int firstESI = numSrcSymbs; // initial repair symbol ESI
+        return numRepairSymbolsPerBlock(numSrcSymbs, firstESI);
+    }
+
+    /**
+     * Returns the total number of possible repair symbols in a source block, given the number of source symbols in the
+     * block and the encoding symbol identifier of the first repair symbol.
+     * 
+     * @param numSrcSymbs
+     *            The number of source symbols in a source block
+     * @param firstESI
+     *            The first repair symbol identifier
+     * @return the total number of possible repair symbols in a source block, given the number of source symbols in the
+     *         block, starting at a specified repair symbol identifier
+     * @exception IllegalArgumentException
+     *                If the number of source symbols is {@linkplain #isNumSourceSymbolsPerBlockOutOfBounds(int) out of
+     *                bounds}, or if the first repair symbol identifier is
+     *                {@linkplain #isEncodingSymbolIDOutOfBounds(int) out of bounds} or is less than the number of
+     *                source symbols
+     */
+    public static int numRepairSymbolsPerBlock(int numSrcSymbs, int firstESI) {
+
         _checkNumSourceSymbolsPerBlockOutOfBounds(numSrcSymbs);
 
-        final int minESI = minEncodingSymbolID();
         final int maxESI = maxEncodingSymbolID();
-        final int totalSymbs = 1 + maxESI - minESI;
+
+        if (firstESI < numSrcSymbs || firstESI > maxESI) {
+            throw new IllegalArgumentException(
+                String.format("first repair symbol identifier must be within [%d, %d]",
+                    numSrcSymbs, maxESI));
+        }
+
+        final int totalSymbs = 1 + maxESI - firstESI;
 
         return totalSymbs - numSrcSymbs;
     }

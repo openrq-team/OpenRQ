@@ -213,7 +213,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     @Override
     public Iterable<EncodingPacket> repairPacketsIterable(int numRepairPackets) {
 
-        if (numRepairPackets < 1 || numRepairPackets > (1 + ParameterChecker.maxEncodingSymbolID() - K)) {
+        if (numRepairPackets < 1 || numRepairPackets > ParameterChecker.numRepairSymbolsPerBlock(K)) {
             throw new IllegalArgumentException("invalid number of repair packets");
         }
 
@@ -255,7 +255,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     // requires valid ESI
     private void checkNumRepairSymbols(int esi, int numSymbols) {
 
-        if (numSymbols < 1 || numSymbols > (1 + ParameterChecker.maxEncodingSymbolID() - esi)) {
+        if (numSymbols < 1 || numSymbols > ParameterChecker.numRepairSymbolsPerBlock(K, esi)) {
             throw new IllegalArgumentException("invalid number of repair symbols");
         }
     }

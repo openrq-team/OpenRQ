@@ -5,6 +5,9 @@ Clarified the meaning of "symbol overhead".
 Added new methods for retrieving and changing the symbol overhead value in
 a source block decoder.
 
+Added a new method that returns the number of repair symbol starting at a
+specified index.
+
 Changed public method signatures:
 (++/-- mean new/old methods, xx means deleted method)
 * net.fec.openrq.OpenRQ
@@ -14,6 +17,8 @@ Changed public method signatures:
 * net.fec.openrq.decoder.SourceBlockDecoder
  * public int symbolOverhead()
  * public void setSymbolOverhead(int)
+* net.fec.openrq.parameters.ParameterChecker
+ * ++ public static int numRepairSymbolsPerBlock(int, int)
 
 ## 3.2
 
