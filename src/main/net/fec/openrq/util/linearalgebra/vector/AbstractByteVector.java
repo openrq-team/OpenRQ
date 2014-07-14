@@ -40,11 +40,11 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aDividedByB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aMinusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aPlusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aTimesB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static net.fec.openrq.util.linearalgebra.vector.ByteVectors.printVector;
 
 import java.util.Random;
@@ -55,7 +55,6 @@ import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorProcedure;
-
 
 
 public abstract class AbstractByteVector implements ByteVector {
@@ -517,6 +516,17 @@ public abstract class AbstractByteVector implements ByteVector {
 
         for (int i = 0; i < length; i++) {
             set(i, function.evaluate(i, get(i)));
+        }
+    }
+
+    @Override
+    public void updateNonZeros(VectorFunction function) {
+
+        for (int i = 0; i < length; i++) {
+            final byte val = get(i);
+            if (!aIsEqualToB(val, (byte)0)) {
+                set(i, function.evaluate(i, val));
+            }
         }
     }
 

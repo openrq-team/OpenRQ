@@ -36,7 +36,7 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import junit.framework.TestCase;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;

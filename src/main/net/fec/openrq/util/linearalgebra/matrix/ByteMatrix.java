@@ -52,7 +52,6 @@ import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 
-
 /**
  * This interface represents byte matrix.
  * <p>
@@ -431,6 +430,34 @@ public interface ByteMatrix extends Externalizable {
     ByteVector getRow(int i, Factory factory);
 
     /**
+     * Copies a range of elements from the specified row of this matrix into a vector.
+     * 
+     * @param i
+     *            The row index
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @return the range of a row represented as a vector
+     */
+    ByteVector getRow(int i, int fromColumn, int toColumn);
+
+    /**
+     * Copies a range of elements from the specified row of this matrix into a vector.
+     * 
+     * @param i
+     *            The row index
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @param factory
+     *            The factory of the result vector
+     * @return the range of a row represented as a vector
+     */
+    ByteVector getRow(int i, int fromColumn, int toColumn, Factory factory);
+
+    /**
      * Copies the specified column of this matrix into the vector.
      * 
      * @param j
@@ -449,6 +476,34 @@ public interface ByteMatrix extends Externalizable {
      * @return the column represented as vector
      */
     ByteVector getColumn(int j, Factory factory);
+
+    /**
+     * Copies a range of elements from the specified column of this matrix into a vector.
+     * 
+     * @param j
+     *            The column index
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     * @return the range of a column represented as a vector
+     */
+    ByteVector getColumn(int j, int fromRow, int toRow);
+
+    /**
+     * Copies a range of elements from the specified column of this matrix into a vector.
+     * 
+     * @param j
+     *            The column index
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     * @param factory
+     *            The factory of the result vector
+     * @return the range of a column represented as a vector
+     */
+    ByteVector getColumn(int j, int fromRow, int toRow, Factory factory);
 
     /**
      * Copies given {@code vector} into the specified row of this matrix.
@@ -726,6 +781,57 @@ public interface ByteMatrix extends Externalizable {
     Factory factory();
 
     /**
+     * Returns the number of non zero elements in this matrix.
+     * 
+     * @return the number of non zero elements in this matrix
+     */
+    int nonZeros();
+
+    /**
+     * Returns the number of non zero elements in the row of this matrix.
+     * 
+     * @param i
+     *            The row index
+     * @return the number of non zero elements in the row of this matrix
+     */
+    int nonZerosInRow(int i);
+
+    /**
+     * Returns the number of non zero elements in the range of row of this matrix.
+     * 
+     * @param i
+     *            The row index
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @return the number of non zero elements in the range of row of this matrix
+     */
+    int nonZerosInRow(int i, int fromColumn, int toColumn);
+
+    /**
+     * Returns the number of non zero elements in the column of this matrix.
+     * 
+     * @param j
+     *            The column index
+     * @return the number of non zero elements in the column of this matrix
+     */
+    int nonZerosInColumn(int j);
+
+    /**
+     * Returns the number of non zero elements in the range of column of this matrix.
+     * 
+     * @param j
+     *            The column index
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     * @return the number of non zero elements in the range of column of this matrix
+     */
+    int nonZerosInColumn(int j, int fromRow, int toRow);
+
+    /**
      * Applies given {@code procedure} to each element of this matrix.
      * 
      * @param procedure
@@ -940,6 +1046,14 @@ public interface ByteMatrix extends Externalizable {
     void update(MatrixFunction function);
 
     /**
+     * Updates all non zero elements of this matrix by applying given {@code function}.
+     * 
+     * @param function
+     *            the matrix function
+     */
+    void updateNonZeros(MatrixFunction function);
+
+    /**
      * Updates the specified element of this matrix by applying given {@code function}.
      * 
      * @param i
@@ -962,6 +1076,30 @@ public interface ByteMatrix extends Externalizable {
     void updateRow(int i, MatrixFunction function);
 
     /**
+     * Updates a range of elements of the specified row in this matrix by applying given {@code function}.
+     * 
+     * @param i
+     *            the row index
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @param function
+     *            the matrix function
+     */
+    void updateRow(int i, int fromColumn, int toColumn, MatrixFunction function);
+
+    /**
+     * Updates all non zero elements of the specified row in this matrix by applying given {@code function}.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     */
+    void updateRowNonZeros(int i, MatrixFunction function);
+
+    /**
      * Updates all elements of the specified column in this matrix by applying given {@code function}.
      * 
      * @param j
@@ -970,6 +1108,30 @@ public interface ByteMatrix extends Externalizable {
      *            the matrix function
      */
     void updateColumn(int j, MatrixFunction function);
+
+    /**
+     * Updates a range of elements of the specified column in this matrix by applying given {@code function}.
+     * 
+     * @param j
+     *            the column index
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     * @param function
+     *            the matrix function
+     */
+    void updateColumn(int j, int fromRow, int toRow, MatrixFunction function);
+
+    /**
+     * Updates all non zero elements of the specified column in this matrix by applying given {@code function}.
+     * 
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     */
+    void updateColumnNonZeros(int j, MatrixFunction function);
 
     /**
      * Folds all elements of this matrix with given {@code accumulator}.

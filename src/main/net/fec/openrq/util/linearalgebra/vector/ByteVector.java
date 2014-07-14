@@ -49,7 +49,6 @@ import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorProcedure;
 
 
-
 /**
  * The byte vector interface.
  */
@@ -531,6 +530,14 @@ public interface ByteVector extends Externalizable {
      *            the the vector function
      */
     void update(VectorFunction function);
+
+    /**
+     * Updates all non zero elements of this vector by applying given {@code function}.
+     * 
+     * @param function
+     *            the the vector function
+     */
+    void updateNonZeros(VectorFunction function);
 
     /**
      * Updates the specified element of this vector by applying given {@code function}.

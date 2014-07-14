@@ -38,17 +38,21 @@
 package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsGreaterThanB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsLessThanB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.maxByte;
-import static net.fec.openrq.util.linearalgebra.ByteOps.minByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
+import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
@@ -158,6 +162,64 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
             insert(k, i, value);
         }
     }
+
+    // =========================================================================
+    // Optimized multiplications that take advantage of sparsity in this matrix.
+
+    @Override
+    public ByteVector multiply(byte value) {
+
+        return multiply(value, factory);
+    }
+
+    @Override
+    public ByteVector multiply(byte value, Factory factory) {
+
+        ByteVector result = blank(factory);
+
+        for (int i = 0; i < cardinality; i++) {
+            final byte prod = aTimesB(value, values[i]);
+            result.set(indices[i], prod);
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector multiply(ByteMatrix matrix) {
+
+        return multiply(matrix, factory);
+    }
+
+    @Override
+    public ByteVector multiply(ByteMatrix matrix, Factory factory) {
+
+        ensureArgumentIsNotNull(matrix, "matrix");
+
+        if (length != matrix.rows()) {
+            fail("Wrong matrix dimensions: " + matrix.rows() + "x" + matrix.columns() +
+                 ". Should be: " + length + "x_.");
+        }
+
+        ByteVector result = factory.createVector(matrix.columns());
+
+        for (int j = 0; j < matrix.columns(); j++) {
+
+            byte acc = 0;
+
+            for (int i = 0; i < cardinality; i++) {
+                final byte prod = aTimesB(values[i], matrix.get(indices[i], j));
+                acc = aPlusB(acc, prod);
+            }
+
+            result.set(j, acc);
+        }
+
+        return result;
+    }
+
+    // Optimized multiplications that take advantage of sparsity in this matrix.
+    // =========================================================================
 
     @Override
     public void swap(int i, int j) {
@@ -276,6 +338,14 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
 
         for (int i = 0; i < cardinality; i++) {
             procedure.apply(indices[i], values[i]);
+        }
+    }
+
+    @Override
+    public void updateNonZeros(VectorFunction function) {
+
+        for (int i = 0; i < cardinality; i++) {
+            values[i] = function.evaluate(indices[i], values[i]);
         }
     }
 

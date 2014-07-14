@@ -36,7 +36,7 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +45,6 @@ import java.util.Random;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSByteMatrix;
-
 
 
 public class CRSFactory extends CompressedFactory implements Factory {

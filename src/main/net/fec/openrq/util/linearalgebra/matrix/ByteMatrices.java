@@ -40,15 +40,15 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aDividedByB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aMinusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aPlusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aTimesB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.maxByte;
-import static net.fec.openrq.util.linearalgebra.ByteOps.maxOfAandB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.minByte;
-import static net.fec.openrq.util.linearalgebra.ByteOps.minOfAandB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
+import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
 import java.io.IOException;
 
@@ -64,7 +64,6 @@ import net.fec.openrq.util.linearalgebra.matrix.source.LoopbackMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.RandomMatrixSource;
 import net.fec.openrq.util.printing.appendable.PrintableAppendable;
-
 
 
 public final class ByteMatrices {
@@ -749,16 +748,16 @@ public final class ByteMatrices {
         // this prints a line with column indexes and a line for each row preceded by a row index
         // (this only works fine for indices less than 100)
         try {
-            output.printf("    ");
+            output.printf("   ");
             for (int j = 0; j < C; j++)
                 output.printf("* %02d ", j);
 
             output.println('|');
 
             for (int i = 0; i < R; i++) {
-                output.printf(" %02d)", i);
+                output.printf("%02d)", i);
                 for (int j = 0; j < C; j++)
-                    output.printf("| %02x ", matrix.get(i, j));
+                    output.printf("| %02X ", matrix.get(i, j));
                 output.println('|');
             }
         }

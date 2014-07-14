@@ -36,13 +36,11 @@
 package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aPlusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aTimesB;
-
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-
 
 
 public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix

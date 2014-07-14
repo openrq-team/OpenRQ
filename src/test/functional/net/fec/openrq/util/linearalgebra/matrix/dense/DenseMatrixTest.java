@@ -36,7 +36,7 @@
 package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractMatrixTest;

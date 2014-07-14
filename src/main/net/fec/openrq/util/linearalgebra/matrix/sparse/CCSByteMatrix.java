@@ -39,16 +39,17 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsGreaterThanB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsLessThanB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.maxByte;
-import static net.fec.openrq.util.linearalgebra.ByteOps.minByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
+import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -328,6 +329,37 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public int nonZeros() {
+
+        return cardinality();
+    }
+
+    @Override
+    public int nonZerosInColumn(int j) {
+
+        return columnPointers[j + 1] - columnPointers[j];
+    }
+
+    @Override
+    public int nonZerosInColumn(int j, int fromRow, int toRow) {
+
+        int nonZeros = 0;
+        for (int i = columnPointers[j]; i < columnPointers[j + 1]; i++) {
+            final int row = rowIndices[i];
+            if (fromRow <= row) {
+                if (row < toRow) {
+                    nonZeros++;
+                }
+                else {
+                    break; // no need to check rows beyond the last one
+                }
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
     public void eachNonZero(MatrixProcedure procedure) {
 
         int k = 0, j = 0;
@@ -401,7 +433,41 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    public void updateNonZeros(MatrixFunction function) {
+
+        int k = 0, j = 0;
+        while (k < cardinality) {
+            for (int i = columnPointers[j]; i < columnPointers[j + 1]; i++, k++) {
+
+                byte value = function.evaluate(rowIndices[i], j, values[i]);
+                if (aIsEqualToB(value, (byte)0)) {
+                    remove(i, j);
+                }
+                else {
+                    values[i] = value;
+                }
+            }
+            j++;
+        }
+    }
+
+    @Override
+    public void updateColumnNonZeros(int j, MatrixFunction function) {
+
+        for (int i = columnPointers[j]; i < columnPointers[j + 1]; i++) {
+
+            byte value = function.evaluate(rowIndices[i], j, values[i]);
+            if (aIsEqualToB(value, (byte)0)) {
+                remove(i, j);
+            }
+            else {
+                values[i] = value;
+            }
+        }
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException {
 
         rows = in.readInt();
         columns = in.readInt();
@@ -639,7 +705,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         int newCardinality = 0;
         for (int i = 0; i < newRows; i++) {
             for (int j = 0; j < newCols; j++) {
-                if (get(rowIndices[i], columnIndices[j]) != 0.0) {
+                if (!OctetOps.aIsEqualToB(get(rowIndices[i], columnIndices[j]), (byte)0)) {
                     newCardinality++;
                 }
             }

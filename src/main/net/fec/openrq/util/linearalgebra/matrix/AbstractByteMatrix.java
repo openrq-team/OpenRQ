@@ -43,11 +43,11 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aDividedByB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aMinusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aPlusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aTimesB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 
 import java.util.Random;
 
@@ -129,6 +129,29 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public ByteVector getRow(int i, int fromColumn, int toColumn) {
+
+        return getRow(i, fromColumn, toColumn, factory);
+    }
+
+    @Override
+    public ByteVector getRow(int i, int fromColumn, int toColumn, Factory factory) {
+
+        if (fromColumn < 0) throw new IndexOutOfBoundsException("negative fromColumn");
+        if (toColumn < 0) throw new IndexOutOfBoundsException("negative toColumn");
+        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
+        ensureFactoryIsNotNull(factory);
+
+        ByteVector result = factory.createVector(toColumn - fromColumn);
+
+        for (int jg = fromColumn, js = 0; jg < toColumn; jg++, js++) {
+            result.set(js, get(i, jg));
+        }
+
+        return result;
+    }
+
+    @Override
     public ByteVector getColumn(int j) {
 
         return getColumn(j, factory);
@@ -143,6 +166,29 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             result.set(i, get(i, j));
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector getColumn(int j, int fromRow, int toRow) {
+
+        return getColumn(j, fromRow, toRow, factory);
+    }
+
+    @Override
+    public ByteVector getColumn(int j, int fromRow, int toRow, Factory factory) {
+
+        if (fromRow < 0) throw new IndexOutOfBoundsException("negative fromRow");
+        if (toRow < 0) throw new IndexOutOfBoundsException("negative toRow");
+        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
+        ensureFactoryIsNotNull(factory);
+
+        ByteVector result = factory.createVector(toRow - fromRow);
+
+        for (int ig = fromRow, is = 0; ig < toRow; ig++, is++) {
+            result.set(is, get(ig, j));
         }
 
         return result;
@@ -744,6 +790,81 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public int nonZeros() {
+
+        int nonZeros = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                if (!aIsEqualToB(get(i, j), (byte)0)) {
+                    nonZeros++;
+                }
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZerosInRow(int i) {
+
+        int nonZeros = 0;
+        for (int j = 0; j < columns; j++) {
+            if (!aIsEqualToB(get(i, j), (byte)0)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZerosInRow(int i, int fromColumn, int toColumn) {
+
+        if (fromColumn < 0) throw new IndexOutOfBoundsException("negative fromColumn");
+        if (toColumn < 0) throw new IndexOutOfBoundsException("negative toColumn");
+        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
+
+        int nonZeros = 0;
+        for (int j = fromColumn; j < toColumn; j++) {
+            if (!aIsEqualToB(get(i, j), (byte)0)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZerosInColumn(int j) {
+
+        int nonZeros = 0;
+        for (int i = 0; i < rows; i++) {
+            if (!aIsEqualToB(get(i, j), (byte)0)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZerosInColumn(int j, int fromRow, int toRow) {
+
+        if (fromRow < 0) throw new IndexOutOfBoundsException("negative fromRow");
+        if (toRow < 0) throw new IndexOutOfBoundsException("negative toRow");
+        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
+
+        int nonZeros = 0;
+        for (int i = fromRow; i < toRow; i++) {
+            if (!aIsEqualToB(get(i, j), (byte)0)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
     public void each(MatrixProcedure procedure) {
 
         for (int i = 0; i < rows; i++) {
@@ -774,8 +895,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                if (!aIsEqualToB(get(i, j), (byte)0)) {
-                    procedure.apply(i, j, get(i, j));
+                final byte val = get(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    procedure.apply(i, j, val);
                 }
             }
         }
@@ -785,8 +907,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
 
         for (int j = 0; j < columns; j++) {
-            if (!aIsEqualToB(get(i, j), (byte)0)) {
-                procedure.apply(i, j, get(i, j));
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                procedure.apply(i, j, val);
             }
         }
     }
@@ -795,8 +918,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public void eachNonZeroInColumn(int j, MatrixProcedure procedure) {
 
         for (int i = 0; i < rows; i++) {
-            if (!aIsEqualToB(get(i, j), (byte)0)) {
-                procedure.apply(i, j, get(i, j));
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                procedure.apply(i, j, val);
             }
         }
     }
@@ -913,7 +1037,20 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                set(i, j, function.evaluate(i, j, get(i, j)));
+                update(i, j, function);
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeros(MatrixFunction function) {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                final byte val = get(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    set(i, j, function.evaluate(i, j, val));
+                }
             }
         }
     }
@@ -933,10 +1070,56 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public void updateRow(int i, int fromColumn, int toColumn, MatrixFunction function) {
+
+        if (fromColumn < 0) throw new IndexOutOfBoundsException("negative fromColumn");
+        if (toColumn < 0) throw new IndexOutOfBoundsException("negative toColumn");
+        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
+
+        for (int j = fromColumn; j < toColumn; j++) {
+            update(i, j, function);
+        }
+    }
+
+    @Override
+    public void updateRowNonZeros(int i, MatrixFunction function) {
+
+        for (int j = 0; j < columns; j++) {
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                set(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
     public void updateColumn(int j, MatrixFunction function) {
 
         for (int i = 0; i < rows; i++) {
             update(i, j, function);
+        }
+    }
+
+    @Override
+    public void updateColumn(int j, int fromRow, int toRow, MatrixFunction function) {
+
+        if (fromRow < 0) throw new IndexOutOfBoundsException("negative fromRow");
+        if (toRow < 0) throw new IndexOutOfBoundsException("negative toRow");
+        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
+
+        for (int i = fromRow; i < toRow; i++) {
+            update(i, j, function);
+        }
+    }
+
+    @Override
+    public void updateColumnNonZeros(int j, MatrixFunction function) {
+
+        for (int i = 0; i < rows; i++) {
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                set(i, j, function.evaluate(i, j, val));
+            }
         }
     }
 

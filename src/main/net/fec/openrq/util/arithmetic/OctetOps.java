@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package net.fec.openrq.util.rq;
+package net.fec.openrq.util.arithmetic;
 
 
 import java.util.Arrays;
 
+import net.fec.openrq.util.function.ByteBinaryOperator;
 import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
 
@@ -36,22 +37,36 @@ public final class OctetOps {
         return OCT_EXP[i];
     }
 
+    public static byte alphaPower(int i) {
+
+        return (byte)getExp(i);
+    }
+
     public static int getLog(int i) {
 
         return OCT_LOG[i];
     }
 
-    public static byte addition(byte u, byte v) {
+    public static byte aPlusB(byte u, byte v) {
 
         return (byte)(u ^ v);
     }
 
-    public static byte subtraction(byte u, byte v) {
+    public static byte aMinusB(byte u, byte v) {
 
-        return addition(u, v);
+        return aPlusB(u, v);
     }
 
-    public static byte division(byte u, byte v) {
+    public static byte aTimesB(byte u, byte v) {
+
+        if (u == 0 || v == 0) return 0;
+        if (u == 1) return v;
+        if (v == 1) return u;
+
+        return (byte)getExp(getLog(UNSIGN(u - 1)) + getLog(UNSIGN(v - 1)));
+    }
+
+    public static byte aDividedByB(byte u, byte v) {
 
         if (v == 0) throw new ArithmeticException("cannot divide by zero");
         if (u == 0) return 0;
@@ -63,18 +78,98 @@ public final class OctetOps {
         }
     }
 
-    public static byte product(byte u, byte v) {
+    public static byte minByte() {
 
-        if (u == 0 || v == 0) return 0;
-        if (u == 1) return v;
-        if (v == 1) return u;
-
-        return (byte)getExp(getLog(UNSIGN(u - 1)) + getLog(UNSIGN(v - 1)));
+        return 0;
     }
 
-    public static byte alphaPower(int i) {
+    public static byte maxByte() {
 
-        return (byte)getExp(i);
+        return (byte)-1;
+    }
+
+    // for completeness sake
+    public static boolean aIsEqualToB(byte a, byte b) {
+
+        return a == b;
+    }
+
+    public static boolean aIsLessThanB(byte a, byte b) {
+
+        return OctetOps.UNSIGN(a) < OctetOps.UNSIGN(b);
+    }
+
+    public static boolean aIsLessThanOrEqualToB(byte a, byte b) {
+
+        return OctetOps.UNSIGN(a) <= OctetOps.UNSIGN(b);
+    }
+
+    public static boolean aIsGreaterThanB(byte a, byte b) {
+
+        return OctetOps.UNSIGN(a) > OctetOps.UNSIGN(b);
+    }
+
+    public static boolean aIsGreaterThanOrEqualToB(byte a, byte b) {
+
+        return OctetOps.UNSIGN(a) >= OctetOps.UNSIGN(b);
+    }
+
+    public static byte maxOfAandB(byte a, byte b) {
+
+        return aIsGreaterThanOrEqualToB(a, b) ? a : b;
+    }
+
+    public static byte minOfAandB(byte a, byte b) {
+
+        return aIsLessThanOrEqualToB(a, b) ? a : b;
+    }
+
+    public static ByteBinaryOperator additionOp() {
+
+        return new ByteBinaryOperator() {
+
+            @Override
+            public byte applyAsByte(byte left, byte right) {
+
+                return aPlusB(left, right);
+            }
+        };
+    }
+
+    public static ByteBinaryOperator subtractionOp() {
+
+        return new ByteBinaryOperator() {
+
+            @Override
+            public byte applyAsByte(byte left, byte right) {
+
+                return aMinusB(left, right);
+            }
+        };
+    }
+
+    public static ByteBinaryOperator multiplicationOp() {
+
+        return new ByteBinaryOperator() {
+
+            @Override
+            public byte applyAsByte(byte left, byte right) {
+
+                return aTimesB(left, right);
+            }
+        };
+    }
+
+    public static ByteBinaryOperator divisionOp() {
+
+        return new ByteBinaryOperator() {
+
+            @Override
+            public byte applyAsByte(byte left, byte right) {
+
+                return aDividedByB(left, right);
+            }
+        };
     }
 
     public static byte[] betaProduct(byte beta, byte[] vector) {
@@ -123,7 +218,7 @@ public final class OctetOps {
             }
             else {
                 for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
-                    result[rr] = product(beta, vector[vv]);
+                    result[rr] = aTimesB(beta, vector[vv]);
                 }
             }
         }
@@ -169,7 +264,7 @@ public final class OctetOps {
         else {
             final int resEnd = resPos + length;
             for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
-                result[rr] = division(vector[vv], beta);
+                result[rr] = aDividedByB(vector[vv], beta);
             }
         }
     }

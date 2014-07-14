@@ -37,15 +37,15 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aDividedByB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aMinusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aPlusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aTimesB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.maxByte;
-import static net.fec.openrq.util.linearalgebra.ByteOps.maxOfAandB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.minByte;
-import static net.fec.openrq.util.linearalgebra.ByteOps.minOfAandB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
+import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
 import java.io.IOException;
 
@@ -58,7 +58,6 @@ import net.fec.openrq.util.linearalgebra.vector.source.LoopbackVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.RandomVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 import net.fec.openrq.util.printing.appendable.PrintableAppendable;
-
 
 
 public final class ByteVectors {

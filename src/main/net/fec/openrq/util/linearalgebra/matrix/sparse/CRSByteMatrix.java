@@ -39,19 +39,19 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsEqualToB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsGreaterThanB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aIsLessThanB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aPlusB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.aTimesB;
-import static net.fec.openrq.util.linearalgebra.ByteOps.maxByte;
-import static net.fec.openrq.util.linearalgebra.ByteOps.minByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
+import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import net.fec.openrq.util.linearalgebra.ByteOps;
+import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -201,6 +201,33 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     // Optimized multiplications that take advantage of sparsity in this matrix.
 
     @Override
+    public ByteMatrix multiply(byte value) {
+
+        return multiply(value, factory);
+    }
+
+    @Override
+    public ByteMatrix multiply(byte value, Factory factory) {
+
+        ByteMatrix result = blank(factory);
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = rowPointers[i]; j < rowPointers[i + 1]; j++) {
+                final byte prod = aTimesB(value, values[j]);
+                result.set(i, columnIndices[j], prod);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteMatrix multiply(ByteMatrix matrix) {
+
+        return multiply(matrix, factory);
+    }
+
+    @Override
     public ByteMatrix multiply(ByteMatrix matrix, Factory factory) {
 
         ensureFactoryIsNotNull(factory);
@@ -220,13 +247,19 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
                     acc = aPlusB(acc, prod);
                 }
 
-                if (!ByteOps.aIsEqualToB(acc, (byte)0)) {
+                if (!aIsEqualToB(acc, (byte)0)) {
                     result.set(i, j, acc);
                 }
             }
         }
 
         return result;
+    }
+
+    @Override
+    public ByteVector multiply(ByteVector vector) {
+
+        return multiply(vector, factory);
     }
 
     @Override
@@ -406,6 +439,37 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public int nonZeros() {
+
+        return cardinality();
+    }
+
+    @Override
+    public int nonZerosInRow(int i) {
+
+        return rowPointers[i + 1] - rowPointers[i];
+    }
+
+    @Override
+    public int nonZerosInRow(int i, int fromColumn, int toColumn) {
+
+        int nonZeros = 0;
+        for (int j = rowPointers[i]; j < rowPointers[i + 1]; j++) {
+            final int col = columnIndices[j];
+            if (fromColumn <= col) {
+                if (col < toColumn) {
+                    nonZeros++;
+                }
+                else {
+                    break; // no need to check columns beyond the last one
+                }
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
     public void eachNonZero(MatrixProcedure procedure) {
 
         int k = 0, i = 0;
@@ -479,6 +543,42 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public void updateNonZeros(MatrixFunction function) {
+
+        int k = 0, i = 0;
+        while (k < cardinality) {
+            for (int j = rowPointers[i]; j < rowPointers[i + 1]; j++, k++) {
+
+                byte value = function.evaluate(i, columnIndices[j], values[j]);
+
+                if (aIsEqualToB(value, (byte)0)) {
+                    remove(j, i);
+                }
+                else {
+                    values[j] = value;
+                }
+            }
+            i++;
+        }
+    }
+
+    @Override
+    public void updateRowNonZeros(int i, MatrixFunction function) {
+
+        for (int j = rowPointers[i]; j < rowPointers[i + 1]; j++) {
+
+            byte value = function.evaluate(i, columnIndices[j], values[j]);
+
+            if (aIsEqualToB(value, (byte)0)) {
+                remove(j, i);
+            }
+            else {
+                values[j] = value;
+            }
+        }
+    }
+
+    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
 
         out.writeInt(rows);
@@ -497,7 +597,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    public void readExternal(ObjectInput in) throws IOException {
 
         rows = in.readInt();
         columns = in.readInt();
@@ -715,7 +815,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         int newCardinality = 0;
         for (int i = 0; i < newRows; i++) {
             for (int j = 0; j < newCols; j++) {
-                if (get(rowIndices[i], columnIndices[j]) != 0.0) {
+                if (!OctetOps.aIsEqualToB(get(rowIndices[i], columnIndices[j]), (byte)0)) {
                     newCardinality++;
                 }
             }
