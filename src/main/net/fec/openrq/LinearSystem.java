@@ -16,6 +16,8 @@
 package net.fec.openrq;
 
 
+import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
@@ -27,7 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.fec.openrq.util.rq.OctetOps;
+import net.fec.openrq.util.arithmetic.OctetOps;
+import net.fec.openrq.util.linearalgebra.LinearAlgebra;
+import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
+import net.fec.openrq.util.linearalgebra.vector.ByteVector;
+import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -36,14 +45,40 @@ import net.fec.openrq.util.rq.SystematicIndices;
  */
 final class LinearSystem {
 
+    private static final Factory DENSE_FACTORY = LinearAlgebra.BASIC2D_FACTORY;
+    private static final Factory SPARSE_FACTORY = LinearAlgebra.CRS_FACTORY;
+    private static final long A_SPARSE_THRESHOLD = 1L;
+    private static final long MT_SPARSE_THRESHOLD = 1L;
+
+
+    private static Factory getMatrixAfactory(int L, int overheadRows) {
+
+        if ((long)L * (L + overheadRows) < A_SPARSE_THRESHOLD) {
+            return DENSE_FACTORY;
+        }
+        else {
+            return SPARSE_FACTORY;
+        }
+    }
+
+    private static Factory getMatrixMTfactory(int H, int Kprime, int S) {
+
+        if ((long)H * (Kprime + S) < MT_SPARSE_THRESHOLD) {
+            return DENSE_FACTORY;
+        }
+        else {
+            return SPARSE_FACTORY;
+        }
+    }
+
     /**
      * Initializes the G_LDPC1 submatrix.
      * 
-     * @param constraint_matrix
+     * @param A
      * @param B
      * @param S
      */
-    private static void initializeG_LPDC1(byte[][] constraint_matrix, int B, int S)
+    private static void initializeG_LPDC1(ByteMatrix A, int B, int S)
     {
 
         int circulant_matrix = -1;
@@ -55,26 +90,26 @@ final class LinearSystem {
             if (circulant_matrix_column != 0)
             {
                 // cyclic down-shift
-                constraint_matrix[0][col] = constraint_matrix[S - 1][col - 1];
+                A.set(0, col, A.get(S - 1, col - 1));
 
                 for (int row = 1; row < S; row++)
                 {
-                    constraint_matrix[row][col] = constraint_matrix[row - 1][col - 1];
+                    A.set(row, col, A.get(row - 1, col - 1));
                 }
             }
             else
-            { 	// if 0, then its the first column of the current circulant matrix
+            {   // if 0, then it's the first column of the current circulant matrix
 
                 circulant_matrix++;
 
                 // 0
-                constraint_matrix[0][col] = 1;
+                A.set(0, col, (byte)1);
 
                 // (i + 1) mod S
-                constraint_matrix[(circulant_matrix + 1) % S][col] = 1;
+                A.set((circulant_matrix + 1) % S, col, (byte)1);
 
                 // (2 * (i + 1)) mod S
-                constraint_matrix[(2 * (circulant_matrix + 1)) % S][col] = 1;
+                A.set((2 * (circulant_matrix + 1)) % S, col, (byte)1);
             }
         }
     }
@@ -82,61 +117,51 @@ final class LinearSystem {
     /**
      * Initializes the G_LPDC2 submatrix.
      * 
-     * @param constraint_matrix
+     * @param A
      * @param S
      * @param P
      * @param W
      */
-    private static void initializeG_LPDC2(byte[][] constraint_matrix, int S, int P, int W) {
+    private static void initializeG_LPDC2(ByteMatrix A, int S, int P, int W) {
 
         for (int row = 0; row < S; row++)
         {
-            // consecutives 1's modulo P
-            constraint_matrix[row][(row % P) + W] = 1;
-            constraint_matrix[row][((row + 1) % P) + W] = 1;
+            // consecutive 1s modulo P
+            A.set(row, (row % P) + W, (byte)1);
+            A.set(row, ((row + 1) % P) + W, (byte)1);
         }
     }
 
     /**
      * Initializes the I_S submatrix.
      * 
-     * @param constraint_matrix
+     * @param A
      * @param S
      * @param B
      */
-    private static void initializeIs(byte[][] constraint_matrix, int S, int B) {
+    private static void initializeIs(ByteMatrix A, int S, int B) {
 
-        for (int row = 0; row < S; row++)
-        {
-            for (int col = 0; col < S; col++)
-            {
-                if (col != row) continue;
-                else constraint_matrix[row][col + B] = 1;
-            }
+        for (int n = 0; n < S; n++) {
+            A.set(n, n + B, (byte)1);
         }
     }
 
     /**
      * Initializes the I_H submatrix.
      * 
-     * @param constraint_matrix
+     * @param A
      * @param W
      * @param U
      * @param H
      * @param S
      */
-    private static void initializeIh(byte[][] constraint_matrix, int W, int U, int H, int S)
+    private static void initializeIh(ByteMatrix A, int W, int U, int H, int S)
     {
 
         int lower_limit_col = W + U;
 
-        for (int row = 0; row < H; row++)
-        {
-            for (int col = 0; col < H; col++)
-            {
-                if (col != row) continue;
-                else constraint_matrix[row + S][col + lower_limit_col] = 1;
-            }
+        for (int n = 0; n < H; n++) {
+            A.set(n + S, n + lower_limit_col, (byte)1);
         }
     }
 
@@ -148,25 +173,28 @@ final class LinearSystem {
      * @param S
      * @return MT
      */
-    private static byte[][] generateMT(int H, int Kprime, int S)
+    private static ByteMatrix generateMT(int H, int Kprime, int S)
     {
 
-        byte[][] MT = new byte[H][Kprime + S];
+        ByteMatrix MT = getMatrixMTfactory(H, Kprime, S).createMatrix(H, Kprime + S);
 
         for (int row = 0; row < H; row++)
         {
             for (int col = 0; col < Kprime + S - 1; col++)
             {
-                if (row != (int)(Rand.rand(col + 1, 6, H)) && row != (((int)(Rand.rand(col + 1, 6, H)) + (int)(Rand.rand(
-                    col + 1, 7, H - 1)) + 1) % H)) continue;
-                else MT[row][col] = 1;
+                if (row == (int)Rand.rand(col + 1, 6, H) ||
+                    row == (((int)Rand.rand(col + 1, 6, H) + (int)Rand.rand(col + 1, 7, H - 1) + 1) % H))
+                {
+                    MT.set(row, col, (byte)1);
+                }
             }
         }
 
-        for (int row = 0; row < H; row++)
-            MT[row][Kprime + S - 1] = (byte)OctetOps.getExp(row);
+        for (int row = 0; row < H; row++) {
+            MT.set(row, Kprime + S - 1, (byte)OctetOps.getExp(row));
+        }
 
-        return (MT);
+        return MT;
     }
 
     /**
@@ -176,17 +204,18 @@ final class LinearSystem {
      * @param S
      * @return GAMMA
      */
-    private static byte[][] generateGAMMA(int Kprime, int S)
+    private static ByteMatrix generateGAMMA(int Kprime, int S)
     {
 
-        byte[][] GAMMA = new byte[Kprime + S][Kprime + S];
+        ByteMatrix GAMMA = DENSE_FACTORY.createMatrix(Kprime + S, Kprime + S);
 
         for (int row = 0; row < Kprime + S; row++)
         {
             for (int col = 0; col < Kprime + S; col++)
             {
-                if (row >= col) GAMMA[row][col] = (byte)OctetOps.getExp((row - col) % 256);
-                else continue;
+                if (row >= col) {
+                    GAMMA.set(row, col, (byte)OctetOps.getExp((row - col) % 256));
+                }
             }
         }
 
@@ -196,13 +225,13 @@ final class LinearSystem {
     /**
      * Initializes the G_ENC submatrix.
      * 
-     * @param constraint_matrix
+     * @param A
      * @param S
      * @param H
      * @param L
      * @param Kprime
      */
-    private static void initializeG_ENC(byte[][] constraint_matrix, int S, int H, int L, int Kprime)
+    private static void initializeG_ENC(ByteMatrix A, int S, int H, int L, int Kprime)
     {
 
         for (int row = S + H; row < L; row++)
@@ -213,7 +242,7 @@ final class LinearSystem {
 
             for (Integer j : indexes)
             {
-                constraint_matrix[row][j] = 1;
+                A.set(row, j, (byte)1);
             }
         }
     }
@@ -224,8 +253,19 @@ final class LinearSystem {
      * @param Kprime
      * @return a constraint matrix
      */
-    static byte[][] generateConstraintMatrix(int Kprime)
-    {
+    static ByteMatrix generateConstraintMatrix(int Kprime) {
+
+        return generateConstraintMatrix(Kprime, 0);
+    }
+
+    /**
+     * Generates the constraint matrix.
+     * 
+     * @param Kprime
+     * @param overheadRows
+     * @return a constraint matrix
+     */
+    static ByteMatrix generateConstraintMatrix(int Kprime, int overheadRows) {
 
         // calculate necessary parameters
         int Ki = SystematicIndices.getKIndex(Kprime);
@@ -238,49 +278,51 @@ final class LinearSystem {
         int B = W - S;
 
         // allocate memory for the constraint matrix
-        byte[][] constraint_matrix = new byte[L][L]; // A
+        ByteMatrix A = getMatrixAfactory(L, overheadRows).createMatrix(L + overheadRows, L);
 
         /*
          * upper half
          */
 
         // initialize G_LPDC2
-        initializeG_LPDC2(constraint_matrix, S, P, W);
+        initializeG_LPDC2(A, S, P, W);
 
         // initialize G_LPDC1
-        initializeG_LPDC1(constraint_matrix, B, S);
+        initializeG_LPDC1(A, B, S);
 
         // initialize I_s
-        initializeIs(constraint_matrix, S, B);
+        initializeIs(A, S, B);
 
         /*
          * bottom half
          */
 
         // initialize I_h
-        initializeIh(constraint_matrix, W, U, H, S);
+        initializeIh(A, W, U, H, S);
 
         // initialize G_HDPC
 
         // MT
-        byte[][] MT = generateMT(H, Kprime, S);
+        ByteMatrix MT = generateMT(H, Kprime, S);
 
         // GAMMA
-        byte[][] GAMMA = generateGAMMA(Kprime, S);
+        ByteMatrix GAMMA = generateGAMMA(Kprime, S);
 
         // G_HDPC = MT * GAMMA
-        byte[][] G_HDPC = MatrixUtilities.multiplyMatrices(MT, GAMMA);
+        ByteMatrix G_HDPC = MT.multiply(GAMMA);
 
         // initialize G_HDPC
-        for (int row = S; row < S + H; row++)
-            for (int col = 0; col < W + U; col++)
-                constraint_matrix[row][col] = G_HDPC[row - S][col];
+        for (int row = S; row < S + H; row++) {
+            for (int col = 0; col < W + U; col++) {
+                A.set(row, col, G_HDPC.get(row - S, col));
+            }
+        }
 
         // initialize G_ENC
-        initializeG_ENC(constraint_matrix, S, H, L, Kprime);
+        initializeG_ENC(A, S, H, L, Kprime);
 
         // return the constraint matrix
-        return constraint_matrix;
+        return A;
     }
 
     /**
@@ -406,12 +448,15 @@ final class LinearSystem {
      * Solves the decoding system of linear equations using the permanent inactivation technique
      * 
      * @param A
+     *            The constraint matrix
      * @param D
+     *            The vector with available symbols (each row of the matrix contains one symbol)
      * @param Kprime
+     *            The total number of source symbols for decoding
      * @return the intermediate symbols
      * @throws SingularMatrixException
      */
-    static byte[][] PInactivationDecoding(byte[][] A, byte[][] D, int Kprime)
+    static byte[][] PInactivationDecoding(ByteMatrix A, byte[][] D, int Kprime)
         throws SingularMatrixException {
 
         // decoding parameters
@@ -421,7 +466,7 @@ final class LinearSystem {
         int W = SystematicIndices.W(Ki);
         int L = Kprime + S + H;
         int P = L - W;
-        int M = A.length;
+        int M = A.rows();
 
         // DEBUG
         // PRINTER.println(printVarDeclar(int.class, "Kprime", String.valueOf(Kprime)));
@@ -445,10 +490,7 @@ final class LinearSystem {
 
         // TODO see if X can be deleted (this requires saving some modifications on A (during 1st phase))
         // allocate X and copy A into X
-        byte[][] X = new byte[M][L];
-
-        for (int row = 0; row < M; row++)
-            System.arraycopy(A[row], 0, X[row], 0, L);
+        ByteMatrix X = A.copy();
 
         // initialize i and u parameters, for the submatrices sizes
         int i = 0, u = P;
@@ -489,7 +531,7 @@ final class LinearSystem {
             // check all columns for non-zeros
             for (int col = 0; col < noCols; col++)
             {
-                if (A[row][col] == 0) { // branch prediction
+                if (A.get(row, col) == 0) {
                     continue;
                 }
                 else
@@ -498,7 +540,7 @@ final class LinearSystem {
                     nonZeros++;
 
                     // add to the degree of this row
-                    degree += OctetOps.UNSIGN(A[row][col]);
+                    degree += OctetOps.UNSIGN(A.get(row, col));
 
                     nodes.add(col);
                 }
@@ -775,14 +817,10 @@ final class LinearSystem {
             if (rLinha != i)
             {
                 // swap i with rLinha in A
-                byte[] auxRow = A[i];
-                A[i] = A[rLinha];
-                A[rLinha] = auxRow;
+                A.swapRows(i, rLinha);
 
-                // swap i with rLinha in X
-                auxRow = X[i];
-                X[i] = X[rLinha];
-                X[rLinha] = auxRow;
+                // swap i with rLinha in X~
+                X.swapRows(i, rLinha);
 
                 // decoding process - swap i with rLinha in d
                 int auxIndex = d[i];
@@ -808,8 +846,8 @@ final class LinearSystem {
             // search the chosen row for the positions of the non-zeros
             for (int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++) // TODO the positions of the non-zeros could
                                                                       // be stored as a Row attribute
-            {														  // this would spare wasting time in this for (little optimization)
-                if (A[i][col] == 0) { // a zero
+            {                                                         // this would spare wasting time in this for (little optimization)
+                if (A.get(i, col) == 0) { // a zero
                     continue;
                 }
                 else
@@ -827,14 +865,14 @@ final class LinearSystem {
 
             // swap a non-zero's column to the first column in V
             int column;
-            if (A[i][i] == 0) // is the first column in V already the place of a non-zero?
+            if (A.get(i, i) == 0) // is the first column in V already the place of a non-zero?
             {
                 // column to be swapped
                 column = nonZerosStack.pop();
 
                 // swap columns
-                MatrixUtilities.swapColumns(A, column, i);
-                MatrixUtilities.swapColumns(X, column, i);
+                A.swapColumns(column, i);
+                X.swapColumns(column, i);
 
                 // decoding process - swap i and column in c
                 int auxIndex = c[i];
@@ -851,8 +889,8 @@ final class LinearSystem {
                 column = nonZerosStack.pop();
 
                 // swap columns
-                MatrixUtilities.swapColumns(A, column, L - u - remainingNZ);
-                MatrixUtilities.swapColumns(X, column, L - u - remainingNZ);
+                A.swapColumns(column, L - u - remainingNZ);
+                X.swapColumns(column, L - u - remainingNZ);
 
                 // decoding process - swap column with L-u-remainingNZ in c
                 int auxIndex = c[L - u - remainingNZ];
@@ -868,37 +906,45 @@ final class LinearSystem {
              */
 
             // "the chosen row has entry alpha in the first column of V"
-            byte alpha = A[i][i];
+            byte alpha = A.get(i, i);
 
             // let's look at all rows below the chosen one
             for (int row = i + 1; row < M; row++) // TODO queue these row operations for when/if the row is chosen
             // Page35@RFC6330 1st Par.
             {
                 // if it's already 0, no problem
-                if (A[row][i] == 0) continue;
+                if (A.get(row, i) == 0) continue;
 
                 // if it's a non-zero we've got to "zerofy" it
                 else
                 {
                     // "if a row below the chosen row has entry beta in the first column of V"
-                    byte beta = A[row][i];
+                    byte beta = A.get(row, i);
 
                     /*
                      * "then beta/alpha multiplied by the chosen row is added to this row"
                      */
 
                     // division
-                    byte balpha = OctetOps.division(beta, alpha);
+                    byte balpha = OctetOps.aDividedByB(beta, alpha);
 
                     // multiplication
-                    byte[] product = OctetOps.betaProduct(balpha, A[i]);
+                    final ByteVector product = A.getRow(i);
+                    product.updateNonZeros(ByteVectors.asMulFunction(balpha));
 
                     // addition
-                    MatrixUtilities.xorSymbolInPlace(A[row], product);
+                    A.updateRow(row, new MatrixFunction() {
+
+                        @Override
+                        public byte evaluate(int notUsed, int j, byte value) {
+
+                            return aPlusB(product.get(j), value);
+                        }
+                    });
 
                     // decoding process - (beta * D[d[i]]) + D[d[row]]
-                    product = OctetOps.betaProduct(balpha, D[d[i]]);
-                    MatrixUtilities.xorSymbolInPlace(D[d[row]], product);
+                    byte[] p = OctetOps.betaProduct(balpha, D[d[i]]);
+                    MatrixUtilities.xorSymbolInPlace(D[d[row]], p);
                     // DEBUG
                     // PRINTER.println(
                     // printVarDeclar(byte[].class, "p",
@@ -924,7 +970,7 @@ final class LinearSystem {
                 // check all columns for non-zeros
                 for (int col = i; col < L - u; col++)
                 {
-                    if (A[line][col] == 0) {// branch prediction
+                    if (A.get(line, col) == 0) {
                         continue;
                     }
                     else
@@ -949,7 +995,7 @@ final class LinearSystem {
         }
 
         // END OF FIRST PHASE
-
+        
         /*
          * Second phase
          */
@@ -970,7 +1016,7 @@ final class LinearSystem {
         MatrixUtilities.reduceToRowEchelonForm(A, i, M, L - u, L, d, D);
 
         // check U_lower's rank, if it's less than 'u' we've got a decoding failure
-        if (!MatrixUtilities.validateRank(A, i, i, M, L, u)) {
+        if (MatrixUtilities.nonZeroRows(A, i, M, i, L) < u) {
             throw new SingularMatrixException(
                 "Decoding Failure - PI Decoding @ Phase 2: U_lower's rank is less than u.");
         }
@@ -1000,8 +1046,8 @@ final class LinearSystem {
         }
 
         for (int row = 0; row < i; row++) {
-            // multiply X by D
-            D[d[row]] = MatrixUtilities.multiplyByteLineBySymbolVector(X[row], i, noOverheadD);
+            // multiply X[row] by D
+            D[d[row]] = MatrixUtilities.multiplyByteLineBySymbolVector(X.getRow(row), i, noOverheadD);
             // DEBUG
             // PRINTER.println(
             // "D[" + d[row] + "]=multiplyByteLineBySymbolVector(" +
@@ -1013,10 +1059,10 @@ final class LinearSystem {
          */
 
         // This multiplies X by A and stores the product in X (this destroys X)
-        // Utilities.multiplyMatricesHack(X, 0, 0, i, i, A, 0, 0, i, L, X, 0, 0, i, L);
+        // Utilities.multiplyMatricesHack(X, 0, i, 0, i, A, 0, i, 0, L, X, 0, i, 0, L);
 
         // A can be safely re-assigned because the product matrix has the same dimensions of A
-        A = MatrixUtilities.multiplyMatrices(X, 0, 0, i, i, A, 0, 0, i, L);
+        A = MatrixUtilities.multiplyMatrices(X, 0, i, 0, i, A, 0, i, 0, L);
 
         // copy the product X to A
         // for (int row = 0; row < i; row++)
@@ -1037,14 +1083,13 @@ final class LinearSystem {
             for (int j = i; j < L; j++)
             {
                 // "if the row has a nonzero entry at position j"
-                if (A[row][j] != 0)
+                // "if the value of that nonzero entry is b"
+                byte b = A.get(row, j);
+                if (b != 0)
                 {
-                    // "if the value of that nonzero entry is b"
-                    byte b = A[row][j];
-
                     // "add to this row b times row j" -- this would "zerofy" that position, thus we can save the
                     // complexity
-                    A[row][j] = 0;
+                    A.set(row, j, (byte)0);
 
                     // decoding process - (beta * D[d[j]]) + D[d[row]]
                     byte[] product = OctetOps.betaProduct(b, D[d[j]]);
@@ -1058,7 +1103,7 @@ final class LinearSystem {
                 }
             }
         }
-
+        
         /*
          * Fifth phase
          */
@@ -1066,39 +1111,47 @@ final class LinearSystem {
         // "For j from 1 to i, perform the following operations:"
         for (int j = 0; j < i; j++)
         {
-            // "If A[j,j] is not one"
-            if (A[j][j] != 1)
             {
-                byte beta = A[j][j];
+                // "If A[j,j] is not one"
+                byte beta = A.get(j, j);
+                if (beta != 1)
+                {
+                    // "then divide row j of A by A[j,j]."
+                    A.updateRow(j, ByteMatrices.asDivFunction(beta));
 
-                // "then divide row j of A by A[j,j]."
-                OctetOps.betaDivision(beta, A[j], A[j]); // in place division
-
-                // decoding process - D[d[j]] / beta
-                OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
-                // DEBUG
-                // PRINTER.println(
-                // "betaDivision((byte)" + beta + ",D[" + d[j] + "],D[" + d[j] + "]);");
+                    // decoding process - D[d[j]] / beta
+                    OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
+                    // DEBUG
+                    // PRINTER.println(
+                    // "betaDivision((byte)" + beta + ",D[" + d[j] + "],D[" + d[j] + "]);");
+                }
             }
 
-            // "For l from 1 to j-1"
-            for (int l = 0; l < j; l++) {
+            // "For eL from 1 to j-1"
+            for (int eL = 0; eL < j; eL++) {
 
                 // "if A[j,l] is nonzero"
-                if (A[j][l] != 0)
+                byte beta = A.get(j, eL);
+                if (beta != 0)
                 { // "then add A[j,l] multiplied with row l of A to row j of A."
 
-                    byte beta = A[j][l];
+                    // multiply A[j][l] by row 'l' of A
+                    final ByteVector product = A.getRow(eL);
+                    product.updateNonZeros(ByteVectors.asMulFunction(beta));
 
-                    // multiply A[j][l] by row 'l' of A -- this would write a line of an identity matrix, so avoid
-                    // product
-                    byte[] product = OctetOps.betaProduct(beta, A[l]);
                     // add the product to row 'j' of A
-                    MatrixUtilities.xorSymbolInPlace(A[j], product);
+                    A.updateRow(j, new MatrixFunction() {
+
+                        @Override
+                        public byte evaluate(int notUsed, int j, byte value) {
+
+                            return aPlusB(product.get(j), value);
+                        }
+                    });
 
                     // decoding process - D[d[j]] + (A[j][l] * D[d[l]])
-                    product = OctetOps.betaProduct(beta, D[d[l]]);
-                    MatrixUtilities.xorSymbolInPlace(D[d[j]], product);
+                    byte[] p = OctetOps.betaProduct(beta, D[d[eL]]);
+                    MatrixUtilities.xorSymbolInPlace(D[d[j]], p);
                     // DEBUG
                     // PRINTER.println(
                     // printVarDeclar(byte[].class, "p",
@@ -1108,7 +1161,7 @@ final class LinearSystem {
                 }
             }
         }
-
+        
         // use the already allocated matrix for the matrix C
         final byte[][] C = noOverheadD;
 
@@ -1121,7 +1174,7 @@ final class LinearSystem {
             // PRINTER.println(
             // "E[" + ci + "]=D[" + di + "];");
         }
-
+        
         // DEBUG
         // PRINTER.println("return E;");
         return C;

@@ -33,6 +33,7 @@ import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.collection.BitSetIterators;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.rq.SystematicIndices;
 
 
@@ -371,15 +372,8 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         // number of rows in the decoding matrix
         int M = L + overhead;
 
-        // allocate memory for the decoding matrix
-        byte[][] constraint_matrix = new byte[M][];
-
-        // generate the original constraint matrix
-        byte[][] lConstraint = LinearSystem.generateConstraintMatrix(Kprime);
-
-        // copy to our decoding matrix
-        for (int row = 0; row < L; row++)
-            constraint_matrix[row] = lConstraint[row];
+        // generate the original constraint matrix and allocate memory for overhead rows
+        ByteMatrix A = LinearSystem.generateConstraintMatrix(Kprime, overhead);
 
         // initialize D
         byte[][] D = new byte[M][T];
@@ -407,12 +401,10 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             Tuple tuple = new Tuple(Kprime, repair.getISI(K));
             Set<Integer> indexes = LinearSystem.encIndexes(Kprime, tuple);
 
-            byte[] newLine = new byte[L];
-
-            for (Integer col : indexes)
-                newLine[col] = 1;
-
-            constraint_matrix[row] = newLine;
+            A.assignRow(row, (byte)0); // must clear previous data first!
+            for (Integer col : indexes) {
+                A.set(row, col, (byte)1);
+            }
 
             // fill in missing source symbols in D with the repair symbols
             D[row] = repair.data();
@@ -427,12 +419,10 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             Tuple tuple = new Tuple(Kprime, repair.getISI(K));
             Set<Integer> indexes = LinearSystem.encIndexes(Kprime, tuple);
 
-            byte[] newLine = new byte[L];
-
-            for (Integer col : indexes)
-                newLine[col] = 1;
-
-            constraint_matrix[row] = newLine;
+            A.assignRow(row, (byte)0); // must clear previous data first!
+            for (Integer col : indexes) {
+                A.set(row, col, (byte)1);
+            }
 
             // update D with the data for that symbol
             D[row] = repair.data();
@@ -444,7 +434,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
          */
 
         try {
-            return LinearSystem.PInactivationDecoding(constraint_matrix, D, Kprime);
+            return LinearSystem.PInactivationDecoding(A, D, Kprime);
             // return MatrixUtilities.gaussElimination(constraint_matrix, D);
         }
         catch (SingularMatrixException e) {

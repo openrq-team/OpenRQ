@@ -23,6 +23,7 @@ import java.util.Objects;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -311,7 +312,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         else { // if no optimized decoder is available, fall back to the standard decoding process
 
             // generate LxL Constraint Matrix
-            byte[][] constraint_matrix = LinearSystem.generateConstraintMatrix(Kprime); // A
+            ByteMatrix constraint_matrix = LinearSystem.generateConstraintMatrix(Kprime); // A
 
             // solve system of equations
             try {
