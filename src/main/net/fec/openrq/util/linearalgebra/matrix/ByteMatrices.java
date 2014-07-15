@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -51,12 +51,14 @@ import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
 import java.io.IOException;
+import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.functor.AdvancedMatrixPredicate;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixPredicate;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.matrix.source.Array1DMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.Array2DMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.IdentityMatrixSource;
@@ -68,7 +70,12 @@ import net.fec.openrq.util.printing.appendable.PrintableAppendable;
 
 public final class ByteMatrices {
 
-    private static class DiagonalMatrixPredicate implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is a
+     * <a href="http://mathworld.wolfram.com/DiagonalMatrix.html">diagonal
+     * matrix</a>.
+     */
+    public static final MatrixPredicate DIAGONAL_MATRIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -81,9 +88,14 @@ public final class ByteMatrices {
 
             return (i == j) || aIsEqualToB(value, (byte)0);
         }
-    }
+    };
 
-    private static class IdentityMatrixPredicate implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is an
+     * <a href="http://mathworld.wolfram.com/IdentityMatrix.html">identity
+     * matrix</a>.
+     */
+    public static final MatrixPredicate IDENTITY_MATRIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -94,11 +106,17 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return (i == j) ? aIsEqualToB(value, (byte)1) : aIsEqualToB(value, (byte)0);
+            return (i == j) ? aIsEqualToB(value, (byte)1) : aIsEqualToB(
+                value, (byte)0);
         }
-    }
+    };
 
-    private static class ZeroMatrixPredicate implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is a
+     * <a href="http://mathworld.wolfram.com/ZeroMatrix.html">zero
+     * matrix</a>.
+     */
+    public static final MatrixPredicate ZERO_MATRIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -111,9 +129,14 @@ public final class ByteMatrices {
 
             return aIsEqualToB(value, (byte)0);
         }
-    }
+    };
 
-    private static class TridiagonalMatrixPredicate implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is a
+     * <a href="http://mathworld.wolfram.com/TridiagonalMatrix.html">tridiagonal
+     * matrix</a>.
+     */
+    public static final MatrixPredicate TRIDIAGONAL_MATRIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -126,10 +149,12 @@ public final class ByteMatrices {
 
             return Math.abs(i - j) <= 1 || aIsEqualToB(value, (byte)0);
         }
-    }
+    };
 
-    private static class LowerBidiagonalMatrixPredicate
-        implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is a lower bidiagonal matrix</a>.
+     */
+    public static final MatrixPredicate LOWER_BIDIAGONAL_MATRIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -142,10 +167,12 @@ public final class ByteMatrices {
 
             return (i == j) || (i == j + 1) || aIsEqualToB(value, (byte)0);
         }
-    }
+    };
 
-    private static class UpperBidiagonalMatrixPredicate
-        implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is an upper bidiagonal matrix.
+     */
+    public static final MatrixPredicate UPPER_BIDIAGONAL_MATRIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -158,10 +185,14 @@ public final class ByteMatrices {
 
             return (i == j) || (i == j - 1) || aIsEqualToB(value, (byte)0);
         }
-    }
+    };
 
-    private static class LowerTriangularMatrixPredicate
-        implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is a
+     * <a href="http://mathworld.wolfram.com/LowerTriangularMatrix.html">lower
+     * triangular matrix</a>.
+     */
+    public static final MatrixPredicate LOWER_TRIANGULAR_MARTIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -174,10 +205,14 @@ public final class ByteMatrices {
 
             return (i >= j) || aIsEqualToB(value, (byte)0);
         }
-    }
+    };
 
-    private static class UpperTriangularMatrixPredicate
-        implements MatrixPredicate {
+    /**
+     * Checks whether the matrix is an
+     * <a href="http://mathworld.wolfram.com/UpperTriangularMatrix.html">upper
+     * triangular matrix</a>.
+     */
+    public static final MatrixPredicate UPPER_TRIANGULAR_MATRIX = new MatrixPredicate() {
 
         @Override
         public boolean test(int rows, int columns) {
@@ -190,10 +225,14 @@ public final class ByteMatrices {
 
             return (i <= j) || aIsEqualToB(value, (byte)0);
         }
-    }
+    };
 
-    private static class SymmetricMatrixPredicate
-        implements AdvancedMatrixPredicate {
+    /**
+     * Checks whether the matrix is a
+     * <a href="http://mathworld.wolfram.com/SymmetricMatrix.html">symmetric
+     * matrix</a>.
+     */
+    public static final AdvancedMatrixPredicate SYMMETRIC_MATRIX = new AdvancedMatrixPredicate() {
 
         @Override
         public boolean test(ByteMatrix matrix) {
@@ -214,369 +253,284 @@ public final class ByteMatrices {
 
             return true;
         }
-    }
+    };
 
-    private static class SquareMatrixPredicate implements AdvancedMatrixPredicate {
+    /**
+     * Checks whether the matrix is
+     * <a href="http://en.wikipedia.org/wiki/Square_matrix">square</a>.
+     */
+    public static final AdvancedMatrixPredicate SQUARE_MATRIX = new AdvancedMatrixPredicate() {
 
         @Override
         public boolean test(ByteMatrix matrix) {
 
             return matrix.rows() == matrix.columns();
         }
-    }
-
-    private static class ConstMatrixFunction
-        implements MatrixFunction {
-
-        private byte arg;
-
-
-        public ConstMatrixFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, int j, byte value) {
-
-            return arg;
-        }
-    }
-
-    private static class PlusMatrixFunction
-        implements MatrixFunction {
-
-        private byte arg;
-
-
-        public PlusMatrixFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, int j, byte value) {
-
-            return aPlusB(value, arg);
-        }
-    }
-
-    private static class MinusMatrixFunction
-        implements MatrixFunction {
-
-        private byte arg;
-
-
-        public MinusMatrixFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, int j, byte value) {
-
-            return aMinusB(value, arg);
-        }
-    }
-
-    private static class MulMatrixFunction
-        implements MatrixFunction {
-
-        private byte arg;
-
-
-        public MulMatrixFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, int j, byte value) {
-
-            return aTimesB(value, arg);
-        }
-    }
-
-    private static class DivMatrixFunction
-        implements MatrixFunction {
-
-        private byte arg;
-
-
-        public DivMatrixFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, int j, byte value) {
-
-            return aDividedByB(value, arg);
-        }
-    }
-
-    private static class SumMatrixAccumulator
-        implements MatrixAccumulator {
-
-        private final byte neutral;
-        private byte result;
-
-
-        public SumMatrixAccumulator(byte neutral) {
-
-            this.neutral = neutral;
-            this.result = neutral;
-        }
-
-        @Override
-        public void update(int i, int j, byte value) {
-
-            result = aPlusB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte value = result;
-            result = neutral;
-            return value;
-        }
-    }
-
-    private static class ProductMatrixAccumulator
-        implements MatrixAccumulator {
-
-        private final byte neutral;
-        private byte result;
-
-
-        public ProductMatrixAccumulator(byte neutral) {
-
-            this.neutral = neutral;
-            this.result = neutral;
-        }
-
-        @Override
-        public void update(int i, int j, byte value) {
-
-            result = aTimesB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte value = result;
-            result = neutral;
-            return value;
-        }
-    }
-
-    private static class FunctionMatrixAccumulator
-        implements MatrixAccumulator {
-
-        private final MatrixAccumulator accumulator;
-        private final MatrixFunction function;
-
-
-        public FunctionMatrixAccumulator(MatrixAccumulator accumulator,
-            MatrixFunction function) {
-
-            this.accumulator = accumulator;
-            this.function = function;
-        }
-
-        @Override
-        public void update(int i, int j, byte value) {
-
-            accumulator.update(i, j, function.evaluate(i, j, value));
-        }
-
-        @Override
-        public byte accumulate() {
-
-            return accumulator.accumulate();
-        }
-    }
-
-    private static class MinMatrixAccumulator
-        implements MatrixAccumulator {
-
-        private byte result = maxByte();
-
-
-        @Override
-        public void update(int i, int j, byte value) {
-
-            result = minOfAandB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte value = result;
-            result = maxByte();
-            return value;
-        }
-    }
-
-    private static class MaxMatrixAccumulator
-        implements MatrixAccumulator {
-
-        private byte result = minByte();
-
-
-        @Override
-        public void update(int i, int j, byte value) {
-
-            result = maxOfAandB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte value = result;
-            result = minByte();
-            return value;
-        }
-    }
+    };
 
 
     /**
      * Creates a const function that evaluates it's argument to given {@code value}.
      * 
-     * @param value
-     *            a const value
+     * @param arg
+     *            a constant value
      * @return a closure object that does {@code _}
      */
-    public static MatrixFunction asConstFunction(byte value) {
+    public static MatrixFunction asConstFunction(final byte arg) {
 
-        return new ConstMatrixFunction(value);
+        return new MatrixFunction() {
+
+            @Override
+            public byte evaluate(int i, int j, byte value) {
+
+                return arg;
+            }
+        };
     }
 
     /**
      * Creates a plus function that adds given {@code value} to it's argument.
      * 
-     * @param value
+     * @param arg
      *            a value to be added to function's argument
      * @return a closure object that does {@code _ + _}
      */
-    public static MatrixFunction asPlusFunction(byte value) {
+    public static MatrixFunction asPlusFunction(final byte arg) {
 
-        return new PlusMatrixFunction(value);
+        return new MatrixFunction() {
+
+            @Override
+            public byte evaluate(int i, int j, byte value) {
+
+                return aPlusB(value, arg);
+            }
+        };
     }
 
     /**
      * Creates a minus function that subtracts given {@code value} from it's argument.
      * 
-     * @param value
+     * @param arg
      *            a value to be subtracted from function's argument
      * @return a closure that does {@code _ - _}
      */
-    public static MatrixFunction asMinusFunction(byte value) {
+    public static MatrixFunction asMinusFunction(final byte arg) {
 
-        return new MinusMatrixFunction(value);
+        return new MatrixFunction() {
+
+            @Override
+            public byte evaluate(int i, int j, byte value) {
+
+                return aMinusB(value, arg);
+            }
+        };
     }
 
     /**
      * Creates a mul function that multiplies given {@code value} by it's argument.
      * 
-     * @param value
+     * @param arg
      *            a value to be multiplied by function's argument
      * @return a closure that does {@code _ * _}
      */
-    public static MatrixFunction asMulFunction(byte value) {
+    public static MatrixFunction asMulFunction(final byte arg) {
 
-        return new MulMatrixFunction(value);
+        return new MatrixFunction() {
+
+            @Override
+            public byte evaluate(int i, int j, byte value) {
+
+                return aTimesB(value, arg);
+            }
+        };
     }
 
     /**
      * Creates a div function that divides it's argument by given {@code value}.
      * 
-     * @param value
+     * @param arg
      *            a divisor value
      * @return a closure that does {@code _ / _}
      */
-    public static MatrixFunction asDivFunction(byte value) {
+    public static MatrixFunction asDivFunction(final byte arg) {
 
-        return new DivMatrixFunction(value);
+        return new MatrixFunction() {
+
+            @Override
+            public byte evaluate(int i, int j, byte value) {
+
+                return aDividedByB(value, arg);
+            }
+        };
     }
 
+    /**
+     * Makes a minimum matrix accumulator that accumulates the minimum of matrix elements.
+     * 
+     * @return a minimum vector accumulator
+     */
+    public static MatrixAccumulator mkMinAccumulator() {
+
+        return new MatrixAccumulator() {
+
+            private byte result = maxByte();
+
+
+            @Override
+            public void update(int i, int j, byte value) {
+
+                result = minOfAandB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte value = result;
+                result = maxByte();
+                return value;
+            }
+        };
+    }
 
     /**
-     * Checks whether the matrix is a
-     * <a href="http://mathworld.wolfram.com/DiagonalMatrix.html">diagonal
-     * matrix</a>.
+     * Makes a maximum matrix accumulator that accumulates the maximum of matrix elements.
+     * 
+     * @return a maximum vector accumulator
      */
-    public static final MatrixPredicate DIAGONAL_MATRIX =
-                                                          new DiagonalMatrixPredicate();
+    public static MatrixAccumulator mkMaxAccumulator() {
+
+        return new MatrixAccumulator() {
+
+            private byte result = minByte();
+
+
+            @Override
+            public void update(int i, int j, byte value) {
+
+                result = maxOfAandB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte value = result;
+                result = minByte();
+                return value;
+            }
+        };
+    }
 
     /**
-     * Checks whether the matrix is an
-     * <a href="http://mathworld.wolfram.com/IdentityMatrix.html">identity
-     * matrix</a>.
+     * Creates a sum matrix accumulator that calculates the sum of all elements in the matrix.
+     * 
+     * @param neutral
+     *            the neutral value
+     * @return a sum accumulator
      */
-    public static final MatrixPredicate IDENTITY_MATRIX =
-                                                          new IdentityMatrixPredicate();
+    public static MatrixAccumulator asSumAccumulator(final byte neutral) {
+
+        return new MatrixAccumulator() {
+
+            private byte result = neutral;
+
+
+            @Override
+            public void update(int i, int j, byte value) {
+
+                result = aPlusB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte value = result;
+                result = neutral;
+                return value;
+            }
+        };
+    }
 
     /**
-     * Checks whether the matrix is a
-     * <a href="http://mathworld.wolfram.com/ZeroMatrix.html">zero
-     * matrix</a>.
+     * Creates a product matrix accumulator that calculates the product of all elements in the matrix.
+     * 
+     * @param neutral
+     *            the neutral value
+     * @return a product accumulator
      */
-    public static final MatrixPredicate ZERO_MATRIX =
-                                                      new ZeroMatrixPredicate();
+    public static MatrixAccumulator asProductAccumulator(final byte neutral) {
+
+        return new MatrixAccumulator() {
+
+            private byte result = neutral;
+
+
+            @Override
+            public void update(int i, int j, byte value) {
+
+                result = aTimesB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte value = result;
+                result = neutral;
+                return value;
+            }
+        };
+    }
 
     /**
-     * Checks whether the matrix is a
-     * <a href="http://mathworld.wolfram.com/TridiagonalMatrix.html">tridiagonal
-     * matrix</a>.
+     * Creates a function accumulator, that accumulates all elements in the matrix after applying given {@code function}
+     * to each of them.
+     * 
+     * @param accumulator
+     *            the matrix accumulator
+     * @param function
+     *            the matrix function
+     * @return a function accumulator
      */
-    public static final MatrixPredicate TRIDIAGONAL_MATRIX =
-                                                             new TridiagonalMatrixPredicate();
+    public static MatrixAccumulator asFunctionAccumulator(
+        final MatrixAccumulator accumulator,
+        final MatrixFunction function)
+    {
+
+        return new MatrixAccumulator() {
+
+            @Override
+            public void update(int i, int j, byte value) {
+
+                accumulator.update(i, j, function.evaluate(i, j, value));
+            }
+
+            @Override
+            public byte accumulate() {
+
+                return accumulator.accumulate();
+            }
+        };
+    }
 
     /**
-     * Checks whether the matrix is a lower bidiagonal matrix</a>.
+     * Creates an accumulator procedure that adapts a matrix accumulator for procedure
+     * interface. This is useful for reusing a single accumulator for multiple fold operations
+     * in multiple matrices.
+     * 
+     * @param accumulator
+     *            the matrix accumulator
+     * @return an accumulator procedure
      */
-    public static final MatrixPredicate LOWER_BIDIAGONAL_MATRIX =
-                                                                  new LowerBidiagonalMatrixPredicate();
+    public static MatrixProcedure asAccumulatorProcedure(final MatrixAccumulator accumulator) {
 
-    /**
-     * Checks whether the matrix is an upper bidiagonal matrix.
-     */
-    public static final MatrixPredicate UPPER_BIDIAGONAL_MATRIX =
-                                                                  new UpperBidiagonalMatrixPredicate();
+        return new MatrixProcedure() {
 
-    /**
-     * Checks whether the matrix is a
-     * <a href="http://mathworld.wolfram.com/LowerTriangularMatrix.html">lower
-     * triangular matrix</a>.
-     */
-    public static final MatrixPredicate LOWER_TRIANGULAR_MARTIX =
-                                                                  new LowerTriangularMatrixPredicate();
+            @Override
+            public void apply(int i, int j, byte value) {
 
-    /**
-     * Checks whether the matrix is an
-     * <a href="http://mathworld.wolfram.com/UpperTriangularMatrix.html">upper
-     * triangular matrix</a>.
-     */
-    public static final MatrixPredicate UPPER_TRIANGULAR_MATRIX =
-                                                                  new UpperTriangularMatrixPredicate();
-
-    /**
-     * Checks whether the matrix is a
-     * <a href="http://mathworld.wolfram.com/SymmetricMatrix.html">symmetric
-     * matrix</a>.
-     */
-    public static final AdvancedMatrixPredicate SYMMETRIC_MATRIX =
-                                                                   new SymmetricMatrixPredicate();
-
-    /**
-     * Checks whether the matrix is
-     * <a href="http://en.wikipedia.org/wiki/Square_matrix">square</a>.
-     */
-    public static final AdvancedMatrixPredicate SQUARE_MATRIX =
-                                                                new SquareMatrixPredicate();
-
+                accumulator.update(i, j, value);
+            }
+        };
+    }
 
     /**
      * Creates a singleton 1x1 matrix of given {@code value}.
@@ -649,86 +603,83 @@ public final class ByteMatrices {
      *            the number of rows in the source
      * @param columns
      *            the number of columns in the source
+     *            * @param random the random generator instance
      * @return a random matrix source
      */
-    public static MatrixSource asRandomSource(int rows, int columns) {
+    public static MatrixSource asRandomSource(int rows, int columns, Random random) {
 
-        return new RandomMatrixSource(rows, columns);
+        return new RandomMatrixSource(rows, columns, random);
     }
 
     /**
-     * Makes a minimum matrix accumulator that accumulates the minimum of matrix elements.
+     * Creates a default 1x1 matrix from given {@code value}.
      * 
-     * @return a minimum vector accumulator
+     * @param value
+     *            of the matrix
+     * @return a default 1x1 matrix
      */
-    public static MatrixAccumulator mkMinAccumulator() {
+    public static ByteMatrix asMatrix1x1(byte value) {
 
-        return new MinMatrixAccumulator();
+        return LinearAlgebra.DEFAULT_FACTORY.createMatrix(new byte[][] {{value}});
     }
 
     /**
-     * Makes a maximum matrix accumulator that accumulates the maximum of matrix elements.
+     * Creates a default 2x2 matrix from given {@code value}.
      * 
-     * @return a maximum vector accumulator
+     * @param values
+     *            of the matrix
+     * @return a default 2x2 matrix
      */
-    public static MatrixAccumulator mkMaxAccumulator() {
+    public static ByteMatrix asMatrix2x2(byte... values) {
 
-        return new MaxMatrixAccumulator();
+        return LinearAlgebra.DEFAULT_FACTORY.createMatrix(unflatten(values, 2));
     }
 
     /**
-     * Creates a sum matrix accumulator that calculates the sum of all elements in the matrix.
+     * Creates a default 3x3 matrix from given {@code value}.
      * 
-     * @param neutral
-     *            the neutral value
-     * @return a sum accumulator
+     * @param values
+     *            of the matrix
+     * @return a default 3x3 matrix
      */
-    public static MatrixAccumulator asSumAccumulator(byte neutral) {
+    public static ByteMatrix asMatrix3x3(byte... values) {
 
-        return new SumMatrixAccumulator(neutral);
+        return LinearAlgebra.DEFAULT_FACTORY.createMatrix(unflatten(values, 3));
     }
 
     /**
-     * Creates a product matrix accumulator that calculates the product of all elements in the matrix.
+     * Creates a default 4x4 matrix from given {@code value}.
      * 
-     * @param neutral
-     *            the neutral value
-     * @return a product accumulator
+     * @param values
+     *            of the matrix
+     * @return a default 4x4 matrix
      */
-    public static MatrixAccumulator asProductAccumulator(byte neutral) {
+    public static ByteMatrix asMatrix4x4(byte... values) {
 
-        return new ProductMatrixAccumulator(neutral);
+        return LinearAlgebra.DEFAULT_FACTORY.createMatrix(unflatten(values, 4));
     }
 
     /**
-     * Creates a sum function accumulator, that calculates the sum of all
-     * elements in the matrix after applying given {@code function} to each of them.
+     * TODO: It might be a good idea to put internal routines into a special utility class.
+     * An internal routine that un-flats given 1D {@code array} to square 2D array with size {@code n}.
      * 
-     * @param neutral
-     *            the neutral value
-     * @param function
-     *            the matrix function
-     * @return a sum function accumulator
+     * @param array
+     *            the 1D array
+     * @param n
+     *            the size of square 2D array
+     * @return the square 2D array
      */
-    public static MatrixAccumulator asSumFunctionAccumulator(byte neutral, MatrixFunction function) {
+    private static byte[][] unflatten(byte array[], int n) {
 
-        return new FunctionMatrixAccumulator(new SumMatrixAccumulator(neutral), function);
-    }
+        byte result[][] = new byte[n][n];
 
-    /**
-     * Creates a product function accumulator, that calculates the product of
-     * all elements in the matrix after applying given {@code function} to
-     * each of them.
-     * 
-     * @param neutral
-     *            the neutral value
-     * @param function
-     *            the matrix function
-     * @return a product function accumulator
-     */
-    public static MatrixAccumulator asProductFunctionAccumulator(byte neutral, MatrixFunction function) {
+        int m = Math.min(array.length, n * n);
 
-        return new FunctionMatrixAccumulator(new ProductMatrixAccumulator(neutral), function);
+        for (int i = 0; i < m; i++) {
+            result[i / n][i % n] = array[i];
+        }
+
+        return result;
     }
 
     /**

@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -173,7 +173,28 @@ public abstract class AbstractFactoryTest extends TestCase {
     }
 
     @Test
-    public void testVector() {
+    public void testCreateDiagonalMatrix_3x3() {
+
+        byte diagonal[] = new byte[] {1, 2, 3};
+        ByteMatrix a = factory().createDiagonalMatrix(diagonal);
+
+        assertEquals(3, a.rows());
+        assertEquals(3, a.columns());
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (i == j) {
+                    assertEquals(diagonal[i], a.get(i, j));
+                }
+                else {
+                    assertTrue(aIsEqualToB(a.get(i, j), (byte)0));
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testCreateVector() {
 
         ByteVector a = factory().createVector();
         ByteVector b = factory().createVector(5);
@@ -185,6 +206,22 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < b.length(); i++) {
             assertTrue(aIsEqualToB(b.get(i), (byte)0));
+        }
+    }
+
+    @Test
+    public void testCreateConstantVector_3() {
+
+        ByteVector a = factory().createConstantVector(3, (byte)3);
+        ByteVector b = factory().createConstantVector(1, (byte)3);
+
+        assertEquals(3, a.length());
+        assertEquals(1, b.length());
+
+        assertTrue(aIsEqualToB(b.get(0), (byte)3));
+
+        for (int i = 0; i < 3; i++) {
+            assertTrue(aIsEqualToB(a.get(i), (byte)3));
         }
     }
 

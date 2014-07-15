@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -46,7 +46,6 @@ import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
-
 
 
 public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseByteMatrix {
@@ -80,6 +79,19 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     public Basic2DByteMatrix(int rows, int columns) {
 
         this(new byte[rows][columns]);
+    }
+
+    public Basic2DByteMatrix(int rows, int columns, byte array[]) {
+
+        this(rows, columns);
+
+        // TODO:
+        // We suppose that 'array.length = rows * columns' for now.
+        // Probably, we should check this explicitly.
+
+        for (int i = 0; i < rows; i++) {
+            System.arraycopy(array, i * columns, self[i], 0, columns);
+        }
     }
 
     public Basic2DByteMatrix(byte array[][]) {
@@ -182,8 +194,7 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException,
-        ClassNotFoundException {
+    public void readExternal(ObjectInput in) throws IOException {
 
         rows = in.readInt();
         columns = in.readInt();

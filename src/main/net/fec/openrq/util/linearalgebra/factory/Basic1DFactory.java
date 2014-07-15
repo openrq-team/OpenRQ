@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -44,8 +44,7 @@ import net.fec.openrq.util.linearalgebra.matrix.dense.Basic1DByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 
 
-
-public class Basic1DFactory extends BasicFactory implements Factory {
+public class Basic1DFactory extends BasicFactory {
 
     private static final long serialVersionUID = 4071505L;
 
@@ -60,6 +59,12 @@ public class Basic1DFactory extends BasicFactory implements Factory {
     public ByteMatrix createMatrix(int rows, int columns) {
 
         return new Basic1DByteMatrix(rows, columns);
+    }
+
+    @Override
+    public ByteMatrix createMatrix(int rows, int columns, byte[] array) {
+
+        return new Basic1DByteMatrix(rows, columns, array);
     }
 
     @Override
@@ -90,29 +95,25 @@ public class Basic1DFactory extends BasicFactory implements Factory {
     }
 
     @Override
-    public ByteMatrix createRandomMatrix(int rows, int columns) {
+    public ByteMatrix createRandomMatrix(int rows, int columns, Random random) {
 
         byte array[] = new byte[rows * columns];
 
-        Random rnd = new Random();
-
         for (int i = 0; i < rows * columns; i++) {
-            array[i] = (byte)rnd.nextInt();
+            array[i] = (byte)random.nextInt();
         }
 
         return new Basic1DByteMatrix(rows, columns, array);
     }
 
     @Override
-    public ByteMatrix createRandomSymmetricMatrix(int size) {
+    public ByteMatrix createRandomSymmetricMatrix(int size, Random random) {
 
         byte array[] = new byte[size * size];
 
-        Random rnd = new Random();
-
         for (int i = 0; i < size; i++) {
             for (int j = i; j < size; j++) {
-                byte value = (byte)rnd.nextInt();
+                byte value = (byte)random.nextInt();
                 array[i * size + j] = value;
                 array[j * size + i] = value;
             }
@@ -168,5 +169,18 @@ public class Basic1DFactory extends BasicFactory implements Factory {
         }
 
         return new Basic1DByteMatrix(rows, cols, blockMatrix);
+    }
+
+    @Override
+    public ByteMatrix createDiagonalMatrix(byte[] diagonal) {
+
+        int size = diagonal.length;
+        byte array[] = new byte[size * size];
+
+        for (int i = 0; i < size; i++) {
+            array[i * size + i] = diagonal[i];
+        }
+
+        return new Basic1DByteMatrix(size, size, array);
     }
 }

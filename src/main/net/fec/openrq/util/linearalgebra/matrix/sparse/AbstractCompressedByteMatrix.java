@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -36,9 +36,14 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
-
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
+import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 
 public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
@@ -79,6 +84,127 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
 
         if (cardinality > capacity) {
             fail("Cardinality should be less then or equal to capacity: " + cardinality + ".");
+        }
+    }
+
+    @Override
+    public boolean isZeroAt(int i, int j) {
+
+        return !nonZeroAt(i, j);
+    }
+
+    @Override
+    public void eachNonZero(MatrixProcedure procedure) {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                final byte val = get(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    procedure.apply(i, j, val);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
+
+        for (int j = 0; j < columns; j++) {
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZeroInColumn(int j, MatrixProcedure procedure) {
+
+        for (int i = 0; i < rows; i++) {
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
+    public byte foldNonZero(MatrixAccumulator accumulator) {
+
+        eachNonZero(ByteMatrices.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
+    }
+
+    @Override
+    public byte foldNonZeroInRow(int i, MatrixAccumulator accumulator) {
+
+        eachNonZeroInRow(i, ByteMatrices.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
+    }
+
+    @Override
+    public byte foldNonZeroInColumn(int j, MatrixAccumulator accumulator) {
+
+        eachNonZeroInColumn(j, ByteMatrices.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
+    }
+
+    @Override
+    public ByteVector foldNonZeroInColumns(MatrixAccumulator accumulator) {
+
+        ByteVector result = factory.createVector(columns);
+
+        for (int i = 0; i < columns; i++) {
+            result.set(i, foldNonZeroInColumn(i, accumulator));
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector foldNonZeroInRows(MatrixAccumulator accumulator) {
+
+        ByteVector result = factory.createVector(rows);
+
+        for (int i = 0; i < rows; i++) {
+            result.set(i, foldNonZeroInRow(i, accumulator));
+        }
+
+        return result;
+    }
+
+    @Override
+    public void updateNonZero(MatrixFunction function) {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                final byte val = get(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    set(i, j, function.evaluate(i, j, val));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInRow(int i, MatrixFunction function) {
+
+        for (int j = 0; j < columns; j++) {
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                set(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInColumn(int j, MatrixFunction function) {
+
+        for (int i = 0; i < rows; i++) {
+            final byte val = get(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                set(i, j, function.evaluate(i, j, val));
+            }
         }
     }
 }

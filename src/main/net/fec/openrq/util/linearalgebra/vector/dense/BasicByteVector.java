@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -40,15 +40,13 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import net.fec.openrq.util.linearalgebra.LinearAlgebra;
-import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 
 
-
-public class BasicByteVector extends AbstractByteVector implements DenseByteVector {
+public class BasicByteVector extends DenseByteVector {
 
     private static final long serialVersionUID = 4071505L;
 
@@ -81,7 +79,7 @@ public class BasicByteVector extends AbstractByteVector implements DenseByteVect
 
     public BasicByteVector(byte array[]) {
 
-        super(LinearAlgebra.DENSE_FACTORY, array.length);
+        super(array.length);
         this.self = array;
     }
 
@@ -152,5 +150,45 @@ public class BasicByteVector extends AbstractByteVector implements DenseByteVect
         for (int i = 0; i < length; i++) {
             self[i] = in.readByte();
         }
+    }
+
+    @Override
+    public ByteVectorIterator iterator() {
+
+        return new ByteVectorIterator(length) {
+
+            private int i = -1;
+
+
+            @Override
+            public int index() {
+
+                return i;
+            }
+
+            @Override
+            public byte get() {
+
+                return self[i];
+            }
+
+            @Override
+            public void set(byte value) {
+
+                self[i] = value;
+            }
+
+            @Override
+            public boolean hasNext() {
+
+                return i + 1 < length;
+            }
+
+            @Override
+            public Byte next() {
+
+                return self[++i];
+            }
+        };
     }
 }

@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -39,8 +39,12 @@ package net.fec.openrq.util.linearalgebra.matrix.sparse;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
+import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 import org.junit.Test;
 
@@ -129,5 +133,60 @@ public abstract class SparseMatrixTest extends AbstractMatrixTest {
         for (int row = 0; row < 32; row++) {
             a.set(row, 1, (byte)3);
         }
+    }
+
+    public void testFoldNonZero_3x3() {
+
+        SparseByteMatrix a = (SparseByteMatrix)factory().createMatrix(new byte[][] {
+                                                                                    {1, 0, 2},
+                                                                                    {4, 0, 5},
+                                                                                    {0, 0, 0}
+        });
+
+        MatrixAccumulator sum = ByteMatrices.asSumAccumulator((byte)0);
+        MatrixAccumulator product = ByteMatrices.asProductAccumulator((byte)1);
+
+        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)2));
+        // check whether the accumulator were flushed or not
+        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)2));
+
+        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)40));
+        // check whether the accumulator were flushed or not
+        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)40));
+
+        assertTrue(aIsEqualToB(a.foldNonZeroInRow(1, product), (byte)20));
+        assertTrue(aIsEqualToB(a.foldNonZeroInColumn(2, product), (byte)10));
+
+        ByteVector nonZeroInColumns = a.foldNonZeroInColumns(product);
+        assertEquals(factory().createVector(new byte[] {4, 1, 10}), nonZeroInColumns);
+
+        ByteVector nonZeroInRows = a.foldNonZeroInRows(product);
+        assertEquals(factory().createVector(new byte[] {2, 20, 1}), nonZeroInRows);
+    }
+
+    public void testIsZeroAt_5x3() {
+
+        SparseByteMatrix a = (SparseByteMatrix)factory().createMatrix(new byte[][] {
+                                                                                    {1, 0, 0},
+                                                                                    {0, 0, 2},
+                                                                                    {0, 0, 0},
+                                                                                    {0, 3, 0},
+                                                                                    {0, 0, 0}
+        });
+
+        assertTrue(a.isZeroAt(2, 2));
+        assertFalse(a.isZeroAt(3, 1));
+    }
+
+    public void testNonZeroAt_3x4() {
+
+        SparseByteMatrix a = (SparseByteMatrix)factory().createMatrix(new byte[][] {
+                                                                                    {0, 0, 2, 0},
+                                                                                    {0, 0, 0, 0},
+                                                                                    {0, 1, 0, 0}
+        });
+
+        assertTrue(a.nonZeroAt(2, 1));
+        assertFalse(a.nonZeroAt(0, 3));
     }
 }

@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -38,19 +38,26 @@ package net.fec.openrq.util.linearalgebra.matrix.source;
 public interface MatrixSource {
 
     /**
-     * @param i
-     * @param j
-     * @return
+     * Gets a specified element of this source.
+     * 
+     * @param i the row index
+     * @param j the column index
+     *
+     * @return an element of this source
      */
     byte get(int i, int j);
 
     /**
-     * @return
+     * Returns the number of columns in this source.
+     * 
+     * @return a number of columns
      */
     int columns();
 
     /**
-     * @return
+     * Returns the number of rows in this source.
+     * 
+     * @return a number of rows
      */
     int rows();
 }

@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -48,7 +48,7 @@ import net.fec.openrq.util.linearalgebra.matrix.sparse.CCSByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSByteMatrix;
 
 
-public class CCSFactory extends CompressedFactory implements Factory {
+public class CCSFactory extends CompressedFactory {
 
     private static final long serialVersionUID = 4071505L;
 
@@ -63,6 +63,12 @@ public class CCSFactory extends CompressedFactory implements Factory {
     public ByteMatrix createMatrix(int rows, int columns) {
 
         return new CCSByteMatrix(rows, columns);
+    }
+
+    @Override
+    public ByteMatrix createMatrix(int rows, int columns, byte[] array) {
+
+        return new CCSByteMatrix(rows, columns, array);
     }
 
     @Override
@@ -106,9 +112,7 @@ public class CCSFactory extends CompressedFactory implements Factory {
     }
 
     @Override
-    public ByteMatrix createRandomMatrix(int rows, int columns) {
-
-        Random random = new Random();
+    public ByteMatrix createRandomMatrix(int rows, int columns, Random random) {
 
         int cardinality = (rows * columns) / DENSITY;
 
@@ -149,13 +153,11 @@ public class CCSFactory extends CompressedFactory implements Factory {
     }
 
     @Override
-    public ByteMatrix createRandomSymmetricMatrix(int size) {
+    public ByteMatrix createRandomSymmetricMatrix(int size, Random random) {
 
         // TODO: Issue 15
 
         int cardinality = (size * size) / DENSITY;
-
-        Random random = new Random();
 
         ByteMatrix matrix = new CCSByteMatrix(size, size, cardinality);
 
@@ -180,18 +182,10 @@ public class CCSFactory extends CompressedFactory implements Factory {
     @Override
     public ByteMatrix createIdentityMatrix(int size) {
 
-        byte values[] = new byte[size];
-        int rowIndices[] = new int[size];
-        int columnPointers[] = new int[size + 1];
+        byte diagonal[] = new byte[size];
+        Arrays.fill(diagonal, (byte)1);
 
-        for (int i = 0; i < size; i++) {
-            values[i] = 1;
-            rowIndices[i] = i;
-            columnPointers[i] = i;
-        }
-        columnPointers[size] = size;
-
-        return new CCSByteMatrix(size, size, size, values, rowIndices, columnPointers);
+        return createDiagonalMatrix(diagonal);
     }
 
     @Override
@@ -240,5 +234,21 @@ public class CCSFactory extends CompressedFactory implements Factory {
         }
 
         return new CRSByteMatrix(rows, cols, k, valuesArray, rowIndArray, columnPointers);
+    }
+
+    @Override
+    public ByteMatrix createDiagonalMatrix(byte[] diagonal) {
+
+        int size = diagonal.length;
+        int rowIndices[] = new int[size];
+        int columnPointers[] = new int[size + 1];
+
+        for (int i = 0; i < size; i++) {
+            rowIndices[i] = i;
+            columnPointers[i] = i;
+        }
+        columnPointers[size] = size;
+
+        return new CCSByteMatrix(size, size, size, diagonal, rowIndices, columnPointers);
     }
 }

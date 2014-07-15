@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -48,11 +48,13 @@ import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
 import java.io.IOException;
+import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
+import net.fec.openrq.util.linearalgebra.vector.functor.VectorProcedure;
 import net.fec.openrq.util.linearalgebra.vector.source.ArrayVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.LoopbackVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.RandomVectorSource;
@@ -62,300 +64,282 @@ import net.fec.openrq.util.printing.appendable.PrintableAppendable;
 
 public final class ByteVectors {
 
-    private static class ZeroVectorPredicate implements VectorPredicate {
+    /**
+     * Checks whether the vector is a
+     * <a href="http://mathworld.wolfram.com/ZeroMatrix.html">zero
+     * vector</a>.
+     */
+    public static final VectorPredicate ZERO_VECTOR = new VectorPredicate() {
 
         @Override
         public boolean test(int i, byte value) {
 
             return aIsEqualToB(value, (byte)0);
         }
-    }
-
-    private static class ConstVectorFunction implements VectorFunction {
-
-        private byte arg;
-
-
-        public ConstVectorFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, byte value) {
-
-            return arg;
-        }
-    }
-
-    private static class PlusFunction implements VectorFunction {
-
-        private byte arg;
-
-
-        public PlusFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, byte value) {
-
-            return aPlusB(value, arg);
-        }
-    }
-
-    private static class MinusFunction implements VectorFunction {
-
-        private byte arg;
-
-
-        public MinusFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, byte value) {
-
-            return aMinusB(value, arg);
-        }
-    }
-
-    private static class MulFunction implements VectorFunction {
-
-        private byte arg;
-
-
-        public MulFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, byte value) {
-
-            return aTimesB(value, arg);
-        }
-    }
-
-    private static class DivFunction implements VectorFunction {
-
-        private byte arg;
-
-
-        public DivFunction(byte arg) {
-
-            this.arg = arg;
-        }
-
-        @Override
-        public byte evaluate(int i, byte value) {
-
-            return aDividedByB(value, arg);
-        }
-    }
-
-    private static class SumVectorAccumulator implements VectorAccumulator {
-
-        private final byte neutral;
-        private byte result;
-
-
-        public SumVectorAccumulator(byte neutral) {
-
-            this.neutral = neutral;
-            this.result = neutral;
-        }
-
-        @Override
-        public void update(int i, byte value) {
-
-            result = aPlusB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte acc = result;
-            result = neutral;
-            return acc;
-        }
-    }
-
-    private static class ProductVectorAccumulator implements VectorAccumulator {
-
-        private final byte neutral;
-        private byte result;
-
-
-        public ProductVectorAccumulator(byte neutral) {
-
-            this.neutral = neutral;
-            this.result = neutral;
-        }
-
-        @Override
-        public void update(int i, byte value) {
-
-            result = aTimesB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte acc = result;
-            result = neutral;
-            return acc;
-        }
-    }
-
-    private static class FunctionVectorAccumulator implements VectorAccumulator {
-
-        private VectorAccumulator accumulator;
-        private VectorFunction function;
-
-
-        public FunctionVectorAccumulator(VectorAccumulator accumulator,
-            VectorFunction function) {
-
-            this.accumulator = accumulator;
-            this.function = function;
-        }
-
-        @Override
-        public void update(int i, byte value) {
-
-            accumulator.update(i, function.evaluate(i, value));
-        }
-
-        @Override
-        public byte accumulate() {
-
-            return accumulator.accumulate();
-        }
-    }
-
-    private static class MinVectorAccumulator implements VectorAccumulator {
-
-        private byte result = maxByte();
-
-
-        @Override
-        public void update(int i, byte value) {
-
-            result = minOfAandB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte min = result;
-            result = maxByte();
-            return min;
-        }
-    }
-
-    private static class MaxVectorAccumulator implements VectorAccumulator {
-
-        private byte result = minByte();
-
-
-        @Override
-        public void update(int i, byte value) {
-
-            result = maxOfAandB(result, value);
-        }
-
-        @Override
-        public byte accumulate() {
-
-            byte max = result;
-            result = minByte();
-            return max;
-        }
-    }
+    };
 
 
     /**
      * Creates a const function that evaluates it's argument to given {@code value}.
      * 
-     * @param value
+     * @param arg
      *            a const value
      * @return a closure object that does {@code _}
      */
-    public static VectorFunction asConstFunction(byte value) {
+    public static VectorFunction asConstFunction(final byte arg) {
 
-        return new ConstVectorFunction(value);
+        return new VectorFunction() {
+
+            @Override
+            public byte evaluate(int i, byte value) {
+
+                return arg;
+            }
+        };
     }
 
     /**
      * Creates a plus function that adds given {@code value} to it's argument.
      * 
-     * @param value
+     * @param arg
      *            a value to be added to function's argument
      * @return a closure object that does {@code _ + _}
      */
-    public static VectorFunction asPlusFunction(byte value) {
+    public static VectorFunction asPlusFunction(final byte arg) {
 
-        return new PlusFunction(value);
+        return new VectorFunction() {
+
+            @Override
+            public byte evaluate(int i, byte value) {
+
+                return aPlusB(value, arg);
+            }
+        };
     }
 
     /**
      * Creates a minus function that subtracts given {@code value} from it's argument.
      * 
-     * @param value
+     * @param arg
      *            a value to be subtracted from function's argument
      * @return a closure that does {@code _ - _}
      */
-    public static VectorFunction asMinusFunction(byte value) {
+    public static VectorFunction asMinusFunction(final byte arg) {
 
-        return new MinusFunction(value);
+        return new VectorFunction() {
+
+            @Override
+            public byte evaluate(int i, byte value) {
+
+                return aMinusB(value, arg);
+            }
+        };
     }
 
     /**
      * Creates a mul function that multiplies given {@code value} by it's argument.
      * 
-     * @param value
+     * @param arg
      *            a value to be multiplied by function's argument
      * @return a closure that does {@code _ * _}
      */
-    public static VectorFunction asMulFunction(byte value) {
+    public static VectorFunction asMulFunction(final byte arg) {
 
-        return new MulFunction(value);
+        return new VectorFunction() {
+
+            @Override
+            public byte evaluate(int i, byte value) {
+
+                return aTimesB(value, arg);
+            }
+        };
     }
 
     /**
      * Creates a div function that divides it's argument by given {@code value}.
      * 
-     * @param value
+     * @param arg
      *            a divisor value
      * @return a closure that does {@code _ / _}
      */
-    public static VectorFunction asDivFunction(byte value) {
+    public static VectorFunction asDivFunction(final byte arg) {
 
-        return new DivFunction(value);
+        return new VectorFunction() {
+
+            @Override
+            public byte evaluate(int i, byte value) {
+
+                return aDividedByB(value, arg);
+            }
+        };
     }
 
-
     /**
-     * Checks whether the vector is a
-     * <a href="http://mathworld.wolfram.com/ZeroMatrix.html">zero
-     * vector</a>.
-     */
-    public static final VectorPredicate ZERO_VECTOR = new ZeroVectorPredicate();
-
-
-    /**
-     * Creates a singleton 1-length vector of given {@code value}.
+     * Creates a sum vector accumulator that calculates the sum of all elements in the vector.
      * 
-     * @param value
-     *            the vector's singleton value
-     * @return a singleton vector
+     * @param neutral
+     *            the neutral value
+     * @return a sum accumulator
      */
-    public static ByteVector asSingletonVector(byte value) {
+    public static VectorAccumulator asSumAccumulator(final byte neutral) {
 
-        return LinearAlgebra.DEFAULT_FACTORY.createVector(new byte[] {value});
+        return new VectorAccumulator() {
+
+            private byte result = neutral;
+
+
+            @Override
+            public void update(int i, byte value) {
+
+                result = aPlusB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte acc = result;
+                result = neutral;
+                return acc;
+            }
+        };
+    }
+
+    /**
+     * Creates a product vector accumulator that calculates the product of all elements in the vector.
+     * 
+     * @param neutral
+     *            the neutral value
+     * @return a product accumulator
+     */
+    public static VectorAccumulator asProductAccumulator(final byte neutral) {
+
+        return new VectorAccumulator() {
+
+            private byte result = neutral;
+
+
+            @Override
+            public void update(int i, byte value) {
+
+                result = aTimesB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte acc = result;
+                result = neutral;
+                return acc;
+            }
+        };
+    }
+
+    /**
+     * Makes a minimum vector accumulator that accumulates the minimum across vector elements.
+     * 
+     * @return a minimum vector accumulator
+     */
+    public static VectorAccumulator mkMinAccumulator() {
+
+        return new VectorAccumulator() {
+
+            private byte result = maxByte();
+
+
+            @Override
+            public void update(int i, byte value) {
+
+                result = minOfAandB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte min = result;
+                result = maxByte();
+                return min;
+            }
+        };
+    }
+
+    /**
+     * Makes a maximum vector accumulator that accumulates the maximum across vector elements.
+     * 
+     * @return a maximum vector accumulator
+     */
+    public static VectorAccumulator mkMaxAccumulator() {
+
+        return new VectorAccumulator() {
+
+            private byte result = minByte();
+
+
+            @Override
+            public void update(int i, byte value) {
+
+                result = maxOfAandB(result, value);
+            }
+
+            @Override
+            public byte accumulate() {
+
+                byte max = result;
+                result = minByte();
+                return max;
+            }
+        };
+    }
+
+    /**
+     * Creates a function accumulator, that accumulates all elements in the vector after applying given {@code function}
+     * to each of them.
+     * 
+     * @param accumulator
+     *            the accumulator
+     * @param function
+     *            the function
+     * @return a sum function accumulator
+     */
+    public static VectorAccumulator asFunctionAccumulator(
+        final VectorAccumulator accumulator,
+        final VectorFunction function)
+    {
+
+        return new VectorAccumulator() {
+
+            @Override
+            public void update(int i, byte value) {
+
+                accumulator.update(i, function.evaluate(i, value));
+            }
+
+            @Override
+            public byte accumulate() {
+
+                return accumulator.accumulate();
+            }
+        };
+    }
+
+    /**
+     * Creates an accumulator procedure that adapts a vector accumulator for procedure
+     * interface. This is useful for reusing a single accumulator for multiple fold operations
+     * in multiple vectors.
+     * 
+     * @param accumulator
+     *            the vector accumulator
+     * @return an accumulator procedure
+     */
+    public static VectorProcedure asAccumulatorProcedure(final VectorAccumulator accumulator) {
+
+        return new VectorProcedure() {
+
+            @Override
+            public void apply(int i, byte value) {
+
+                accumulator.update(i, value);
+            }
+        };
     }
 
     /**
@@ -387,86 +371,24 @@ public final class ByteVectors {
      * 
      * @param length
      *            the length of the source
+     * @param random
      * @return a random vector source
      */
-    public static VectorSource asRandomSource(int length) {
+    public static VectorSource asRandomSource(int length, Random random) {
 
-        return new RandomVectorSource(length);
+        return new RandomVectorSource(length, random);
     }
 
     /**
-     * Creates a sum vector accumulator that calculates the sum of all elements in the vector.
+     * Creates a default vector from given vararg {@code values}.
      * 
-     * @param neutral
-     *            the neutral value
-     * @return a sum accumulator
+     * @param values
+     *            of the vector
+     * @return a default vector
      */
-    public static VectorAccumulator asSumAccumulator(byte neutral) {
+    public static ByteVector asVector(byte... values) {
 
-        return new SumVectorAccumulator(neutral);
-    }
-
-    /**
-     * Creates a product vector accumulator that calculates the product of all elements in the vector.
-     * 
-     * @param neutral
-     *            the neutral value
-     * @return a product accumulator
-     */
-    public static VectorAccumulator asProductAccumulator(byte neutral) {
-
-        return new ProductVectorAccumulator(neutral);
-    }
-
-    /**
-     * Makes a minimum vector accumulator that accumulates the minimum across vector elements.
-     * 
-     * @return a minimum vector accumulator
-     */
-    public static VectorAccumulator mkMinAccumulator() {
-
-        return new MinVectorAccumulator();
-    }
-
-    /**
-     * Makes a maximum vector accumulator that accumulates the maximum across vector elements.
-     * 
-     * @return a maximum vector accumulator
-     */
-    public static VectorAccumulator mkMaxAccumulator() {
-
-        return new MaxVectorAccumulator();
-    }
-
-    /**
-     * Creates a sum function accumulator, that calculates the sum of all
-     * elements in the vector after applying given {@code function} to each of them.
-     * 
-     * @param neutral
-     *            the neutral value
-     * @param function
-     *            the vector function
-     * @return a sum function accumulator
-     */
-    public static VectorAccumulator asSumFunctionAccumulator(byte neutral, VectorFunction function) {
-
-        return new FunctionVectorAccumulator(new SumVectorAccumulator(neutral), function);
-    }
-
-    /**
-     * Creates a product function accumulator, that calculates the product of
-     * all elements in the vector after applying given {@code function} to
-     * each of them.
-     * 
-     * @param neutral
-     *            the neutral value
-     * @param function
-     *            the vector function
-     * @return a product function accumulator
-     */
-    public static VectorAccumulator asProductFunctionAccumulator(byte neutral, VectorFunction function) {
-
-        return new FunctionVectorAccumulator(new ProductVectorAccumulator(neutral), function);
+        return LinearAlgebra.DEFAULT_FACTORY.createVector(values);
     }
 
     /**

@@ -19,7 +19,6 @@ package net.fec.openrq.util.arithmetic;
 
 import java.util.Arrays;
 
-import net.fec.openrq.util.function.ByteBinaryOperator;
 import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
 
@@ -122,54 +121,6 @@ public final class OctetOps {
     public static byte minOfAandB(byte a, byte b) {
 
         return aIsLessThanOrEqualToB(a, b) ? a : b;
-    }
-
-    public static ByteBinaryOperator additionOp() {
-
-        return new ByteBinaryOperator() {
-
-            @Override
-            public byte applyAsByte(byte left, byte right) {
-
-                return aPlusB(left, right);
-            }
-        };
-    }
-
-    public static ByteBinaryOperator subtractionOp() {
-
-        return new ByteBinaryOperator() {
-
-            @Override
-            public byte applyAsByte(byte left, byte right) {
-
-                return aMinusB(left, right);
-            }
-        };
-    }
-
-    public static ByteBinaryOperator multiplicationOp() {
-
-        return new ByteBinaryOperator() {
-
-            @Override
-            public byte applyAsByte(byte left, byte right) {
-
-                return aTimesB(left, right);
-            }
-        };
-    }
-
-    public static ByteBinaryOperator divisionOp() {
-
-        return new ByteBinaryOperator() {
-
-            @Override
-            public byte applyAsByte(byte left, byte right) {
-
-                return aDividedByB(left, right);
-            }
-        };
     }
 
     public static byte[] betaProduct(byte beta, byte[] vector) {

@@ -37,6 +37,8 @@ import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
+import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
+import net.fec.openrq.util.linearalgebra.vector.sparse.SparseByteVector;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -68,6 +70,16 @@ final class LinearSystem {
         }
         else {
             return SPARSE_FACTORY;
+        }
+    }
+
+    private static void updateVectorMaybeNonZeroOnly(ByteVector vector, VectorFunction function) {
+
+        if (vector instanceof SparseByteVector) {
+            ((SparseByteVector)vector).updateNonZero(function);
+        }
+        else {
+            vector.update(function);
         }
     }
 
@@ -503,6 +515,8 @@ final class LinearSystem {
          * First phase
          */
 
+        System.out.println("1st: " + System.nanoTime()); // DEBUG
+
         // counts how many rows have been chosen already
         int chosenRowsCounter = 0;
 
@@ -930,7 +944,7 @@ final class LinearSystem {
 
                     // multiplication
                     final ByteVector product = A.getRow(i);
-                    product.updateNonZeros(ByteVectors.asMulFunction(balpha));
+                    updateVectorMaybeNonZeroOnly(product, ByteVectors.asMulFunction(balpha));
 
                     // addition
                     A.updateRow(row, new MatrixFunction() {
@@ -995,10 +1009,12 @@ final class LinearSystem {
         }
 
         // END OF FIRST PHASE
-        
+
         /*
          * Second phase
          */
+
+        System.out.println("2nd: " + System.nanoTime()); // DEBUG
 
         /*
          * "At this point, all the entries of X outside the first i rows and i columns are discarded, so that X
@@ -1030,6 +1046,8 @@ final class LinearSystem {
         /*
          * Third phase
          */
+
+        System.out.println("3rd: " + System.nanoTime()); // DEBUG
 
         // decoding process
         byte[][] noOverheadD = new byte[L][];
@@ -1072,6 +1090,8 @@ final class LinearSystem {
          * Fourth phase
          */
 
+        System.out.println("4th: " + System.nanoTime()); // DEBUG
+
         /*
          * "For each of the first i rows of U_upper, do the following: if the row has a nonzero entry at position j,
          * and if the value of that nonzero entry is b, then add to this row b times row j of I_u."
@@ -1103,10 +1123,12 @@ final class LinearSystem {
                 }
             }
         }
-        
+
         /*
          * Fifth phase
          */
+
+        System.out.println("5th: " + System.nanoTime()); // DEBUG
 
         // "For j from 1 to i, perform the following operations:"
         for (int j = 0; j < i; j++)
@@ -1137,7 +1159,7 @@ final class LinearSystem {
 
                     // multiply A[j][l] by row 'l' of A
                     final ByteVector product = A.getRow(eL);
-                    product.updateNonZeros(ByteVectors.asMulFunction(beta));
+                    updateVectorMaybeNonZeroOnly(product, ByteVectors.asMulFunction(beta));
 
                     // add the product to row 'j' of A
                     A.updateRow(j, new MatrixFunction() {
@@ -1161,7 +1183,7 @@ final class LinearSystem {
                 }
             }
         }
-        
+
         // use the already allocated matrix for the matrix C
         final byte[][] C = noOverheadD;
 
@@ -1174,7 +1196,7 @@ final class LinearSystem {
             // PRINTER.println(
             // "E[" + ci + "]=D[" + di + "];");
         }
-        
+
         // DEBUG
         // PRINTER.println("return E;");
         return C;

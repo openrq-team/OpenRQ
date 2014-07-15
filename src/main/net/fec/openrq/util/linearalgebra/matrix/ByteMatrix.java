@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -860,34 +860,6 @@ public interface ByteMatrix extends Externalizable {
     void eachInColumn(int j, MatrixProcedure procedure);
 
     /**
-     * Applies given {@code procedure} to each non-zero element of this matrix.
-     * 
-     * @param procedure
-     *            the matrix procedure
-     */
-    void eachNonZero(MatrixProcedure procedure);
-
-    /**
-     * Applies given {@code procedure} to each non-zero element of specified row of this matrix.
-     * 
-     * @param i
-     *            the row index
-     * @param procedure
-     *            the matrix procedure
-     */
-    void eachNonZeroInRow(int i, MatrixProcedure procedure);
-
-    /**
-     * Applies given {@code procedure} to each non-zero element of specified column of this matrix.
-     * 
-     * @param j
-     *            the column index
-     * @param procedure
-     *            the matrix procedure
-     */
-    void eachNonZeroInColumn(int j, MatrixProcedure procedure);
-
-    /**
      * Searches for the maximum value of the elements of this matrix.
      * 
      * @return maximum value of this matrix
@@ -1046,14 +1018,6 @@ public interface ByteMatrix extends Externalizable {
     void update(MatrixFunction function);
 
     /**
-     * Updates all non zero elements of this matrix by applying given {@code function}.
-     * 
-     * @param function
-     *            the matrix function
-     */
-    void updateNonZeros(MatrixFunction function);
-
-    /**
      * Updates the specified element of this matrix by applying given {@code function}.
      * 
      * @param i
@@ -1089,15 +1053,7 @@ public interface ByteMatrix extends Externalizable {
      */
     void updateRow(int i, int fromColumn, int toColumn, MatrixFunction function);
 
-    /**
-     * Updates all non zero elements of the specified row in this matrix by applying given {@code function}.
-     * 
-     * @param i
-     *            the row index
-     * @param function
-     *            the matrix function
-     */
-    void updateRowNonZeros(int i, MatrixFunction function);
+    
 
     /**
      * Updates all elements of the specified column in this matrix by applying given {@code function}.
@@ -1123,15 +1079,6 @@ public interface ByteMatrix extends Externalizable {
      */
     void updateColumn(int j, int fromRow, int toRow, MatrixFunction function);
 
-    /**
-     * Updates all non zero elements of the specified column in this matrix by applying given {@code function}.
-     * 
-     * @param j
-     *            the column index
-     * @param function
-     *            the matrix function
-     */
-    void updateColumnNonZeros(int j, MatrixFunction function);
 
     /**
      * Folds all elements of this matrix with given {@code accumulator}.

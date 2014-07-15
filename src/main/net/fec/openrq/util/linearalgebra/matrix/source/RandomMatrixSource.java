@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -45,11 +45,11 @@ public class RandomMatrixSource implements MatrixSource {
     private Random random;
 
 
-    public RandomMatrixSource(int rows, int columns) {
+    public RandomMatrixSource(int rows, int columns, Random random) {
 
         this.rows = rows;
         this.columns = columns;
-        this.random = new Random();
+        this.random = random;
     }
 
     @Override

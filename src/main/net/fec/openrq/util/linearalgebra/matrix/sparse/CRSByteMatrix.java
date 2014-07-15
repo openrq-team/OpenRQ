@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -35,6 +35,7 @@
  * Maxim Samoylov
  * Anveshi Charuvaka
  * Clement Skau
+ * Catherine da Graca
  */
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
@@ -85,6 +86,11 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     public CRSByteMatrix(int rows, int columns) {
 
         this(rows, columns, 0);
+    }
+
+    public CRSByteMatrix(int rows, int columns, byte array[]) {
+
+        this(ByteMatrices.asArray1DSource(rows, columns, array));
     }
 
     public CRSByteMatrix(ByteMatrix matrix) {
@@ -543,7 +549,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void updateNonZeros(MatrixFunction function) {
+    public void updateNonZero(MatrixFunction function) {
 
         int k = 0, i = 0;
         while (k < cardinality) {
@@ -563,7 +569,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void updateRowNonZeros(int i, MatrixFunction function) {
+    public void updateNonZeroInRow(int i, MatrixFunction function) {
 
         for (int j = rowPointers[i]; j < rowPointers[i + 1]; j++) {
 
@@ -615,6 +621,13 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             values[k] = in.readByte();
             rowPointers[i + 1] = k + 1;
         }
+    }
+
+    @Override
+    public boolean nonZeroAt(int i, int j) {
+
+        final int k = searchForColumnIndex(j, rowPointers[i], rowPointers[i + 1]);
+        return k < rowPointers[i + 1] && columnIndices[k] == j;
     }
 
     private int searchForColumnIndex(int j, int left, int right) {

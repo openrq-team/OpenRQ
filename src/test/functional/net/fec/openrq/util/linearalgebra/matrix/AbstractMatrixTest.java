@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -36,6 +36,7 @@
  * Maxim Samoylov
  * Anveshi Charuvaka
  * Todd Brunhoff
+ * Catherine da Graca
  */
 package net.fec.openrq.util.linearalgebra.matrix;
 
@@ -1609,5 +1610,104 @@ public abstract class AbstractMatrixTest {
 
         s = d.foldRows(ByteMatrices.asSumAccumulator((byte)0));
         assertEquals(s, rowSums);
+    }
+
+    public void testDiagonalMatrixPredicate() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 0},
+                                                            {0, 1, 0},
+                                                            {0, 0, 1}
+        });
+
+        assertTrue(a.is(ByteMatrices.DIAGONAL_MATRIX));
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {2, 1, 0},
+                                                            {0, 0, 1}
+        });
+
+        assertFalse(b.is(ByteMatrices.DIAGONAL_MATRIX));
+    }
+
+    public void testIdentityMatrixPredicate() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 0},
+                                                            {0, 1, 0},
+                                                            {0, 0, 1}
+        });
+
+        assertTrue(a.is(ByteMatrices.IDENTITY_MATRIX));
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {1, 0, 0},
+                                                            {0, 0, 1}
+        });
+
+        assertFalse(b.is(ByteMatrices.IDENTITY_MATRIX));
+    }
+
+    public void testZeroMatrixPredicate() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+
+        assertTrue(a.is(ByteMatrices.ZERO_MATRIX));
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 1}
+        });
+
+        assertFalse(b.is(ByteMatrices.ZERO_MATRIX));
+    }
+
+    public void testTridiagonalMatrixPredicate() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 1, 0, 0},
+                                                            {1, 2, 3, 0},
+                                                            {0, 1, 0, 2},
+                                                            {0, 0, 1, 2}
+        });
+
+        assertTrue(a.is(ByteMatrices.TRIDIAGONAL_MATRIX));
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 1, 0, 0},
+                                                            {1, 2, 3, 0},
+                                                            {5, 0, 0, 2},
+                                                            {0, 0, 1, 2}
+        });
+
+        assertFalse(b.is(ByteMatrices.TRIDIAGONAL_MATRIX));
+    }
+
+    public void testSymmetricMatrixPredicate() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 1, 0, 0},
+                                                            {1, 2, 3, 5},
+                                                            {0, 3, 0, 0},
+                                                            {0, 5, 0, 2}
+        });
+
+        assertTrue(a.is(ByteMatrices.SYMMETRIC_MATRIX));
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0, 0},
+                                                            {0, 2, 3, 0},
+                                                            {3, 3, 0, 0},
+                                                            {0, 0, 0, 2}
+        });
+
+        assertFalse(b.is(ByteMatrices.SYMMETRIC_MATRIX));
+
     }
 }

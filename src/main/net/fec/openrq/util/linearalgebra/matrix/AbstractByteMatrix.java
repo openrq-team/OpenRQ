@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -891,41 +891,6 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
-    public void eachNonZero(MatrixProcedure procedure) {
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                final byte val = get(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
-                    procedure.apply(i, j, val);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
-
-        for (int j = 0; j < columns; j++) {
-            final byte val = get(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
-                procedure.apply(i, j, val);
-            }
-        }
-    }
-
-    @Override
-    public void eachNonZeroInColumn(int j, MatrixProcedure procedure) {
-
-        for (int i = 0; i < rows; i++) {
-            final byte val = get(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
-                procedure.apply(i, j, val);
-            }
-        }
-    }
-
-    @Override
     public byte max() {
 
         return fold(ByteMatrices.mkMaxAccumulator());
@@ -1043,19 +1008,6 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
-    public void updateNonZeros(MatrixFunction function) {
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                final byte val = get(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
-                    set(i, j, function.evaluate(i, j, val));
-                }
-            }
-        }
-    }
-
-    @Override
     public void update(int i, int j, MatrixFunction function) {
 
         set(i, j, function.evaluate(i, j, get(i, j)));
@@ -1082,17 +1034,6 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
-    public void updateRowNonZeros(int i, MatrixFunction function) {
-
-        for (int j = 0; j < columns; j++) {
-            final byte val = get(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
-                set(i, j, function.evaluate(i, j, val));
-            }
-        }
-    }
-
-    @Override
     public void updateColumn(int j, MatrixFunction function) {
 
         for (int i = 0; i < rows; i++) {
@@ -1109,17 +1050,6 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = fromRow; i < toRow; i++) {
             update(i, j, function);
-        }
-    }
-
-    @Override
-    public void updateColumnNonZeros(int j, MatrixFunction function) {
-
-        for (int i = 0; i < rows; i++) {
-            final byte val = get(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
-                set(i, j, function.evaluate(i, j, val));
-            }
         }
     }
 

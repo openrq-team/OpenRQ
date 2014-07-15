@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -39,21 +39,16 @@ package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
-import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
-import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
@@ -61,7 +56,7 @@ import net.fec.openrq.util.linearalgebra.vector.functor.VectorProcedure;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 
 
-public class CompressedByteVector extends AbstractByteVector implements SparseByteVector {
+public class CompressedByteVector extends SparseByteVector {
 
     private static final long serialVersionUID = 4071505L;
 
@@ -69,8 +64,6 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
 
     private byte values[];
     private int indices[];
-
-    private int cardinality;
 
 
     public CompressedByteVector() {
@@ -114,7 +107,7 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
 
     public CompressedByteVector(int length, int cardinality) {
 
-        super(LinearAlgebra.SPARSE_FACTORY, length);
+        super(length, 0);
 
         int alignedSize = align(length, cardinality);
 
@@ -125,7 +118,7 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
 
     public CompressedByteVector(int length, int cardinality, byte values[], int indices[]) {
 
-        super(LinearAlgebra.SPARSE_FACTORY, length);
+        super(length, cardinality);
 
         this.cardinality = cardinality;
 
@@ -136,7 +129,7 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
     @Override
     public byte get(int i) {
 
-        int k = searchForIndex(i, 0, cardinality);
+        int k = searchForIndex(i);
 
         if (k < cardinality && indices[k] == i) {
             return values[k];
@@ -148,7 +141,7 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
     @Override
     public void set(int i, byte value) {
 
-        int k = searchForIndex(i, 0, cardinality);
+        int k = searchForIndex(i);
 
         if (k < cardinality && indices[k] == i) {
             if (!aIsEqualToB(value, (byte)0)) {
@@ -228,8 +221,8 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
             return;
         }
 
-        int ii = searchForIndex(i, 0, cardinality);
-        int jj = searchForIndex(j, 0, cardinality);
+        int ii = searchForIndex(i);
+        int jj = searchForIndex(j);
 
         boolean iiNotZero = ii < cardinality && i == indices[ii];
         boolean jjNotZero = jj < cardinality && j == indices[jj];
@@ -287,50 +280,33 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
     }
 
     @Override
-    public int cardinality() {
-
-        return cardinality;
-    }
-
-    @Override
-    public double density() {
-
-        return cardinality / (double)length;
-    }
-
-    @Override
-    public ByteVector copy() {
-
-        return resize(length);
-    }
-
-    @Override
     public ByteVector resize(int length) {
 
         ensureLengthIsCorrect(length);
 
-        int $cardinality = 0;
-        byte $values[] = new byte[align(length, 0)];
-        int $indices[] = new int[align(length, 0)];
+        int $cardinality = (length > this.length) ? cardinality : searchForIndex(length);
 
-        if (length >= this.length) {
+        byte $values[] = new byte[align(length, $cardinality)];
+        int $indices[] = new int[align(length, $cardinality)];
 
-            $cardinality = cardinality;
-            System.arraycopy(values, 0, $values, 0, cardinality);
-            System.arraycopy(indices, 0, $indices, 0, cardinality);
-
-        }
-        else {
-
-            $cardinality = searchForIndex(length, 0, cardinality);
-            for (int i = 0; i < $cardinality; i++) {
-                $values[i] = values[i];
-                $indices[i] = indices[i];
-            }
-
-        }
+        System.arraycopy(values, 0, $values, 0, $cardinality);
+        System.arraycopy(indices, 0, $indices, 0, $cardinality);
 
         return new CompressedByteVector(length, $cardinality, $values, $indices);
+    }
+
+    @Override
+    public void each(VectorProcedure procedure) {
+
+        int k = 0;
+        for (int i = 0; i < length; i++) {
+            if (k < cardinality && indices[k] == i) {
+                procedure.apply(i, values[k++]);
+            }
+            else {
+                procedure.apply(i, (byte)0);
+            }
+        }
     }
 
     @Override
@@ -342,7 +318,7 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
     }
 
     @Override
-    public void updateNonZeros(VectorFunction function) {
+    public void updateNonZero(VectorFunction function) {
 
         for (int i = 0; i < cardinality; i++) {
             values[i] = function.evaluate(indices[i], values[i]);
@@ -352,7 +328,7 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
     @Override
     public void update(int i, VectorFunction function) {
 
-        int k = searchForIndex(i, 0, cardinality);
+        int k = searchForIndex(i);
 
         if (k < cardinality && indices[k] == i) {
 
@@ -399,33 +375,37 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
         }
     }
 
-    private int searchForIndex(int i, int left, int right) {
+    @Override
+    public boolean nonZeroAt(int i) {
 
-        if (left == right) {
-            return left;
+        int k = searchForIndex(i);
+        return k < cardinality && indices[k] == i;
+    }
+
+    private int searchForIndex(int i) {
+
+        // TODO: add the same check for CRS/CCS matrices
+        if (cardinality == 0 || i > indices[cardinality - 1]) {
+            return cardinality;
         }
 
-        if (right - left < 8) {
+        int left = 0;
+        int right = cardinality;
 
-            int ii = left;
-            while (ii < right && indices[ii] < i) {
-                ii++;
+        while (left < right) {
+            int p = (left + right) / 2;
+            if (indices[p] > i) {
+                right = p;
             }
-
-            return ii;
+            else if (indices[p] < i) {
+                left = p + 1;
+            }
+            else {
+                return p;
+            }
         }
 
-        int p = (left + right) / 2;
-
-        if (indices[p] > i) {
-            return searchForIndex(i, left, p);
-        }
-        else if (indices[p] < i) {
-            return searchForIndex(i, p + 1, right);
-        }
-        else {
-            return p;
-        }
+        return left;
     }
 
     private void insert(int k, int i, byte value) {
@@ -438,8 +418,11 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
             growup();
         }
 
-        System.arraycopy(values, k, values, k + 1, cardinality - k);
-        System.arraycopy(indices, k, indices, k + 1, cardinality - k);
+        // TODO: revise other system.arraycopy() calls
+        if (cardinality - k > 0) {
+            System.arraycopy(values, k, values, k + 1, cardinality - k);
+            System.arraycopy(indices, k, indices, k + 1, cardinality - k);
+        }
 
         // for (int kk = cardinality; kk > k; kk--) {
         // values[kk] = values[kk - 1];
@@ -454,6 +437,7 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
 
     private void remove(int k) {
 
+        // TODO: https://github.com/vkostyukov/la4j/issues/87
         cardinality--;
 
         System.arraycopy(values, k + 1, values, k, cardinality - k);
@@ -484,52 +468,138 @@ public class CompressedByteVector extends AbstractByteVector implements SparseBy
         indices = $indices;
     }
 
-    private int align(int length, int cardinality) {
+    private int align(int length, int capacity) {
 
-        if (cardinality < 0) {
-            fail("Cardinality should be positive: " + cardinality + ".");
+        if (capacity < 0) {
+            fail("Cardinality should be positive: " + capacity + ".");
         }
-        if (cardinality > length) {
-            fail("Cardinality should be less then or equal to capacity: " + cardinality + ".");
+        if (capacity > length) {
+            fail("Cardinality should be less then or equal to capacity: " + capacity + ".");
         }
-        return Math.min(length, ((cardinality / MINIMUM_SIZE) + 1) * MINIMUM_SIZE);
+        return Math.min(length, ((capacity / MINIMUM_SIZE) + 1) * MINIMUM_SIZE);
     }
 
     @Override
-    public byte max() {
+    public ByteVectorIterator nonZeroIterator() {
 
-        byte max = minByte();
+        return new ByteVectorIterator(length) {
 
-        for (int i = 0; i < cardinality; i++) {
-            if (aIsGreaterThanB(values[i], max)) {
-                max = values[i];
+            private boolean currentIsRemoved = false;
+            private int k = -1;
+            private int removedIndex = -1;
+
+
+            @Override
+            public int index() {
+
+                return currentIsRemoved ? removedIndex : indices[k];
             }
-        }
 
-        if (cardinality == length || aIsGreaterThanB(max, (byte)0)) {
-            return max;
-        }
-        else {
-            return 0;
-        }
+            @Override
+            public byte get() {
+
+                return currentIsRemoved ? (byte)0 : values[k];
+            }
+
+            @Override
+            public void set(byte value) {
+
+                if (aIsEqualToB(value, (byte)0) && !currentIsRemoved) {
+                    currentIsRemoved = true;
+                    removedIndex = indices[k];
+                    CompressedByteVector.this.remove(k--);
+                }
+                else if (!aIsEqualToB(value, (byte)0) && !currentIsRemoved) {
+                    values[k] = value;
+                }
+                else {
+                    currentIsRemoved = false;
+                    CompressedByteVector.this.insert(++k, removedIndex, value);
+                }
+            }
+
+            @Override
+            public boolean hasNext() {
+
+                return k + 1 < cardinality;
+            }
+
+            @Override
+            public Byte next() {
+
+                currentIsRemoved = false;
+                return values[++k];
+            }
+
+            @Override
+            protected int innerCursor() {
+
+                return k;
+            }
+        };
     }
 
     @Override
-    public byte min() {
+    public ByteVectorIterator iterator() {
 
-        byte min = maxByte();
+        return new ByteVectorIterator(length) {
 
-        for (int i = 0; i < cardinality; i++) {
-            if (aIsLessThanB(values[i], min)) {
-                min = values[i];
+            private int k = 0;
+            private int i = -1;
+
+
+            @Override
+            public int index() {
+
+                return i;
             }
-        }
 
-        if (cardinality == length || aIsLessThanB(min, (byte)0)) {
-            return min;
-        }
-        else {
-            return 0;
-        }
+            @Override
+            public byte get() {
+
+                if (k < cardinality && indices[k] == i) {
+                    return values[k];
+                }
+                return 0;
+            }
+
+            @Override
+            public void set(byte value) {
+
+                if (k < cardinality && indices[k] == i) {
+                    if (aIsEqualToB(value, (byte)0)) {
+                        CompressedByteVector.this.remove(k);
+                    }
+                    else {
+                        values[k] = value;
+                    }
+                }
+                else {
+                    CompressedByteVector.this.insert(k, i, value);
+                }
+            }
+
+            @Override
+            public boolean hasNext() {
+
+                return i + 1 < length;
+            }
+
+            @Override
+            public Byte next() {
+
+                i++;
+                if (k < cardinality && indices[k] == i - 1) {
+                    k++;
+                }
+                return get();
+            }
+
+            @Override
+            protected int innerCursor() {
+
+                return k;
+            }
+        };
     }
 }

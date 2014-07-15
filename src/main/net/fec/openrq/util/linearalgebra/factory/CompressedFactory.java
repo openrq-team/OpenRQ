@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -44,7 +44,7 @@ import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedByteVector;
 
 
-public abstract class CompressedFactory implements Factory {
+public abstract class CompressedFactory extends Factory {
 
     private static final long serialVersionUID = 4071505L;
 
@@ -96,9 +96,7 @@ public abstract class CompressedFactory implements Factory {
     }
 
     @Override
-    public ByteVector createRandomVector(int length) {
-
-        Random random = new Random();
+    public ByteVector createRandomVector(int length, Random random) {
 
         int cardinality = length / DENSITY;
 

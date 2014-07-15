@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -42,17 +42,20 @@ package net.fec.openrq.util.linearalgebra.vector;
 import java.io.Externalizable;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorProcedure;
+import net.fec.openrq.util.linearalgebra.vector.operation.VectorOperation;
+import net.fec.openrq.util.linearalgebra.vector.operation.VectorVectorOperation;
 
 
 /**
  * The byte vector interface.
  */
-public interface ByteVector extends Externalizable {
+public interface ByteVector extends Externalizable, Iterable<Byte> {
 
     /**
      * Gets the specified element of this vector.
@@ -72,6 +75,11 @@ public interface ByteVector extends Externalizable {
      *            element's new value
      */
     void set(int i, byte value);
+
+    /**
+     * Assigns all the elements of this vector to zero.
+     */
+    void clear();
 
     /**
      * Assigns all elements of this vector to given {@code value}.
@@ -109,6 +117,14 @@ public interface ByteVector extends Externalizable {
     ByteVector add(byte value, Factory factory);
 
     /**
+     * Adds given {@code value} (v) to this vector (X) in-place.
+     * 
+     * @param value
+     *            the right hand value for addition
+     */
+    void addInPlace(byte value);
+
+    /**
      * Adds given {@code vector} (X) to this vector (Y).
      * 
      * @param vector
@@ -127,6 +143,14 @@ public interface ByteVector extends Externalizable {
      * @return X + Y
      */
     ByteVector add(ByteVector vector, Factory factory);
+
+    /**
+     * Adds given {@code vector} (X) to this vector (Y) in-place.
+     * 
+     * @param vector
+     *            the right hand vector for addition
+     */
+    void addInPlace(ByteVector vector);
 
     /**
      * Multiplies this vector (X) by given {@code value} (v).
@@ -149,6 +173,14 @@ public interface ByteVector extends Externalizable {
     ByteVector multiply(byte value, Factory factory);
 
     /**
+     * Multiplies this vector (X) by given {@code value} (v) in-place.
+     * 
+     * @param value
+     *            the right hand value for multiplication
+     */
+    void multiplyInPlace(byte value);
+
+    /**
      * Calculates the Hadamard (element-wise) product of this vector and given {@code vector}.
      * 
      * @param vector
@@ -167,6 +199,14 @@ public interface ByteVector extends Externalizable {
      * @return the Hadamard product of two vectors
      */
     ByteVector hadamardProduct(ByteVector vector, Factory factory);
+
+    /**
+     * Calculates the Hadamard (element-wise) product of this vector and given {@code vector} in-place.
+     * 
+     * @param vector
+     *            the right hand vector for Hadamard product
+     */
+    void hadamardProductInPlace(ByteVector vector);
 
     /**
      * Multiples this vector (X) by given {@code matrix} (A).
@@ -209,6 +249,14 @@ public interface ByteVector extends Externalizable {
     ByteVector subtract(byte value, Factory factory);
 
     /**
+     * Subtracts given {@code value} (v) from this vector (X) in-place.
+     * 
+     * @param value
+     *            the right hand value for subtraction
+     */
+    void subtractInPlace(byte value);
+
+    /**
      * Subtracts given {@code vector} (Y) from this vector (X).
      * 
      * @param vector
@@ -229,6 +277,14 @@ public interface ByteVector extends Externalizable {
     ByteVector subtract(ByteVector vector, Factory factory);
 
     /**
+     * Subtracts given {@code vector} (Y) from this vector (X) in-place.
+     * 
+     * @param vector
+     *            the right hand vector for subtraction
+     */
+    void subtractInPlace(ByteVector vector);
+
+    /**
      * Divides this vector (X) by given {@code value} (v).
      * 
      * @param value
@@ -247,6 +303,14 @@ public interface ByteVector extends Externalizable {
      * @return X / v
      */
     ByteVector divide(byte value, Factory factory);
+
+    /**
+     * Divides this vector (X) by given {@code value} (v) in-place.
+     * 
+     * @param value
+     *            the right hand value for division
+     */
+    void divideInPlace(byte value);
 
     /**
      * Multiplies up all elements of this vector.
@@ -454,14 +518,6 @@ public interface ByteVector extends Externalizable {
     void each(VectorProcedure procedure);
 
     /**
-     * Applies given {@code procedure} to each non-zero element of this vector.
-     * 
-     * @param procedure
-     *            the vector procedure
-     */
-    void eachNonZero(VectorProcedure procedure);
-
-    /**
      * Searches for the maximum value of the elements of this vector.
      * 
      * @return the maximum value of this vector
@@ -532,14 +588,6 @@ public interface ByteVector extends Externalizable {
     void update(VectorFunction function);
 
     /**
-     * Updates all non zero elements of this vector by applying given {@code function}.
-     * 
-     * @param function
-     *            the the vector function
-     */
-    void updateNonZeros(VectorFunction function);
-
-    /**
      * Updates the specified element of this vector by applying given {@code function}.
      * 
      * @param i
@@ -607,4 +655,42 @@ public interface ByteVector extends Externalizable {
      * @return the column matrix
      */
     ByteMatrix toColumnMatrix(Factory factory);
+
+    /**
+     * Returns a {@code ByteVectorIterator} which allows the getting/setting of traversed elements.
+     */
+    @Override
+    ByteVectorIterator iterator();
+
+    /**
+     * Returns a burning vector iterator.
+     * 
+     * @return a burning vector iterator
+     */
+    ByteVectorIterator burningIterator();
+
+    /**
+     * Pipes this vector to a given {@code operation}.
+     * 
+     * @param operation
+     *            the vector operation
+     *            (an operation that take vector and returns {@code T})
+     * @param <T>
+     *            the result type
+     * @return the result of an operation applied to this vector
+     */
+    <T> T pipeTo(VectorOperation<T> operation);
+
+    /**
+     * Pipes this vector to a given {@code operation}.
+     * 
+     * @param operation
+     *            the vector-vector operation
+     *            (an operation that takes two vectors and returns {@code T})
+     * @param that
+     * @param <T>
+     *            the result type
+     * @return the result of an operation applied to this and {@code that} vector
+     */
+    <T> T pipeTo(VectorVectorOperation<T> operation, ByteVector that);
 }

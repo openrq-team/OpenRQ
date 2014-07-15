@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -36,15 +36,78 @@
 package net.fec.openrq.util.linearalgebra.vector.dense;
 
 
+import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import net.fec.openrq.util.linearalgebra.LinearAlgebra;
+import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
+import net.fec.openrq.util.linearalgebra.io.VectorToBurningIterator;
+import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
+import net.fec.openrq.util.linearalgebra.vector.operation.VectorOperation;
+import net.fec.openrq.util.linearalgebra.vector.operation.VectorVectorOperation;
 
 
-public interface DenseByteVector extends ByteVector {
+public abstract class DenseByteVector extends AbstractByteVector {
+
+    public DenseByteVector(int length) {
+
+        super(LinearAlgebra.DENSE_FACTORY, length);
+    }
+
+    @Override
+    public <T> T pipeTo(VectorOperation<T> operation) {
+
+        return operation.apply(this);
+    }
+
+    @Override
+    public <T> T pipeTo(VectorVectorOperation<T> operation, ByteVector that) {
+
+        return that.pipeTo(operation.curry(this));
+    }
 
     /**
      * Converts this dense vector to byte array.
      * 
      * @return array representation of this vector
      */
-    byte[] toArray();
+    public abstract byte[] toArray();
+
+    @Override
+    public ByteVector multiply(byte value, Factory factory) {
+
+        ensureFactoryIsNotNull(factory);
+        ByteVector result = blank(factory);
+
+        for (int i = 0; i < length(); i++) {
+            result.set(i, aTimesB(get(i), value));
+        }
+
+        return result;
+    }
+
+    @Override
+    public void multiplyInPlace(byte value) {
+
+        // TODO: multiply by 0 = clear()
+        for (int i = 0; i < length; i++) {
+            set(i, aTimesB(get(i), value));
+        }
+    }
+
+    @Override
+    public ByteVectorIterator burningIterator() {
+
+        return new VectorToBurningIterator(iterator()) {
+
+            @Override
+            public void flush() {
+
+                // fast flush
+                for (int i = innerCursor() + 1; i < length; i++) {
+                    DenseByteVector.this.set(i, (byte)0);
+                }
+            }
+        };
+    }
 }

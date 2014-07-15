@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -55,6 +55,8 @@ import java.util.Arrays;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
+import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
 
 import org.junit.Test;
 
@@ -458,5 +460,82 @@ public abstract class AbstractVectorTest {
 
         ByteVector a = factory().createVector(new byte[] {1, 0, 0, -1, 0, 0, 0, 0, -5, 0, 0, 5});
         assertTrue(aIsEqualToB((byte)0, a.min()));
+    }
+
+    public void testFold_6() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 0, 5, 0, 2, 1});
+
+        VectorAccumulator sum = ByteVectors.asSumAccumulator((byte)0);
+        VectorAccumulator product = ByteVectors.asProductAccumulator((byte)1);
+
+        assertTrue(aIsEqualToB(a.fold(sum), (byte)6));
+        // check whether the accumulator were flushed
+        assertTrue(aIsEqualToB(a.fold(sum), (byte)6));
+
+        assertTrue(aIsEqualToB(a.fold(product), (byte)0));
+        // check whether the accumulator were flushed
+        assertTrue(aIsEqualToB(a.fold(product), (byte)0));
+    }
+
+    public void testIssue162_0() {
+
+        VectorPredicate three = new VectorPredicate() {
+
+            @Override
+            public boolean test(int i, byte value) {
+
+                return aIsEqualToB(value, (byte)3);
+            }
+        };
+
+        ByteVector a = factory().createVector();
+        ByteVector b = a.resize(31);
+
+        assertEquals(0, a.length());
+        assertEquals(31, b.length());
+
+        b.assign((byte)3);
+        assertTrue(b.is(three));
+
+        ByteVector c = b.resize(42);
+        c.assign((byte)3);
+        assertTrue(c.is(three));
+
+        ByteVector d = c.resize(54);
+        d.assign((byte)3);
+        assertTrue(d.is(three));
+    }
+
+    public void testResize_32_to_110_to_1076_to_31() {
+
+        VectorPredicate fortyTwo = new VectorPredicate() {
+
+            @Override
+            public boolean test(int i, byte value) {
+
+                return aIsEqualToB(value, (byte)42);
+            }
+        };
+
+        ByteVector a = factory().createVector();
+        ByteVector b = a.resize(32);
+
+        assertEquals(32, b.length());
+
+        b.assign((byte)42);
+        assertTrue(b.is(fortyTwo));
+
+        ByteVector c = b.resize(110);
+        c.assign((byte)42);
+        assertTrue(c.is(fortyTwo));
+
+        ByteVector d = c.resize(1076);
+        d.assign((byte)42);
+        assertTrue(d.is(fortyTwo));
+
+        ByteVector e = d.resize(31);
+        e.assign((byte)42);
+        assertTrue(e.is(fortyTwo));
     }
 }

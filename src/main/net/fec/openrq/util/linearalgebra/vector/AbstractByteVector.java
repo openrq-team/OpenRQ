@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -50,11 +50,13 @@ import static net.fec.openrq.util.linearalgebra.vector.ByteVectors.printVector;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorProcedure;
+import net.fec.openrq.util.linearalgebra.vector.operation.VectorOperations;
 
 
 public abstract class AbstractByteVector implements ByteVector {
@@ -83,6 +85,12 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
+    public void clear() {
+
+        assign((byte)0);
+    }
+
+    @Override
     public void assign(byte value) {
 
         update(ByteVectors.asConstFunction(value));
@@ -106,12 +114,24 @@ public abstract class AbstractByteVector implements ByteVector {
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = blank(factory);
+        ByteVectorIterator it = iterator();
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, aPlusB(get(i), value));
+        while (it.hasNext()) {
+            it.next();
+            result.set(it.index(), aPlusB(it.get(), value));
         }
 
         return result;
+    }
+
+    @Override
+    public void addInPlace(byte value) {
+
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.set(aPlusB(it.get(), value));
+        }
     }
 
     @Override
@@ -125,18 +145,18 @@ public abstract class AbstractByteVector implements ByteVector {
 
         ensureFactoryIsNotNull(factory);
         ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector);
 
-        if (length != vector.length()) {
-            fail("Wrong vector length: " + vector.length() + ". Should be: " + length + ".");
-        }
+        return pipeTo(VectorOperations.ooPlaceVectorToVectorAddition(factory), vector);
+    }
 
-        ByteVector result = blank(factory);
+    @Override
+    public void addInPlace(ByteVector vector) {
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, aPlusB(get(i), vector.get(i)));
-        }
+        ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector);
 
-        return result;
+        pipeTo(VectorOperations.inPlaceVectorToVectorAddition(), vector);
     }
 
     @Override
@@ -151,12 +171,24 @@ public abstract class AbstractByteVector implements ByteVector {
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = blank(factory);
+        ByteVectorIterator it = iterator();
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, aTimesB(get(i), value));
+        while (it.hasNext()) {
+            it.next();
+            result.set(it.index(), aTimesB(it.get(), value));
         }
 
         return result;
+    }
+
+    @Override
+    public void multiplyInPlace(byte value) {
+
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.set(aTimesB(it.get(), value));
+        }
     }
 
     @Override
@@ -170,18 +202,18 @@ public abstract class AbstractByteVector implements ByteVector {
 
         ensureFactoryIsNotNull(factory);
         ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector);
 
-        if (length != vector.length()) {
-            fail("Wrong vector length: " + vector.length() + ". Should be: " + length + ".");
-        }
+        return pipeTo(VectorOperations.ooPlaceHadamardProduct(factory), vector);
+    }
 
-        ByteVector result = blank(factory);
+    @Override
+    public void hadamardProductInPlace(ByteVector vector) {
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, aTimesB(get(i), vector.get(i)));
-        }
+        ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector);
 
-        return result;
+        pipeTo(VectorOperations.inPlaceHadamardProduct(), vector);
     }
 
     @Override
@@ -230,9 +262,11 @@ public abstract class AbstractByteVector implements ByteVector {
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = blank(factory);
+        ByteVectorIterator it = iterator();
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, aMinusB(get(i), value));
+        while (it.hasNext()) {
+            it.next();
+            result.set(it.index(), aMinusB(it.get(), value));
         }
 
         return result;
@@ -249,18 +283,28 @@ public abstract class AbstractByteVector implements ByteVector {
 
         ensureFactoryIsNotNull(factory);
         ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector);
 
-        if (length != vector.length()) {
-            fail("Wrong vector length: " + vector.length() + ". Should be: " + length + ".");
+        return pipeTo(VectorOperations.ooPlaceVectorFromVectorSubtraction(factory), vector);
+    }
+
+    @Override
+    public void subtractInPlace(byte value) {
+
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.set(aMinusB(it.get(), value));
         }
+    }
 
-        ByteVector result = blank(factory);
+    @Override
+    public void subtractInPlace(ByteVector vector) {
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, aMinusB(get(i), vector.get(i)));
-        }
+        ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector);
 
-        return result;
+        pipeTo(VectorOperations.inPlaceVectorFromVectorSubtraction(), vector);
     }
 
     @Override
@@ -275,12 +319,24 @@ public abstract class AbstractByteVector implements ByteVector {
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = blank(factory);
+        ByteVectorIterator it = iterator();
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, aDividedByB(get(i), value));
+        while (it.hasNext()) {
+            it.next();
+            result.set(it.index(), aDividedByB(it.get(), value));
         }
 
         return result;
+    }
+
+    @Override
+    public void divideInPlace(byte value) {
+
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.set(aDividedByB(it.get(), value));
+        }
     }
 
     @Override
@@ -457,16 +513,6 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
-    public void eachNonZero(VectorProcedure procedure) {
-
-        for (int i = 0; i < length; i++) {
-            if (!aIsEqualToB(get(i), (byte)0)) {
-                procedure.apply(i, get(i));
-            }
-        }
-    }
-
-    @Override
     public byte max() {
 
         return fold(ByteVectors.mkMaxAccumulator());
@@ -488,9 +534,11 @@ public abstract class AbstractByteVector implements ByteVector {
     public ByteVector transform(VectorFunction function, Factory factory) {
 
         ByteVector result = blank(factory);
+        ByteVectorIterator it = iterator();
 
-        for (int i = 0; i < length; i++) {
-            result.set(i, function.evaluate(i, get(i)));
+        while (it.hasNext()) {
+            it.next();
+            result.set(it.index(), function.evaluate(it.index(), it.get()));
         }
 
         return result;
@@ -514,19 +562,10 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void update(VectorFunction function) {
 
-        for (int i = 0; i < length; i++) {
-            set(i, function.evaluate(i, get(i)));
-        }
-    }
-
-    @Override
-    public void updateNonZeros(VectorFunction function) {
-
-        for (int i = 0; i < length; i++) {
-            final byte val = get(i);
-            if (!aIsEqualToB(val, (byte)0)) {
-                set(i, function.evaluate(i, val));
-            }
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.set(function.evaluate(it.index(), it.get()));
         }
     }
 
@@ -539,10 +578,7 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public byte fold(VectorAccumulator accumulator) {
 
-        for (int i = 0; i < length; i++) {
-            accumulator.update(i, get(i));
-        }
-
+        each(ByteVectors.asAccumulatorProcedure(accumulator));
         return accumulator.accumulate();
     }
 
@@ -550,9 +586,11 @@ public abstract class AbstractByteVector implements ByteVector {
     public boolean is(VectorPredicate predicate) {
 
         boolean result = true;
+        ByteVectorIterator it = iterator();
 
-        for (int i = 0; i < length; i++) {
-            result = result && predicate.test(i, get(i));
+        while (it.hasNext()) {
+            it.next();
+            result = result && predicate.test(it.index(), it.get());
         }
 
         return result;
@@ -596,9 +634,11 @@ public abstract class AbstractByteVector implements ByteVector {
     public int hashCode() {
 
         int result = 17;
+        ByteVectorIterator it = iterator();
 
-        for (int i = 0; i < length; i++) {
-            long value = get(i);
+        while (it.hasNext()) {
+            it.next();
+            long value = it.get();
             result = 37 * result + (int)(value ^ (value >>> 32));
         }
 
@@ -652,6 +692,13 @@ public abstract class AbstractByteVector implements ByteVector {
         }
         if (length == Integer.MAX_VALUE) {
             fail("Wrong vector length: use 'Integer.MAX_VALUE - 1' instead.");
+        }
+    }
+
+    protected void ensureVectorIsSimilar(ByteVector that) {
+
+        if (length != that.length()) {
+            fail("Wong vector length: " + that.length() + ". Should be: " + length + ".");
         }
     }
 

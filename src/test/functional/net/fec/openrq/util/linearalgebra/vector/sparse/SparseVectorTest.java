@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2011-2013, by Vladimir Kostyukov and Contributors.
+ * Copyright 2011-2014, by Vladimir Kostyukov and Contributors.
  * 
  * This file is part of la4j project (http://la4j.org)
  * 
@@ -36,8 +36,13 @@
 package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import net.fec.openrq.util.linearalgebra.vector.AbstractVectorTest;
+import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
+import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 
 
 public abstract class SparseVectorTest extends AbstractVectorTest {
@@ -48,5 +53,43 @@ public abstract class SparseVectorTest extends AbstractVectorTest {
             new byte[] {0, 0, 0, 0, 1});
 
         assertEquals(1, a.cardinality());
+    }
+
+    public void testFoldNonZero_5() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(
+            new byte[] {2, 0, 5, 0, 2}
+            );
+
+        VectorAccumulator sum = ByteVectors.asSumAccumulator((byte)0);
+        VectorAccumulator product = ByteVectors.asProductAccumulator((byte)1);
+
+        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)5));
+        // check whether the accumulator were flushed
+        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)5));
+
+        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)20));
+        // check whether the accumulator were flushed
+        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)20));
+    }
+
+    public void testIsZeroAt_4() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(
+            new byte[] {1, 0, 0, 4}
+            );
+
+        assertTrue(a.isZeroAt(1));
+        assertFalse(a.isZeroAt(3));
+    }
+
+    public void testNonZeroAt_6() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(
+            new byte[] {0, 5, 2, 0, 0, 0}
+            );
+
+        assertTrue(a.nonZeroAt(1));
+        assertFalse(a.nonZeroAt(3));
     }
 }
