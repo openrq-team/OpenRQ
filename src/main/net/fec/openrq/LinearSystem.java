@@ -1183,6 +1183,8 @@ final class LinearSystem {
                 }
             }
         }
+        
+        System.out.println("END: " + System.nanoTime()); // DEBUG
 
         // use the already allocated matrix for the matrix C
         final byte[][] C = noOverheadD;
