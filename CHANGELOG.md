@@ -43,6 +43,7 @@ Changed public method signatures:
  * ++ public Iterable<? extends SourceBlockDecoder> sourceBlockIterable()
 * net.fec.openrq.decoder.SourceBlockDecoder
  * ++ public SourceBlockState latestState()
+ * ++ public SBDInfo information()
 * net.fec.openrq.parameters.ParameterChecker
  * ++ public static int minNumSourceSymbolsPerBlock()
  * ++ public static boolean isNumSourceSymbolsPerBlockOutOfBounds(int)
