@@ -18,6 +18,7 @@ package net.fec.openrq;
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 
+import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
@@ -28,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
@@ -39,6 +41,7 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.sparse.SparseByteVector;
+import net.fec.openrq.util.printing.TimePrinter;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -511,11 +514,15 @@ final class LinearSystem {
          * DECODING
          */
 
+        final PrintStream timerPrintable = System.out; // DEBUG
+        // final QuietPrintableAppendable timerPrintable = QuietPrintableAppendable.ofNull(); // DEBUG
+
         /*
          * First phase
          */
 
-        System.out.println("1st: " + System.nanoTime()); // DEBUG
+        timerPrintable.println(); // DEBUG
+        TimePrinter.beginTimer(); // DEBUG
 
         // counts how many rows have been chosen already
         int chosenRowsCounter = 0;
@@ -575,6 +582,9 @@ final class LinearSystem {
             else rows.put(row, new Row(row, nonZeros, degree, isHDPC));
         }
 
+        TimePrinter.markTimestamp(); // DEBUG
+        TimePrinter.printlnEllapsedTime(timerPrintable, "1st(a): ", TimeUnit.MILLISECONDS); // DEBUG
+
         // at most L steps
         while (i + u != L)
         {
@@ -596,6 +606,8 @@ final class LinearSystem {
             /*
              * find r
              */
+
+            TimePrinter.beginTimer(); // DEBUG
 
             for (Map.Entry<Integer, Row> row : rows.entrySet()) {
 
@@ -624,6 +636,9 @@ final class LinearSystem {
                 }
             }
 
+            TimePrinter.markTimestamp(); // DEBUG
+            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; find r)", TimeUnit.MILLISECONDS); // DEBUG
+
             if (allZeros) {// DECODING FAILURE
                 throw new SingularMatrixException(
                     "Decoding Failure - PI Decoding @ Phase 1: All entries in V are zero.");
@@ -632,6 +647,8 @@ final class LinearSystem {
             /*
              * choose the row
              */
+
+            TimePrinter.beginTimer(); // DEBUG
 
             if (r == 2 && two1s) {
 
@@ -809,6 +826,10 @@ final class LinearSystem {
                 }
 
                 chosenRowsCounter++;
+
+                TimePrinter.markTimestamp(); // DEBUG
+                TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; choose row)",
+                    TimeUnit.MILLISECONDS); // DEBUG
             }
             else {
 
@@ -830,6 +851,8 @@ final class LinearSystem {
             // if the chosen row is not 'i' already
             if (rLinha != i)
             {
+                TimePrinter.beginTimer(); // DEBUG
+
                 // swap i with rLinha in A
                 A.swapRows(i, rLinha);
 
@@ -846,6 +869,10 @@ final class LinearSystem {
                 rows.put(rLinha, other);
                 other.position = rLinha;
                 chosenRow.position = i;
+                
+                TimePrinter.markTimestamp(); // DEBUG
+                TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap rows)",
+                    TimeUnit.MILLISECONDS); // DEBUG
             }
 
             /*
@@ -853,6 +880,8 @@ final class LinearSystem {
              * in the chosen row appears in the first column of V and so that the remaining r-1 nonzeros
              * appear in the last columns of V."
              */
+            
+            TimePrinter.beginTimer(); // DEBUG
 
             // stack of non-zeros in the chosen row
             Deque<Integer> nonZerosStack = new ArrayDeque<>(chosenRow.nonZeros);
@@ -912,6 +941,10 @@ final class LinearSystem {
                 c[column] = auxIndex;
 
             }
+            
+            TimePrinter.markTimestamp(); // DEBUG
+            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap columns)",
+                TimeUnit.MILLISECONDS); // DEBUG
 
             /*
              * "... if a row below the chosen row has entry beta in the first column of V, and the chosen
@@ -921,6 +954,8 @@ final class LinearSystem {
 
             // "the chosen row has entry alpha in the first column of V"
             byte alpha = A.get(i, i);
+            
+            TimePrinter.beginTimer(); // DEBUG
 
             // let's look at all rows below the chosen one
             for (int row = i + 1; row < M; row++) // TODO queue these row operations for when/if the row is chosen
@@ -967,6 +1002,10 @@ final class LinearSystem {
                     // "xorSymbolInPlace(D[" + d[row] + "],p);");
                 }
             }
+            
+            TimePrinter.markTimestamp(); // DEBUG
+            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; row add/mult)",
+                TimeUnit.MILLISECONDS); // DEBUG
 
             /*
              * "Finally, i is incremented by 1 and u is incremented by r-1, which completes the step."
@@ -974,6 +1013,8 @@ final class LinearSystem {
             i++;
             u += r - 1;
 
+            TimePrinter.beginTimer(); // DEBUG
+            
             // update nonZeros
             for (Row row : rows.values())
             {
@@ -1006,6 +1047,10 @@ final class LinearSystem {
 
                 row.nonZeros = nonZeros;
             }
+            
+            TimePrinter.markTimestamp(); // DEBUG
+            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; update non zeros)",
+                TimeUnit.MILLISECONDS); // DEBUG
         }
 
         // END OF FIRST PHASE
@@ -1014,7 +1059,7 @@ final class LinearSystem {
          * Second phase
          */
 
-        System.out.println("2nd: " + System.nanoTime()); // DEBUG
+        TimePrinter.beginTimer(); // DEBUG
 
         /*
          * "At this point, all the entries of X outside the first i rows and i columns are discarded, so that X
@@ -1041,13 +1086,16 @@ final class LinearSystem {
          * "After this phase, A has L rows and L columns."
          */
 
+        TimePrinter.markTimestamp(); // DEBUG
+        TimePrinter.printlnEllapsedTime(timerPrintable, "2nd: ", TimeUnit.MILLISECONDS); // DEBUG
+
         // END OF SECOND PHASE
 
         /*
          * Third phase
          */
 
-        System.out.println("3rd: " + System.nanoTime()); // DEBUG
+        TimePrinter.beginTimer(); // DEBUG
 
         // decoding process
         byte[][] noOverheadD = new byte[L][];
@@ -1086,11 +1134,14 @@ final class LinearSystem {
         // for (int row = 0; row < i; row++)
         // A[row] = XA[row];
 
+        TimePrinter.markTimestamp(); // DEBUG
+        TimePrinter.printlnEllapsedTime(timerPrintable, "3rd: ", TimeUnit.MILLISECONDS); // DEBUG
+
         /*
          * Fourth phase
          */
 
-        System.out.println("4th: " + System.nanoTime()); // DEBUG
+        TimePrinter.beginTimer(); // DEBUG
 
         /*
          * "For each of the first i rows of U_upper, do the following: if the row has a nonzero entry at position j,
@@ -1124,11 +1175,14 @@ final class LinearSystem {
             }
         }
 
+        TimePrinter.markTimestamp(); // DEBUG
+        TimePrinter.printlnEllapsedTime(timerPrintable, "4th: ", TimeUnit.MILLISECONDS); // DEBUG
+
         /*
          * Fifth phase
          */
 
-        System.out.println("5th: " + System.nanoTime()); // DEBUG
+        TimePrinter.beginTimer(); // DEBUG
 
         // "For j from 1 to i, perform the following operations:"
         for (int j = 0; j < i; j++)
@@ -1183,8 +1237,9 @@ final class LinearSystem {
                 }
             }
         }
-        
-        System.out.println("END: " + System.nanoTime()); // DEBUG
+
+        TimePrinter.markTimestamp(); // DEBUG
+        TimePrinter.printlnEllapsedTime(timerPrintable, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
 
         // use the already allocated matrix for the matrix C
         final byte[][] C = noOverheadD;

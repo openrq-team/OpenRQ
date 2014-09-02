@@ -692,7 +692,7 @@ public final class ByteMatrices {
      */
     public static void printMatrix(ByteMatrix matrix, Appendable appendable) {
 
-        final PrintableAppendable output = new PrintableAppendable(appendable);
+        final PrintableAppendable output = PrintableAppendable.of(appendable);
         final int R = matrix.rows();
         final int C = matrix.columns();
 

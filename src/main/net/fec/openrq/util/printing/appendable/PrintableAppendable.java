@@ -13,34 +13,40 @@ import java.nio.CharBuffer;
  * 
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public final class PrintableAppendable implements Appendable {
+public class PrintableAppendable implements Appendable {
+
+    public static PrintableAppendable of(Appendable appendable) {
+
+        if (appendable instanceof PrintStream) {
+            return new PrintableAppendable(new PrintStreamWrapper<>((PrintStream)appendable));
+        }
+        else if (appendable instanceof PrintWriter) {
+            return new PrintableAppendable(new PrintWriterWrapper<>((PrintWriter)appendable));
+        }
+        else if (appendable instanceof Writer) {
+            return new PrintableAppendable(new WriterWrapper<>((Writer)appendable));
+        }
+        else if (appendable instanceof StringBuilder) {
+            return new PrintableAppendable(new StringBuilderWrapper((StringBuilder)appendable));
+        }
+        else if (appendable instanceof StringBuffer) {
+            return new PrintableAppendable(new StringBufferWrapper((StringBuffer)appendable));
+        }
+        else if (appendable instanceof CharBuffer) {
+            return new PrintableAppendable(new CharBufferWrapper<>((CharBuffer)appendable));
+        }
+        else {
+            return new PrintableAppendable(new AppendableWrapper<>(appendable));
+        }
+    }
+
 
     private final AppendableWrapper<?> wrapper;
 
 
-    public PrintableAppendable(Appendable appendable) {
+    PrintableAppendable(AppendableWrapper<?> wrapper) {
 
-        if (appendable instanceof PrintStream) {
-            wrapper = new PrintStreamWrapper<>((PrintStream)appendable);
-        }
-        else if (appendable instanceof PrintWriter) {
-            wrapper = new PrintWriterWrapper<>((PrintWriter)appendable);
-        }
-        else if (appendable instanceof Writer) {
-            wrapper = new WriterWrapper<>((Writer)appendable);
-        }
-        else if (appendable instanceof StringBuilder) {
-            wrapper = new StringBuilderWrapper((StringBuilder)appendable);
-        }
-        else if (appendable instanceof StringBuffer) {
-            wrapper = new StringBufferWrapper((StringBuffer)appendable);
-        }
-        else if (appendable instanceof CharBuffer) {
-            wrapper = new CharBufferWrapper<>((CharBuffer)appendable);
-        }
-        else {
-            wrapper = new AppendableWrapper<>(appendable);
-        }
+        this.wrapper = wrapper;
     }
 
     public PrintableAppendable print(char c) throws IOException {

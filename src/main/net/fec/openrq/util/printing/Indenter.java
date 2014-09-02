@@ -56,7 +56,7 @@ public final class Indenter {
     private Indenter(Appendable app, int maxLineWidth, int maxIndentLevel, String prefix, char indentChar) {
 
         this.originalAppendable = Objects.requireNonNull(app);
-        this.output = new PrintableAppendable(app);
+        this.output = PrintableAppendable.of(app);
 
         validateMaxParams(maxLineWidth, maxIndentLevel);
         validatePrefix(prefix, maxLineWidth, maxIndentLevel);

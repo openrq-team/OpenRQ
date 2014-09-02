@@ -401,7 +401,7 @@ public final class ByteVectors {
      */
     public static void printVector(ByteVector vector, Appendable appendable) {
 
-        final PrintableAppendable output = new PrintableAppendable(appendable);
+        final PrintableAppendable output = PrintableAppendable.of(appendable);
         final int N = vector.length();
 
         // this prints two lines, the first with indexes and the second with the actual values
