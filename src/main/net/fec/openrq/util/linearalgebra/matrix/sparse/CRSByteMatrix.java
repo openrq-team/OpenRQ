@@ -435,12 +435,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public int nonZeros() {
-
-        return cardinality();
-    }
-
-    @Override
     public int nonZerosInRow(int i) {
 
         checkRowBounds(i);
@@ -832,7 +826,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         int newCardinality = 0;
         for (int i = 0; i < newRows; i++) {
             for (int j = 0; j < newCols; j++) {
-                if (!OctetOps.aIsEqualToB(get(rowIndices[i], columnIndices[j]), (byte)0)) {
+                if (!aIsEqualToB(get(rowIndices[i], columnIndices[j]), (byte)0)) {
                     newCardinality++;
                 }
             }

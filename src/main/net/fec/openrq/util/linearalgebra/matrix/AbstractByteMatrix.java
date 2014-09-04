@@ -940,42 +940,6 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
-    public byte max() {
-
-        return fold(ByteMatrices.mkMaxAccumulator());
-    }
-
-    @Override
-    public byte min() {
-
-        return fold(ByteMatrices.mkMinAccumulator());
-    }
-
-    @Override
-    public byte maxInRow(int i) {
-
-        return foldRow(i, ByteMatrices.mkMaxAccumulator());
-    }
-
-    @Override
-    public byte minInRow(int i) {
-
-        return foldRow(i, ByteMatrices.mkMinAccumulator());
-    }
-
-    @Override
-    public byte maxInColumn(int j) {
-
-        return foldColumn(j, ByteMatrices.mkMaxAccumulator());
-    }
-
-    @Override
-    public byte minInColumn(int j) {
-
-        return foldColumn(j, ByteMatrices.mkMinAccumulator());
-    }
-
-    @Override
     public ByteMatrix transform(MatrixFunction function) {
 
         return transform(function, factory);
@@ -1211,6 +1175,42 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public ByteVector toColumnVector(Factory factory) {
 
         return getColumn(0, factory);
+    }
+
+    @Override
+    public byte max() {
+
+        return fold(ByteMatrices.mkMaxAccumulator());
+    }
+
+    @Override
+    public byte min() {
+
+        return fold(ByteMatrices.mkMinAccumulator());
+    }
+
+    @Override
+    public byte maxInRow(int i) {
+
+        return foldRow(i, ByteMatrices.mkMaxAccumulator());
+    }
+
+    @Override
+    public byte minInRow(int i) {
+
+        return foldRow(i, ByteMatrices.mkMinAccumulator());
+    }
+
+    @Override
+    public byte maxInColumn(int j) {
+
+        return foldColumn(j, ByteMatrices.mkMaxAccumulator());
+    }
+
+    @Override
+    public byte minInColumn(int j) {
+
+        return foldColumn(j, ByteMatrices.mkMinAccumulator());
     }
 
     @Override

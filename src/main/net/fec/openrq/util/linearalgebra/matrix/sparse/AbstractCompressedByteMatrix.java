@@ -91,6 +91,74 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         return !nonZeroAt(i, j);
     }
+    
+    @Override
+    public int nonZeros() {
+
+        return cardinality();
+    }
+    
+    @Override
+    public int nonZerosInRow(int i) {
+
+        checkRowBounds(i);
+
+        int nonZeros = 0;
+        for (int j = 0; j < columns; j++) {
+            if (nonZeroAt(i, j)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZerosInRow(int i, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        int nonZeros = 0;
+        for (int j = fromColumn; j < toColumn; j++) {
+            if (nonZeroAt(i, j)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZerosInColumn(int j) {
+
+        checkColumnBounds(j);
+
+        int nonZeros = 0;
+        for (int i = 0; i < rows; i++) {
+            if (nonZeroAt(i, j)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZerosInColumn(int j, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        int nonZeros = 0;
+        for (int i = fromRow; i < toRow; i++) {
+            if (nonZeroAt(i, j)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
 
     @Override
     public void eachNonZero(MatrixProcedure procedure) {
