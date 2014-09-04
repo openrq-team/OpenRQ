@@ -123,17 +123,36 @@ public abstract class SparseByteVector extends AbstractByteVector {
      */
     public abstract boolean nonZeroAt(int i);
 
-    /**
-     * Folds non-zero elements of this vector with given {@code accumulator}.
-     * 
-     * @param accumulator
-     *            the vector accumulator
-     * @return the accumulated value
-     */
-    public byte foldNonZero(VectorAccumulator accumulator) {
+    @Override
+    public int nonZeros() {
 
-        eachNonZero(ByteVectors.asAccumulatorProcedure(accumulator));
-        return accumulator.accumulate();
+        return cardinality();
+    }
+
+    @Override
+    public int nonZeros(int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+
+        int nonZeros = 0;
+
+        ByteVectorIterator it = nonZeroIterator();
+        while (it.hasNext()) {
+            it.next(); // advance the iterator
+            final int currIndex = it.index();
+
+            // check if the current index is inside the range
+            if (fromIndex <= currIndex) {
+                if (currIndex < toIndex) {
+                    nonZeros++;
+                }
+                else {
+                    break; // we stop if the current index surpasses the range
+                }
+            }
+        }
+
+        return nonZeros;
     }
 
     /**
@@ -152,6 +171,37 @@ public abstract class SparseByteVector extends AbstractByteVector {
     }
 
     /**
+     * Applies given {@code procedure} to each non-zero element of a range of this vector.
+     * 
+     * @param procedure
+     *            the vector procedure
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     */
+    public void eachNonZero(VectorProcedure procedure, int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+
+        ByteVectorIterator it = nonZeroIterator();
+        while (it.hasNext()) {
+            it.next(); // advance the iterator
+            final int currIndex = it.index();
+
+            // check if the current index is inside the range
+            if (fromIndex <= currIndex) {
+                if (currIndex < toIndex) {
+                    procedure.apply(currIndex, it.get());
+                }
+                else {
+                    break; // we stop if the current index surpasses the range
+                }
+            }
+        }
+    }
+
+    /**
      * Updates all non zero elements of this vector by applying given {@code function}.
      * 
      * @param function
@@ -164,6 +214,148 @@ public abstract class SparseByteVector extends AbstractByteVector {
             it.next();
             it.set(function.evaluate(it.index(), it.get()));
         }
+    }
+
+    /**
+     * Updates all non zero elements in a range of this vector by applying given {@code function}.
+     * 
+     * @param function
+     *            the the vector function
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     */
+    public void updateNonZero(VectorFunction function, int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+
+        ByteVectorIterator it = nonZeroIterator();
+        while (it.hasNext()) {
+            it.next(); // advance the iterator
+            final int currIndex = it.index();
+
+            // check if the current index is inside the range
+            if (fromIndex <= currIndex) {
+                if (currIndex < toIndex) {
+                    it.set(function.evaluate(currIndex, it.get()));
+                }
+                else {
+                    break; // we stop if the current index surpasses the range
+                }
+            }
+        }
+    }
+
+    /**
+     * Builds a new vector by applying given {@code function} to each non zero element of this vector.
+     * 
+     * @param function
+     *            the vector function
+     * @return the transformed vector
+     */
+    public ByteVector transformNonZero(VectorFunction function) {
+
+        return transformNonZero(function, factory);
+    }
+
+    /**
+     * Builds a new vector by applying given {@code function} to each non zero element of this vector.
+     * 
+     * @param function
+     *            the vector function
+     * @param factory
+     *            the factory of result vector
+     * @return the transformed vector
+     */
+    public ByteVector transformNonZero(VectorFunction function, Factory factory) {
+
+        ByteVector result = copy(factory); // since it is a copy, we can use update methods
+
+        if (result instanceof SparseByteVector) {
+            ((SparseByteVector)result).updateNonZero(function);
+        }
+        else {
+            ByteVectorIterator it = nonZeroIterator();
+            while (it.hasNext()) {
+                it.next();
+                result.update(it.index(), function);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Builds a new vector by applying given {@code function} to each non zero element in a range of this vector.
+     * 
+     * @param function
+     *            the vector function
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return the transformed vector
+     */
+    public ByteVector transformNonZero(VectorFunction function, int fromIndex, int toIndex) {
+
+        return transformNonZero(function, fromIndex, toIndex, factory);
+    }
+
+    /**
+     * Builds a new vector by applying given {@code function} to each non zero element in a range of this vector.
+     * 
+     * @param function
+     *            the vector function
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @param factory
+     *            the factory of result vector
+     * @return the transformed vector
+     */
+    public ByteVector transformNonZero(VectorFunction function, int fromIndex, int toIndex, Factory factory) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+
+        ByteVector result = copy(factory); // since it is a copy, we can use update methods
+
+        if (result instanceof SparseByteVector) {
+            ((SparseByteVector)result).updateNonZero(function, fromIndex, toIndex);
+        }
+        else {
+            ByteVectorIterator it = nonZeroIterator();
+            while (it.hasNext()) {
+                it.next(); // advance the iterator
+                final int currIndex = it.index();
+
+                // check if the current index is inside the range
+                if (fromIndex <= currIndex) {
+                    if (currIndex < toIndex) {
+                        result.update(currIndex, function);
+                    }
+                    else {
+                        break; // we stop if the current index surpasses the range
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Folds non-zero elements of this vector with given {@code accumulator}.
+     * 
+     * @param accumulator
+     *            the vector accumulator
+     * @return the accumulated value
+     */
+    public byte foldNonZero(VectorAccumulator accumulator) {
+
+        eachNonZero(ByteVectors.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
     }
 
     @Override

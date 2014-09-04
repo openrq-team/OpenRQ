@@ -510,6 +510,24 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
     Factory factory();
 
     /**
+     * Returns the number of non zero elements in this vector.
+     * 
+     * @return the number of non zero elements in this vector
+     */
+    int nonZeros();
+
+    /**
+     * Returns the number of non zero elements in a range of this matrix.
+     * 
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return the number of non zero elements in a range of this matrix
+     */
+    int nonZeros(int fromIndex, int toIndex);
+
+    /**
      * Applies given {@code procedure} to each element of this vector.
      * 
      * @param procedure
@@ -518,18 +536,46 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
     void each(VectorProcedure procedure);
 
     /**
-     * Searches for the maximum value of the elements of this vector.
+     * Applies given {@code procedure} to each element of a range of this vector.
      * 
-     * @return the maximum value of this vector
+     * @param procedure
+     *            the vector procedure
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
      */
-    byte max();
+    void each(VectorProcedure procedure, int fromIndex, int toIndex);
 
     /**
-     * Searches for the minimum value of the elements of this vector.
+     * Updates all elements of this vector by applying given {@code function}.
      * 
-     * @return the minimum value of this vector
+     * @param function
+     *            the the vector function
      */
-    byte min();
+    void update(VectorFunction function);
+
+    /**
+     * Updates the specified element of this vector by applying given {@code function}.
+     * 
+     * @param i
+     *            element's index
+     * @param function
+     *            the vector function
+     */
+    void update(int i, VectorFunction function);
+
+    /**
+     * Updates all elements in a range of this vector by applying given {@code function}.
+     * 
+     * @param function
+     *            the vector function
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     */
+    void update(VectorFunction function, int fromIndex, int toIndex);
 
     /**
      * Builds a new vector by applying given {@code function} to each element
@@ -580,22 +626,34 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
     ByteVector transform(int i, VectorFunction function, Factory factory);
 
     /**
-     * Updates all elements of this vector by applying given {@code function}.
+     * Builds a new vector by applying given {@code function} to each element in a range
+     * of this vector.
      * 
-     * @param function
-     *            the the vector function
-     */
-    void update(VectorFunction function);
-
-    /**
-     * Updates the specified element of this vector by applying given {@code function}.
-     * 
-     * @param i
-     *            element's index
      * @param function
      *            the vector function
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return the transformed vector
      */
-    void update(int i, VectorFunction function);
+    ByteVector transform(VectorFunction function, int fromIndex, int toIndex);
+
+    /**
+     * Builds a new vector by applying given {@code function} to each element in a range
+     * of this vector.
+     * 
+     * @param function
+     *            the vector function
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @param factory
+     *            the factory of result vector
+     * @return the transformed vector
+     */
+    ByteVector transform(VectorFunction function, int fromIndex, int toIndex, Factory factory);
 
     /**
      * Folds all elements of this vector with given {@code accumulator}.
@@ -655,6 +713,20 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
      * @return the column matrix
      */
     ByteMatrix toColumnMatrix(Factory factory);
+
+    /**
+     * Searches for the maximum value of the elements of this vector.
+     * 
+     * @return the maximum value of this vector
+     */
+    byte max();
+
+    /**
+     * Searches for the minimum value of the elements of this vector.
+     * 
+     * @return the minimum value of this vector
+     */
+    byte min();
 
     /**
      * Returns a {@code ByteVectorIterator} which allows the getting/setting of traversed elements.

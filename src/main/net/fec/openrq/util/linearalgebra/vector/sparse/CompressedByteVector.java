@@ -144,11 +144,11 @@ public class CompressedByteVector extends SparseByteVector {
         int k = searchForIndex(i);
 
         if (k < cardinality && indices[k] == i) {
-            if (!aIsEqualToB(value, (byte)0)) {
-                values[k] = value;
+            if (aIsEqualToB(value, (byte)0)) {
+                remove(k);
             }
             else {
-                remove(k);
+                values[k] = value;
             }
         }
         else {
@@ -157,7 +157,7 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     // =========================================================================
-    // Optimized multiplications that take advantage of sparsity in this matrix.
+    // Optimized multiplications that take advantage of sparsity in this vector.
 
     @Override
     public ByteVector multiply(byte value) {
@@ -211,7 +211,7 @@ public class CompressedByteVector extends SparseByteVector {
         return result;
     }
 
-    // Optimized multiplications that take advantage of sparsity in this matrix.
+    // Optimized multiplications that take advantage of sparsity in this vector.
     // =========================================================================
 
     @Override
@@ -340,10 +340,10 @@ public class CompressedByteVector extends SparseByteVector {
             byte value = function.evaluate(i, values[k]);
 
             if (aIsEqualToB(value, (byte)0)) {
-                values[k] = value;
+                remove(k);
             }
             else {
-                remove(k);
+                values[k] = value;
             }
         }
         else {

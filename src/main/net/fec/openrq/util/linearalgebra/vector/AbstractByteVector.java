@@ -520,6 +520,34 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
+    public int nonZeros() {
+
+        int nonZeros = 0;
+        for (int i = 0; i < length; i++) {
+            if (!aIsEqualToB(safeGet(i), (byte)0)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
+    public int nonZeros(int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, fromIndex);
+
+        int nonZeros = 0;
+        for (int i = fromIndex; i < toIndex; i++) {
+            if (!aIsEqualToB(safeGet(i), (byte)0)) {
+                nonZeros++;
+            }
+        }
+
+        return nonZeros;
+    }
+
+    @Override
     public void each(VectorProcedure procedure) {
 
         for (int i = 0; i < length; i++) {
@@ -528,15 +556,38 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
-    public byte max() {
+    public void each(VectorProcedure procedure, int fromIndex, int toIndex) {
 
-        return fold(ByteVectors.mkMaxAccumulator());
+        checkIndexRangeBounds(fromIndex, toIndex);
+        for (int i = fromIndex; i < toIndex; i++) {
+            procedure.apply(i, safeGet(i));
+        }
     }
 
     @Override
-    public byte min() {
+    public void update(VectorFunction function) {
 
-        return fold(ByteVectors.mkMinAccumulator());
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.set(function.evaluate(it.index(), it.get()));
+        }
+    }
+
+    @Override
+    public void update(int i, VectorFunction function) {
+
+        checkIndexBounds(i);
+        safeSet(i, function.evaluate(i, safeGet(i)));
+    }
+
+    @Override
+    public void update(VectorFunction function, int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+        for (int i = fromIndex; i < toIndex; i++) {
+            safeSet(i, function.evaluate(i, safeGet(i)));
+        }
     }
 
     @Override
@@ -569,27 +620,41 @@ public abstract class AbstractByteVector implements ByteVector {
     public ByteVector transform(int i, VectorFunction function, Factory factory) {
 
         checkIndexBounds(i);
-        ByteVector result = copy(factory);
-        result.set(i, function.evaluate(i, safeGet(i)));
+        ByteVector result = copy(factory); // since it is a copy, we can use update method
+        result.update(i, function);
 
         return result;
     }
 
     @Override
-    public void update(VectorFunction function) {
+    public ByteVector transform(VectorFunction function, int fromIndex, int toIndex) {
 
-        ByteVectorIterator it = iterator();
-        while (it.hasNext()) {
-            it.next();
-            it.set(function.evaluate(it.index(), it.get()));
-        }
+        return transform(function, fromIndex, toIndex, factory);
     }
 
     @Override
-    public void update(int i, VectorFunction function) {
+    public ByteVector transform(VectorFunction function, int fromIndex, int toIndex, Factory factory) {
 
-        checkIndexBounds(i);
-        safeSet(i, function.evaluate(i, safeGet(i)));
+        checkIndexRangeBounds(fromIndex, toIndex);
+        ByteVector result = blank(factory);
+        ByteVectorIterator it = iterator();
+
+        while (it.hasNext()) {
+            it.next();
+            final int currIndex = it.index();
+
+            final byte transformed;
+            if (fromIndex <= currIndex && currIndex < toIndex) {
+                transformed = function.evaluate(currIndex, it.get());
+            }
+            else {
+                transformed = it.get();
+            }
+
+            result.set(currIndex, transformed);
+        }
+
+        return result;
     }
 
     @Override
@@ -645,6 +710,18 @@ public abstract class AbstractByteVector implements ByteVector {
         ByteMatrix result = factory.createMatrix(length, 1);
         result.setColumn(0, this);
         return result;
+    }
+
+    @Override
+    public byte max() {
+
+        return fold(ByteVectors.mkMaxAccumulator());
+    }
+
+    @Override
+    public byte min() {
+
+        return fold(ByteVectors.mkMinAccumulator());
     }
 
     @Override
