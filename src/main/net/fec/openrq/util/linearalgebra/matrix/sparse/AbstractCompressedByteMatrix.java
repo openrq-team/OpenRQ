@@ -40,6 +40,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
@@ -91,13 +92,13 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         return !nonZeroAt(i, j);
     }
-    
+
     @Override
     public int nonZeros() {
 
         return cardinality();
     }
-    
+
     @Override
     public int nonZerosInRow(int i) {
 
@@ -177,7 +178,22 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
     public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
 
         checkRowBounds(i);
+
         for (int j = 0; j < columns; j++) {
+            final byte val = safeGet(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZeroInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        for (int j = fromColumn; j < toColumn; j++) {
             final byte val = safeGet(i, j);
             if (!aIsEqualToB(val, (byte)0)) {
                 procedure.apply(i, j, val);
@@ -189,12 +205,242 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
     public void eachNonZeroInColumn(int j, MatrixProcedure procedure) {
 
         checkColumnBounds(j);
+
         for (int i = 0; i < rows; i++) {
             final byte val = safeGet(i, j);
             if (!aIsEqualToB(val, (byte)0)) {
                 procedure.apply(i, j, val);
             }
         }
+    }
+
+    @Override
+    public void eachNonZeroInColumn(int j, MatrixProcedure procedure, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        for (int i = fromRow; i < toRow; i++) {
+            final byte val = safeGet(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZero(MatrixFunction function) {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                final byte val = safeGet(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    safeSet(i, j, function.evaluate(i, j, val));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInRow(int i, MatrixFunction function) {
+
+        checkRowBounds(i);
+
+        for (int j = 0; j < columns; j++) {
+            final byte val = safeGet(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        for (int j = fromColumn; j < toColumn; j++) {
+            final byte val = safeGet(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInColumn(int j, MatrixFunction function) {
+
+        checkColumnBounds(j);
+
+        for (int i = 0; i < rows; i++) {
+            final byte val = safeGet(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        for (int i = fromRow; i < toRow; i++) {
+            final byte val = safeGet(i, j);
+            if (!aIsEqualToB(val, (byte)0)) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public ByteMatrix transformNonZero(MatrixFunction function) {
+
+        return transformNonZero(function, factory);
+    }
+
+    @Override
+    public ByteMatrix transformNonZero(MatrixFunction function, Factory factory) {
+
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update methods
+
+        if (result instanceof SparseByteMatrix) {
+            ((SparseByteMatrix)result).updateNonZero(function);
+        }
+        else {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    final byte val = safeGet(i, j);
+                    if (!aIsEqualToB(val, (byte)0)) {
+                        result.set(i, j, function.evaluate(i, j, val));
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInRow(int i, MatrixFunction function) {
+
+        return transformNonZeroInRow(i, function, factory);
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInRow(int i, MatrixFunction function, Factory factory) {
+
+        checkRowBounds(i);
+
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update methods
+
+        if (result instanceof SparseByteMatrix) {
+            ((SparseByteMatrix)result).updateNonZeroInRow(i, function);
+        }
+        else {
+            for (int j = 0; j < columns; j++) {
+                final byte val = safeGet(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    result.set(i, j, function.evaluate(i, j, val));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
+
+        return transformNonZeroInRow(i, function, fromColumn, toColumn, factory);
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInRow(
+        int i,
+        MatrixFunction function,
+        int fromColumn,
+        int toColumn,
+        Factory factory)
+    {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update methods
+
+        if (result instanceof SparseByteMatrix) {
+            ((SparseByteMatrix)result).updateNonZeroInRow(i, function, fromColumn, toColumn);
+        }
+        else {
+            for (int j = fromColumn; j < toColumn; j++) {
+                final byte val = safeGet(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    result.set(i, j, function.evaluate(i, j, val));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function) {
+
+        return transformNonZeroInColumn(j, function, factory);
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function, Factory factory) {
+
+        checkColumnBounds(j);
+
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update methods
+
+        if (result instanceof SparseByteMatrix) {
+            ((SparseByteMatrix)result).updateNonZeroInColumn(j, function);
+        }
+        else {
+            for (int i = 0; i < rows; i++) {
+                final byte val = safeGet(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    result.set(i, j, function.evaluate(i, j, val));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow) {
+
+        return transformNonZeroInColumn(j, function, fromRow, toRow, factory);
+    }
+
+    @Override
+    public ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow, Factory factory) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update methods
+
+        if (result instanceof SparseByteMatrix) {
+            ((SparseByteMatrix)result).updateNonZeroInColumn(j, function);
+        }
+        else {
+            for (int i = fromRow; i < toRow; i++) {
+                final byte val = safeGet(i, j);
+                if (!aIsEqualToB(val, (byte)0)) {
+                    result.set(i, j, function.evaluate(i, j, val));
+                }
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -240,42 +486,5 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         }
 
         return result;
-    }
-
-    @Override
-    public void updateNonZero(MatrixFunction function) {
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                final byte val = safeGet(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
-                    safeSet(i, j, function.evaluate(i, j, val));
-                }
-            }
-        }
-    }
-
-    @Override
-    public void updateNonZeroInRow(int i, MatrixFunction function) {
-
-        checkRowBounds(i);
-        for (int j = 0; j < columns; j++) {
-            final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
-                safeSet(i, j, function.evaluate(i, j, val));
-            }
-        }
-    }
-
-    @Override
-    public void updateNonZeroInColumn(int j, MatrixFunction function) {
-
-        checkColumnBounds(j);
-        for (int i = 0; i < rows; i++) {
-            final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
-                safeSet(i, j, function.evaluate(i, j, val));
-            }
-        }
     }
 }

@@ -850,6 +850,20 @@ public interface ByteMatrix extends Externalizable {
     void eachInRow(int i, MatrixProcedure procedure);
 
     /**
+     * Applies given {@code procedure} to each element of a range of specified row of this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param procedure
+     *            the matrix procedure
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     */
+    void eachInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn);
+
+    /**
      * Applies given {@code procedure} to each element of specified column of this matrix.
      * 
      * @param j
@@ -860,54 +874,86 @@ public interface ByteMatrix extends Externalizable {
     void eachInColumn(int j, MatrixProcedure procedure);
 
     /**
-     * Searches for the maximum value of the elements of this matrix.
-     * 
-     * @return maximum value of this matrix
-     */
-    byte max();
-
-    /**
-     * Searches for the minimum value of the elements of this matrix.
-     * 
-     * @return minimum value of this matrix
-     */
-    byte min();
-
-    /**
-     * Searches for the maximum value of specified row in this matrix.
-     * 
-     * @param i
-     *            the row index
-     * @return maximum value of specified row in this matrix
-     */
-    byte maxInRow(int i);
-
-    /**
-     * Searches for the minimum value of specified row in this matrix.
-     * 
-     * @param i
-     *            the row index
-     * @return minimum value of specified row in this matrix
-     */
-    byte minInRow(int i);
-
-    /**
-     * Searches for the maximum value of specified column in this matrix.
+     * Applies given {@code procedure} to each element of a range of specified column of this matrix.
      * 
      * @param j
      *            the column index
-     * @return maximum value of specified column in this matrix
+     * @param procedure
+     *            the matrix procedure
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
      */
-    byte maxInColumn(int j);
+    void eachInColumn(int j, MatrixProcedure procedure, int fromRow, int toRow);
 
     /**
-     * Searches for the minimum value of specified column in this matrix.
+     * Updates all elements of this matrix by applying given {@code function}.
+     * 
+     * @param function
+     *            the matrix function
+     */
+    void update(MatrixFunction function);
+
+    /**
+     * Updates the specified element of this matrix by applying given {@code function}.
+     * 
+     * @param i
+     *            the row index
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     */
+    void update(int i, int j, MatrixFunction function);
+
+    /**
+     * Updates all elements of the specified row in this matrix by applying given {@code function}.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     */
+    void updateRow(int i, MatrixFunction function);
+
+    /**
+     * Updates a range of elements of the specified row in this matrix by applying given {@code function}.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     */
+    void updateRow(int i, MatrixFunction function, int fromColumn, int toColumn);
+
+    /**
+     * Updates all elements of the specified column in this matrix by applying given {@code function}.
      * 
      * @param j
      *            the column index
-     * @return minimum value of specified column in this matrix
+     * @param function
+     *            the matrix function
      */
-    byte minInColumn(int j);
+    void updateColumn(int j, MatrixFunction function);
+
+    /**
+     * Updates a range of elements of the specified column in this matrix by applying given {@code function}.
+     * 
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     */
+    void updateColumn(int j, MatrixFunction function, int fromRow, int toRow);
 
     /**
      * Builds a new matrix by applying given {@code function} to each element of this matrix.
@@ -984,6 +1030,40 @@ public interface ByteMatrix extends Externalizable {
     ByteMatrix transformRow(int i, MatrixFunction function, Factory factory);
 
     /**
+     * Builds a new matrix by applying given {@code function} to each element of a range of specified
+     * row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @return the transformed matrix
+     */
+    ByteMatrix transformRow(int i, MatrixFunction function, int fromColumn, int toColumn);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each element of a range of specified
+     * row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @param factory
+     *            the factory of result matrix
+     * @return the transformed matrix
+     */
+    ByteMatrix transformRow(int i, MatrixFunction function, int fromColumn, int toColumn, Factory factory);
+
+    /**
      * Builds a new matrix by applying given {@code function} to each element of specified
      * column in this matrix.
      * 
@@ -1010,75 +1090,38 @@ public interface ByteMatrix extends Externalizable {
     ByteMatrix transformColumn(int j, MatrixFunction function, Factory factory);
 
     /**
-     * Updates all elements of this matrix by applying given {@code function}.
-     * 
-     * @param function
-     *            the matrix function
-     */
-    void update(MatrixFunction function);
-
-    /**
-     * Updates the specified element of this matrix by applying given {@code function}.
-     * 
-     * @param i
-     *            the row index
-     * @param j
-     *            the column index
-     * @param function
-     *            the matrix function
-     */
-    void update(int i, int j, MatrixFunction function);
-
-    /**
-     * Updates all elements of the specified row in this matrix by applying given {@code function}.
-     * 
-     * @param i
-     *            the row index
-     * @param function
-     *            the matrix function
-     */
-    void updateRow(int i, MatrixFunction function);
-
-    /**
-     * Updates a range of elements of the specified row in this matrix by applying given {@code function}.
-     * 
-     * @param i
-     *            the row index
-     * @param fromColumn
-     *            The first column index (inclusive)
-     * @param toColumn
-     *            The last column index (exclusive)
-     * @param function
-     *            the matrix function
-     */
-    void updateRow(int i, int fromColumn, int toColumn, MatrixFunction function);
-
-    
-
-    /**
-     * Updates all elements of the specified column in this matrix by applying given {@code function}.
+     * Builds a new matrix by applying given {@code function} to each element of a range of specified
+     * column in this matrix.
      * 
      * @param j
      *            the column index
      * @param function
      *            the matrix function
-     */
-    void updateColumn(int j, MatrixFunction function);
-
-    /**
-     * Updates a range of elements of the specified column in this matrix by applying given {@code function}.
-     * 
-     * @param j
-     *            the column index
      * @param fromRow
      *            The first row index (inclusive)
      * @param toRow
      *            The last row index (exclusive)
+     * @return the transformed matrix
+     */
+    ByteMatrix transformColumn(int j, MatrixFunction function, int fromRow, int toRow);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each element of a range of specified
+     * column in this matrix.
+     * 
+     * @param j
+     *            the column index
      * @param function
      *            the matrix function
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     * @param factory
+     *            the factory of result matrix
+     * @return the transformed matrix
      */
-    void updateColumn(int j, int fromRow, int toRow, MatrixFunction function);
-
+    ByteMatrix transformColumn(int j, MatrixFunction function, int fromRow, int toRow, Factory factory);
 
     /**
      * Folds all elements of this matrix with given {@code accumulator}.
@@ -1196,4 +1239,54 @@ public interface ByteMatrix extends Externalizable {
      * @return the column vector of this matrix
      */
     ByteVector toColumnVector(Factory factory);
+
+    /**
+     * Searches for the maximum value of the elements of this matrix.
+     * 
+     * @return maximum value of this matrix
+     */
+    byte max();
+
+    /**
+     * Searches for the minimum value of the elements of this matrix.
+     * 
+     * @return minimum value of this matrix
+     */
+    byte min();
+
+    /**
+     * Searches for the maximum value of specified row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @return maximum value of specified row in this matrix
+     */
+    byte maxInRow(int i);
+
+    /**
+     * Searches for the minimum value of specified row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @return minimum value of specified row in this matrix
+     */
+    byte minInRow(int i);
+
+    /**
+     * Searches for the maximum value of specified column in this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @return maximum value of specified column in this matrix
+     */
+    byte maxInColumn(int j);
+
+    /**
+     * Searches for the minimum value of specified column in this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @return minimum value of specified column in this matrix
+     */
+    byte minInColumn(int j);
 }

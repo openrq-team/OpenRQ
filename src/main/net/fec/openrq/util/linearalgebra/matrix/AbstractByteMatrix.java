@@ -259,7 +259,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         checkRowBounds(i);
         checkRowBounds(j);
-        
+
         if (i != j) {
             ByteVector ii = getRow(i);
             ByteVector jj = getRow(j);
@@ -274,7 +274,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         checkColumnBounds(i);
         checkColumnBounds(j);
-        
+
         if (i != j) {
             ByteVector ii = getColumn(i);
             ByteVector jj = getColumn(j);
@@ -931,11 +931,79 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public void eachInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+        for (int j = fromColumn; j < toColumn; j++) {
+            procedure.apply(i, j, safeGet(i, j));
+        }
+    }
+
+    @Override
     public void eachInColumn(int j, MatrixProcedure procedure) {
 
         checkColumnBounds(j);
         for (int i = 0; i < rows; i++) {
             procedure.apply(i, j, safeGet(i, j));
+        }
+    }
+
+    @Override
+    public void eachInColumn(int j, MatrixProcedure procedure, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+        for (int i = fromRow; i < toRow; i++) {
+            procedure.apply(i, j, safeGet(i, j));
+        }
+    }
+
+    @Override
+    public void update(MatrixFunction function) {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                safeUpdate(i, j, function);
+            }
+        }
+    }
+
+    @Override
+    public void updateRow(int i, MatrixFunction function) {
+
+        checkRowBounds(i);
+        for (int j = 0; j < columns; j++) {
+            safeUpdate(i, j, function);
+        }
+    }
+
+    @Override
+    public void updateRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+        for (int j = fromColumn; j < toColumn; j++) {
+            safeUpdate(i, j, function);
+        }
+    }
+
+    @Override
+    public void updateColumn(int j, MatrixFunction function) {
+
+        checkColumnBounds(j);
+        for (int i = 0; i < rows; i++) {
+            safeUpdate(i, j, function);
+        }
+    }
+
+    @Override
+    public void updateColumn(int j, MatrixFunction function, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+        for (int i = fromRow; i < toRow; i++) {
+            safeUpdate(i, j, function);
         }
     }
 
@@ -969,8 +1037,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public ByteMatrix transform(int i, int j, MatrixFunction function, Factory factory) {
 
         checkBounds(i, j);
-        ByteMatrix result = copy(factory);
-        result.set(i, j, function.evaluate(i, j, result.get(i, j)));
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update method
+        result.update(i, j, function);
 
         return result;
     }
@@ -985,12 +1053,25 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public ByteMatrix transformRow(int i, MatrixFunction function, Factory factory) {
 
         checkRowBounds(i);
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update method
+        result.updateRow(i, function);
 
-        ByteMatrix result = copy(factory);
+        return result;
+    }
 
-        for (int j = 0; j < columns; j++) {
-            result.set(i, j, function.evaluate(i, j, result.get(i, j)));
-        }
+    @Override
+    public ByteMatrix transformRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
+
+        return transformRow(i, function, fromColumn, toColumn, factory);
+    }
+
+    @Override
+    public ByteMatrix transformRow(int i, MatrixFunction function, int fromColumn, int toColumn, Factory factory) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update method
+        result.updateRow(i, function, fromColumn, toColumn);
 
         return result;
     }
@@ -1005,62 +1086,27 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public ByteMatrix transformColumn(int j, MatrixFunction function, Factory factory) {
 
         checkColumnBounds(j);
-
-        ByteMatrix result = copy(factory);
-
-        for (int i = 0; i < rows; i++) {
-            result.set(i, j, function.evaluate(i, j, result.get(i, j)));
-        }
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update method
+        result.updateColumn(j, function);
 
         return result;
     }
 
     @Override
-    public void update(MatrixFunction function) {
+    public ByteMatrix transformColumn(int j, MatrixFunction function, int fromRow, int toRow) {
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                safeUpdate(i, j, function);
-            }
-        }
+        return transformColumn(j, function, fromRow, toRow, factory);
     }
 
     @Override
-    public void updateRow(int i, MatrixFunction function) {
-
-        checkRowBounds(i);
-        for (int j = 0; j < columns; j++) {
-            safeUpdate(i, j, function);
-        }
-    }
-
-    @Override
-    public void updateRow(int i, int fromColumn, int toColumn, MatrixFunction function) {
-
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-        for (int j = fromColumn; j < toColumn; j++) {
-            safeUpdate(i, j, function);
-        }
-    }
-
-    @Override
-    public void updateColumn(int j, MatrixFunction function) {
-
-        checkColumnBounds(j);
-        for (int i = 0; i < rows; i++) {
-            safeUpdate(i, j, function);
-        }
-    }
-
-    @Override
-    public void updateColumn(int j, int fromRow, int toRow, MatrixFunction function) {
+    public ByteMatrix transformColumn(int j, MatrixFunction function, int fromRow, int toRow, Factory factory) {
 
         checkColumnBounds(j);
         checkRowRangeBounds(fromRow, toRow);
-        for (int i = fromRow; i < toRow; i++) {
-            safeUpdate(i, j, function);
-        }
+        ByteMatrix result = copy(factory); // since it is a copy, we can use update method
+        result.updateColumn(j, function, fromRow, toRow);
+
+        return result;
     }
 
     @Override

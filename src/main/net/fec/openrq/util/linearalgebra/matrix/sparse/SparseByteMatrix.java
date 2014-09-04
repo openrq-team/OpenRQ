@@ -36,6 +36,7 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
+import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
@@ -59,23 +60,25 @@ public interface SparseByteMatrix extends ByteMatrix {
      * @return the density of this matrix
      */
     double density();
-    
+
     /**
      * Whether or not the specified element is zero.
-     *
-     * @param i element's row index
-     * @param j element's column index
-     *
+     * 
+     * @param i
+     *            element's row index
+     * @param j
+     *            element's column index
      * @return {@code true} if specified element is zero, {@code false} otherwise
      */
     boolean isZeroAt(int i, int j);
 
     /**
      * Whether or not the specified element is not zero.
-     *
-     * @param i element's row index
-     * @param j element's column index
-     *
+     * 
+     * @param i
+     *            element's row index
+     * @param j
+     *            element's column index
      * @return {@code true} if specified element is not zero, {@code false} otherwise
      */
     boolean nonZeroAt(int i, int j);
@@ -99,6 +102,20 @@ public interface SparseByteMatrix extends ByteMatrix {
     void eachNonZeroInRow(int i, MatrixProcedure procedure);
 
     /**
+     * Applies given {@code procedure} to each non-zero element of a range of specified row of this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param procedure
+     *            the matrix procedure
+     * @param fromColumn
+     *            The starting column (inclusive)
+     * @param toColumn
+     *            The ending column (exclusive)
+     */
+    void eachNonZeroInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn);
+
+    /**
      * Applies given {@code procedure} to each non-zero element of specified column of this matrix.
      * 
      * @param j
@@ -107,53 +124,20 @@ public interface SparseByteMatrix extends ByteMatrix {
      *            the matrix procedure
      */
     void eachNonZeroInColumn(int j, MatrixProcedure procedure);
-    
-    /**
-     * Folds non-zero elements of this matrix with given {@code accumulator}.
-     *
-     * @param accumulator the matrix accumulator
-     *
-     * @return the accumulated value
-     */
-    byte foldNonZero(MatrixAccumulator accumulator);
 
     /**
-     * Folds non-zero elements of specified row in this matrix with given {@code accumulator}.
-     *
-     * @param i the row index
-     * @param accumulator the matrix accumulator
-     *
-     * @return the accumulated value
+     * Applies given {@code procedure} to each non-zero element of a range of specified column of this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @param procedure
+     *            the matrix procedure
+     * @param fromRow
+     *            The starting row (inclusive)
+     * @param toRow
+     *            The ending row (exclusive)
      */
-    byte foldNonZeroInRow(int i, MatrixAccumulator accumulator);
-
-    /**
-     * Folds non-zero elements of specified column in this matrix with given {@code accumulator}.
-     *
-     * @param j the column index
-     * @param accumulator the matrix accumulator
-     *
-     * @return the accumulated value
-     */
-    byte foldNonZeroInColumn(int j, MatrixAccumulator accumulator);
-
-    /**
-     * Folds non-zero elements (in a column-by-column manner) of this matrix with given {@code accumulator}.
-     *
-     * @param accumulator the matrix accumulator
-     *
-     * @return the accumulated vector
-     */
-    ByteVector foldNonZeroInColumns(MatrixAccumulator accumulator);
-
-    /**
-     * Folds non-zero elements (in a row-by-row manner) of this matrix with given {@code accumulator}.
-     *
-     * @param accumulator the matrix accumulator
-     *
-     * @return the accumulated vector
-     */
-    ByteVector foldNonZeroInRows(MatrixAccumulator accumulator);
+    void eachNonZeroInColumn(int j, MatrixProcedure procedure, int fromRow, int toRow);
 
     /**
      * Updates all non zero elements of this matrix by applying given {@code function}.
@@ -174,6 +158,20 @@ public interface SparseByteMatrix extends ByteMatrix {
     void updateNonZeroInRow(int i, MatrixFunction function);
 
     /**
+     * Updates all non zero elements of a range of the specified row in this matrix by applying given {@code function}.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @param fromColumn
+     *            The starting column (inclusive)
+     * @param toColumn
+     *            The ending column (exclusive)
+     */
+    void updateNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn);
+
+    /**
      * Updates all non zero elements of the specified column in this matrix by applying given {@code function}.
      * 
      * @param j
@@ -182,4 +180,208 @@ public interface SparseByteMatrix extends ByteMatrix {
      *            the matrix function
      */
     void updateNonZeroInColumn(int j, MatrixFunction function);
+
+    /**
+     * Updates all non zero elements of a range of the specified column in this matrix by applying given
+     * {@code function}.
+     * 
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     * @param fromRow
+     *            The starting row (inclusive)
+     * @param toRow
+     *            The ending row (exclusive)
+     */
+    void updateNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of this matrix.
+     * 
+     * @param function
+     *            the matrix function
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZero(MatrixFunction function);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of this matrix.
+     * 
+     * @param function
+     *            the matrix function
+     * @param factory
+     *            the factory of result matrix
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZero(MatrixFunction function, Factory factory);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of specified
+     * row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInRow(int i, MatrixFunction function);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of specified
+     * row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @param factory
+     *            the factory of result matrix
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInRow(int i, MatrixFunction function, Factory factory);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of a range of specified
+     * row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of a range of specified
+     * row in this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param function
+     *            the matrix function
+     * @param fromColumn
+     *            The first column index (inclusive)
+     * @param toColumn
+     *            The last column index (exclusive)
+     * @param factory
+     *            the factory of result matrix
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn, Factory factory);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of specified
+     * column in this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of specified
+     * column in this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     * @param factory
+     *            the factory of result matrix
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function, Factory factory);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of a range of specified
+     * column in this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow);
+
+    /**
+     * Builds a new matrix by applying given {@code function} to each non zero element of a range of specified
+     * column in this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @param function
+     *            the matrix function
+     * @param fromRow
+     *            The first row index (inclusive)
+     * @param toRow
+     *            The last row index (exclusive)
+     * @param factory
+     *            the factory of result matrix
+     * @return the transformed matrix
+     */
+    ByteMatrix transformNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow, Factory factory);
+
+    /**
+     * Folds non-zero elements of this matrix with given {@code accumulator}.
+     * 
+     * @param accumulator
+     *            the matrix accumulator
+     * @return the accumulated value
+     */
+    byte foldNonZero(MatrixAccumulator accumulator);
+
+    /**
+     * Folds non-zero elements of specified row in this matrix with given {@code accumulator}.
+     * 
+     * @param i
+     *            the row index
+     * @param accumulator
+     *            the matrix accumulator
+     * @return the accumulated value
+     */
+    byte foldNonZeroInRow(int i, MatrixAccumulator accumulator);
+
+    /**
+     * Folds non-zero elements of specified column in this matrix with given {@code accumulator}.
+     * 
+     * @param j
+     *            the column index
+     * @param accumulator
+     *            the matrix accumulator
+     * @return the accumulated value
+     */
+    byte foldNonZeroInColumn(int j, MatrixAccumulator accumulator);
+
+    /**
+     * Folds non-zero elements (in a column-by-column manner) of this matrix with given {@code accumulator}.
+     * 
+     * @param accumulator
+     *            the matrix accumulator
+     * @return the accumulated vector
+     */
+    ByteVector foldNonZeroInColumns(MatrixAccumulator accumulator);
+
+    /**
+     * Folds non-zero elements (in a row-by-row manner) of this matrix with given {@code accumulator}.
+     * 
+     * @param accumulator
+     *            the matrix accumulator
+     * @return the accumulated vector
+     */
+    ByteVector foldNonZeroInRows(MatrixAccumulator accumulator);
 }
