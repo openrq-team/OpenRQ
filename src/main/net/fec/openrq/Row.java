@@ -47,12 +47,4 @@ final class Row {
         nodes = e;
         isHDPC = hdpc;
     }
-
-    @Override
-    public boolean equals(Object o) {
-
-        if (!o.getClass().getName().equals(this.getClass().getName())) return false;
-        else if (((Row)o).position == this.position) return true;
-        else return false;
-    }
 }

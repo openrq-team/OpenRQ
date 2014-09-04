@@ -869,7 +869,7 @@ final class LinearSystem {
                 rows.put(rLinha, other);
                 other.position = rLinha;
                 chosenRow.position = i;
-                
+
                 TimePrinter.markTimestamp(); // DEBUG
                 TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap rows)",
                     TimeUnit.MILLISECONDS); // DEBUG
@@ -880,7 +880,7 @@ final class LinearSystem {
              * in the chosen row appears in the first column of V and so that the remaining r-1 nonzeros
              * appear in the last columns of V."
              */
-            
+
             TimePrinter.beginTimer(); // DEBUG
 
             // stack of non-zeros in the chosen row
@@ -941,7 +941,7 @@ final class LinearSystem {
                 c[column] = auxIndex;
 
             }
-            
+
             TimePrinter.markTimestamp(); // DEBUG
             TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap columns)",
                 TimeUnit.MILLISECONDS); // DEBUG
@@ -954,7 +954,7 @@ final class LinearSystem {
 
             // "the chosen row has entry alpha in the first column of V"
             byte alpha = A.get(i, i);
-            
+
             TimePrinter.beginTimer(); // DEBUG
 
             // let's look at all rows below the chosen one
@@ -1002,7 +1002,7 @@ final class LinearSystem {
                     // "xorSymbolInPlace(D[" + d[row] + "],p);");
                 }
             }
-            
+
             TimePrinter.markTimestamp(); // DEBUG
             TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; row add/mult)",
                 TimeUnit.MILLISECONDS); // DEBUG
@@ -1014,7 +1014,7 @@ final class LinearSystem {
             u += r - 1;
 
             TimePrinter.beginTimer(); // DEBUG
-            
+
             // update nonZeros
             for (Row row : rows.values())
             {
@@ -1047,7 +1047,7 @@ final class LinearSystem {
 
                 row.nonZeros = nonZeros;
             }
-            
+
             TimePrinter.markTimestamp(); // DEBUG
             TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; update non zeros)",
                 TimeUnit.MILLISECONDS); // DEBUG
