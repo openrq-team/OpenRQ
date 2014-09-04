@@ -84,19 +84,22 @@ public class BasicByteVector extends DenseByteVector {
     }
 
     @Override
-    public byte get(int i) {
+    public byte safeGet(int i) {
 
         return self[i];
     }
 
     @Override
-    public void set(int i, byte value) {
+    public void safeSet(int i, byte value) {
 
         self[i] = value;
     }
 
     @Override
     public void swap(int i, int j) {
+
+        checkIndexBounds(i);
+        checkIndexBounds(j);
 
         if (i != j) {
             byte d = self[i];

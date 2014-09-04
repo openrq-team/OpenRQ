@@ -79,6 +79,36 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public final byte get(int i, int j) {
+
+        checkBounds(i, j);
+        return safeGet(i, j);
+    }
+
+    protected abstract byte safeGet(int i, int j);
+
+    @Override
+    public final void set(int i, int j, byte value) {
+
+        checkBounds(i, j);
+        safeSet(i, j, value);
+    }
+
+    protected abstract void safeSet(int i, int j, byte value);
+
+    @Override
+    public final void update(int i, int j, MatrixFunction function) {
+
+        checkBounds(i, j);
+        safeUpdate(i, j, function);
+    }
+
+    protected void safeUpdate(int i, int j, MatrixFunction function) {
+
+        safeSet(i, j, function.evaluate(i, j, safeGet(i, j)));
+    }
+
+    @Override
     public void assign(byte value) {
 
         update(ByteMatrices.asConstFunction(value));
@@ -117,12 +147,13 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getRow(int i, Factory factory) {
 
+        checkRowBounds(i);
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(columns);
 
         for (int j = 0; j < columns; j++) {
-            result.set(j, get(i, j));
+            result.set(j, safeGet(i, j));
         }
 
         return result;
@@ -137,15 +168,14 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getRow(int i, int fromColumn, int toColumn, Factory factory) {
 
-        if (fromColumn < 0) throw new IndexOutOfBoundsException("negative fromColumn");
-        if (toColumn < 0) throw new IndexOutOfBoundsException("negative toColumn");
-        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(toColumn - fromColumn);
 
         for (int jg = fromColumn, js = 0; jg < toColumn; jg++, js++) {
-            result.set(js, get(i, jg));
+            result.set(js, safeGet(i, jg));
         }
 
         return result;
@@ -160,12 +190,13 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getColumn(int j, Factory factory) {
 
+        checkColumnBounds(j);
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(rows);
 
         for (int i = 0; i < rows; i++) {
-            result.set(i, get(i, j));
+            result.set(i, safeGet(i, j));
         }
 
         return result;
@@ -180,15 +211,14 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getColumn(int j, int fromRow, int toRow, Factory factory) {
 
-        if (fromRow < 0) throw new IndexOutOfBoundsException("negative fromRow");
-        if (toRow < 0) throw new IndexOutOfBoundsException("negative toRow");
-        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(toRow - fromRow);
 
         for (int ig = fromRow, is = 0; ig < toRow; ig++, is++) {
-            result.set(is, get(ig, j));
+            result.set(is, safeGet(ig, j));
         }
 
         return result;
@@ -197,6 +227,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void setRow(int i, ByteVector row) {
 
+        checkRowBounds(i);
         ensureArgumentIsNotNull(row, "vector");
 
         if (columns != row.length()) {
@@ -204,13 +235,14 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         }
 
         for (int j = 0; j < row.length(); j++) {
-            set(i, j, row.get(j));
+            safeSet(i, j, row.get(j));
         }
     }
 
     @Override
     public void setColumn(int j, ByteVector column) {
 
+        checkColumnBounds(j);
         ensureArgumentIsNotNull(column, "vector");
 
         if (rows != column.length()) {
@@ -218,13 +250,16 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         }
 
         for (int i = 0; i < column.length(); i++) {
-            set(i, j, column.get(i));
+            safeSet(i, j, column.get(i));
         }
     }
 
     @Override
     public void swapRows(int i, int j) {
 
+        checkRowBounds(i);
+        checkRowBounds(j);
+        
         if (i != j) {
             ByteVector ii = getRow(i);
             ByteVector jj = getRow(j);
@@ -237,6 +272,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void swapColumns(int i, int j) {
 
+        checkColumnBounds(i);
+        checkColumnBounds(j);
+        
         if (i != j) {
             ByteVector ii = getColumn(i);
             ByteVector jj = getColumn(j);
@@ -261,7 +299,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(j, i, get(i, j));
+                result.set(j, i, safeGet(i, j));
             }
         }
 
@@ -283,7 +321,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(j, rows - 1 - i, get(i, j));
+                result.set(j, rows - 1 - i, safeGet(i, j));
             }
         }
 
@@ -333,7 +371,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, aTimesB(get(i, j), value));
+                result.set(i, j, aTimesB(safeGet(i, j), value));
             }
         }
 
@@ -363,7 +401,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
             byte acc = 0;
 
             for (int j = 0; j < columns; j++) {
-                final byte prod = aTimesB(get(i, j), vector.get(j));
+                final byte prod = aTimesB(safeGet(i, j), vector.get(j));
                 acc = aPlusB(acc, prod);
             }
 
@@ -401,7 +439,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
                 byte acc = 0;
 
                 for (int k = 0; k < columns; k++) {
-                    final byte prod = aTimesB(get(i, k), column.get(k));
+                    final byte prod = aTimesB(safeGet(i, k), column.get(k));
                     acc = aPlusB(acc, prod);
                 }
 
@@ -427,7 +465,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, aMinusB(get(i, j), value));
+                result.set(i, j, aMinusB(safeGet(i, j), value));
             }
         }
 
@@ -455,7 +493,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, aMinusB(get(i, j), matrix.get(i, j)));
+                result.set(i, j, aMinusB(safeGet(i, j), matrix.get(i, j)));
             }
         }
 
@@ -477,7 +515,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, aPlusB(get(i, j), value));
+                result.set(i, j, aPlusB(safeGet(i, j), value));
             }
         }
 
@@ -505,7 +543,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, aPlusB(get(i, j), matrix.get(i, j)));
+                result.set(i, j, aPlusB(safeGet(i, j), matrix.get(i, j)));
             }
         }
 
@@ -527,7 +565,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, aDividedByB(get(i, j), value));
+                result.set(i, j, aDividedByB(safeGet(i, j), value));
             }
         }
 
@@ -541,7 +579,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         final int fence = Math.min(rows, columns);
         for (int i = 0; i < fence; i++) {
-            result = aPlusB(result, get(i, i));
+            result = aPlusB(result, safeGet(i, i));
         }
 
         return result;
@@ -554,7 +592,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         final int fence = Math.min(rows, columns);
         for (int i = 0; i < fence; i++) {
-            result = aTimesB(result, get(i, i));
+            result = aTimesB(result, safeGet(i, i));
         }
 
         return result;
@@ -587,7 +625,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, aTimesB(matrix.get(i, j), get(i, j)));
+                result.set(i, j, aTimesB(matrix.get(i, j), safeGet(i, j)));
             }
         }
 
@@ -667,7 +705,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < Math.min(rows, this.rows); i++) {
             for (int j = 0; j < Math.min(columns, this.columns); j++) {
-                result.set(i, j, get(i, j));
+                result.set(i, j, safeGet(i, j));
             }
         }
 
@@ -705,27 +743,34 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
-    public ByteMatrix slice(int fromRow, int fromColumn, int untilRow,
-        int untilColumn) {
+    public ByteMatrix slice(
+        int fromRow,
+        int fromColumn,
+        int untilRow,
+        int untilColumn)
+    {
 
         return slice(fromRow, fromColumn, untilRow, untilColumn, factory);
     }
 
     @Override
-    public ByteMatrix slice(int fromRow, int fromColumn, int untilRow,
-        int untilColumn, Factory factory) {
+    public ByteMatrix slice(
+        int fromRow,
+        int fromColumn,
+        int untilRow,
+        int untilColumn,
+        Factory factory)
+    {
 
+        checkRowRangeBounds(fromRow, untilRow);
+        checkColumnRangeBounds(fromColumn, untilColumn);
         ensureFactoryIsNotNull(factory);
-
-        if (untilRow - fromRow < 0 || untilColumn - fromColumn < 0) {
-            fail("Wrong slice range: [" + fromRow + ".." + untilRow + "][" + fromColumn + ".." + untilColumn + "].");
-        }
 
         ByteMatrix result = factory.createMatrix(untilRow - fromRow, untilColumn - fromColumn);
 
         for (int i = fromRow; i < untilRow; i++) {
             for (int j = fromColumn; j < untilColumn; j++) {
-                result.set(i - fromRow, j - fromColumn, get(i, j));
+                result.set(i - fromRow, j - fromColumn, safeGet(i, j));
             }
         }
 
@@ -776,7 +821,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < newRows; i++) {
             for (int j = 0; j < newCols; j++) {
-                result.set(i, j, get(rowIndices[i], columnIndices[j]));
+                result.set(i, j, get(rowIndices[i], columnIndices[j])); // use normal get for row/column bounds check
             }
         }
 
@@ -795,7 +840,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         int nonZeros = 0;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                if (!aIsEqualToB(get(i, j), (byte)0)) {
+                if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
                     nonZeros++;
                 }
             }
@@ -807,9 +852,11 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public int nonZerosInRow(int i) {
 
+        checkRowBounds(i);
+
         int nonZeros = 0;
         for (int j = 0; j < columns; j++) {
-            if (!aIsEqualToB(get(i, j), (byte)0)) {
+            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
                 nonZeros++;
             }
         }
@@ -820,13 +867,12 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public int nonZerosInRow(int i, int fromColumn, int toColumn) {
 
-        if (fromColumn < 0) throw new IndexOutOfBoundsException("negative fromColumn");
-        if (toColumn < 0) throw new IndexOutOfBoundsException("negative toColumn");
-        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
 
         int nonZeros = 0;
         for (int j = fromColumn; j < toColumn; j++) {
-            if (!aIsEqualToB(get(i, j), (byte)0)) {
+            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
                 nonZeros++;
             }
         }
@@ -837,9 +883,11 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public int nonZerosInColumn(int j) {
 
+        checkColumnBounds(j);
+
         int nonZeros = 0;
         for (int i = 0; i < rows; i++) {
-            if (!aIsEqualToB(get(i, j), (byte)0)) {
+            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
                 nonZeros++;
             }
         }
@@ -850,13 +898,12 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public int nonZerosInColumn(int j, int fromRow, int toRow) {
 
-        if (fromRow < 0) throw new IndexOutOfBoundsException("negative fromRow");
-        if (toRow < 0) throw new IndexOutOfBoundsException("negative toRow");
-        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
 
         int nonZeros = 0;
         for (int i = fromRow; i < toRow; i++) {
-            if (!aIsEqualToB(get(i, j), (byte)0)) {
+            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
                 nonZeros++;
             }
         }
@@ -869,7 +916,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                procedure.apply(i, j, get(i, j));
+                procedure.apply(i, j, safeGet(i, j));
             }
         }
     }
@@ -877,16 +924,18 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void eachInRow(int i, MatrixProcedure procedure) {
 
+        checkRowBounds(i);
         for (int j = 0; j < columns; j++) {
-            procedure.apply(i, j, get(i, j));
+            procedure.apply(i, j, safeGet(i, j));
         }
     }
 
     @Override
     public void eachInColumn(int j, MatrixProcedure procedure) {
 
+        checkColumnBounds(j);
         for (int i = 0; i < rows; i++) {
-            procedure.apply(i, j, get(i, j));
+            procedure.apply(i, j, safeGet(i, j));
         }
     }
 
@@ -939,7 +988,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                result.set(i, j, function.evaluate(i, j, get(i, j)));
+                result.set(i, j, function.evaluate(i, j, safeGet(i, j)));
             }
         }
 
@@ -955,6 +1004,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteMatrix transform(int i, int j, MatrixFunction function, Factory factory) {
 
+        checkBounds(i, j);
         ByteMatrix result = copy(factory);
         result.set(i, j, function.evaluate(i, j, result.get(i, j)));
 
@@ -969,6 +1019,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
     @Override
     public ByteMatrix transformRow(int i, MatrixFunction function, Factory factory) {
+
+        checkRowBounds(i);
 
         ByteMatrix result = copy(factory);
 
@@ -988,6 +1040,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteMatrix transformColumn(int j, MatrixFunction function, Factory factory) {
 
+        checkColumnBounds(j);
+
         ByteMatrix result = copy(factory);
 
         for (int i = 0; i < rows; i++) {
@@ -1002,54 +1056,46 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                update(i, j, function);
+                safeUpdate(i, j, function);
             }
         }
     }
 
     @Override
-    public void update(int i, int j, MatrixFunction function) {
-
-        set(i, j, function.evaluate(i, j, get(i, j)));
-    }
-
-    @Override
     public void updateRow(int i, MatrixFunction function) {
 
+        checkRowBounds(i);
         for (int j = 0; j < columns; j++) {
-            update(i, j, function);
+            safeUpdate(i, j, function);
         }
     }
 
     @Override
     public void updateRow(int i, int fromColumn, int toColumn, MatrixFunction function) {
 
-        if (fromColumn < 0) throw new IndexOutOfBoundsException("negative fromColumn");
-        if (toColumn < 0) throw new IndexOutOfBoundsException("negative toColumn");
-        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
-
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
         for (int j = fromColumn; j < toColumn; j++) {
-            update(i, j, function);
+            safeUpdate(i, j, function);
         }
     }
 
     @Override
     public void updateColumn(int j, MatrixFunction function) {
 
+        checkColumnBounds(j);
         for (int i = 0; i < rows; i++) {
-            update(i, j, function);
+            safeUpdate(i, j, function);
         }
     }
 
     @Override
     public void updateColumn(int j, int fromRow, int toRow, MatrixFunction function) {
 
-        if (fromRow < 0) throw new IndexOutOfBoundsException("negative fromRow");
-        if (toRow < 0) throw new IndexOutOfBoundsException("negative toRow");
-        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
-
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
         for (int i = fromRow; i < toRow; i++) {
-            update(i, j, function);
+            safeUpdate(i, j, function);
         }
     }
 
@@ -1058,7 +1104,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                accumulator.update(i, j, get(i, j));
+                accumulator.update(i, j, safeGet(i, j));
             }
         }
 
@@ -1068,8 +1114,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public byte foldRow(int i, MatrixAccumulator accumulator) {
 
+        checkRowBounds(i);
         for (int j = 0; j < columns; j++) {
-            accumulator.update(i, j, get(i, j));
+            accumulator.update(i, j, safeGet(i, j));
         }
 
         return accumulator.accumulate();
@@ -1090,8 +1137,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public byte foldColumn(int j, MatrixAccumulator accumulator) {
 
+        checkColumnBounds(j);
         for (int i = 0; i < rows; i++) {
-            accumulator.update(i, j, get(i, j));
+            accumulator.update(i, j, safeGet(i, j));
         }
 
         return accumulator.accumulate();
@@ -1116,7 +1164,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; result && i < rows; i++) {
             for (int j = 0; result && j < columns; j++) {
-                result = predicate.test(i, j, get(i, j));
+                result = predicate.test(i, j, safeGet(i, j));
             }
         }
 
@@ -1172,7 +1220,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                long value = get(i, j);
+                long value = safeGet(i, j);
                 result = 37 * result + (int)(value ^ (value >>> 32));
             }
         }
@@ -1202,7 +1250,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; result && i < rows; i++) {
             for (int j = 0; result && j < columns; j++) {
-                result = aIsEqualToB(get(i, j), matrix.get(i, j));
+                result = aIsEqualToB(safeGet(i, j), matrix.get(i, j));
             }
         }
 
@@ -1242,5 +1290,35 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     protected void fail(String message) {
 
         throw new IllegalArgumentException(message);
+    }
+
+    protected void checkBounds(int row, int column) {
+
+        checkRowBounds(row);
+        checkColumnBounds(column);
+    }
+
+    protected void checkRowBounds(int row) {
+
+        if (row < 0 || row >= rows()) throw new IndexOutOfBoundsException("row index is out of bounds");
+    }
+
+    protected void checkRowRangeBounds(int fromRow, int toRow) {
+
+        if (fromRow < 0) throw new IndexOutOfBoundsException("fromRow < 0");
+        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
+        if (rows() < toRow) throw new IndexOutOfBoundsException("rows() < toRow");
+    }
+
+    protected void checkColumnBounds(int column) {
+
+        if (column < 0 || column >= columns()) throw new IndexOutOfBoundsException("column index is out of bounds");
+    }
+
+    protected void checkColumnRangeBounds(int fromColumn, int toColumn) {
+
+        if (fromColumn < 0) throw new IndexOutOfBoundsException("fromColumn < 0");
+        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
+        if (columns() < toColumn) throw new IndexOutOfBoundsException("columns() < toColumn");
     }
 }

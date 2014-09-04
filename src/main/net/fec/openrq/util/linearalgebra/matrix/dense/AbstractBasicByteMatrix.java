@@ -43,8 +43,7 @@ import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 
 
-public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix
-    implements DenseByteMatrix {
+public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix implements DenseByteMatrix {
 
     private static final int BLOCKSIZE = 64;
 
@@ -77,7 +76,7 @@ public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix
                     for (int u = 0; u < BLOCKSIZE; u++) {
                         for (int w = 0; w < BLOCKSIZE; w++) {
                             for (int v = 0; v < BLOCKSIZE; v++) {
-                                final byte prod = aTimesB(get(i + u, k + w), matrix.get(k + w, j + v));
+                                final byte prod = aTimesB(safeGet(i + u, k + w), matrix.get(k + w, j + v));
                                 result.set(i + u, j + v, aPlusB(result.get(i + u, j + v), prod));
                             }
                         }

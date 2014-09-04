@@ -127,7 +127,7 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     @Override
-    public byte get(int i) {
+    public byte safeGet(int i) {
 
         int k = searchForIndex(i);
 
@@ -139,7 +139,7 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     @Override
-    public void set(int i, byte value) {
+    public void safeSet(int i, byte value) {
 
         int k = searchForIndex(i);
 
@@ -216,6 +216,9 @@ public class CompressedByteVector extends SparseByteVector {
 
     @Override
     public void swap(int i, int j) {
+
+        checkIndexBounds(i);
+        checkIndexBounds(j);
 
         if (i == j) {
             return;
@@ -328,6 +331,8 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public void update(int i, VectorFunction function) {
 
+        checkIndexBounds(i);
+
         int k = searchForIndex(i);
 
         if (k < cardinality && indices[k] == i) {
@@ -378,6 +383,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public boolean nonZeroAt(int i) {
 
+        checkIndexBounds(i);
         int k = searchForIndex(i);
         return k < cardinality && indices[k] == i;
     }

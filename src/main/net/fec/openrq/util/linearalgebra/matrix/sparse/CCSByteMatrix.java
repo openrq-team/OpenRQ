@@ -156,15 +156,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public byte get(int i, int j) {
-
-        if (i < 0 || i >= rows) {
-            throw new IndexOutOfBoundsException("illegal row index");
-        }
-
-        if (j < 0 || j >= columns) {
-            throw new IndexOutOfBoundsException("illegal column index");
-        }
+    public byte safeGet(int i, int j) {
 
         int k = searchForRowIndex(i, columnPointers[j], columnPointers[j + 1]);
 
@@ -176,15 +168,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void set(int i, int j, byte value) {
-
-        if (i < 0 || i >= rows) {
-            throw new IndexOutOfBoundsException("illegal row index");
-        }
-
-        if (j < 0 || j >= columns) {
-            throw new IndexOutOfBoundsException("illegal column index");
-        }
+    public void safeSet(int i, int j, byte value) {
 
         int k = searchForRowIndex(i, columnPointers[j], columnPointers[j + 1]);
 
@@ -204,6 +188,8 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteVector getColumn(int j) {
 
+        checkColumnBounds(j);
+
         int columnCardinality = columnPointers[j + 1] - columnPointers[j];
 
         byte columnValues[] = new byte[columnCardinality];
@@ -218,6 +204,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteVector getColumn(int j, Factory factory) {
 
+        checkColumnBounds(j);
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(rows);
@@ -232,6 +219,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteVector getRow(int i, Factory factory) {
 
+        checkRowBounds(i);
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(columns);
@@ -343,11 +331,15 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public int nonZerosInColumn(int j) {
 
+        checkColumnBounds(j);
         return columnPointers[j + 1] - columnPointers[j];
     }
 
     @Override
     public int nonZerosInColumn(int j, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
 
         int nonZeros = 0;
         for (int i = columnPointers[j]; i < columnPointers[j + 1]; i++) {
@@ -398,6 +390,8 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public void eachInColumn(int j, MatrixProcedure procedure) {
 
+        checkColumnBounds(j);
+
         int k = columnPointers[j];
         int valuesSoFar = columnPointers[j + 1];
         for (int i = 0; i < columns; i++) {
@@ -413,13 +407,14 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public void eachNonZeroInColumn(int j, MatrixProcedure procedure) {
 
+        checkColumnBounds(j);
         for (int i = columnPointers[j]; i < columnPointers[j + 1]; i++) {
             procedure.apply(rowIndices[i], j, values[i]);
         }
     }
 
     @Override
-    public void update(int i, int j, MatrixFunction function) {
+    public void safeUpdate(int i, int j, MatrixFunction function) {
 
         int k = searchForRowIndex(i, columnPointers[j], columnPointers[j + 1]);
 
@@ -459,6 +454,8 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
     @Override
     public void updateNonZeroInColumn(int j, MatrixFunction function) {
+
+        checkColumnBounds(j);
 
         for (int i = columnPointers[j]; i < columnPointers[j + 1]; i++) {
 
@@ -515,6 +512,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public boolean nonZeroAt(int i, int j) {
 
+        checkBounds(i, j);
         final int k = searchForRowIndex(i, columnPointers[j], columnPointers[j + 1]);
         return k < columnPointers[j + 1] && rowIndices[k] == i;
     }
@@ -664,6 +662,8 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public byte maxInColumn(int j) {
 
+        checkColumnBounds(j);
+
         byte max = minByte();
 
         for (int k = columnPointers[j]; k < columnPointers[j + 1]; k++) {
@@ -682,6 +682,8 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
     @Override
     public byte minInColumn(int j) {
+
+        checkColumnBounds(j);
 
         byte min = minByte();
 

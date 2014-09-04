@@ -101,13 +101,13 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     }
 
     @Override
-    public byte get(int i, int j) {
+    public byte safeGet(int i, int j) {
 
         return self[i][j];
     }
 
     @Override
-    public void set(int i, int j, byte value) {
+    public void safeSet(int i, int j, byte value) {
 
         self[i][j] = value;
     }
@@ -115,6 +115,8 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public void swapRows(int i, int j) {
 
+        checkRowBounds(i);
+        checkRowBounds(j);
         if (i != j) {
             byte tmp[] = self[i];
             self[i] = self[j];
@@ -125,6 +127,8 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public void swapColumns(int i, int j) {
 
+        checkColumnBounds(i);
+        checkColumnBounds(j);
         if (i != j) {
             for (int ii = 0; ii < rows; ii++) {
                 byte tmp = self[ii][i];
@@ -137,6 +141,7 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public ByteVector getRow(int i) {
 
+        checkRowBounds(i);
         byte result[] = new byte[columns];
         System.arraycopy(self[i], 0, result, 0, columns);
 

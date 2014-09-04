@@ -75,12 +75,33 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
+    public final byte get(int i) {
+
+        checkIndexBounds(i);
+        return safeGet(i);
+    }
+
+    protected abstract byte safeGet(int i);
+
+    @Override
+    public final void set(int i, byte value) {
+
+        checkIndexBounds(i);
+        safeSet(i, value);
+    }
+
+    protected abstract void safeSet(int i, byte value);
+
+    @Override
     public void swap(int i, int j) {
 
+        checkIndexBounds(i);
+        checkIndexBounds(j);
+
         if (i != j) {
-            byte s = get(i);
-            set(i, get(j));
-            set(j, s);
+            byte s = safeGet(i);
+            safeSet(i, safeGet(j));
+            safeSet(j, s);
         }
     }
 
@@ -240,7 +261,7 @@ public abstract class AbstractByteVector implements ByteVector {
             byte acc = 0;
 
             for (int i = 0; i < matrix.rows(); i++) {
-                final byte prod = aTimesB(get(i), matrix.get(i, j));
+                final byte prod = aTimesB(safeGet(i), matrix.get(i, j));
                 acc = aPlusB(acc, prod);
             }
 
@@ -393,7 +414,7 @@ public abstract class AbstractByteVector implements ByteVector {
         ByteVector result = factory.createVector(length);
 
         for (int i = 0; i < Math.min(length, this.length); i++) {
-            result.set(i, get(i));
+            result.set(i, safeGet(i));
         }
 
         return result;
@@ -417,10 +438,7 @@ public abstract class AbstractByteVector implements ByteVector {
 
         for (int i = 0; i < length; i++) {
             int ii = rnd.nextInt(length - i) + i;
-
-            byte a = result.get(ii);
-            result.set(ii, result.get(i));
-            result.set(i, a);
+            result.swap(i, ii);
         }
 
         return result;
@@ -459,16 +477,13 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public ByteVector slice(int from, int until, Factory factory) {
 
+        checkIndexRangeBounds(from, until);
         ensureFactoryIsNotNull(factory);
-
-        if (until - from < 0) {
-            fail("Wrong slice range: [" + from + ".." + until + "].");
-        }
 
         ByteVector result = factory.createVector(until - from);
 
         for (int i = from; i < until; i++) {
-            result.set(i - from, get(i));
+            result.set(i - from, safeGet(i));
         }
 
         return result;
@@ -492,7 +507,7 @@ public abstract class AbstractByteVector implements ByteVector {
         ByteVector result = factory.createVector(newLength);
 
         for (int i = 0; i < newLength; i++) {
-            result.set(i, get(indices[i]));
+            result.set(i, get(indices[i])); // use normal get for index bounds check
         }
 
         return result;
@@ -508,7 +523,7 @@ public abstract class AbstractByteVector implements ByteVector {
     public void each(VectorProcedure procedure) {
 
         for (int i = 0; i < length; i++) {
-            procedure.apply(i, get(i));
+            procedure.apply(i, safeGet(i));
         }
     }
 
@@ -553,8 +568,9 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public ByteVector transform(int i, VectorFunction function, Factory factory) {
 
+        checkIndexBounds(i);
         ByteVector result = copy(factory);
-        result.set(i, function.evaluate(i, get(i)));
+        result.set(i, function.evaluate(i, safeGet(i)));
 
         return result;
     }
@@ -572,7 +588,8 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void update(int i, VectorFunction function) {
 
-        set(i, function.evaluate(i, get(i)));
+        checkIndexBounds(i);
+        safeSet(i, function.evaluate(i, safeGet(i)));
     }
 
     @Override
@@ -666,7 +683,7 @@ public abstract class AbstractByteVector implements ByteVector {
         boolean result = true;
 
         for (int i = 0; result && i < length; i++) {
-            result = aIsEqualToB(get(i), vector.get(i));
+            result = aIsEqualToB(safeGet(i), vector.get(i));
         }
 
         return result;
@@ -712,5 +729,17 @@ public abstract class AbstractByteVector implements ByteVector {
     protected void fail(String message) {
 
         throw new IllegalArgumentException(message);
+    }
+
+    protected void checkIndexBounds(int index) {
+
+        if (index < 0 || index >= length()) throw new IndexOutOfBoundsException("index is out of bounds");
+    }
+
+    protected void checkIndexRangeBounds(int fromIndex, int toIndex) {
+
+        if (fromIndex < 0) throw new IndexOutOfBoundsException("fromIndex < 0");
+        if (toIndex < fromIndex) throw new IndexOutOfBoundsException("toIndex < fromIndex");
+        if (length() < toIndex) throw new IndexOutOfBoundsException("length() < toIndex");
     }
 }

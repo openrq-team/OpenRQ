@@ -46,8 +46,7 @@ import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 
-public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
-    implements SparseByteMatrix {
+public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix implements SparseByteMatrix {
 
     protected int cardinality;
 
@@ -98,7 +97,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                final byte val = get(i, j);
+                final byte val = safeGet(i, j);
                 if (!aIsEqualToB(val, (byte)0)) {
                     procedure.apply(i, j, val);
                 }
@@ -109,8 +108,9 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
     @Override
     public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
 
+        checkRowBounds(i);
         for (int j = 0; j < columns; j++) {
-            final byte val = get(i, j);
+            final byte val = safeGet(i, j);
             if (!aIsEqualToB(val, (byte)0)) {
                 procedure.apply(i, j, val);
             }
@@ -120,8 +120,9 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
     @Override
     public void eachNonZeroInColumn(int j, MatrixProcedure procedure) {
 
+        checkColumnBounds(j);
         for (int i = 0; i < rows; i++) {
-            final byte val = get(i, j);
+            final byte val = safeGet(i, j);
             if (!aIsEqualToB(val, (byte)0)) {
                 procedure.apply(i, j, val);
             }
@@ -178,9 +179,9 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                final byte val = get(i, j);
+                final byte val = safeGet(i, j);
                 if (!aIsEqualToB(val, (byte)0)) {
-                    set(i, j, function.evaluate(i, j, val));
+                    safeSet(i, j, function.evaluate(i, j, val));
                 }
             }
         }
@@ -189,10 +190,11 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
     @Override
     public void updateNonZeroInRow(int i, MatrixFunction function) {
 
+        checkRowBounds(i);
         for (int j = 0; j < columns; j++) {
-            final byte val = get(i, j);
+            final byte val = safeGet(i, j);
             if (!aIsEqualToB(val, (byte)0)) {
-                set(i, j, function.evaluate(i, j, val));
+                safeSet(i, j, function.evaluate(i, j, val));
             }
         }
     }
@@ -200,10 +202,11 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix
     @Override
     public void updateNonZeroInColumn(int j, MatrixFunction function) {
 
+        checkColumnBounds(j);
         for (int i = 0; i < rows; i++) {
-            final byte val = get(i, j);
+            final byte val = safeGet(i, j);
             if (!aIsEqualToB(val, (byte)0)) {
-                set(i, j, function.evaluate(i, j, val));
+                safeSet(i, j, function.evaluate(i, j, val));
             }
         }
     }

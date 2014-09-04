@@ -80,7 +80,7 @@ public abstract class DenseByteVector extends AbstractByteVector {
         ByteVector result = blank(factory);
 
         for (int i = 0; i < length(); i++) {
-            result.set(i, aTimesB(get(i), value));
+            result.set(i, aTimesB(safeGet(i), value));
         }
 
         return result;
@@ -91,7 +91,7 @@ public abstract class DenseByteVector extends AbstractByteVector {
 
         // TODO: multiply by 0 = clear()
         for (int i = 0; i < length; i++) {
-            set(i, aTimesB(get(i), value));
+            safeSet(i, aTimesB(safeGet(i), value));
         }
     }
 
@@ -105,7 +105,7 @@ public abstract class DenseByteVector extends AbstractByteVector {
 
                 // fast flush
                 for (int i = innerCursor() + 1; i < length; i++) {
-                    DenseByteVector.this.set(i, (byte)0);
+                    DenseByteVector.this.safeSet(i, (byte)0);
                 }
             }
         };

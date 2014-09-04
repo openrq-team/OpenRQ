@@ -48,7 +48,6 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 
 
-
 public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseByteMatrix {
 
     private static final long serialVersionUID = 4071505L;
@@ -101,13 +100,13 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     }
 
     @Override
-    public byte get(int i, int j) {
+    protected byte safeGet(int i, int j) {
 
         return self[i * columns + j];
     }
 
     @Override
-    public void set(int i, int j, byte value) {
+    protected void safeSet(int i, int j, byte value) {
 
         self[i * columns + j] = value;
     }
@@ -115,6 +114,8 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public void swapRows(int i, int j) {
 
+        checkRowBounds(i);
+        checkRowBounds(j);
         if (i != j) {
             for (int k = 0; k < columns; k++) {
                 byte tmp = self[i * columns + k];
@@ -127,6 +128,8 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public void swapColumns(int i, int j) {
 
+        checkColumnBounds(i);
+        checkColumnBounds(j);
         if (i != j) {
             for (int k = 0; k < rows; k++) {
                 byte tmp = self[k * columns + i];
@@ -139,6 +142,7 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public ByteVector getRow(int i) {
 
+        checkRowBounds(i);
         byte result[] = new byte[columns];
         System.arraycopy(self, i * columns, result, 0, columns);
 
