@@ -39,12 +39,12 @@ package net.fec.openrq.util.linearalgebra.matrix.dense;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import net.fec.openrq.util.linearalgebra.matrix.AbstractMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrixTest;
 
 import org.junit.Test;
 
 
-public abstract class DenseMatrixTest extends AbstractMatrixTest {
+public abstract class DenseByteMatrixTest extends AbstractByteMatrixTest {
 
     @Test
     public void testToArray() {

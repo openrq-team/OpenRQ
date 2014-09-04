@@ -41,7 +41,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import net.fec.openrq.util.linearalgebra.matrix.AbstractMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrixTest;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
@@ -49,7 +49,7 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import org.junit.Test;
 
 
-public abstract class SparseMatrixTest extends AbstractMatrixTest {
+public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
 
     @Test
     public void testCardinality() {
@@ -135,6 +135,7 @@ public abstract class SparseMatrixTest extends AbstractMatrixTest {
         }
     }
 
+    @Test
     public void testFoldNonZero_3x3() {
 
         SparseByteMatrix a = (SparseByteMatrix)factory().createMatrix(new byte[][] {
@@ -164,6 +165,7 @@ public abstract class SparseMatrixTest extends AbstractMatrixTest {
         assertEquals(factory().createVector(new byte[] {2, 20, 1}), nonZeroInRows);
     }
 
+    @Test
     public void testIsZeroAt_5x3() {
 
         SparseByteMatrix a = (SparseByteMatrix)factory().createMatrix(new byte[][] {
@@ -178,6 +180,7 @@ public abstract class SparseMatrixTest extends AbstractMatrixTest {
         assertFalse(a.isZeroAt(3, 1));
     }
 
+    @Test
     public void testNonZeroAt_3x4() {
 
         SparseByteMatrix a = (SparseByteMatrix)factory().createMatrix(new byte[][] {

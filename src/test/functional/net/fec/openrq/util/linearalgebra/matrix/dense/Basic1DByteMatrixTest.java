@@ -33,18 +33,18 @@
  * 
  * Contributor(s): -
  */
-package net.fec.openrq.util.linearalgebra.vector.sparse;
+package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
-import net.fec.openrq.util.linearalgebra.factory.CRSFactory;
+import net.fec.openrq.util.linearalgebra.factory.Basic1DFactory;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 
 
-public class CompressedVectorTest extends SparseVectorTest {
+public class Basic1DByteMatrixTest extends DenseByteMatrixTest {
 
     @Override
     public Factory factory() {
 
-        return new CRSFactory();
+        return new Basic1DFactory();
     }
 }

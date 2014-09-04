@@ -62,7 +62,7 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import org.junit.Test;
 
 
-public abstract class AbstractMatrixTest {
+public abstract class AbstractByteMatrixTest {
 
     public abstract Factory factory();
 
@@ -1612,6 +1612,7 @@ public abstract class AbstractMatrixTest {
         assertEquals(s, rowSums);
     }
 
+    @Test
     public void testDiagonalMatrixPredicate() {
 
         ByteMatrix a = factory().createMatrix(new byte[][] {
@@ -1631,6 +1632,7 @@ public abstract class AbstractMatrixTest {
         assertFalse(b.is(ByteMatrices.DIAGONAL_MATRIX));
     }
 
+    @Test
     public void testIdentityMatrixPredicate() {
 
         ByteMatrix a = factory().createMatrix(new byte[][] {
@@ -1650,6 +1652,7 @@ public abstract class AbstractMatrixTest {
         assertFalse(b.is(ByteMatrices.IDENTITY_MATRIX));
     }
 
+    @Test
     public void testZeroMatrixPredicate() {
 
         ByteMatrix a = factory().createMatrix(new byte[][] {
@@ -1668,6 +1671,7 @@ public abstract class AbstractMatrixTest {
         assertFalse(b.is(ByteMatrices.ZERO_MATRIX));
     }
 
+    @Test
     public void testTridiagonalMatrixPredicate() {
 
         ByteMatrix a = factory().createMatrix(new byte[][] {
@@ -1689,6 +1693,7 @@ public abstract class AbstractMatrixTest {
         assertFalse(b.is(ByteMatrices.TRIDIAGONAL_MATRIX));
     }
 
+    @Test
     public void testSymmetricMatrixPredicate() {
 
         ByteMatrix a = factory().createMatrix(new byte[][] {

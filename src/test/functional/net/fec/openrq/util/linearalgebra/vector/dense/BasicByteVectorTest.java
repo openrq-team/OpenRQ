@@ -40,7 +40,7 @@ import net.fec.openrq.util.linearalgebra.factory.Basic1DFactory;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 
 
-public class BasicVectorTest extends DenseVectorTest {
+public class BasicByteVectorTest extends DenseByteVectorTest {
 
     @Override
     public Factory factory() {

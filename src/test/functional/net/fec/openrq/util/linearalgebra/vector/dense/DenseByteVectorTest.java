@@ -33,18 +33,24 @@
  * 
  * Contributor(s): -
  */
-package net.fec.openrq.util.linearalgebra.matrix.sparse;
+package net.fec.openrq.util.linearalgebra.vector.dense;
 
 
-import net.fec.openrq.util.linearalgebra.factory.CCSFactory;
-import net.fec.openrq.util.linearalgebra.factory.Factory;
+import static org.junit.Assert.assertArrayEquals;
+import net.fec.openrq.util.linearalgebra.vector.AbstractByteVectorTest;
+
+import org.junit.Test;
 
 
-public class CCSMatrixTest extends SparseMatrixTest {
+public abstract class DenseByteVectorTest extends AbstractByteVectorTest {
 
-    @Override
-    public Factory factory() {
+    @Test
+    public void testToArray() {
 
-        return new CCSFactory();
+        byte array[] = new byte[] {0, 0, 0, 0, 1};
+
+        DenseByteVector a = (DenseByteVector)factory().createVector(array);
+
+        assertArrayEquals(array, a.toArray());
     }
 }

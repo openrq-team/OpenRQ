@@ -16,11 +16,11 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import net.fec.openrq.util.linearalgebra.matrix.dense.Basic1DMatrixTest;
-import net.fec.openrq.util.linearalgebra.matrix.dense.Basic2DMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.dense.Basic1DByteMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.dense.Basic2DByteMatrixTest;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSourcesTest;
-import net.fec.openrq.util.linearalgebra.matrix.sparse.CCSMatrixTest;
-import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.sparse.CCSByteMatrixTest;
+import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSByteMatrixTest;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -29,11 +29,11 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-               Basic1DMatrixTest.class,
-               Basic2DMatrixTest.class,
+               Basic1DByteMatrixTest.class,
+               Basic2DByteMatrixTest.class,
                MatrixSourcesTest.class,
-               CCSMatrixTest.class,
-               CRSMatrixTest.class
+               CCSByteMatrixTest.class,
+               CRSByteMatrixTest.class
 })
 public class LinearAlgebraMatrixSuite {
 

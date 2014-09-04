@@ -16,8 +16,8 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import net.fec.openrq.util.linearalgebra.vector.dense.BasicVectorTest;
-import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedVectorTest;
+import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVectorTest;
+import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedByteVectorTest;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -26,8 +26,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-               BasicVectorTest.class,
-               CompressedVectorTest.class
+               BasicByteVectorTest.class,
+               CompressedByteVectorTest.class
 })
 public class LinearAlgebraVectorSuite {
 
