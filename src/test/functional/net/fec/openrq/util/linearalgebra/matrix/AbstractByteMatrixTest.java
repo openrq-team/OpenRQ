@@ -82,35 +82,43 @@ public abstract class AbstractByteMatrixTest {
     @Test
     public void testGetColumn_4x4() {
 
-        ByteMatrix a = factory().createMatrix(new byte[][] {
-                                                            {8, 3, 1, 9},
-                                                            {4, 9, 6, 6},
-                                                            {9, 1, 1, 4},
-                                                            {5, 7, 3, 0}
+        ByteMatrix matrix = factory().createMatrix(new byte[][] {
+                                                                 {8, 3, 1, 9},
+                                                                 {4, 9, 6, 6},
+                                                                 {9, 1, 1, 4},
+                                                                 {5, 7, 3, 0}
         });
 
-        ByteVector b = factory().createVector(new byte[] {8, 4, 9, 5});
-        ByteVector c = factory().createVector(new byte[] {1, 6, 1, 3});
+        ByteVector vecA = factory().createVector(new byte[] {8, 4, 9, 5});
+        ByteVector vecB = factory().createVector(new byte[] {3, 9, 1, 7});
+        ByteVector vecC = factory().createVector(new byte[] {1, 6, 1, 3});
+        ByteVector vecD = factory().createVector(new byte[] {9, 6, 4, 0});
 
-        assertEquals(b, a.getColumn(0));
-        assertEquals(c, a.getColumn(2));
+        assertEquals(vecA, matrix.getColumn(0));
+        assertEquals(vecB, matrix.getColumn(1));
+        assertEquals(vecC, matrix.getColumn(2));
+        assertEquals(vecD, matrix.getColumn(3));
     }
 
     @Test
     public void testGetRow_4x4() {
 
-        ByteMatrix a = factory().createMatrix(new byte[][] {
-                                                            {8, 3, 1, 9},
-                                                            {4, 9, 6, 6},
-                                                            {9, 1, 1, 4},
-                                                            {5, 7, 3, 0}
+        ByteMatrix matrix = factory().createMatrix(new byte[][] {
+                                                                 {8, 3, 1, 9},
+                                                                 {4, 9, 6, 6},
+                                                                 {9, 1, 1, 4},
+                                                                 {5, 7, 3, 0}
         });
 
-        ByteVector b = factory().createVector(new byte[] {8, 3, 1, 9});
-        ByteVector c = factory().createVector(new byte[] {9, 1, 1, 4});
+        ByteVector vecA = factory().createVector(new byte[] {8, 3, 1, 9});
+        ByteVector vecB = factory().createVector(new byte[] {4, 9, 6, 6});
+        ByteVector vecC = factory().createVector(new byte[] {9, 1, 1, 4});
+        ByteVector vecD = factory().createVector(new byte[] {5, 7, 3, 0});
 
-        assertEquals(b, a.getRow(0));
-        assertEquals(c, a.getRow(2));
+        assertEquals(vecA, matrix.getRow(0));
+        assertEquals(vecB, matrix.getRow(1));
+        assertEquals(vecC, matrix.getRow(2));
+        assertEquals(vecD, matrix.getRow(3));
     }
 
     @Test

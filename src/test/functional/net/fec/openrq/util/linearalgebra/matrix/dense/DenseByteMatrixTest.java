@@ -36,11 +36,13 @@
 package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrixTest;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -57,18 +59,7 @@ public abstract class DenseByteMatrixTest extends AbstractByteMatrixTest {
 
         DenseByteMatrix a = (DenseByteMatrix)factory().createMatrix(array);
         assertEquals(array.length, a.rows());
-
-        byte[][] toArray = a.toArray();
-        assertEquals(array.length, toArray.length);
-
-        for (int i = 0; i < a.rows(); i++) {
-            final byte[] row1 = array[i];
-            final byte[] row2 = toArray[i];
-            assertEquals(row1.length, row2.length);
-
-            for (int j = 0; j < row1.length; j++) {
-                assertTrue(aIsEqualToB(row1[j], row2[j]));
-            }
-        }
+        assertEquals(array[0].length, a.columns());
+        Assert.assertTrue(Arrays.deepEquals(array, a.toArray()));
     }
 }

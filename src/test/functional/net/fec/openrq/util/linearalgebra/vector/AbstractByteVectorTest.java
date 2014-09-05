@@ -66,7 +66,7 @@ import org.junit.Test;
 public abstract class AbstractByteVectorTest {
 
     public abstract Factory factory();
-
+    
     @Test
     public void testAccess_4() {
 
