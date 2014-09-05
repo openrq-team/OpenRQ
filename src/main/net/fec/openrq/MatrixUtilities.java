@@ -418,7 +418,7 @@ final class MatrixUtilities {
             byte beta = A.get(r + first_row, lead + first_col);
             if (beta != 0) {
                 // byte[] / byte
-                A.updateRow(r + first_row, first_col, last_col, ByteMatrices.asDivFunction(beta));
+                A.updateRow(r + first_row, ByteMatrices.asDivFunction(beta), first_col, last_col);
 
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
                 // byte[] / beta
@@ -438,14 +438,17 @@ final class MatrixUtilities {
                     final ByteVector product = A.getRow(r + first_row, first_col, last_col);
                     product.update(ByteVectors.asMulFunction(beta));
 
-                    A.updateRow(i + first_row, first_col, last_col, new MatrixFunction() {
+                    A.updateRow(i + first_row,
+                        new MatrixFunction() {
 
-                        @Override
-                        public byte evaluate(int notUsed, int col, byte value) {
+                            @Override
+                            public byte evaluate(int notUsed, int col, byte value) {
 
-                            return OctetOps.aMinusB(value, product.get(col - first_col));
-                        }
-                    });
+                                return OctetOps.aMinusB(value, product.get(col - first_col));
+                            }
+                        },
+                        first_col,
+                        last_col);
 
                     // decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
                     byte[] p = OctetOps.betaProduct(beta, D[d[r + first_row]]);
