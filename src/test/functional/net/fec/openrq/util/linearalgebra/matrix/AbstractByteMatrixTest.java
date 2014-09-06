@@ -57,6 +57,8 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 import org.junit.Test;
@@ -1721,6 +1723,899 @@ public abstract class AbstractByteMatrixTest {
         });
 
         assertFalse(b.is(ByteMatrices.SYMMETRIC_MATRIX));
+    }
 
+    @Test
+    public void testNonZeros() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+
+        assertEquals(0, a.nonZeros());
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 1},
+                                                            {0, 1, 0},
+                                                            {1, 0, 0}
+        });
+
+        assertEquals(3, b.nonZeros());
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                            {1, 1, 1},
+                                                            {1, 1, 1},
+                                                            {1, 1, 1}
+        });
+
+        assertEquals(9, c.nonZeros());
+    }
+
+    @Test
+    public void testNonZerosInRow() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+
+        assertEquals(0, a.nonZerosInRow(1));
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 1, 0},
+                                                            {0, 0, 0}
+        });
+
+        assertEquals(1, b.nonZerosInRow(1));
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {1, 1, 1},
+                                                            {0, 0, 0}
+        });
+
+        assertEquals(3, c.nonZerosInRow(1));
+    }
+
+    private ByteMatrix nonZeroMatrix() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {7, 7, 1, 7, 7},
+                                                    {7, 7, 0, 7, 7},
+                                                    {0, 1, 0, 0, 1},
+                                                    {7, 7, 1, 7, 7},
+                                                    {7, 7, 0, 7, 7}
+        });
+    }
+
+    @Test
+    public void testNonZerosInRowInRangeOf_0_to_0() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(0, nonZeroMatrix.nonZerosInRow(2, 0, 0));
+    }
+
+    @Test
+    public void testNonZerosInRowInRangeOf_0_to_2() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(1, nonZeroMatrix.nonZerosInRow(2, 0, 2));
+    }
+
+    @Test
+    public void testNonZerosInRowInRangeOf_0_to_5() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(2, nonZeroMatrix.nonZerosInRow(2, 0, 5));
+    }
+
+    @Test
+    public void testNonZerosInRowInRangeOf_2_to_5() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(1, nonZeroMatrix.nonZerosInRow(2, 2, 5));
+    }
+
+    @Test
+    public void testNonZerosInRowInRangeOf_5_to_5() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(0, nonZeroMatrix.nonZerosInRow(2, 5, 5));
+    }
+
+    @Test
+    public void testNonZerosInColumn() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+
+        assertEquals(0, a.nonZerosInColumn(1));
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 1, 0},
+                                                            {0, 0, 0}
+        });
+
+        assertEquals(1, b.nonZerosInColumn(1));
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                            {0, 1, 0},
+                                                            {0, 1, 0},
+                                                            {0, 1, 0}
+        });
+
+        assertEquals(3, c.nonZerosInColumn(1));
+    }
+
+    @Test
+    public void testNonZerosInColumnInRangeOf_0_to_0() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(0, nonZeroMatrix.nonZerosInColumn(2, 0, 0));
+    }
+
+    @Test
+    public void testNonZerosInColumnInRangeOf_0_to_2() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(1, nonZeroMatrix.nonZerosInColumn(2, 0, 2));
+    }
+
+    @Test
+    public void testNonZerosInColumnInRangeOf_0_to_5() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(2, nonZeroMatrix.nonZerosInColumn(2, 0, 5));
+    }
+
+    @Test
+    public void testNonZerosInColumnInRangeOf_2_to_5() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(1, nonZeroMatrix.nonZerosInColumn(2, 2, 5));
+    }
+
+    @Test
+    public void testNonZerosInColumnInRangeOf_5_to_5() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(0, nonZeroMatrix.nonZerosInColumn(2, 5, 5));
+    }
+
+    private ByteMatrix initialMatrix() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {0, 1, 2},
+                                                    {3, 4, 5},
+                                                    {6, 7, 8}
+        });
+    }
+
+
+    private static final class SetterProcedure implements MatrixProcedure {
+
+        private final ByteMatrix matrix;
+
+
+        SetterProcedure(ByteMatrix matrix) {
+
+            this.matrix = matrix;
+        }
+
+        @Override
+        public void apply(int i, int j, byte value) {
+
+            matrix.set(i, j, value);
+        }
+    }
+
+
+    @Test
+    public void testEach() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+
+        a.each(new SetterProcedure(b));
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testEachInRow() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {3, 4, 5},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInRow(1, new SetterProcedure(b));
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInRowInRangeOf_0_to_0() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInRow(1, new SetterProcedure(b), 0, 0);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInRowInRangeOf_0_to_1() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {3, 0, 0},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInRow(1, new SetterProcedure(b), 0, 1);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInRowInRangeOf_0_to_3() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {3, 4, 5},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInRow(1, new SetterProcedure(b), 0, 3);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInRowInRangeOf_1_to_3() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {0, 4, 5},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInRow(1, new SetterProcedure(b), 1, 3);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInRowInRangeOf_3_to_3() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInRow(1, new SetterProcedure(b), 3, 3);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInColumn() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 1, 0},
+                                                                  {0, 4, 0},
+                                                                  {0, 7, 0}
+        });
+
+        a.eachInColumn(1, new SetterProcedure(b));
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInColumnInRangeOf_0_to_0() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInColumn(1, new SetterProcedure(b), 0, 0);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInColumnInRangeOf_0_to_1() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 1, 0},
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInColumn(1, new SetterProcedure(b), 0, 1);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInColumnInRangeOf_0_to_3() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 1, 0},
+                                                                  {0, 4, 0},
+                                                                  {0, 7, 0}
+        });
+
+        a.eachInColumn(1, new SetterProcedure(b), 0, 3);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInColumnInRangeOf_1_to_3() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {0, 4, 0},
+                                                                  {0, 7, 0}
+        });
+
+        a.eachInColumn(1, new SetterProcedure(b), 1, 3);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInColumnInRangeOf_3_to_3() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0},
+                                                                  {0, 0, 0}
+        });
+
+        a.eachInColumn(1, new SetterProcedure(b), 3, 3);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+
+    private static final class IndexFunction implements MatrixFunction {
+
+        private final ByteMatrix matrix;
+
+
+        IndexFunction(ByteMatrix matrix) {
+
+            this.matrix = matrix;
+        }
+
+        @Override
+        public byte evaluate(int i, int j, @SuppressWarnings("unused") byte value) {
+
+            // converts row/column indices into a "global" index
+            return (byte)((i * matrix.rows()) + (j % matrix.columns()));
+        }
+    }
+
+
+    private ByteMatrix allNinesMatrix() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {9, 9, 9},
+                                                    {9, 9, 9},
+                                                    {9, 9, 9}
+        });
+    }
+
+    @Test
+    public void testUpdate() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {0, 1, 2},
+                                                                  {3, 4, 5},
+                                                                  {6, 7, 8}
+        });
+
+        a.update(new IndexFunction(a));
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateAt_1x1() {
+
+        final ByteMatrix a = allNinesMatrix();
+
+        a.update(1, 1, new IndexFunction(a));
+
+        assertTrue(aIsEqualToB((byte)4, a.get(1, 1)));
+    }
+
+    @Test
+    public void testUpdateRow() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {3, 4, 5},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateRow(1, new IndexFunction(a));
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateRowInRangeOf_0_to_0() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateRow(1, new IndexFunction(a), 0, 0);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateRowInRangeOf_0_to_1() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {3, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateRow(1, new IndexFunction(a), 0, 1);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateRowInRangeOf_0_to_3() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {3, 4, 5},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateRow(1, new IndexFunction(a), 0, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateRowInRangeOf_1_to_3() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 4, 5},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateRow(1, new IndexFunction(a), 1, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateRowInRangeOf_3_to_3() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateRow(1, new IndexFunction(a), 3, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateColumn() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 1, 9},
+                                                                  {9, 4, 9},
+                                                                  {9, 7, 9}
+        });
+
+        a.updateColumn(1, new IndexFunction(a));
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateColumnInRangeOf_0_to_0() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateColumn(1, new IndexFunction(a), 0, 0);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateColumnInRangeOf_0_to_1() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 1, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateColumn(1, new IndexFunction(a), 0, 1);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateColumnInRangeOf_0_to_3() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 1, 9},
+                                                                  {9, 4, 9},
+                                                                  {9, 7, 9}
+        });
+
+        a.updateColumn(1, new IndexFunction(a), 0, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateColumnInRangeOf_1_to_3() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 4, 9},
+                                                                  {9, 7, 9}
+        });
+
+        a.updateColumn(1, new IndexFunction(a), 1, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateColumnInRangeOf_3_to_3() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateColumn(1, new IndexFunction(a), 3, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testTransform() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {0, 1, 2},
+                                                                  {3, 4, 5},
+                                                                  {6, 7, 8}
+        });
+
+        final ByteMatrix c = a.transform(new IndexFunction(a));
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformAt_1x1() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 4, 9},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transform(1, 1, new IndexFunction(a));
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformRow() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {3, 4, 5},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformRow(1, new IndexFunction(a));
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformRowInRangeOf_0_to_0() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 0, 0);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformRowInRangeOf_0_to_1() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {3, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 0, 1);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformRowInRangeOf_0_to_3() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {3, 4, 5},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 0, 3);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformRowInRangeOf_1_to_3() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 4, 5},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 1, 3);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformRowInRangeOf_3_to_3() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 3, 3);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformColumn() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 1, 9},
+                                                                  {9, 4, 9},
+                                                                  {9, 7, 9}
+        });
+
+        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a));
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformColumnInRangeOf_0_to_0() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 0, 0);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformColumnInRangeOf_0_to_1() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 1, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 0, 1);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformColumnInRangeOf_0_to_3() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 1, 9},
+                                                                  {9, 4, 9},
+                                                                  {9, 7, 9}
+        });
+
+        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 0, 3);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformColumnInRangeOf_1_to_3() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 4, 9},
+                                                                  {9, 7, 9}
+        });
+
+        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 1, 3);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
+    }
+
+    @Test
+    public void testTransformColumnInRangeOf_3_to_3() {
+
+        final ByteMatrix initial = allNinesMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 3, 3);
+
+        assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
+        assertEquals(b, c);
     }
 }

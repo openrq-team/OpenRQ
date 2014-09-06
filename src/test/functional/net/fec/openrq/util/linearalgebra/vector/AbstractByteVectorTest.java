@@ -66,7 +66,7 @@ import org.junit.Test;
 public abstract class AbstractByteVectorTest {
 
     public abstract Factory factory();
-    
+
     @Test
     public void testAccess_4() {
 
@@ -673,6 +673,25 @@ public abstract class AbstractByteVectorTest {
         assertEquals(5, a.nonZeros());
     }
 
+
+    private static final class SetterProcedure implements VectorProcedure {
+
+        private final ByteVector vector;
+
+
+        SetterProcedure(ByteVector vector) {
+
+            this.vector = vector;
+        }
+
+        @Override
+        public void apply(int i, byte value) {
+
+            vector.set(i, value);
+        }
+    }
+
+
     @Test
     public void testEach() {
 
@@ -681,14 +700,7 @@ public abstract class AbstractByteVectorTest {
         final ByteVector a = initial.copy();
         final ByteVector b = a.blank();
 
-        a.each(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        });
+        a.each(new SetterProcedure(b));
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(a, b);
@@ -703,14 +715,7 @@ public abstract class AbstractByteVectorTest {
         final ByteVector b = a.blank();
         final ByteVector c = factory().createVector(new byte[] {0, 0, 0, 0, 0});
 
-        a.each(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 0, 0);
+        a.each(new SetterProcedure(b), 0, 0);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -725,14 +730,7 @@ public abstract class AbstractByteVectorTest {
         final ByteVector b = a.blank();
         final ByteVector c = factory().createVector(new byte[] {0, 1, 0, 0, 0});
 
-        a.each(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 0, 2);
+        a.each(new SetterProcedure(b), 0, 2);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -747,14 +745,7 @@ public abstract class AbstractByteVectorTest {
         final ByteVector b = a.blank();
         final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 3, 4});
 
-        a.each(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 0, 5);
+        a.each(new SetterProcedure(b), 0, 5);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -769,14 +760,7 @@ public abstract class AbstractByteVectorTest {
         final ByteVector b = a.blank();
         final ByteVector c = factory().createVector(new byte[] {0, 0, 2, 3, 4});
 
-        a.each(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 2, 5);
+        a.each(new SetterProcedure(b), 2, 5);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -791,32 +775,30 @@ public abstract class AbstractByteVectorTest {
         final ByteVector b = a.blank();
         final ByteVector c = factory().createVector(new byte[] {0, 0, 0, 0, 0});
 
-        a.each(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 5, 5);
+        a.each(new SetterProcedure(b), 5, 5);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
     }
+
+
+    private static final class IndexFunction implements VectorFunction {
+
+        @Override
+        public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
+
+            return (byte)i;
+        }
+    }
+
 
     @Test
     public void testUpdate() {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
-        a.update(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        });
+        a.update(new IndexFunction());
 
         assertEquals(b, a);
     }
@@ -825,14 +807,8 @@ public abstract class AbstractByteVectorTest {
     public void testUpdateAt_2() {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        a.update(2, new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        });
+        a.update(2, new IndexFunction());
 
         assertTrue(aIsEqualToB((byte)2, a.get(2)));
     }
@@ -842,14 +818,8 @@ public abstract class AbstractByteVectorTest {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        a.update(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 0);
+        a.update(new IndexFunction(), 0, 0);
 
         assertEquals(b, a);
     }
@@ -859,14 +829,8 @@ public abstract class AbstractByteVectorTest {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {0, 1, 7, 7, 7});
-        a.update(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 2);
+        a.update(new IndexFunction(), 0, 2);
 
         assertEquals(b, a);
     }
@@ -876,14 +840,8 @@ public abstract class AbstractByteVectorTest {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
-        a.update(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 5);
+        a.update(new IndexFunction(), 0, 5);
 
         assertEquals(b, a);
     }
@@ -893,14 +851,8 @@ public abstract class AbstractByteVectorTest {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 7, 2, 3, 4});
-        a.update(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 2, 5);
+        a.update(new IndexFunction(), 2, 5);
 
         assertEquals(b, a);
     }
@@ -910,14 +862,8 @@ public abstract class AbstractByteVectorTest {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        a.update(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 5, 5);
+        a.update(new IndexFunction(), 5, 5);
 
         assertEquals(b, a);
     }
@@ -926,17 +872,10 @@ public abstract class AbstractByteVectorTest {
     public void testTransform() {
 
         final ByteVector initial = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-
         final ByteVector a = initial.copy();
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
-        final ByteVector c = a.transform(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        });
+        final ByteVector c = a.transform(new IndexFunction());
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -946,17 +885,10 @@ public abstract class AbstractByteVectorTest {
     public void testTransformAt_2() {
 
         final ByteVector initial = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-
         final ByteVector a = initial.copy();
         final ByteVector b = factory().createVector(new byte[] {7, 7, 2, 7, 7});
-        final ByteVector c = a.transform(2, new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        });
+        final ByteVector c = a.transform(2, new IndexFunction());
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -966,17 +898,10 @@ public abstract class AbstractByteVectorTest {
     public void testTransformInRangeOf_0_to_0() {
 
         final ByteVector initial = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-
         final ByteVector a = initial.copy();
         final ByteVector b = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        final ByteVector c = a.transform(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 0);
+        final ByteVector c = a.transform(new IndexFunction(), 0, 0);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -986,17 +911,10 @@ public abstract class AbstractByteVectorTest {
     public void testTransformInRangeOf_0_to_2() {
 
         final ByteVector initial = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-
         final ByteVector a = initial.copy();
         final ByteVector b = factory().createVector(new byte[] {0, 1, 7, 7, 7});
-        final ByteVector c = a.transform(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 2);
+        final ByteVector c = a.transform(new IndexFunction(), 0, 2);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -1006,17 +924,10 @@ public abstract class AbstractByteVectorTest {
     public void testTransformInRangeOf_0_to_5() {
 
         final ByteVector initial = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-
         final ByteVector a = initial.copy();
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
-        final ByteVector c = a.transform(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 5);
+        final ByteVector c = a.transform(new IndexFunction(), 0, 5);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -1026,17 +937,10 @@ public abstract class AbstractByteVectorTest {
     public void testTransformInRangeOf_2_to_5() {
 
         final ByteVector initial = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-
         final ByteVector a = initial.copy();
         final ByteVector b = factory().createVector(new byte[] {7, 7, 2, 3, 4});
-        final ByteVector c = a.transform(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 2, 5);
+        final ByteVector c = a.transform(new IndexFunction(), 2, 5);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -1049,14 +953,7 @@ public abstract class AbstractByteVectorTest {
 
         final ByteVector a = initial.copy();
         final ByteVector b = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        final ByteVector c = a.transform(new VectorFunction() {
-
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 5, 5);
+        final ByteVector c = a.transform(new IndexFunction(), 5, 5);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);

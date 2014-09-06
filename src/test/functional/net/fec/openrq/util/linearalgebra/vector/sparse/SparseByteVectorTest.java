@@ -102,6 +102,25 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         assertFalse(a.nonZeroAt(3));
     }
 
+
+    private static final class SetterProcedure implements VectorProcedure {
+
+        private final ByteVector vector;
+
+
+        SetterProcedure(ByteVector vector) {
+
+            this.vector = vector;
+        }
+
+        @Override
+        public void apply(int i, byte value) {
+
+            vector.set(i, value);
+        }
+    }
+
+
     @Test
     public void testEachNonZero() {
 
@@ -111,14 +130,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
         final ByteVector c = factory().createVector(new byte[] {7, 1, 2, 7, 7});
 
-        a.eachNonZero(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        });
+        a.eachNonZero(new SetterProcedure(b));
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -133,14 +145,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
         final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 3, 4});
 
-        a.eachNonZero(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 0, 0);
+        a.eachNonZero(new SetterProcedure(b), 0, 0);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -155,14 +160,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
         final ByteVector c = factory().createVector(new byte[] {7, 1, 2, 3, 4});
 
-        a.eachNonZero(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 0, 2);
+        a.eachNonZero(new SetterProcedure(b), 0, 2);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -177,14 +175,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
         final ByteVector c = factory().createVector(new byte[] {7, 1, 2, 7, 7});
 
-        a.eachNonZero(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 0, 5);
+        a.eachNonZero(new SetterProcedure(b), 0, 5);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -199,14 +190,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
         final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 7, 7});
 
-        a.eachNonZero(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 2, 5);
+        a.eachNonZero(new SetterProcedure(b), 2, 5);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
@@ -221,32 +205,30 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
         final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 3, 4});
 
-        a.eachNonZero(new VectorProcedure() {
-
-            @Override
-            public void apply(int i, byte value) {
-
-                b.set(i, value);
-            }
-        }, 5, 5);
+        a.eachNonZero(new SetterProcedure(b), 5, 5);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller vector
         assertEquals(c, b);
     }
+
+
+    private static final class IndexFunction implements VectorFunction {
+
+        @Override
+        public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
+
+            return (byte)i;
+        }
+    }
+
 
     @Test
     public void testUpdateNonZero() {
 
         final SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {7, 0, 0, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {0, 0, 0, 3, 4});
-        a.updateNonZero(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        });
+        a.updateNonZero(new IndexFunction());
 
         assertEquals(b, a);
     }
@@ -256,14 +238,8 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         final SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {7, 0, 0, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 0, 0, 7, 7});
-        a.updateNonZero(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 0);
+        a.updateNonZero(new IndexFunction(), 0, 0);
 
         assertEquals(b, a);
     }
@@ -273,14 +249,8 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         final SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {7, 0, 0, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {0, 0, 0, 7, 7});
-        a.updateNonZero(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 2);
+        a.updateNonZero(new IndexFunction(), 0, 2);
 
         assertEquals(b, a);
     }
@@ -290,14 +260,8 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         final SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {7, 0, 0, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {0, 0, 0, 3, 4});
-        a.updateNonZero(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 5);
+        a.updateNonZero(new IndexFunction(), 0, 5);
 
         assertEquals(b, a);
     }
@@ -307,14 +271,8 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         final SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {7, 0, 0, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 0, 0, 3, 4});
-        a.updateNonZero(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 2, 5);
+        a.updateNonZero(new IndexFunction(), 2, 5);
 
         assertEquals(b, a);
     }
@@ -324,14 +282,8 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         final SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {7, 0, 0, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 0, 0, 7, 7});
-        a.updateNonZero(new VectorFunction() {
 
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 5, 5);
+        a.updateNonZero(new IndexFunction(), 5, 5);
 
         assertEquals(b, a);
     }
@@ -344,14 +296,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final SparseByteVector a = (SparseByteVector)initial.copy();
         final ByteVector b = factory().createVector(new byte[] {0, 0, 0, 3, 4});
 
-        final ByteVector c = a.transformNonZero(new VectorFunction() {
-
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        });
+        final ByteVector c = a.transformNonZero(new IndexFunction());
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -365,14 +310,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final SparseByteVector a = (SparseByteVector)initial.copy();
         final ByteVector b = factory().createVector(new byte[] {7, 0, 0, 7, 7});
 
-        final ByteVector c = a.transformNonZero(new VectorFunction() {
-
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 0);
+        final ByteVector c = a.transformNonZero(new IndexFunction(), 0, 0);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -386,14 +324,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final SparseByteVector a = (SparseByteVector)initial.copy();
         final ByteVector b = factory().createVector(new byte[] {0, 0, 0, 7, 7});
 
-        final ByteVector c = a.transformNonZero(new VectorFunction() {
-
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 2);
+        final ByteVector c = a.transformNonZero(new IndexFunction(), 0, 2);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -407,14 +338,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final SparseByteVector a = (SparseByteVector)initial.copy();
         final ByteVector b = factory().createVector(new byte[] {0, 0, 0, 3, 4});
 
-        final ByteVector c = a.transformNonZero(new VectorFunction() {
-
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 0, 5);
+        final ByteVector c = a.transformNonZero(new IndexFunction(), 0, 5);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -428,14 +352,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final SparseByteVector a = (SparseByteVector)initial.copy();
         final ByteVector b = factory().createVector(new byte[] {7, 0, 0, 3, 4});
 
-        final ByteVector c = a.transformNonZero(new VectorFunction() {
-
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 2, 5);
+        final ByteVector c = a.transformNonZero(new IndexFunction(), 2, 5);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
@@ -449,14 +366,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         final SparseByteVector a = (SparseByteVector)initial.copy();
         final ByteVector b = factory().createVector(new byte[] {7, 0, 0, 7, 7});
 
-        final ByteVector c = a.transformNonZero(new VectorFunction() {
-
-            @Override
-            public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
-
-                return (byte)i;
-            }
-        }, 5, 5);
+        final ByteVector c = a.transformNonZero(new IndexFunction(), 5, 5);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller vector
         assertEquals(b, c);
