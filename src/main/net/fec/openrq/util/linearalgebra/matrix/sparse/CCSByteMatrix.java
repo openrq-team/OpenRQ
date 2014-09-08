@@ -439,20 +439,15 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         if (k < columnPointers[j + 1] && rowIndices[k] == i) {
             final byte value = function.evaluate(i, j, values[k]);
-            updateNonZero(k, j, value);
+            if (aIsEqualToB(value, (byte)0)) {
+                remove(k, j);
+            }
+            else {
+                values[k] = value;
+            }
         }
         else {
             insert(k, i, j, function.evaluate(i, j, (byte)0));
-        }
-    }
-
-    private void updateNonZero(int k, int j, byte value) {
-
-        if (aIsEqualToB(value, (byte)0)) {
-            remove(k, j);
-        }
-        else {
-            values[k] = value;
         }
     }
 
@@ -463,7 +458,15 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         while (nonZeroCount < cardinality) {
             for (int k = columnPointers[j]; k < columnPointers[j + 1]; k++, nonZeroCount++) {
                 final byte value = function.evaluate(rowIndices[k], j, values[k]);
-                updateNonZero(k, j, value);
+                if (aIsEqualToB(value, (byte)0)) {
+                    remove(k, j);
+                    // since we removed a nonzero, the indices must be decremented accordingly
+                    k--;
+                    nonZeroCount--;
+                }
+                else {
+                    values[k] = value;
+                }
             }
             j++;
         }
@@ -476,22 +479,36 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         for (int k = columnPointers[j]; k < columnPointers[j + 1]; k++) {
             final byte value = function.evaluate(rowIndices[k], j, values[k]);
-            updateNonZero(k, j, value);
+            if (aIsEqualToB(value, (byte)0)) {
+                remove(k, j);
+                // since we removed a nonzero, the index must be decremented accordingly
+                k--;
+            }
+            else {
+                values[k] = value;
+            }
         }
     }
-    
+
     @Override
     public void updateNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow) {
 
         checkColumnBounds(j);
         checkRowRangeBounds(fromRow, toRow);
-        
+
         for (int k = columnPointers[j]; k < columnPointers[j + 1]; k++) {
             final int row = rowIndices[k];
             if (fromRow <= row) {
                 if (row < toRow) {
                     final byte value = function.evaluate(row, j, values[k]);
-                    updateNonZero(k, j, value);
+                    if (aIsEqualToB(value, (byte)0)) {
+                        remove(k, j);
+                        // since we removed a nonzero, the index must be decremented accordingly
+                        k--;
+                    }
+                    else {
+                        values[k] = value;
+                    }
                 }
                 else {
                     break; // no need to check rows beyond the last one
@@ -517,7 +534,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             j++;
         }
     }
-    
+
     @Override
     public void readExternal(ObjectInput in) throws IOException {
 

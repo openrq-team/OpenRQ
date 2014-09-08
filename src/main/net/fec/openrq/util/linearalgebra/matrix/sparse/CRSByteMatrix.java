@@ -549,20 +549,15 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         if (k < rowPointers[i + 1] && columnIndices[k] == j) {
             final byte value = function.evaluate(i, j, values[k]);
-            updateNonZero(k, i, value);
+            if (aIsEqualToB(value, (byte)0)) {
+                remove(k, i);
+            }
+            else {
+                values[k] = value;
+            }
         }
         else {
             insert(k, i, j, function.evaluate(i, j, (byte)0));
-        }
-    }
-
-    private void updateNonZero(int k, int i, byte value) {
-
-        if (aIsEqualToB(value, (byte)0)) {
-            remove(k, i);
-        }
-        else {
-            values[k] = value;
         }
     }
 
@@ -573,7 +568,15 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         while (nonZeroCount < cardinality) {
             for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++, nonZeroCount++) {
                 final byte value = function.evaluate(i, columnIndices[k], values[k]);
-                updateNonZero(k, i, value);
+                if (aIsEqualToB(value, (byte)0)) {
+                    remove(k, i);
+                    // since we removed a nonzero, the indices must be decremented accordingly
+                    k--;
+                    nonZeroCount--;
+                }
+                else {
+                    values[k] = value;
+                }
             }
             i++;
         }
@@ -586,7 +589,14 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
             final byte value = function.evaluate(i, columnIndices[k], values[k]);
-            updateNonZero(k, i, value);
+            if (aIsEqualToB(value, (byte)0)) {
+                remove(k, i);
+                // since we removed a nonzero, the index must be decremented accordingly
+                k--;
+            }
+            else {
+                values[k] = value;
+            }
         }
     }
 
@@ -601,7 +611,14 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             if (fromColumn <= col) {
                 if (col < toColumn) {
                     final byte value = function.evaluate(i, col, values[k]);
-                    updateNonZero(k, i, value);
+                    if (aIsEqualToB(value, (byte)0)) {
+                        remove(k, i);
+                        // since we removed a nonzero, the index must be decremented accordingly
+                        k--;
+                    }
+                    else {
+                        values[k] = value;
+                    }
                 }
                 else {
                     break; // no need to check columns beyond the last one

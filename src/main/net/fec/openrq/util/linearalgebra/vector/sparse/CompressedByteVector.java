@@ -321,14 +321,6 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     @Override
-    public void updateNonZero(VectorFunction function) {
-
-        for (int i = 0; i < cardinality; i++) {
-            values[i] = function.evaluate(indices[i], values[i]);
-        }
-    }
-
-    @Override
     public void update(int i, VectorFunction function) {
 
         checkIndexBounds(i);

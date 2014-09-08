@@ -429,7 +429,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         ByteMatrix result = copy(factory); // since it is a copy, we can use update methods
 
         if (result instanceof SparseByteMatrix) {
-            ((SparseByteMatrix)result).updateNonZeroInColumn(j, function);
+            ((SparseByteMatrix)result).updateNonZeroInColumn(j, function, fromRow, toRow);
         }
         else {
             for (int i = fromRow; i < toRow; i++) {
