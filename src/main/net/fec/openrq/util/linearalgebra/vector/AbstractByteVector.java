@@ -520,6 +520,20 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
+    public boolean isZeroAt(int i) {
+
+        checkIndexBounds(i);
+        return safeGet(i) == 0;
+    }
+
+    @Override
+    public boolean nonZeroAt(int i) {
+
+        checkIndexBounds(i);
+        return safeGet(i) != 0;
+    }
+
+    @Override
     public int nonZeros() {
 
         int nonZeros = 0;
@@ -550,8 +564,10 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void each(VectorProcedure procedure) {
 
-        for (int i = 0; i < length; i++) {
-            procedure.apply(i, safeGet(i));
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            procedure.apply(it.index(), it.get());
         }
     }
 
@@ -565,12 +581,25 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
-    public void update(VectorFunction function) {
+    public void eachNonZero(VectorProcedure procedure) {
 
-        ByteVectorIterator it = iterator();
-        while (it.hasNext()) {
-            it.next();
-            it.set(function.evaluate(it.index(), it.get()));
+        for (int i = 0; i < length; i++) {
+            final byte value = safeGet(i);
+            if (value != 0) {
+                procedure.apply(i, value);
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZero(VectorProcedure procedure, int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+        for (int i = fromIndex; i < toIndex; i++) {
+            final byte value = safeGet(i);
+            if (value != 0) {
+                procedure.apply(i, value);
+            }
         }
     }
 
@@ -579,6 +608,16 @@ public abstract class AbstractByteVector implements ByteVector {
 
         checkIndexBounds(i);
         safeSet(i, function.evaluate(i, safeGet(i)));
+    }
+
+    @Override
+    public void update(VectorFunction function) {
+
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.set(function.evaluate(it.index(), it.get()));
+        }
     }
 
     @Override
@@ -591,76 +630,40 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
-    public ByteVector transform(VectorFunction function) {
+    public void updateNonZero(VectorFunction function) {
 
-        return transform(function, factory);
-    }
-
-    @Override
-    public ByteVector transform(VectorFunction function, Factory factory) {
-
-        ByteVector result = blank(factory);
         ByteVectorIterator it = iterator();
-
         while (it.hasNext()) {
-            it.next();
-            result.set(it.index(), function.evaluate(it.index(), it.get()));
+            final byte value = it.next();
+            if (value != 0) {
+                it.set(function.evaluate(it.index(), value));
+            }
         }
-
-        return result;
     }
 
     @Override
-    public ByteVector transform(int i, VectorFunction function) {
-
-        return transform(i, function, factory);
-    }
-
-    @Override
-    public ByteVector transform(int i, VectorFunction function, Factory factory) {
-
-        checkIndexBounds(i);
-        ByteVector result = copy(factory); // since it is a copy, we can use update method
-        result.update(i, function);
-
-        return result;
-    }
-
-    @Override
-    public ByteVector transform(VectorFunction function, int fromIndex, int toIndex) {
-
-        return transform(function, fromIndex, toIndex, factory);
-    }
-
-    @Override
-    public ByteVector transform(VectorFunction function, int fromIndex, int toIndex, Factory factory) {
+    public void updateNonZero(VectorFunction function, int fromIndex, int toIndex) {
 
         checkIndexRangeBounds(fromIndex, toIndex);
-        ByteVector result = blank(factory);
-        ByteVectorIterator it = iterator();
-
-        while (it.hasNext()) {
-            it.next();
-            final int currIndex = it.index();
-
-            final byte transformed;
-            if (fromIndex <= currIndex && currIndex < toIndex) {
-                transformed = function.evaluate(currIndex, it.get());
+        for (int i = fromIndex; i < toIndex; i++) {
+            final byte value = safeGet(i);
+            if (value != 0) {
+                safeSet(i, function.evaluate(i, value));
             }
-            else {
-                transformed = it.get();
-            }
-
-            result.set(currIndex, transformed);
         }
-
-        return result;
     }
 
     @Override
     public byte fold(VectorAccumulator accumulator) {
 
         each(ByteVectors.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
+    }
+
+    @Override
+    public byte foldNonZero(VectorAccumulator accumulator) {
+
+        eachNonZero(ByteVectors.asAccumulatorProcedure(accumulator));
         return accumulator.accumulate();
     }
 
@@ -679,7 +682,7 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
-    public boolean non(VectorPredicate predicate) {
+    public final boolean non(VectorPredicate predicate) {
 
         return !is(predicate);
     }

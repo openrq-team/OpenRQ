@@ -489,7 +489,7 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
      *            the array of indices
      * @return the new vector with the selected elements
      */
-    public ByteVector select(int[] indices);
+    ByteVector select(int[] indices);
 
     /**
      * Returns a new vector with the selected elements.
@@ -500,7 +500,7 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
      *            the factory of result vector
      * @return the new vector with the selected elements
      */
-    public ByteVector select(int[] indices, Factory factory);
+    ByteVector select(int[] indices, Factory factory);
 
     /**
      * Returns the factory of this vector.
@@ -508,6 +508,24 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
      * @return the factory of this vector
      */
     Factory factory();
+
+    /**
+     * Whether or not the specified element is zero.
+     * 
+     * @param i
+     *            element's index
+     * @return {@code true} if specified element is zero, {@code false} otherwise
+     */
+    boolean isZeroAt(int i);
+
+    /**
+     * Whether or not the specified element is not zero.
+     * 
+     * @param i
+     *            element's index
+     * @return {@code true} if specified element is not zero, {@code false} otherwise
+     */
+    boolean nonZeroAt(int i);
 
     /**
      * Returns the number of non zero elements in this vector.
@@ -548,12 +566,24 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
     void each(VectorProcedure procedure, int fromIndex, int toIndex);
 
     /**
-     * Updates all elements of this vector by applying given {@code function}.
+     * Applies given {@code procedure} to each non-zero element of this vector.
      * 
-     * @param function
-     *            the the vector function
+     * @param procedure
+     *            the vector procedure
      */
-    void update(VectorFunction function);
+    void eachNonZero(VectorProcedure procedure);
+
+    /**
+     * Applies given {@code procedure} to each non-zero element of a range of this vector.
+     * 
+     * @param procedure
+     *            the vector procedure
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     */
+    void eachNonZero(VectorProcedure procedure, int fromIndex, int toIndex);
 
     /**
      * Updates the specified element of this vector by applying given {@code function}.
@@ -564,6 +594,14 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
      *            the vector function
      */
     void update(int i, VectorFunction function);
+
+    /**
+     * Updates all elements of this vector by applying given {@code function}.
+     * 
+     * @param function
+     *            the the vector function
+     */
+    void update(VectorFunction function);
 
     /**
      * Updates all elements in a range of this vector by applying given {@code function}.
@@ -578,82 +616,24 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
     void update(VectorFunction function, int fromIndex, int toIndex);
 
     /**
-     * Builds a new vector by applying given {@code function} to each element
-     * of this vector.
+     * Updates all non zero elements of this vector by applying given {@code function}.
      * 
      * @param function
-     *            the vector function
-     * @return the transformed vector
+     *            the the vector function
      */
-    ByteVector transform(VectorFunction function);
+    void updateNonZero(VectorFunction function);
 
     /**
-     * Builds a new vector by applying given {@code function} to each element
-     * of this vector.
+     * Updates all non zero elements in a range of this vector by applying given {@code function}.
      * 
      * @param function
-     *            the vector function
-     * @param factory
-     *            the factory of result vector
-     * @return the transformed vector
-     */
-    ByteVector transform(VectorFunction function, Factory factory);
-
-    /**
-     * Builds a new vector by applying given {@code function} to the specified element
-     * of this vector.
-     * 
-     * @param i
-     *            element's index
-     * @param function
-     *            the vector function
-     * @return the transformed vector
-     */
-    ByteVector transform(int i, VectorFunction function);
-
-    /**
-     * Builds a new vector by applying given {@code function} to the specified element
-     * of this vector.
-     * 
-     * @param i
-     *            element's index
-     * @param function
-     *            the vector function
-     * @param factory
-     *            the factory of result vector
-     * @return the transformed vector
-     */
-    ByteVector transform(int i, VectorFunction function, Factory factory);
-
-    /**
-     * Builds a new vector by applying given {@code function} to each element in a range
-     * of this vector.
-     * 
-     * @param function
-     *            the vector function
+     *            the the vector function
      * @param fromIndex
      *            The starting index (inclusive)
      * @param toIndex
      *            The ending index (exclusive)
-     * @return the transformed vector
      */
-    ByteVector transform(VectorFunction function, int fromIndex, int toIndex);
-
-    /**
-     * Builds a new vector by applying given {@code function} to each element in a range
-     * of this vector.
-     * 
-     * @param function
-     *            the vector function
-     * @param fromIndex
-     *            The starting index (inclusive)
-     * @param toIndex
-     *            The ending index (exclusive)
-     * @param factory
-     *            the factory of result vector
-     * @return the transformed vector
-     */
-    ByteVector transform(VectorFunction function, int fromIndex, int toIndex, Factory factory);
+    void updateNonZero(VectorFunction function, int fromIndex, int toIndex);
 
     /**
      * Folds all elements of this vector with given {@code accumulator}.
@@ -663,6 +643,15 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
      * @return the accumulated value
      */
     byte fold(VectorAccumulator accumulator);
+
+    /**
+     * Folds non-zero elements of this vector with given {@code accumulator}.
+     * 
+     * @param accumulator
+     *            the vector accumulator
+     * @return the accumulated value
+     */
+    byte foldNonZero(VectorAccumulator accumulator);
 
     /**
      * Checks whether this vector compiles with given {@code predicate} or not.

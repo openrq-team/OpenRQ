@@ -41,8 +41,6 @@ import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.matrix.sparse.SparseByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
-import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
-import net.fec.openrq.util.linearalgebra.vector.sparse.SparseByteVector;
 import net.fec.openrq.util.printing.TimePrinter;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
@@ -75,16 +73,6 @@ final class LinearSystem {
         }
         else {
             return SPARSE_FACTORY;
-        }
-    }
-
-    private static void updateVectorMaybeNonZeroOnly(ByteVector vector, VectorFunction function) {
-
-        if (vector instanceof SparseByteVector) {
-            ((SparseByteVector)vector).updateNonZero(function);
-        }
-        else {
-            vector.update(function);
         }
     }
 
@@ -1006,7 +994,7 @@ final class LinearSystem {
 
                     // multiplication
                     final ByteVector product = A.getRow(i);
-                    updateVectorMaybeNonZeroOnly(product, ByteVectors.asMulFunction(balpha));
+                    product.updateNonZero(ByteVectors.asMulFunction(balpha));
 
                     // addition
                     A.updateRow(row, new MatrixFunction() {
@@ -1232,7 +1220,7 @@ final class LinearSystem {
 
                     // multiply A[j][l] by row 'l' of A
                     final ByteVector product = A.getRow(eL);
-                    updateVectorMaybeNonZeroOnly(product, ByteVectors.asMulFunction(beta));
+                    product.updateNonZero(ByteVectors.asMulFunction(beta));
 
                     // add the product to row 'j' of A
                     A.updateRow(j, new MatrixFunction() {
