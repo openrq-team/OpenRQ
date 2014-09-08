@@ -37,6 +37,8 @@ import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
+import net.fec.openrq.util.linearalgebra.matrix.sparse.SparseByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
@@ -83,6 +85,31 @@ final class LinearSystem {
         }
         else {
             vector.update(function);
+        }
+    }
+
+    private static void eachNonZeroInRow(
+        ByteMatrix matrix,
+        int row,
+        final MatrixProcedure procedure,
+        int fromColumn,
+        int toColumn)
+    {
+
+        if (matrix instanceof SparseByteMatrix) {
+            ((SparseByteMatrix)matrix).eachNonZeroInRow(row, procedure, fromColumn, toColumn);
+        }
+        else {
+            matrix.eachInRow(row, new MatrixProcedure() {
+
+                @Override
+                public void apply(int i, int j, byte value) {
+
+                    if (value != 0) {
+                        procedure.apply(i, j, value);
+                    }
+                }
+            }, fromColumn, toColumn);
         }
     }
 
@@ -1018,34 +1045,26 @@ final class LinearSystem {
             // update nonZeros
             for (Row row : rows.values())
             {
-                int nonZeros = 0;
-                int line = row.position;
-                Set<Integer> nodes = new HashSet<>(L - u - i + 1, 1.0f);
+                // update the non zero count
+                row.nonZeros = A.nonZerosInRow(row.position, i, L - u);
 
-                // check all columns for non-zeros
-                for (int col = i; col < L - u; col++)
-                {
-                    if (A.get(line, col) == 0) {
-                        continue;
-                    }
-                    else
-                    {
-                        // count the non-zero
-                        nonZeros++;
-
-                        // add node to this edge
-                        nodes.add(col);
-                    }
-                }
-
-                if (nonZeros != 2 || row.isHDPC) {
+                if (row.nonZeros != 2 || row.isHDPC) {
                     row.nodes = null;
                 }
                 else {
+                    final Set<Integer> nodes = new HashSet<>(2 + 1, 1.0f); // we know there will only be two non zeros
+                    eachNonZeroInRow(A, row.position, new MatrixProcedure() {
+
+                        @Override
+                        @SuppressWarnings("unused")
+                        public void apply(int i, int j, byte value) {
+
+                            nodes.add(j); // add node to this edge (column index)
+                        }
+                    }, i, L - u);
+
                     row.nodes = nodes;
                 }
-
-                row.nonZeros = nonZeros;
             }
 
             TimePrinter.markTimestamp(); // DEBUG

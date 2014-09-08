@@ -469,18 +469,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void eachNonZero(MatrixProcedure procedure) {
-
-        int nonZeroCount = 0, i = 0;
-        while (nonZeroCount < cardinality) {
-            for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++, nonZeroCount++) {
-                procedure.apply(i, columnIndices[k], values[k]);
-            }
-            i++;
-        }
-    }
-
-    @Override
     public void each(MatrixProcedure procedure) {
 
         int k = 0;
@@ -511,6 +499,18 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             else {
                 procedure.apply(i, j, (byte)0);
             }
+        }
+    }
+
+    @Override
+    public void eachNonZero(MatrixProcedure procedure) {
+
+        int nonZeroCount = 0, i = 0;
+        while (nonZeroCount < cardinality) {
+            for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++, nonZeroCount++) {
+                procedure.apply(i, columnIndices[k], values[k]);
+            }
+            i++;
         }
     }
 
