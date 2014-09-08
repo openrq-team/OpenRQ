@@ -781,12 +781,12 @@ public abstract class AbstractByteVectorTest {
     }
 
 
-    private static final class IndexFunction implements VectorFunction {
+    private static final class IndexModulus2Function implements VectorFunction {
 
         @Override
         public byte evaluate(int i, @SuppressWarnings("unused") byte value) {
 
-            return (byte)i;
+            return (byte)(i % 2);
         }
     }
 
@@ -795,9 +795,9 @@ public abstract class AbstractByteVectorTest {
     public void testUpdate() {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 0, 1, 0});
 
-        a.update(new IndexFunction());
+        a.update(new IndexModulus2Function());
 
         assertEquals(b, a);
     }
@@ -807,9 +807,9 @@ public abstract class AbstractByteVectorTest {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
 
-        a.update(2, new IndexFunction());
+        a.update(2, new IndexModulus2Function());
 
-        assertEquals(2, a.get(2));
+        assertEquals(0, a.get(2));
     }
 
     @Test
@@ -818,7 +818,7 @@ public abstract class AbstractByteVectorTest {
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 7, 7, 7, 7});
 
-        a.update(new IndexFunction(), 0, 0);
+        a.update(new IndexModulus2Function(), 0, 0);
 
         assertEquals(b, a);
     }
@@ -829,7 +829,7 @@ public abstract class AbstractByteVectorTest {
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {0, 1, 7, 7, 7});
 
-        a.update(new IndexFunction(), 0, 2);
+        a.update(new IndexModulus2Function(), 0, 2);
 
         assertEquals(b, a);
     }
@@ -838,9 +838,9 @@ public abstract class AbstractByteVectorTest {
     public void testUpdateInRangeOf_0_to_5() {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 0, 1, 0});
 
-        a.update(new IndexFunction(), 0, 5);
+        a.update(new IndexModulus2Function(), 0, 5);
 
         assertEquals(b, a);
     }
@@ -849,9 +849,9 @@ public abstract class AbstractByteVectorTest {
     public void testUpdateInRangeOf_2_to_5() {
 
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
-        final ByteVector b = factory().createVector(new byte[] {7, 7, 2, 3, 4});
+        final ByteVector b = factory().createVector(new byte[] {7, 7, 0, 1, 0});
 
-        a.update(new IndexFunction(), 2, 5);
+        a.update(new IndexModulus2Function(), 2, 5);
 
         assertEquals(b, a);
     }
@@ -862,7 +862,204 @@ public abstract class AbstractByteVectorTest {
         final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
         final ByteVector b = factory().createVector(new byte[] {7, 7, 7, 7, 7});
 
-        a.update(new IndexFunction(), 5, 5);
+        a.update(new IndexModulus2Function(), 5, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testFoldNonZero_5() {
+
+        ByteVector a = factory().createVector(
+            new byte[] {2, 0, 5, 0, 2}
+            );
+
+        VectorAccumulator sum = ByteVectors.asSumAccumulator((byte)0);
+        VectorAccumulator product = ByteVectors.asProductAccumulator((byte)1);
+
+        assertEquals(a.foldNonZero(sum), 5);
+        // check whether the accumulator were flushed
+        assertEquals(a.foldNonZero(sum), 5);
+
+        assertEquals(a.foldNonZero(product), 20);
+        // check whether the accumulator were flushed
+        assertEquals(a.foldNonZero(product), 20);
+    }
+
+    @Test
+    public void testIsZeroAt_4() {
+
+        ByteVector a = factory().createVector(
+            new byte[] {1, 0, 0, 4}
+            );
+
+        assertTrue(a.isZeroAt(1));
+        assertFalse(a.isZeroAt(3));
+    }
+
+    @Test
+    public void testNonZeroAt_6() {
+
+        ByteVector a = factory().createVector(
+            new byte[] {0, 5, 2, 0, 0, 0}
+            );
+
+        assertTrue(a.nonZeroAt(1));
+        assertFalse(a.nonZeroAt(3));
+    }
+
+    @Test
+    public void testEachNonZero() {
+
+        final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector c = factory().createVector(new byte[] {7, 1, 2, 7, 7});
+
+        a.eachNonZero(new SetterProcedure(b));
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRangeOf_0_to_0() {
+
+        final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+
+        a.eachNonZero(new SetterProcedure(b), 0, 0);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRangeOf_0_to_2() {
+
+        final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector c = factory().createVector(new byte[] {7, 1, 2, 3, 4});
+
+        a.eachNonZero(new SetterProcedure(b), 0, 2);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRangeOf_0_to_5() {
+
+        final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector c = factory().createVector(new byte[] {7, 1, 2, 7, 7});
+
+        a.eachNonZero(new SetterProcedure(b), 0, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRangeOf_2_to_5() {
+
+        final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 7, 7});
+
+        a.eachNonZero(new SetterProcedure(b), 2, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRangeOf_5_to_5() {
+
+        final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+
+        a.eachNonZero(new SetterProcedure(b), 5, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testUpdateNonZero() {
+
+        final ByteVector a = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 0, 1, 0});
+
+        a.updateNonZero(new IndexModulus2Function());
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRangeOf_0_to_0() {
+
+        final ByteVector a = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+
+        a.updateNonZero(new IndexModulus2Function(), 0, 0);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRangeOf_0_to_2() {
+
+        final ByteVector a = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 0, 7, 7});
+
+        a.updateNonZero(new IndexModulus2Function(), 0, 2);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRangeOf_0_to_5() {
+
+        final ByteVector a = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 0, 1, 0});
+
+        a.updateNonZero(new IndexModulus2Function(), 0, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRangeOf_2_to_5() {
+
+        final ByteVector a = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {0, 7, 0, 1, 0});
+
+        a.updateNonZero(new IndexModulus2Function(), 2, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRangeOf_5_to_5() {
+
+        final ByteVector a = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+
+        a.updateNonZero(new IndexModulus2Function(), 5, 5);
 
         assertEquals(b, a);
     }
