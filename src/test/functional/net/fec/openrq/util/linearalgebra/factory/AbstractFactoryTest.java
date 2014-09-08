@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import junit.framework.TestCase;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
@@ -68,8 +67,8 @@ public abstract class AbstractFactoryTest extends TestCase {
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++)
             {
-                assertTrue(aIsEqualToB(b.get(i, j), (byte)0));
-                assertTrue(aIsEqualToB(d.get(i, j), (byte)0));
+                assertEquals(b.get(i, j), 0);
+                assertEquals(d.get(i, j), 0);
             }
         }
     }
@@ -90,7 +89,7 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                assertTrue(aIsEqualToB(array[i][j], a.get(i, j)));
+                assertEquals(array[i][j], a.get(i, j));
             }
         }
     }
@@ -105,7 +104,7 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.columns(); j++) {
-                assertTrue(aIsEqualToB(a.get(i, j), (byte)10));
+                assertEquals(a.get(i, j), 10);
             }
         }
     }
@@ -120,7 +119,7 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.columns(); j++) {
-                assertTrue(aIsEqualToB(a.get(i, j), (byte)20));
+                assertEquals(a.get(i, j), 20);
             }
         }
     }
@@ -135,7 +134,7 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.columns(); j++) {
-                assertTrue(aIsEqualToB(a.get(i, j), (byte)30));
+                assertEquals(a.get(i, j), 30);
             }
         }
     }
@@ -147,7 +146,7 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < a.rows(); i++) {
             for (int j = i; j < a.columns(); j++) {
-                assertTrue(aIsEqualToB(a.get(i, j), a.get(j, i)));
+                assertEquals(a.get(i, j), a.get(j, i));
             }
         }
     }
@@ -163,10 +162,10 @@ public abstract class AbstractFactoryTest extends TestCase {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 if (i == j) {
-                    assertTrue(aIsEqualToB(a.get(i, j), (byte)1));
+                    assertEquals(a.get(i, j), 1);
                 }
                 else {
-                    assertTrue(aIsEqualToB(a.get(i, j), (byte)0));
+                    assertEquals(a.get(i, j), 0);
                 }
             }
         }
@@ -187,7 +186,7 @@ public abstract class AbstractFactoryTest extends TestCase {
                     assertEquals(diagonal[i], a.get(i, j));
                 }
                 else {
-                    assertTrue(aIsEqualToB(a.get(i, j), (byte)0));
+                    assertEquals(a.get(i, j), 0);
                 }
             }
         }
@@ -205,7 +204,7 @@ public abstract class AbstractFactoryTest extends TestCase {
         assertEquals(5, c.length());
 
         for (int i = 0; i < b.length(); i++) {
-            assertTrue(aIsEqualToB(b.get(i), (byte)0));
+            assertEquals(b.get(i), 0);
         }
     }
 
@@ -218,10 +217,10 @@ public abstract class AbstractFactoryTest extends TestCase {
         assertEquals(3, a.length());
         assertEquals(1, b.length());
 
-        assertTrue(aIsEqualToB(b.get(0), (byte)3));
+        assertEquals(b.get(0), 3);
 
         for (int i = 0; i < 3; i++) {
-            assertTrue(aIsEqualToB(a.get(i), (byte)3));
+            assertEquals(a.get(i), 3);
         }
     }
 
@@ -234,7 +233,7 @@ public abstract class AbstractFactoryTest extends TestCase {
         assertEquals(5, a.length());
 
         for (int i = 0; i < 5; i++) {
-            assertTrue(aIsEqualToB(array[i], a.get(i)));
+            assertEquals(array[i], a.get(i));
         }
     }
 }

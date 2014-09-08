@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -87,7 +86,7 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
 
         for (int x = 0; x < i; x += 100000) {
             for (int y = 0; y < j; y += 500000) {
-                assertTrue(aIsEqualToB(a.get(x, y), aTimesB((byte)x, (byte)y)));
+                assertEquals(a.get(x, y), aTimesB((byte)x, (byte)y));
             }
         }
     }
@@ -107,10 +106,10 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         assertEquals(j, a.columns());
 
         a.set(0, 0, (byte)42);
-        assertTrue(aIsEqualToB(a.get(0, 0), (byte)42));
+        assertEquals(a.get(0, 0), 42);
 
         a.set(i - 1, j - 1, (byte)7);
-        assertTrue(aIsEqualToB(a.get(i - 1, j - 1), (byte)7));
+        assertEquals(a.get(i - 1, j - 1), 7);
 
         // Since values and Indices array sizes are align'd with CCSMatrix and
         // CRSMatrix.MINIMUM_SIZE (=32), we need to set more than 32 values.
@@ -150,16 +149,16 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         MatrixAccumulator sum = ByteMatrices.asSumAccumulator((byte)0);
         MatrixAccumulator product = ByteMatrices.asProductAccumulator((byte)1);
 
-        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)2));
+        assertEquals(a.foldNonZero(sum), 2);
         // check whether the accumulator were flushed or not
-        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)2));
+        assertEquals(a.foldNonZero(sum), 2);
 
-        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)40));
+        assertEquals(a.foldNonZero(product), 40);
         // check whether the accumulator were flushed or not
-        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)40));
+        assertEquals(a.foldNonZero(product), 40);
 
-        assertTrue(aIsEqualToB(a.foldNonZeroInRow(1, product), (byte)20));
-        assertTrue(aIsEqualToB(a.foldNonZeroInColumn(2, product), (byte)10));
+        assertEquals(a.foldNonZeroInRow(1, product), 20);
+        assertEquals(a.foldNonZeroInColumn(2, product), 10);
 
         ByteVector nonZeroInColumns = a.foldNonZeroInColumns(product);
         assertEquals(factory().createVector(new byte[] {4, 1, 10}), nonZeroInColumns);

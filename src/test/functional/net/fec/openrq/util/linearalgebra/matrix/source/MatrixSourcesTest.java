@@ -36,9 +36,7 @@
 package net.fec.openrq.util.linearalgebra.matrix.source;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import net.fec.openrq.util.linearalgebra.factory.Basic1DFactory;
 import net.fec.openrq.util.linearalgebra.factory.Basic2DFactory;
 import net.fec.openrq.util.linearalgebra.factory.CCSFactory;
@@ -69,10 +67,10 @@ public class MatrixSourcesTest {
             for (int i = 0; i < a.rows(); i++) {
                 for (int j = 0; j < a.columns(); j++) {
                     if (i == j) {
-                        assertTrue(aIsEqualToB(a.get(i, j), (byte)1));
+                        assertEquals(a.get(i, j), 1);
                     }
                     else {
-                        assertTrue(aIsEqualToB(a.get(i, j), (byte)0));
+                        assertEquals(a.get(i, j), 0);
                     }
                 }
             }

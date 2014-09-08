@@ -38,7 +38,6 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -75,9 +74,9 @@ public abstract class AbstractByteVectorTest {
         assertEquals(5, a.length());
 
         a.set(0, aPlusB(a.get(2), (byte)10));
-        assertTrue(aIsEqualToB((byte)9, a.get(0)));
+        assertEquals(9, a.get(0));
 
-        assertTrue(aIsEqualToB((byte)0, a.get(1)));
+        assertEquals(0, a.get(1));
     }
 
     @Test
@@ -398,7 +397,7 @@ public abstract class AbstractByteVectorTest {
 
         ByteVector a = factory().createVector(new byte[] {2, 4, 6});
 
-        assertTrue(aIsEqualToB(a.product(), (byte)48));
+        assertEquals(a.product(), 48);
     }
 
     @Test
@@ -406,7 +405,7 @@ public abstract class AbstractByteVectorTest {
 
         ByteVector a = factory().createVector(new byte[] {2, 4, 6});
 
-        assertTrue(aIsEqualToB(a.sum(), (byte)0));
+        assertEquals(a.sum(), 0);
     }
 
     @Test
@@ -492,7 +491,7 @@ public abstract class AbstractByteVectorTest {
             Arrays.sort(array2);
 
             for (int ii = 0; ii < length; ii++) {
-                if (!aIsEqualToB(array1[ii], array2[ii])) {
+                if (array1[ii] != array2[ii]) {
                     return false;
                 }
             }
@@ -527,14 +526,14 @@ public abstract class AbstractByteVectorTest {
     public void testMax() {
 
         ByteVector a = factory().createVector(new byte[] {1, 0, 0, -1, 0, 0, 0, 0, -5, 0, 0, 5});
-        assertTrue(aIsEqualToB((byte)-1, a.max()));
+        assertEquals(-1, a.max());
     }
 
     @Test
     public void testMin() {
 
         ByteVector a = factory().createVector(new byte[] {1, 0, 0, -1, 0, 0, 0, 0, -5, 0, 0, 5});
-        assertTrue(aIsEqualToB((byte)0, a.min()));
+        assertEquals(0, a.min());
     }
 
     @Test
@@ -545,13 +544,13 @@ public abstract class AbstractByteVectorTest {
         VectorAccumulator sum = ByteVectors.asSumAccumulator((byte)0);
         VectorAccumulator product = ByteVectors.asProductAccumulator((byte)1);
 
-        assertTrue(aIsEqualToB(a.fold(sum), (byte)6));
+        assertEquals(a.fold(sum), 6);
         // check whether the accumulator were flushed
-        assertTrue(aIsEqualToB(a.fold(sum), (byte)6));
+        assertEquals(a.fold(sum), 6);
 
-        assertTrue(aIsEqualToB(a.fold(product), (byte)0));
+        assertEquals(a.fold(product), 0);
         // check whether the accumulator were flushed
-        assertTrue(aIsEqualToB(a.fold(product), (byte)0));
+        assertEquals(a.fold(product), 0);
     }
 
     @Test
@@ -562,7 +561,7 @@ public abstract class AbstractByteVectorTest {
             @Override
             public boolean test(@SuppressWarnings("unused") int i, byte value) {
 
-                return aIsEqualToB(value, (byte)3);
+                return value == 3;
             }
         };
 
@@ -592,7 +591,7 @@ public abstract class AbstractByteVectorTest {
             @Override
             public boolean test(@SuppressWarnings("unused") int i, byte value) {
 
-                return aIsEqualToB(value, (byte)42);
+                return value == 42;
             }
         };
 
@@ -810,7 +809,7 @@ public abstract class AbstractByteVectorTest {
 
         a.update(2, new IndexFunction());
 
-        assertTrue(aIsEqualToB((byte)2, a.get(2)));
+        assertEquals(2, a.get(2));
     }
 
     @Test

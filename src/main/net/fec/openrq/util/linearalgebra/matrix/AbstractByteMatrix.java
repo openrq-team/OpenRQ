@@ -44,7 +44,6 @@ package net.fec.openrq.util.linearalgebra.matrix;
 
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
@@ -840,7 +839,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         int nonZeros = 0;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
+                if (safeGet(i, j) != 0) {
                     nonZeros++;
                 }
             }
@@ -856,7 +855,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int j = 0; j < columns; j++) {
-            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
+            if (safeGet(i, j) != 0) {
                 nonZeros++;
             }
         }
@@ -872,7 +871,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int j = fromColumn; j < toColumn; j++) {
-            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
+            if (safeGet(i, j) != 0) {
                 nonZeros++;
             }
         }
@@ -887,7 +886,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int i = 0; i < rows; i++) {
-            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
+            if (safeGet(i, j) != 0) {
                 nonZeros++;
             }
         }
@@ -903,7 +902,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int i = fromRow; i < toRow; i++) {
-            if (!aIsEqualToB(safeGet(i, j), (byte)0)) {
+            if (safeGet(i, j) != 0) {
                 nonZeros++;
             }
         }
@@ -1296,7 +1295,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; result && i < rows; i++) {
             for (int j = 0; result && j < columns; j++) {
-                result = aIsEqualToB(safeGet(i, j), matrix.get(i, j));
+                result = safeGet(i, j) == matrix.get(i, j);
             }
         }
 

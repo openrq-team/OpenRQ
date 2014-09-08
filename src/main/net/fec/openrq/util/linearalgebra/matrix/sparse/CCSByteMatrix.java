@@ -40,7 +40,6 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
@@ -108,7 +107,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             columnPointers[j] = cardinality;
             for (int i = 0; i < rows; i++) {
                 byte value = source.get(i, j);
-                if (!aIsEqualToB(value, (byte)0)) {
+                if (value != 0) {
 
                     if (values.length < cardinality + 1) {
                         growup();
@@ -172,7 +171,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         int k = searchForRowIndex(i, columnPointers[j], columnPointers[j + 1]);
 
         if (k < columnPointers[j + 1] && rowIndices[k] == i) {
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k, j);
             }
             else {
@@ -439,7 +438,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         if (k < columnPointers[j + 1] && rowIndices[k] == i) {
             final byte value = function.evaluate(i, j, values[k]);
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k, j);
             }
             else {
@@ -458,7 +457,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         while (nonZeroCount < cardinality) {
             for (int k = columnPointers[j]; k < columnPointers[j + 1]; k++, nonZeroCount++) {
                 final byte value = function.evaluate(rowIndices[k], j, values[k]);
-                if (aIsEqualToB(value, (byte)0)) {
+                if (value == 0) {
                     remove(k, j);
                     // since we removed a nonzero, the indices must be decremented accordingly
                     k--;
@@ -479,7 +478,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         for (int k = columnPointers[j]; k < columnPointers[j + 1]; k++) {
             final byte value = function.evaluate(rowIndices[k], j, values[k]);
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k, j);
                 // since we removed a nonzero, the index must be decremented accordingly
                 k--;
@@ -501,7 +500,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             if (fromRow <= row) {
                 if (row < toRow) {
                     final byte value = function.evaluate(row, j, values[k]);
-                    if (aIsEqualToB(value, (byte)0)) {
+                    if (value == 0) {
                         remove(k, j);
                         // since we removed a nonzero, the index must be decremented accordingly
                         k--;
@@ -759,7 +758,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         int newCardinality = 0;
         for (int i = 0; i < newRows; i++) {
             for (int j = 0; j < newCols; j++) {
-                if (!aIsEqualToB(get(rowIndices[i], columnIndices[j]), (byte)0)) {
+                if (get(rowIndices[i], columnIndices[j]) != 0) {
                     newCardinality++;
                 }
             }
@@ -776,7 +775,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             newColumnPointers[j + 1] = newColumnPointers[j];
             for (int i = 0; i < newRows; i++) {
                 byte val = get(rowIndices[i], columnIndices[j]);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     newValues[endPtr] = val;
                     newRowIndices[endPtr] = i;
                     endPtr++;

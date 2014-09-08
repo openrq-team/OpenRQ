@@ -40,7 +40,6 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
@@ -110,7 +109,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             rowPointers[i] = cardinality;
             for (int j = 0; j < columns; j++) {
                 byte value = source.get(i, j);
-                if (!aIsEqualToB(value, (byte)0)) {
+                if (value != 0) {
 
                     if (values.length < cardinality + 1) {
                         growup();
@@ -174,7 +173,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         int k = searchForColumnIndex(j, rowPointers[i], rowPointers[i + 1]);
 
         if (k < rowPointers[i + 1] && columnIndices[k] == j) {
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k, i);
             }
             else {
@@ -236,7 +235,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
                     acc = aPlusB(acc, prod);
                 }
 
-                if (!aIsEqualToB(acc, (byte)0)) {
+                if (acc != 0) {
                     result.set(i, j, acc);
                 }
             }
@@ -269,7 +268,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
                 acc = aPlusB(acc, prod);
             }
 
-            if (!aIsEqualToB(acc, (byte)0)) {
+            if (acc != 0) {
                 result.set(i, acc);
             }
         }
@@ -549,7 +548,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         if (k < rowPointers[i + 1] && columnIndices[k] == j) {
             final byte value = function.evaluate(i, j, values[k]);
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k, i);
             }
             else {
@@ -568,7 +567,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         while (nonZeroCount < cardinality) {
             for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++, nonZeroCount++) {
                 final byte value = function.evaluate(i, columnIndices[k], values[k]);
-                if (aIsEqualToB(value, (byte)0)) {
+                if (value == 0) {
                     remove(k, i);
                     // since we removed a nonzero, the indices must be decremented accordingly
                     k--;
@@ -589,7 +588,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
             final byte value = function.evaluate(i, columnIndices[k], values[k]);
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k, i);
                 // since we removed a nonzero, the index must be decremented accordingly
                 k--;
@@ -611,7 +610,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             if (fromColumn <= col) {
                 if (col < toColumn) {
                     final byte value = function.evaluate(i, col, values[k]);
-                    if (aIsEqualToB(value, (byte)0)) {
+                    if (value == 0) {
                         remove(k, i);
                         // since we removed a nonzero, the index must be decremented accordingly
                         k--;
@@ -697,7 +696,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
     private void insert(int k, int i, int j, byte value) {
 
-        if (aIsEqualToB(value, (byte)0)) {
+        if (value == 0) {
             return;
         }
 
@@ -868,7 +867,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         int newCardinality = 0;
         for (int i = 0; i < newRows; i++) {
             for (int j = 0; j < newCols; j++) {
-                if (!aIsEqualToB(get(rowIndices[i], columnIndices[j]), (byte)0)) {
+                if (get(rowIndices[i], columnIndices[j]) != 0) {
                     newCardinality++;
                 }
             }
@@ -885,7 +884,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             newRowPointers[i + 1] = newRowPointers[i];
             for (int j = 0; j < newCols; j++) {
                 byte val = get(rowIndices[i], columnIndices[j]);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     newValues[endPtr] = val;
                     newColumnIndices[endPtr] = j;
                     endPtr++;

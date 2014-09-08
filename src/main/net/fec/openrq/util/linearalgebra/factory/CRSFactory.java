@@ -36,8 +36,6 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -217,7 +215,7 @@ public class CRSFactory extends CompressedFactory {
                 if ((i > a.rows()) && (j > a.columns())) {
                     current = d.get(i, j);
                 }
-                if (!aIsEqualToB(current, (byte)0)) {
+                if (current != 0) {
                     values.add(current);
                     columnIndices.add(j);
                     k++;

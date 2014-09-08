@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -167,7 +166,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 final byte val = safeGet(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     procedure.apply(i, j, val);
                 }
             }
@@ -181,7 +180,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int j = 0; j < columns; j++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 procedure.apply(i, j, val);
             }
         }
@@ -195,7 +194,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int j = fromColumn; j < toColumn; j++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 procedure.apply(i, j, val);
             }
         }
@@ -208,7 +207,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int i = 0; i < rows; i++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 procedure.apply(i, j, val);
             }
         }
@@ -222,7 +221,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int i = fromRow; i < toRow; i++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 procedure.apply(i, j, val);
             }
         }
@@ -234,7 +233,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 final byte val = safeGet(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     safeSet(i, j, function.evaluate(i, j, val));
                 }
             }
@@ -248,7 +247,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int j = 0; j < columns; j++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 safeSet(i, j, function.evaluate(i, j, val));
             }
         }
@@ -262,7 +261,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int j = fromColumn; j < toColumn; j++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 safeSet(i, j, function.evaluate(i, j, val));
             }
         }
@@ -275,7 +274,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int i = 0; i < rows; i++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 safeSet(i, j, function.evaluate(i, j, val));
             }
         }
@@ -289,7 +288,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
         for (int i = fromRow; i < toRow; i++) {
             final byte val = safeGet(i, j);
-            if (!aIsEqualToB(val, (byte)0)) {
+            if (val != 0) {
                 safeSet(i, j, function.evaluate(i, j, val));
             }
         }
@@ -313,7 +312,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
                     final byte val = safeGet(i, j);
-                    if (!aIsEqualToB(val, (byte)0)) {
+                    if (val != 0) {
                         result.set(i, j, function.evaluate(i, j, val));
                     }
                 }
@@ -342,7 +341,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         else {
             for (int j = 0; j < columns; j++) {
                 final byte val = safeGet(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     result.set(i, j, function.evaluate(i, j, val));
                 }
             }
@@ -377,7 +376,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         else {
             for (int j = fromColumn; j < toColumn; j++) {
                 final byte val = safeGet(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     result.set(i, j, function.evaluate(i, j, val));
                 }
             }
@@ -405,7 +404,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         else {
             for (int i = 0; i < rows; i++) {
                 final byte val = safeGet(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     result.set(i, j, function.evaluate(i, j, val));
                 }
             }
@@ -434,7 +433,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         else {
             for (int i = fromRow; i < toRow; i++) {
                 final byte val = safeGet(i, j);
-                if (!aIsEqualToB(val, (byte)0)) {
+                if (val != 0) {
                     result.set(i, j, function.evaluate(i, j, val));
                 }
             }

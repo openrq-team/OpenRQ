@@ -38,7 +38,6 @@
 package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 
@@ -92,7 +91,7 @@ public class CompressedByteVector extends SparseByteVector {
 
         for (int i = 0; i < length; i++) {
             byte value = source.get(i);
-            if (!aIsEqualToB(value, (byte)0)) {
+            if (value != 0) {
 
                 if (values.length < cardinality + 1) {
                     growup();
@@ -144,7 +143,7 @@ public class CompressedByteVector extends SparseByteVector {
         int k = searchForIndex(i);
 
         if (k < cardinality && indices[k] == i) {
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k);
             }
             else {
@@ -331,7 +330,7 @@ public class CompressedByteVector extends SparseByteVector {
 
             byte value = function.evaluate(i, values[k]);
 
-            if (aIsEqualToB(value, (byte)0)) {
+            if (value == 0) {
                 remove(k);
             }
             else {
@@ -408,7 +407,7 @@ public class CompressedByteVector extends SparseByteVector {
 
     private void insert(int k, int i, byte value) {
 
-        if (aIsEqualToB(value, (byte)0)) {
+        if (value == 0) {
             return;
         }
 
@@ -502,12 +501,12 @@ public class CompressedByteVector extends SparseByteVector {
             @Override
             public void set(byte value) {
 
-                if (aIsEqualToB(value, (byte)0) && !currentIsRemoved) {
+                if (value == 0 && !currentIsRemoved) {
                     currentIsRemoved = true;
                     removedIndex = indices[k];
                     CompressedByteVector.this.remove(k--);
                 }
-                else if (!aIsEqualToB(value, (byte)0) && !currentIsRemoved) {
+                else if (value != 0 && !currentIsRemoved) {
                     values[k] = value;
                 }
                 else {
@@ -565,7 +564,7 @@ public class CompressedByteVector extends SparseByteVector {
             public void set(byte value) {
 
                 if (k < cardinality && indices[k] == i) {
-                    if (aIsEqualToB(value, (byte)0)) {
+                    if (value == 0) {
                         CompressedByteVector.this.remove(k);
                     }
                     else {

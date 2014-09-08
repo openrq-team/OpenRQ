@@ -41,7 +41,6 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -78,7 +77,7 @@ public abstract class AbstractByteMatrixTest {
         });
 
         a.set(0, 1, aTimesB(a.get(1, 1), (byte)2));
-        assertTrue(aIsEqualToB(a.get(0, 1), (byte)10));
+        assertEquals(a.get(0, 1), 10);
     }
 
     @Test
@@ -791,7 +790,7 @@ public abstract class AbstractByteMatrixTest {
         });
 
         // additions are XORs
-        assertTrue(aIsEqualToB(a.trace(), (byte)13));
+        assertEquals(a.trace(), 13);
     }
 
     @Test
@@ -803,7 +802,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {0, 0, 9}
         });
 
-        assertTrue(aIsEqualToB(a.diagonalProduct(), (byte)45));
+        assertEquals(a.diagonalProduct(), 45);
     }
 
     @Test
@@ -815,7 +814,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {1, 1, 9}
         });
 
-        assertTrue(aIsEqualToB(a.product(), (byte)45));
+        assertEquals(a.product(), 45);
     }
 
     @Test
@@ -827,7 +826,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {0, 0, 9}
         });
 
-        assertTrue(aIsEqualToB(a.sum(), (byte)13));
+        assertEquals(a.sum(), 13);
     }
 
     @Test
@@ -1066,7 +1065,7 @@ public abstract class AbstractByteMatrixTest {
         Arrays.sort(array2);
 
         for (int ii = 0; ii < array1.length; ii++) {
-            if (!aIsEqualToB(array1[ii], array2[ii])) {
+            if (array1[ii] != array2[ii]) {
                 return false;
             }
         }
@@ -1427,7 +1426,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {6, -7, -2}
         });
 
-        assertTrue(aIsEqualToB(a.max(), (byte)-1));
+        assertEquals(a.max(), -1);
     }
 
     @Test
@@ -1439,7 +1438,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {0, 7, 2}
         });
 
-        assertTrue(aIsEqualToB(a.min(), (byte)0));
+        assertEquals(a.min(), 0);
     }
 
     @Test
@@ -1451,7 +1450,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {-2, 0, 0, -1}
         });
 
-        assertTrue(aIsEqualToB(a.maxInRow(2), (byte)-1));
+        assertEquals(a.maxInRow(2), -1);
     }
 
     @Test
@@ -1463,7 +1462,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {2, 0, 0, 1}
         });
 
-        assertTrue(aIsEqualToB(a.minInRow(2), (byte)0));
+        assertEquals(a.minInRow(2), 0);
     }
 
     @Test
@@ -1475,7 +1474,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {-2, 0, 0, -1}
         });
 
-        assertTrue(aIsEqualToB(a.maxInColumn(0), (byte)-2));
+        assertEquals(a.maxInColumn(0), -2);
     }
 
     @Test
@@ -1487,7 +1486,7 @@ public abstract class AbstractByteMatrixTest {
                                                             {-2, 0, 0, -1}
         });
 
-        assertTrue(aIsEqualToB(a.minInColumn(3), (byte)0));
+        assertEquals(a.minInColumn(3), 0);
     }
 
     private ByteMatrix matrixA() {
@@ -1605,7 +1604,7 @@ public abstract class AbstractByteMatrixTest {
 
         for (int col = 0; col < d.columns(); col++) {
             byte sum = d.foldColumn(col, ByteMatrices.asSumAccumulator((byte)0));
-            assertTrue(aIsEqualToB(sum, columnSums.get(col)));
+            assertEquals(sum, columnSums.get(col));
         }
 
         ByteVector s = d.foldColumns(ByteMatrices.asSumAccumulator((byte)0));
@@ -1615,7 +1614,7 @@ public abstract class AbstractByteMatrixTest {
 
         for (int row = 0; row < d.columns(); row++) {
             byte sum = d.foldRow(row, ByteMatrices.asSumAccumulator((byte)0));
-            assertTrue(aIsEqualToB(sum, rowSums.get(row)));
+            assertEquals(sum, rowSums.get(row));
         }
 
         s = d.foldRows(ByteMatrices.asSumAccumulator((byte)0));
@@ -2206,7 +2205,7 @@ public abstract class AbstractByteMatrixTest {
 
         a.update(1, 1, new IndexModulus2Function(a));
 
-        assertTrue(aIsEqualToB((byte)0, a.get(1, 1)));
+        assertEquals(0, a.get(1, 1));
     }
 
     @Test

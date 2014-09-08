@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
@@ -93,7 +92,7 @@ public abstract class SparseByteVector extends AbstractByteVector {
     public void assign(byte value) {
 
         // fast clear
-        if (aIsEqualToB(value, (byte)0)) {
+        if (value == 0) {
             cardinality = 0;
         }
         else {

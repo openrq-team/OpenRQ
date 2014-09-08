@@ -38,7 +38,6 @@ package net.fec.openrq.util.linearalgebra.vector;
 
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
@@ -74,7 +73,7 @@ public final class ByteVectors {
         @Override
         public boolean test(int i, byte value) {
 
-            return aIsEqualToB(value, (byte)0);
+            return value == 0;
         }
     };
 

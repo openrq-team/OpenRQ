@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -71,13 +70,13 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         VectorAccumulator sum = ByteVectors.asSumAccumulator((byte)0);
         VectorAccumulator product = ByteVectors.asProductAccumulator((byte)1);
 
-        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)5));
+        assertEquals(a.foldNonZero(sum), 5);
         // check whether the accumulator were flushed
-        assertTrue(aIsEqualToB(a.foldNonZero(sum), (byte)5));
+        assertEquals(a.foldNonZero(sum), 5);
 
-        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)20));
+        assertEquals(a.foldNonZero(product), 20);
         // check whether the accumulator were flushed
-        assertTrue(aIsEqualToB(a.foldNonZero(product), (byte)20));
+        assertEquals(a.foldNonZero(product), 20);
     }
 
     @Test

@@ -41,7 +41,6 @@ package net.fec.openrq.util.linearalgebra.matrix;
 
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
@@ -86,7 +85,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return (i == j) || aIsEqualToB(value, (byte)0);
+            return (i == j) || (value == 0);
         }
     };
 
@@ -106,8 +105,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return (i == j) ? aIsEqualToB(value, (byte)1) : aIsEqualToB(
-                value, (byte)0);
+            return (i == j) ? (value == 1) : (value == 0);
         }
     };
 
@@ -127,7 +125,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return aIsEqualToB(value, (byte)0);
+            return value == 0;
         }
     };
 
@@ -147,7 +145,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return Math.abs(i - j) <= 1 || aIsEqualToB(value, (byte)0);
+            return Math.abs(i - j) <= 1 || value == 0;
         }
     };
 
@@ -165,7 +163,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return (i == j) || (i == j + 1) || aIsEqualToB(value, (byte)0);
+            return (i == j) || (i == j + 1) || value == 0;
         }
     };
 
@@ -183,7 +181,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return (i == j) || (i == j - 1) || aIsEqualToB(value, (byte)0);
+            return (i == j) || (i == j - 1) || value == 0;
         }
     };
 
@@ -203,7 +201,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return (i >= j) || aIsEqualToB(value, (byte)0);
+            return (i >= j) || value == 0;
         }
     };
 
@@ -223,7 +221,7 @@ public final class ByteMatrices {
         @Override
         public boolean test(int i, int j, byte value) {
 
-            return (i <= j) || aIsEqualToB(value, (byte)0);
+            return (i <= j) || value == 0;
         }
     };
 
@@ -245,7 +243,7 @@ public final class ByteMatrices {
                 for (int j = i + 1; j < matrix.columns(); j++) {
                     byte a = matrix.get(i, j);
                     byte b = matrix.get(j, i);
-                    if (!aIsEqualToB(a, b)) {
+                    if (a != b) {
                         return false;
                     }
                 }

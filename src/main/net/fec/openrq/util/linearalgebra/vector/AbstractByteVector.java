@@ -41,7 +41,6 @@ package net.fec.openrq.util.linearalgebra.vector;
 
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsEqualToB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
@@ -538,7 +537,7 @@ public abstract class AbstractByteVector implements ByteVector {
 
         int nonZeros = 0;
         for (int i = 0; i < length; i++) {
-            if (!aIsEqualToB(safeGet(i), (byte)0)) {
+            if (safeGet(i) != 0) {
                 nonZeros++;
             }
         }
@@ -553,7 +552,7 @@ public abstract class AbstractByteVector implements ByteVector {
 
         int nonZeros = 0;
         for (int i = fromIndex; i < toIndex; i++) {
-            if (!aIsEqualToB(safeGet(i), (byte)0)) {
+            if (safeGet(i) != 0) {
                 nonZeros++;
             }
         }
@@ -763,7 +762,7 @@ public abstract class AbstractByteVector implements ByteVector {
         boolean result = true;
 
         for (int i = 0; result && i < length; i++) {
-            result = aIsEqualToB(safeGet(i), vector.get(i));
+            result = safeGet(i) == vector.get(i);
         }
 
         return result;

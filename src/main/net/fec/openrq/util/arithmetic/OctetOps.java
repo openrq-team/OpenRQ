@@ -87,12 +87,6 @@ public final class OctetOps {
         return (byte)-1;
     }
 
-    // for completeness sake
-    public static boolean aIsEqualToB(byte a, byte b) {
-
-        return a == b;
-    }
-
     public static boolean aIsLessThanB(byte a, byte b) {
 
         return OctetOps.UNSIGN(a) < OctetOps.UNSIGN(b);
