@@ -56,6 +56,7 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
@@ -2384,6 +2385,567 @@ public abstract class AbstractByteMatrixTest {
         });
 
         a.updateColumn(1, new IndexModulus2Function(a), 3, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testFoldNonZero_3x3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2},
+                                                            {4, 0, 5},
+                                                            {0, 0, 0}
+        });
+
+        MatrixAccumulator sum = ByteMatrices.asSumAccumulator((byte)0);
+        MatrixAccumulator product = ByteMatrices.asProductAccumulator((byte)1);
+
+        assertEquals(a.foldNonZero(sum), 2);
+        // check whether the accumulator were flushed or not
+        assertEquals(a.foldNonZero(sum), 2);
+
+        assertEquals(a.foldNonZero(product), 40);
+        // check whether the accumulator were flushed or not
+        assertEquals(a.foldNonZero(product), 40);
+
+        assertEquals(a.foldNonZeroInRow(1, product), 20);
+        assertEquals(a.foldNonZeroInColumn(2, product), 10);
+
+        ByteVector nonZeroInColumns = a.foldNonZeroInColumns(product);
+        assertEquals(factory().createVector(new byte[] {4, 1, 10}), nonZeroInColumns);
+
+        ByteVector nonZeroInRows = a.foldNonZeroInRows(product);
+        assertEquals(factory().createVector(new byte[] {2, 20, 1}), nonZeroInRows);
+    }
+
+    @Test
+    public void testIsZeroAt_5x3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 0},
+                                                            {0, 0, 2},
+                                                            {0, 0, 0},
+                                                            {0, 3, 0},
+                                                            {0, 0, 0}
+        });
+
+        assertTrue(a.isZeroAt(2, 2));
+        assertFalse(a.isZeroAt(3, 1));
+    }
+
+    @Test
+    public void testNonZeroAt_3x4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 2, 0},
+                                                            {0, 0, 0, 0},
+                                                            {0, 1, 0, 0}
+        });
+
+        assertTrue(a.nonZeroAt(2, 1));
+        assertFalse(a.nonZeroAt(0, 3));
+    }
+
+    @Test
+    public void testEachNonZero() {
+
+        final ByteMatrix initial = factory().createMatrix(new byte[][] {
+                                                                        {7, 0, 7, 7, 7},
+                                                                        {0, 7, 0, 7, 7},
+                                                                        {0, 0, 7, 0, 7},
+                                                                        {7, 0, 0, 7, 0},
+                                                                        {7, 7, 0, 0, 7}
+        });
+
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = a.blank();
+
+        a.eachNonZero(new SetterProcedure(b));
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(a, b);
+    }
+
+    private ByteMatrix initialNonZeroMatrix() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {5, 5, 9, 5, 5},
+                                                    {5, 5, 0, 5, 5},
+                                                    {9, 0, 9, 0, 9},
+                                                    {5, 5, 0, 5, 5},
+                                                    {5, 5, 9, 5, 5}
+        });
+    }
+
+    private ByteMatrix bMatrix() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {3, 3, 3, 3, 3},
+                                                    {3, 3, 3, 3, 3},
+                                                    {3, 3, 3, 3, 3},
+                                                    {3, 3, 3, 3, 3},
+                                                    {3, 3, 3, 3, 3}
+        });
+    }
+
+    @Test
+    public void testEachNonZeroInRow() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {9, 3, 9, 3, 9},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInRow(2, new SetterProcedure(b));
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRowInRangeOf_0_to_0() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInRow(2, new SetterProcedure(b), 0, 0);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRowInRangeOf_0_to_2() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {9, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInRow(2, new SetterProcedure(b), 0, 2);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRowInRangeOf_0_to_5() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {9, 3, 9, 3, 9},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInRow(2, new SetterProcedure(b), 0, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRowInRangeOf_2_to_5() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 9},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInRow(2, new SetterProcedure(b), 2, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInRowInRangeOf_5_to_5() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInRow(2, new SetterProcedure(b), 5, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInColumn() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 9, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3}
+        });
+
+        a.eachNonZeroInColumn(2, new SetterProcedure(b));
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInColumnInRangeOf_0_to_0() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInColumn(2, new SetterProcedure(b), 0, 0);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInColumnInRangeOf_0_to_2() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 9, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInColumn(2, new SetterProcedure(b), 0, 2);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInColumnInRangeOf_0_to_5() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 9, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3}
+        });
+
+        a.eachNonZeroInColumn(2, new SetterProcedure(b), 0, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInColumnInRangeOf_2_to_5() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3}
+        });
+
+        a.eachNonZeroInColumn(2, new SetterProcedure(b), 2, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInColumnInRangeOf_5_to_5() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInColumn(2, new SetterProcedure(b), 5, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testUpdateNonZero() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {0, 1, 0, 1, 0},
+                                                                  {1, 0, 0, 0, 1},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {1, 0, 0, 0, 1},
+                                                                  {0, 1, 0, 1, 0}
+        });
+
+        a.updateNonZero(new IndexModulus2Function(a));
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRow() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a));
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRowInRangeOf_0_to_0() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 0, 0);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRowInRangeOf_0_to_2() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 0, 2);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRowInRangeOf_0_to_5() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 0, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRowInRangeOf_2_to_5() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 2, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRowInRangeOf_5_to_5() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 5, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInColumn() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5}
+        });
+
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a));
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInColumnInRangeOf_0_to_0() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 0, 0);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInColumnInRangeOf_0_to_2() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 0, 2);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInColumnInRangeOf_0_to_5() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5}
+        });
+
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 0, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInColumnInRangeOf_2_to_5() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5}
+        });
+
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 2, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInColumnInRangeOf_5_to_5() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 5, 5);
 
         assertEquals(b, a);
     }

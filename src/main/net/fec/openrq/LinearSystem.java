@@ -38,7 +38,6 @@ import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
-import net.fec.openrq.util.linearalgebra.matrix.sparse.SparseByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.printing.TimePrinter;
@@ -73,31 +72,6 @@ final class LinearSystem {
         }
         else {
             return SPARSE_FACTORY;
-        }
-    }
-
-    private static void eachNonZeroInRow(
-        ByteMatrix matrix,
-        int row,
-        final MatrixProcedure procedure,
-        int fromColumn,
-        int toColumn)
-    {
-
-        if (matrix instanceof SparseByteMatrix) {
-            ((SparseByteMatrix)matrix).eachNonZeroInRow(row, procedure, fromColumn, toColumn);
-        }
-        else {
-            matrix.eachInRow(row, new MatrixProcedure() {
-
-                @Override
-                public void apply(int i, int j, byte value) {
-
-                    if (value != 0) {
-                        procedure.apply(i, j, value);
-                    }
-                }
-            }, fromColumn, toColumn);
         }
     }
 
@@ -1041,7 +1015,7 @@ final class LinearSystem {
                 }
                 else {
                     final Set<Integer> nodes = new HashSet<>(2 + 1, 1.0f); // we know there will only be two non zeros
-                    eachNonZeroInRow(A, row.position, new MatrixProcedure() {
+                    A.eachNonZeroInRow(row.position, new MatrixProcedure() {
 
                         @Override
                         @SuppressWarnings("unused")

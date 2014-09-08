@@ -834,6 +834,20 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public boolean isZeroAt(int i, int j) {
+
+        checkBounds(i, j);
+        return safeGet(i, j) == 0;
+    }
+
+    @Override
+    public boolean nonZeroAt(int i, int j) {
+
+        checkBounds(i, j);
+        return safeGet(i, j) != 0;
+    }
+
+    @Override
     public int nonZeros() {
 
         int nonZeros = 0;
@@ -855,7 +869,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int j = 0; j < columns; j++) {
-            if (safeGet(i, j) != 0) {
+            if (nonZeroAt(i, j)) {
                 nonZeros++;
             }
         }
@@ -871,7 +885,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int j = fromColumn; j < toColumn; j++) {
-            if (safeGet(i, j) != 0) {
+            if (nonZeroAt(i, j)) {
                 nonZeros++;
             }
         }
@@ -886,7 +900,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int i = 0; i < rows; i++) {
-            if (safeGet(i, j) != 0) {
+            if (nonZeroAt(i, j)) {
                 nonZeros++;
             }
         }
@@ -902,7 +916,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         int nonZeros = 0;
         for (int i = fromRow; i < toRow; i++) {
-            if (safeGet(i, j) != 0) {
+            if (nonZeroAt(i, j)) {
                 nonZeros++;
             }
         }
@@ -959,6 +973,73 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public void eachNonZero(MatrixProcedure procedure) {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                final byte val = safeGet(i, j);
+                if (val != 0) {
+                    procedure.apply(i, j, val);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
+
+        checkRowBounds(i);
+
+        for (int j = 0; j < columns; j++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZeroInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        for (int j = fromColumn; j < toColumn; j++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZeroInColumn(int j, MatrixProcedure procedure) {
+
+        checkColumnBounds(j);
+
+        for (int i = 0; i < rows; i++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
+    public void eachNonZeroInColumn(int j, MatrixProcedure procedure, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        for (int i = fromRow; i < toRow; i++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                procedure.apply(i, j, val);
+            }
+        }
+    }
+
+    @Override
     public void update(MatrixFunction function) {
 
         for (int i = 0; i < rows; i++) {
@@ -1003,6 +1084,73 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         checkRowRangeBounds(fromRow, toRow);
         for (int i = fromRow; i < toRow; i++) {
             safeUpdate(i, j, function);
+        }
+    }
+
+    @Override
+    public void updateNonZero(MatrixFunction function) {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                final byte val = safeGet(i, j);
+                if (val != 0) {
+                    safeSet(i, j, function.evaluate(i, j, val));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInRow(int i, MatrixFunction function) {
+
+        checkRowBounds(i);
+
+        for (int j = 0; j < columns; j++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        for (int j = fromColumn; j < toColumn; j++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInColumn(int j, MatrixFunction function) {
+
+        checkColumnBounds(j);
+
+        for (int i = 0; i < rows; i++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
+        }
+    }
+
+    @Override
+    public void updateNonZeroInColumn(int j, MatrixFunction function, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        for (int i = fromRow; i < toRow; i++) {
+            final byte val = safeGet(i, j);
+            if (val != 0) {
+                safeSet(i, j, function.evaluate(i, j, val));
+            }
         }
     }
 
@@ -1059,6 +1207,51 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         for (int i = 0; i < columns; i++) {
             result.set(i, foldColumn(i, accumulator));
+        }
+
+        return result;
+    }
+
+    @Override
+    public byte foldNonZero(MatrixAccumulator accumulator) {
+
+        eachNonZero(ByteMatrices.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
+    }
+
+    @Override
+    public byte foldNonZeroInRow(int i, MatrixAccumulator accumulator) {
+
+        eachNonZeroInRow(i, ByteMatrices.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
+    }
+
+    @Override
+    public byte foldNonZeroInColumn(int j, MatrixAccumulator accumulator) {
+
+        eachNonZeroInColumn(j, ByteMatrices.asAccumulatorProcedure(accumulator));
+        return accumulator.accumulate();
+    }
+
+    @Override
+    public ByteVector foldNonZeroInColumns(MatrixAccumulator accumulator) {
+
+        ByteVector result = factory.createVector(columns);
+
+        for (int i = 0; i < columns; i++) {
+            result.set(i, foldNonZeroInColumn(i, accumulator));
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector foldNonZeroInRows(MatrixAccumulator accumulator) {
+
+        ByteVector result = factory.createVector(rows);
+
+        for (int i = 0; i < rows; i++) {
+            result.set(i, foldNonZeroInRow(i, accumulator));
         }
 
         return result;
