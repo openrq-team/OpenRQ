@@ -239,10 +239,10 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
 
         return factory().createMatrix(new byte[][] {
                                                     {5, 5, 9, 5, 5},
-                                                    {5, 5, 9, 5, 5},
-                                                    {0, 9, 0, 9, 9},
-                                                    {5, 5, 9, 5, 5},
-                                                    {5, 5, 0, 5, 5}
+                                                    {5, 5, 0, 5, 5},
+                                                    {9, 0, 9, 0, 9},
+                                                    {5, 5, 0, 5, 5},
+                                                    {5, 5, 9, 5, 5}
         });
     }
 
@@ -266,7 +266,7 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
-                                                                  {3, 9, 3, 9, 9},
+                                                                  {9, 3, 9, 3, 9},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3}
         });
@@ -306,7 +306,7 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
-                                                                  {3, 9, 3, 3, 3},
+                                                                  {9, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3}
         });
@@ -326,7 +326,7 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
-                                                                  {3, 9, 3, 9, 9},
+                                                                  {9, 3, 9, 3, 9},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3}
         });
@@ -346,7 +346,7 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
-                                                                  {3, 3, 3, 9, 9},
+                                                                  {3, 3, 9, 3, 9},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3}
         });
@@ -385,10 +385,10 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix b = bMatrix();
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 9, 3, 3},
-                                                                  {3, 3, 9, 3, 3},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 9, 3, 3},
-                                                                  {3, 3, 3, 3, 3}
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3}
         });
 
         a.eachNonZeroInColumn(2, new SetterProcedure(b));
@@ -425,7 +425,7 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix b = bMatrix();
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 9, 3, 3},
-                                                                  {3, 3, 9, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3}
@@ -445,10 +445,10 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix b = bMatrix();
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 9, 3, 3},
-                                                                  {3, 3, 9, 3, 3},
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 9, 3, 3},
-                                                                  {3, 3, 3, 3, 3}
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3}
         });
 
         a.eachNonZeroInColumn(2, new SetterProcedure(b), 0, 5);
@@ -466,9 +466,9 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix c = factory().createMatrix(new byte[][] {
                                                                   {3, 3, 3, 3, 3},
                                                                   {3, 3, 3, 3, 3},
-                                                                  {3, 3, 3, 3, 3},
                                                                   {3, 3, 9, 3, 3},
-                                                                  {3, 3, 3, 3, 3}
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 9, 3, 3}
         });
 
         a.eachNonZeroInColumn(2, new SetterProcedure(b), 2, 5);
@@ -498,12 +498,12 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
     }
 
 
-    private static final class IndexFunction implements MatrixFunction {
+    private static final class IndexModulus2Function implements MatrixFunction {
 
         private final ByteMatrix matrix;
 
 
-        IndexFunction(ByteMatrix matrix) {
+        IndexModulus2Function(ByteMatrix matrix) {
 
             this.matrix = matrix;
         }
@@ -512,7 +512,8 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         public byte evaluate(int i, int j, @SuppressWarnings("unused") byte value) {
 
             // converts row/column indices into a "global" index
-            return (byte)((i * matrix.rows()) + (j % matrix.columns()));
+            int index = (i * matrix.rows()) + (j % matrix.columns());
+            return (byte)(index % 2);
         }
     }
 
@@ -522,14 +523,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
 
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {0, 1, 2, 3, 4},
-                                                                  {5, 6, 7, 8, 9},
-                                                                  {0, 11, 0, 13, 14},
-                                                                  {15, 16, 17, 18, 19},
-                                                                  {20, 21, 0, 23, 24}
+                                                                  {0, 1, 0, 1, 0},
+                                                                  {1, 0, 0, 0, 1},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {1, 0, 0, 0, 1},
+                                                                  {0, 1, 0, 1, 0}
         });
 
-        a.updateNonZero(new IndexFunction(a));
+        a.updateNonZero(new IndexModulus2Function(a));
 
         assertEquals(b, a);
     }
@@ -540,13 +541,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 11, 0, 13, 14},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInRow(2, new IndexFunction(a));
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a));
 
         assertEquals(b, a);
     }
@@ -557,13 +558,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInRow(2, new IndexFunction(a), 0, 0);
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(b, a);
     }
@@ -574,13 +575,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 11, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInRow(2, new IndexFunction(a), 0, 2);
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 0, 2);
 
         assertEquals(b, a);
     }
@@ -591,13 +592,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 11, 0, 13, 14},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInRow(2, new IndexFunction(a), 0, 5);
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 0, 5);
 
         assertEquals(b, a);
     }
@@ -608,13 +609,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 13, 14},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInRow(2, new IndexFunction(a), 2, 5);
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 2, 5);
 
         assertEquals(b, a);
     }
@@ -625,13 +626,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInRow(2, new IndexFunction(a), 5, 5);
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 5, 5);
 
         assertEquals(b, a);
     }
@@ -641,14 +642,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
 
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {5, 5, 2, 5, 5},
-                                                                  {5, 5, 7, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 17, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
                                                                   {5, 5, 0, 5, 5}
         });
 
-        a.updateNonZeroInColumn(2, new IndexFunction(a));
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a));
 
         assertEquals(b, a);
     }
@@ -659,13 +660,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInColumn(2, new IndexFunction(a), 0, 0);
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(b, a);
     }
@@ -675,14 +676,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
 
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {5, 5, 2, 5, 5},
-                                                                  {5, 5, 7, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInColumn(2, new IndexFunction(a), 0, 2);
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 0, 2);
 
         assertEquals(b, a);
     }
@@ -692,14 +693,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
 
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {5, 5, 2, 5, 5},
-                                                                  {5, 5, 7, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 17, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
                                                                   {5, 5, 0, 5, 5}
         });
 
-        a.updateNonZeroInColumn(2, new IndexFunction(a), 0, 5);
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 0, 5);
 
         assertEquals(b, a);
     }
@@ -710,13 +711,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 17, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
                                                                   {5, 5, 0, 5, 5}
         });
 
-        a.updateNonZeroInColumn(2, new IndexFunction(a), 2, 5);
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 2, 5);
 
         assertEquals(b, a);
     }
@@ -727,13 +728,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initialMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        a.updateNonZeroInColumn(2, new IndexFunction(a), 5, 5);
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 5, 5);
 
         assertEquals(b, a);
     }
@@ -744,14 +745,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix initial = initialMatrix();
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {0, 1, 2, 3, 4},
-                                                                  {5, 6, 7, 8, 9},
-                                                                  {0, 11, 0, 13, 14},
-                                                                  {15, 16, 17, 18, 19},
-                                                                  {20, 21, 0, 23, 24}
+                                                                  {0, 1, 0, 1, 0},
+                                                                  {1, 0, 0, 0, 1},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {1, 0, 0, 0, 1},
+                                                                  {0, 1, 0, 1, 0}
         });
 
-        final ByteMatrix c = a.transformNonZero(new IndexFunction(a));
+        final ByteMatrix c = a.transformNonZero(new IndexModulus2Function(a));
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -764,13 +765,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 11, 0, 13, 14},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexFunction(a));
+        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexModulus2Function(a));
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -783,13 +784,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexFunction(a), 0, 0);
+        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -802,13 +803,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 11, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexFunction(a), 0, 2);
+        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexModulus2Function(a), 0, 2);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -821,13 +822,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 11, 0, 13, 14},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {0, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexFunction(a), 0, 5);
+        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexModulus2Function(a), 0, 5);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -840,13 +841,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 13, 14},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 0},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexFunction(a), 2, 5);
+        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexModulus2Function(a), 2, 5);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -859,13 +860,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexFunction(a), 5, 5);
+        final ByteMatrix c = a.transformNonZeroInRow(2, new IndexModulus2Function(a), 5, 5);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -877,14 +878,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix initial = initialMatrix();
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {5, 5, 2, 5, 5},
-                                                                  {5, 5, 7, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 17, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
                                                                   {5, 5, 0, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexFunction(a));
+        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexModulus2Function(a));
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -897,13 +898,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexFunction(a), 0, 0);
+        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -915,14 +916,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix initial = initialMatrix();
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {5, 5, 2, 5, 5},
-                                                                  {5, 5, 7, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexFunction(a), 0, 2);
+        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexModulus2Function(a), 0, 2);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -934,14 +935,14 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final ByteMatrix initial = initialMatrix();
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {5, 5, 2, 5, 5},
-                                                                  {5, 5, 7, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 17, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
                                                                   {5, 5, 0, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexFunction(a), 0, 5);
+        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexModulus2Function(a), 0, 5);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -954,13 +955,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 17, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 0, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
                                                                   {5, 5, 0, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexFunction(a), 2, 5);
+        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexModulus2Function(a), 2, 5);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -973,13 +974,13 @@ public abstract class SparseByteMatrixTest extends AbstractByteMatrixTest {
         final SparseByteMatrix a = (SparseByteMatrix)initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {5, 5, 9, 5, 5},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {0, 9, 0, 9, 9},
-                                                                  {5, 5, 9, 5, 5},
-                                                                  {5, 5, 0, 5, 5}
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
         });
 
-        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexFunction(a), 5, 5);
+        final ByteMatrix c = a.transformNonZeroInColumn(2, new IndexModulus2Function(a), 5, 5);
 
         assertEquals(initial, a);  // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);

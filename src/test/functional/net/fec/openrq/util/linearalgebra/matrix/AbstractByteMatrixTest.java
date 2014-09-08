@@ -1894,9 +1894,16 @@ public abstract class AbstractByteMatrixTest {
 
         return factory().createMatrix(new byte[][] {
                                                     {0, 1, 2},
-                                                    {3, 4, 5},
-                                                    {6, 7, 8}
+                                                    {3, 0, 5},
+                                                    {6, 7, 0}
         });
+    }
+
+    private static ByteMatrix minusOneMatrix(ByteMatrix a) {
+
+        ByteMatrix b = a.blank();
+        b.assign((byte)-1);
+        return b;
     }
 
 
@@ -1923,7 +1930,7 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
 
         a.each(new SetterProcedure(b));
 
@@ -1936,11 +1943,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {3, 4, 5},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {3, 0, 5},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInRow(1, new SetterProcedure(b));
@@ -1954,11 +1961,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInRow(1, new SetterProcedure(b), 0, 0);
@@ -1972,11 +1979,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {3, 0, 0},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {3, -1, -1},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInRow(1, new SetterProcedure(b), 0, 1);
@@ -1990,11 +1997,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {3, 4, 5},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {3, 0, 5},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInRow(1, new SetterProcedure(b), 0, 3);
@@ -2008,11 +2015,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {0, 4, 5},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {-1, 0, 5},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInRow(1, new SetterProcedure(b), 1, 3);
@@ -2026,11 +2033,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInRow(1, new SetterProcedure(b), 3, 3);
@@ -2044,11 +2051,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 1, 0},
-                                                                  {0, 4, 0},
-                                                                  {0, 7, 0}
+                                                                  {-1, 1, -1},
+                                                                  {-1, 0, -1},
+                                                                  {-1, 7, -1}
         });
 
         a.eachInColumn(1, new SetterProcedure(b));
@@ -2062,11 +2069,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInColumn(1, new SetterProcedure(b), 0, 0);
@@ -2080,11 +2087,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 1, 0},
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0}
+                                                                  {-1, 1, -1},
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInColumn(1, new SetterProcedure(b), 0, 1);
@@ -2098,11 +2105,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 1, 0},
-                                                                  {0, 4, 0},
-                                                                  {0, 7, 0}
+                                                                  {-1, 1, -1},
+                                                                  {-1, 0, -1},
+                                                                  {-1, 7, -1}
         });
 
         a.eachInColumn(1, new SetterProcedure(b), 0, 3);
@@ -2116,11 +2123,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {0, 4, 0},
-                                                                  {0, 7, 0}
+                                                                  {-1, -1, -1},
+                                                                  {-1, 0, -1},
+                                                                  {-1, 7, -1}
         });
 
         a.eachInColumn(1, new SetterProcedure(b), 1, 3);
@@ -2134,11 +2141,11 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix initial = initialMatrix();
         final ByteMatrix a = initial.copy();
-        final ByteMatrix b = a.blank();
+        final ByteMatrix b = minusOneMatrix(a);
         final ByteMatrix c = factory().createMatrix(new byte[][] {
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0},
-                                                                  {0, 0, 0}
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1}
         });
 
         a.eachInColumn(1, new SetterProcedure(b), 3, 3);
@@ -2148,12 +2155,12 @@ public abstract class AbstractByteMatrixTest {
     }
 
 
-    private static final class IndexFunction implements MatrixFunction {
+    private static final class IndexModulus2Function implements MatrixFunction {
 
         private final ByteMatrix matrix;
 
 
-        IndexFunction(ByteMatrix matrix) {
+        IndexModulus2Function(ByteMatrix matrix) {
 
             this.matrix = matrix;
         }
@@ -2162,7 +2169,8 @@ public abstract class AbstractByteMatrixTest {
         public byte evaluate(int i, int j, @SuppressWarnings("unused") byte value) {
 
             // converts row/column indices into a "global" index
-            return (byte)((i * matrix.rows()) + (j % matrix.columns()));
+            int index = (i * matrix.rows()) + (j % matrix.columns());
+            return (byte)(index % 2);
         }
     }
 
@@ -2181,12 +2189,12 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {0, 1, 2},
-                                                                  {3, 4, 5},
-                                                                  {6, 7, 8}
+                                                                  {0, 1, 0},
+                                                                  {1, 0, 1},
+                                                                  {0, 1, 0}
         });
 
-        a.update(new IndexFunction(a));
+        a.update(new IndexModulus2Function(a));
 
         assertEquals(b, a);
     }
@@ -2196,9 +2204,9 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix a = allNinesMatrix();
 
-        a.update(1, 1, new IndexFunction(a));
+        a.update(1, 1, new IndexModulus2Function(a));
 
-        assertTrue(aIsEqualToB((byte)4, a.get(1, 1)));
+        assertTrue(aIsEqualToB((byte)0, a.get(1, 1)));
     }
 
     @Test
@@ -2207,11 +2215,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {3, 4, 5},
+                                                                  {1, 0, 1},
                                                                   {9, 9, 9}
         });
 
-        a.updateRow(1, new IndexFunction(a));
+        a.updateRow(1, new IndexModulus2Function(a));
 
         assertEquals(b, a);
     }
@@ -2226,7 +2234,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        a.updateRow(1, new IndexFunction(a), 0, 0);
+        a.updateRow(1, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(b, a);
     }
@@ -2237,11 +2245,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {3, 9, 9},
+                                                                  {1, 9, 9},
                                                                   {9, 9, 9}
         });
 
-        a.updateRow(1, new IndexFunction(a), 0, 1);
+        a.updateRow(1, new IndexModulus2Function(a), 0, 1);
 
         assertEquals(b, a);
     }
@@ -2252,11 +2260,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {3, 4, 5},
+                                                                  {1, 0, 1},
                                                                   {9, 9, 9}
         });
 
-        a.updateRow(1, new IndexFunction(a), 0, 3);
+        a.updateRow(1, new IndexModulus2Function(a), 0, 3);
 
         assertEquals(b, a);
     }
@@ -2267,11 +2275,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {9, 4, 5},
+                                                                  {9, 0, 1},
                                                                   {9, 9, 9}
         });
 
-        a.updateRow(1, new IndexFunction(a), 1, 3);
+        a.updateRow(1, new IndexModulus2Function(a), 1, 3);
 
         assertEquals(b, a);
     }
@@ -2286,7 +2294,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        a.updateRow(1, new IndexFunction(a), 3, 3);
+        a.updateRow(1, new IndexModulus2Function(a), 3, 3);
 
         assertEquals(b, a);
     }
@@ -2297,11 +2305,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 1, 9},
-                                                                  {9, 4, 9},
-                                                                  {9, 7, 9}
+                                                                  {9, 0, 9},
+                                                                  {9, 1, 9}
         });
 
-        a.updateColumn(1, new IndexFunction(a));
+        a.updateColumn(1, new IndexModulus2Function(a));
 
         assertEquals(b, a);
     }
@@ -2316,7 +2324,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        a.updateColumn(1, new IndexFunction(a), 0, 0);
+        a.updateColumn(1, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(b, a);
     }
@@ -2331,7 +2339,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        a.updateColumn(1, new IndexFunction(a), 0, 1);
+        a.updateColumn(1, new IndexModulus2Function(a), 0, 1);
 
         assertEquals(b, a);
     }
@@ -2342,11 +2350,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 1, 9},
-                                                                  {9, 4, 9},
-                                                                  {9, 7, 9}
+                                                                  {9, 0, 9},
+                                                                  {9, 1, 9}
         });
 
-        a.updateColumn(1, new IndexFunction(a), 0, 3);
+        a.updateColumn(1, new IndexModulus2Function(a), 0, 3);
 
         assertEquals(b, a);
     }
@@ -2357,11 +2365,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = allNinesMatrix();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {9, 4, 9},
-                                                                  {9, 7, 9}
+                                                                  {9, 0, 9},
+                                                                  {9, 1, 9}
         });
 
-        a.updateColumn(1, new IndexFunction(a), 1, 3);
+        a.updateColumn(1, new IndexModulus2Function(a), 1, 3);
 
         assertEquals(b, a);
     }
@@ -2376,7 +2384,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        a.updateColumn(1, new IndexFunction(a), 3, 3);
+        a.updateColumn(1, new IndexModulus2Function(a), 3, 3);
 
         assertEquals(b, a);
     }
@@ -2387,12 +2395,12 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix initial = allNinesMatrix();
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
-                                                                  {0, 1, 2},
-                                                                  {3, 4, 5},
-                                                                  {6, 7, 8}
+                                                                  {0, 1, 0},
+                                                                  {1, 0, 1},
+                                                                  {0, 1, 0}
         });
 
-        final ByteMatrix c = a.transform(new IndexFunction(a));
+        final ByteMatrix c = a.transform(new IndexModulus2Function(a));
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2405,11 +2413,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {9, 4, 9},
+                                                                  {9, 0, 9},
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transform(1, 1, new IndexFunction(a));
+        final ByteMatrix c = a.transform(1, 1, new IndexModulus2Function(a));
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2422,11 +2430,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {3, 4, 5},
+                                                                  {1, 0, 1},
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformRow(1, new IndexFunction(a));
+        final ByteMatrix c = a.transformRow(1, new IndexModulus2Function(a));
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2443,7 +2451,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 0, 0);
+        final ByteMatrix c = a.transformRow(1, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2456,11 +2464,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {3, 9, 9},
+                                                                  {1, 9, 9},
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 0, 1);
+        final ByteMatrix c = a.transformRow(1, new IndexModulus2Function(a), 0, 1);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2473,11 +2481,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {3, 4, 5},
+                                                                  {1, 0, 1},
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 0, 3);
+        final ByteMatrix c = a.transformRow(1, new IndexModulus2Function(a), 0, 3);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2490,11 +2498,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {9, 4, 5},
+                                                                  {9, 0, 1},
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 1, 3);
+        final ByteMatrix c = a.transformRow(1, new IndexModulus2Function(a), 1, 3);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2511,7 +2519,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformRow(1, new IndexFunction(a), 3, 3);
+        final ByteMatrix c = a.transformRow(1, new IndexModulus2Function(a), 3, 3);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2524,11 +2532,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 1, 9},
-                                                                  {9, 4, 9},
-                                                                  {9, 7, 9}
+                                                                  {9, 0, 9},
+                                                                  {9, 1, 9}
         });
 
-        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a));
+        final ByteMatrix c = a.transformColumn(1, new IndexModulus2Function(a));
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2545,7 +2553,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 0, 0);
+        final ByteMatrix c = a.transformColumn(1, new IndexModulus2Function(a), 0, 0);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2562,7 +2570,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 0, 1);
+        final ByteMatrix c = a.transformColumn(1, new IndexModulus2Function(a), 0, 1);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2575,11 +2583,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 1, 9},
-                                                                  {9, 4, 9},
-                                                                  {9, 7, 9}
+                                                                  {9, 0, 9},
+                                                                  {9, 1, 9}
         });
 
-        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 0, 3);
+        final ByteMatrix c = a.transformColumn(1, new IndexModulus2Function(a), 0, 3);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2592,11 +2600,11 @@ public abstract class AbstractByteMatrixTest {
         final ByteMatrix a = initial.copy();
         final ByteMatrix b = factory().createMatrix(new byte[][] {
                                                                   {9, 9, 9},
-                                                                  {9, 4, 9},
-                                                                  {9, 7, 9}
+                                                                  {9, 0, 9},
+                                                                  {9, 1, 9}
         });
 
-        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 1, 3);
+        final ByteMatrix c = a.transformColumn(1, new IndexModulus2Function(a), 1, 3);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
@@ -2613,7 +2621,7 @@ public abstract class AbstractByteMatrixTest {
                                                                   {9, 9, 9}
         });
 
-        final ByteMatrix c = a.transformColumn(1, new IndexFunction(a), 3, 3);
+        final ByteMatrix c = a.transformColumn(1, new IndexModulus2Function(a), 3, 3);
 
         assertEquals(initial, a); // check if transform wrongly modifies the caller matrix
         assertEquals(b, c);
