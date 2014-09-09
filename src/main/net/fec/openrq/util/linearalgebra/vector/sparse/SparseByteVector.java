@@ -118,11 +118,8 @@ public abstract class SparseByteVector extends AbstractByteVector {
     @Override
     public int nonZeros(int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
-
-        int nonZeros = 0;
-
         ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
+        int nonZeros = 0;
         while (it.hasNext()) {
             it.next();
             nonZeros++;
@@ -144,8 +141,6 @@ public abstract class SparseByteVector extends AbstractByteVector {
     @Override
     public void eachNonZero(VectorProcedure procedure, int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
-
         ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         while (it.hasNext()) {
             it.next();
@@ -165,8 +160,6 @@ public abstract class SparseByteVector extends AbstractByteVector {
 
     @Override
     public void updateNonZero(VectorFunction function, int fromIndex, int toIndex) {
-
-        checkIndexRangeBounds(fromIndex, toIndex);
 
         ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         while (it.hasNext()) {

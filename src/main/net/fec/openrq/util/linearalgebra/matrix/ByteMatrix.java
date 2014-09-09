@@ -44,6 +44,7 @@ package net.fec.openrq.util.linearalgebra.matrix;
 import java.io.Externalizable;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.AdvancedMatrixPredicate;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
@@ -1305,4 +1306,28 @@ public interface ByteMatrix extends Externalizable {
      * @return minimum value of specified column in this matrix
      */
     byte minInColumn(int j);
+
+    /**
+     * Returns a vector iterator over a row of this matrix (no copies are performed).
+     * 
+     * @param i
+     *            The row index
+     * @return a vector iterator
+     */
+    ByteVectorIterator rowIterator(int i);
+
+    /**
+     * Returns a vector iterator over a range of a row of this matrix (no copies are performed).
+     * 
+     * @param i
+     *            The row index
+     * @param fromColumn
+     *            The starting column index (inclusive)
+     * @param toColumn
+     *            The ending column index (exclusive)
+     * @return a vector iterator
+     */
+    ByteVectorIterator rowIterator(int i, int fromColumn, int toColumn);
+
+    // TODO column iterators
 }

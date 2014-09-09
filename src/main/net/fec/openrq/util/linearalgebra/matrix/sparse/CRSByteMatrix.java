@@ -446,28 +446,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public int nonZerosInRow(int i, int fromColumn, int toColumn) {
-
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-
-        int nonZeros = 0;
-        for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
-            final int col = columnIndices[k];
-            if (fromColumn <= col) {
-                if (col < toColumn) {
-                    nonZeros++;
-                }
-                else {
-                    break; // no need to check columns beyond the last one
-                }
-            }
-        }
-
-        return nonZeros;
-    }
-
-    @Override
     public void each(MatrixProcedure procedure) {
 
         int k = 0;
@@ -578,51 +556,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
                 }
             }
             i++;
-        }
-    }
-
-    @Override
-    public void updateNonZeroInRow(int i, MatrixFunction function) {
-
-        checkRowBounds(i);
-
-        for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
-            final byte value = function.evaluate(i, columnIndices[k], values[k]);
-            if (value == 0) {
-                remove(k, i);
-                // since we removed a nonzero, the index must be decremented accordingly
-                k--;
-            }
-            else {
-                values[k] = value;
-            }
-        }
-    }
-
-    @Override
-    public void updateNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
-
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-
-        for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
-            final int col = columnIndices[k];
-            if (fromColumn <= col) {
-                if (col < toColumn) {
-                    final byte value = function.evaluate(i, col, values[k]);
-                    if (value == 0) {
-                        remove(k, i);
-                        // since we removed a nonzero, the index must be decremented accordingly
-                        k--;
-                    }
-                    else {
-                        values[k] = value;
-                    }
-                }
-                else {
-                    break; // no need to check columns beyond the last one
-                }
-            }
         }
     }
 

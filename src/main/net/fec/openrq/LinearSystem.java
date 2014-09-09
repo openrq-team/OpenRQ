@@ -16,8 +16,6 @@
 package net.fec.openrq;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-
 import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -941,47 +939,60 @@ final class LinearSystem {
              * row is added to this row to leave a zero value in the first column of V."
              */
 
-            // "the chosen row has entry alpha in the first column of V"
-            byte alpha = A.get(i, i);
-
             TimePrinter.beginTimer(); // DEBUG
+
+            // "the chosen row has entry alpha in the first column of V"
+            final byte alpha = A.get(i, i);
 
             // let's look at all rows below the chosen one
             for (int row = i + 1; row < M; row++) // TODO queue these row operations for when/if the row is chosen
             // Page35@RFC6330 1st Par.
             {
-                // if it's already 0, no problem
-                if (A.get(row, i) == 0) continue;
+                // "if a row below the chosen row has entry beta in the first column of V"
+                final byte beta = A.get(row, i);
 
+                // if it's already 0, no problem
+                if (beta == 0) {
+                    continue;
+                }
                 // if it's a non-zero we've got to "zerofy" it
                 else
                 {
-                    // "if a row below the chosen row has entry beta in the first column of V"
-                    byte beta = A.get(row, i);
-
                     /*
                      * "then beta/alpha multiplied by the chosen row is added to this row"
                      */
 
                     // division
-                    byte balpha = OctetOps.aDividedByB(beta, alpha);
+                    byte betaOverAlpha = OctetOps.aDividedByB(beta, alpha);
 
                     // multiplication
-                    final ByteVector product = A.getRow(i);
-                    product.updateNonZero(ByteVectors.asMulFunction(balpha));
+                    final ByteVector product = A.getRow(i, i, A.columns()); // we exclude zeros to the left of i
+                    product.updateNonZero(ByteVectors.asMulFunction(betaOverAlpha));
 
-                    // addition
-                    A.updateRow(row, new MatrixFunction() {
+                    class LinePlusProduct implements MatrixFunction {
+
+                        private final int columnOffset;
+
+
+                        LinePlusProduct(int columnOffset) {
+
+                            this.columnOffset = columnOffset;
+                        }
 
                         @Override
                         public byte evaluate(int notUsed, int j, byte value) {
 
-                            return aPlusB(product.get(j), value);
+                            final int prodIndex = j - columnOffset;
+                            return OctetOps.aPlusB(product.get(prodIndex), value);
                         }
-                    });
+                    }
+
+                    // addition
+                    // we exclude zeros to the left of i
+                    A.updateRow(row, new LinePlusProduct(i), i, A.columns());
 
                     // decoding process - (beta * D[d[i]]) + D[d[row]]
-                    byte[] p = OctetOps.betaProduct(balpha, D[d[i]]);
+                    byte[] p = OctetOps.betaProduct(betaOverAlpha, D[d[i]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], p);
                     // DEBUG
                     // PRINTER.println(
@@ -1202,7 +1213,7 @@ final class LinearSystem {
                         @Override
                         public byte evaluate(int notUsed, int j, byte value) {
 
-                            return aPlusB(product.get(j), value);
+                            return OctetOps.aPlusB(product.get(j), value);
                         }
                     });
 

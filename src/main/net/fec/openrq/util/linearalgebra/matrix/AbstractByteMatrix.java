@@ -51,6 +51,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.AdvancedMatrixPredicate;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
@@ -851,9 +852,10 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public int nonZeros() {
 
         int nonZeros = 0;
+
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                if (safeGet(i, j) != 0) {
+                if (nonZeroAt(i, j)) {
                     nonZeros++;
                 }
             }
@@ -865,11 +867,12 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public int nonZerosInRow(int i) {
 
-        checkRowBounds(i);
-
         int nonZeros = 0;
-        for (int j = 0; j < columns; j++) {
-            if (nonZeroAt(i, j)) {
+
+        ByteVectorIterator it = rowIterator(i);
+        while (it.hasNext()) {
+            final byte value = it.next();
+            if (value != 0) {
                 nonZeros++;
             }
         }
@@ -880,12 +883,12 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public int nonZerosInRow(int i, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-
         int nonZeros = 0;
-        for (int j = fromColumn; j < toColumn; j++) {
-            if (nonZeroAt(i, j)) {
+
+        ByteVectorIterator it = rowIterator(i, fromColumn, toColumn);
+        while (it.hasNext()) {
+            final byte value = it.next();
+            if (value != 0) {
                 nonZeros++;
             }
         }
@@ -937,19 +940,20 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void eachInRow(int i, MatrixProcedure procedure) {
 
-        checkRowBounds(i);
-        for (int j = 0; j < columns; j++) {
-            procedure.apply(i, j, safeGet(i, j));
+        ByteVectorIterator it = rowIterator(i);
+        while (it.hasNext()) {
+            it.next();
+            procedure.apply(i, it.index(), it.get());
         }
     }
 
     @Override
     public void eachInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-        for (int j = fromColumn; j < toColumn; j++) {
-            procedure.apply(i, j, safeGet(i, j));
+        ByteVectorIterator it = rowIterator(i, fromColumn, toColumn);
+        while (it.hasNext()) {
+            it.next();
+            procedure.apply(i, it.index(), it.get());
         }
     }
 
@@ -988,12 +992,11 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
 
-        checkRowBounds(i);
-
-        for (int j = 0; j < columns; j++) {
-            final byte val = safeGet(i, j);
-            if (val != 0) {
-                procedure.apply(i, j, val);
+        ByteVectorIterator it = rowIterator(i);
+        while (it.hasNext()) {
+            final byte value = it.next();
+            if (value != 0) {
+                procedure.apply(i, it.index(), value);
             }
         }
     }
@@ -1001,13 +1004,11 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void eachNonZeroInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-
-        for (int j = fromColumn; j < toColumn; j++) {
-            final byte val = safeGet(i, j);
-            if (val != 0) {
-                procedure.apply(i, j, val);
+        ByteVectorIterator it = rowIterator(i, fromColumn, toColumn);
+        while (it.hasNext()) {
+            final byte value = it.next();
+            if (value != 0) {
+                procedure.apply(i, it.index(), value);
             }
         }
     }
@@ -1052,19 +1053,20 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void updateRow(int i, MatrixFunction function) {
 
-        checkRowBounds(i);
-        for (int j = 0; j < columns; j++) {
-            safeUpdate(i, j, function);
+        ByteVectorIterator it = rowIterator(i);
+        while (it.hasNext()) {
+            it.next();
+            it.set(function.evaluate(i, it.index(), it.get()));
         }
     }
 
     @Override
     public void updateRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-        for (int j = fromColumn; j < toColumn; j++) {
-            safeUpdate(i, j, function);
+        ByteVectorIterator it = rowIterator(i, fromColumn, toColumn);
+        while (it.hasNext()) {
+            it.next();
+            it.set(function.evaluate(i, it.index(), it.get()));
         }
     }
 
@@ -1103,12 +1105,11 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void updateNonZeroInRow(int i, MatrixFunction function) {
 
-        checkRowBounds(i);
-
-        for (int j = 0; j < columns; j++) {
-            final byte val = safeGet(i, j);
-            if (val != 0) {
-                safeSet(i, j, function.evaluate(i, j, val));
+        ByteVectorIterator it = rowIterator(i);
+        while (it.hasNext()) {
+            final byte value = it.next();
+            if (value != 0) {
+                it.set(function.evaluate(i, it.index(), value));
             }
         }
     }
@@ -1116,13 +1117,11 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void updateNonZeroInRow(int i, MatrixFunction function, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-
-        for (int j = fromColumn; j < toColumn; j++) {
-            final byte val = safeGet(i, j);
-            if (val != 0) {
-                safeSet(i, j, function.evaluate(i, j, val));
+        ByteVectorIterator it = rowIterator(i, fromColumn, toColumn);
+        while (it.hasNext()) {
+            final byte value = it.next();
+            if (value != 0) {
+                it.set(function.evaluate(i, it.index(), value));
             }
         }
     }
@@ -1347,6 +1346,93 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     public byte minInColumn(int j) {
 
         return foldColumn(j, ByteMatrices.mkMinAccumulator());
+    }
+
+    @Override
+    public ByteVectorIterator rowIterator(final int i) {
+
+        checkRowBounds(i);
+
+        return new ByteVectorIterator(columns()) {
+
+            private int j = -1;
+
+
+            @Override
+            public int index() {
+
+                return j;
+            }
+
+            @Override
+            public byte get() {
+
+                return safeGet(i, j);
+            }
+
+            @Override
+            public void set(byte value) {
+
+                safeSet(i, j, value);
+            }
+
+            @Override
+            public Byte next() {
+
+                j++;
+                return get();
+            }
+
+            @Override
+            public boolean hasNext() {
+
+                return j + 1 < length;
+            }
+        };
+    }
+
+    @Override
+    public ByteVectorIterator rowIterator(final int i, final int fromColumn, final int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        return new ByteVectorIterator(toColumn - fromColumn) {
+
+            private int j = fromColumn - 1;
+
+
+            @Override
+            public int index() {
+
+                return j;
+            }
+
+            @Override
+            public byte get() {
+
+                return safeGet(i, j);
+            }
+
+            @Override
+            public void set(byte value) {
+
+                safeSet(i, j, value);
+            }
+
+            @Override
+            public Byte next() {
+
+                j++;
+                return get();
+            }
+
+            @Override
+            public boolean hasNext() {
+
+                return j + 1 < toColumn;
+            }
+        };
     }
 
     @Override
