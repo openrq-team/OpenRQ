@@ -81,15 +81,116 @@ public abstract class AbstractByteMatrixTest {
         assertEquals(a.get(0, 1), 10);
     }
 
-    @Test
-    public void testGetColumn_4x4() {
+    private ByteMatrix getRowColumnMatrix() {
 
-        ByteMatrix matrix = factory().createMatrix(new byte[][] {
-                                                                 {8, 3, 1, 9},
-                                                                 {4, 9, 6, 6},
-                                                                 {9, 1, 1, 4},
-                                                                 {5, 7, 3, 0}
+        return factory().createMatrix(new byte[][] {
+                                                    {8, 3, 1, 9},
+                                                    {4, 9, 6, 6},
+                                                    {9, 1, 1, 4},
+                                                    {5, 7, 3, 0}
         });
+    }
+
+    @Test
+    public void testGetRow() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {8, 3, 1, 9});
+        ByteVector vecB = factory().createVector(new byte[] {4, 9, 6, 6});
+        ByteVector vecC = factory().createVector(new byte[] {9, 1, 1, 4});
+        ByteVector vecD = factory().createVector(new byte[] {5, 7, 3, 0});
+
+        assertEquals(vecA, matrix.getRow(0));
+        assertEquals(vecB, matrix.getRow(1));
+        assertEquals(vecC, matrix.getRow(2));
+        assertEquals(vecD, matrix.getRow(3));
+    }
+
+    @Test
+    public void testGetRowInRangeOf_0_to_0() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {});
+        ByteVector vecB = factory().createVector(new byte[] {});
+        ByteVector vecC = factory().createVector(new byte[] {});
+        ByteVector vecD = factory().createVector(new byte[] {});
+
+        assertEquals(vecA, matrix.getRow(0, 0, 0));
+        assertEquals(vecB, matrix.getRow(1, 0, 0));
+        assertEquals(vecC, matrix.getRow(2, 0, 0));
+        assertEquals(vecD, matrix.getRow(3, 0, 0));
+    }
+
+    @Test
+    public void testGetRowInRangeOf_0_to_2() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {8, 3});
+        ByteVector vecB = factory().createVector(new byte[] {4, 9});
+        ByteVector vecC = factory().createVector(new byte[] {9, 1});
+        ByteVector vecD = factory().createVector(new byte[] {5, 7});
+
+        assertEquals(vecA, matrix.getRow(0, 0, 2));
+        assertEquals(vecB, matrix.getRow(1, 0, 2));
+        assertEquals(vecC, matrix.getRow(2, 0, 2));
+        assertEquals(vecD, matrix.getRow(3, 0, 2));
+    }
+
+    @Test
+    public void testGetRowInRangeOf_0_to_4() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {8, 3, 1, 9});
+        ByteVector vecB = factory().createVector(new byte[] {4, 9, 6, 6});
+        ByteVector vecC = factory().createVector(new byte[] {9, 1, 1, 4});
+        ByteVector vecD = factory().createVector(new byte[] {5, 7, 3, 0});
+
+        assertEquals(vecA, matrix.getRow(0, 0, 4));
+        assertEquals(vecB, matrix.getRow(1, 0, 4));
+        assertEquals(vecC, matrix.getRow(2, 0, 4));
+        assertEquals(vecD, matrix.getRow(3, 0, 4));
+    }
+
+    @Test
+    public void testGetRowInRangeOf_2_to_4() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {1, 9});
+        ByteVector vecB = factory().createVector(new byte[] {6, 6});
+        ByteVector vecC = factory().createVector(new byte[] {1, 4});
+        ByteVector vecD = factory().createVector(new byte[] {3, 0});
+
+        assertEquals(vecA, matrix.getRow(0, 2, 4));
+        assertEquals(vecB, matrix.getRow(1, 2, 4));
+        assertEquals(vecC, matrix.getRow(2, 2, 4));
+        assertEquals(vecD, matrix.getRow(3, 2, 4));
+    }
+
+    @Test
+    public void testGetRowInRangeOf_4_to_4() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {});
+        ByteVector vecB = factory().createVector(new byte[] {});
+        ByteVector vecC = factory().createVector(new byte[] {});
+        ByteVector vecD = factory().createVector(new byte[] {});
+
+        assertEquals(vecA, matrix.getRow(0, 4, 4));
+        assertEquals(vecB, matrix.getRow(1, 4, 4));
+        assertEquals(vecC, matrix.getRow(2, 4, 4));
+        assertEquals(vecD, matrix.getRow(3, 4, 4));
+    }
+
+    @Test
+    public void testGetColumn() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
 
         ByteVector vecA = factory().createVector(new byte[] {8, 4, 9, 5});
         ByteVector vecB = factory().createVector(new byte[] {3, 9, 1, 7});
@@ -103,24 +204,83 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
-    public void testGetRow_4x4() {
+    public void testGetColumnInRangeOf_0_to_0() {
 
-        ByteMatrix matrix = factory().createMatrix(new byte[][] {
-                                                                 {8, 3, 1, 9},
-                                                                 {4, 9, 6, 6},
-                                                                 {9, 1, 1, 4},
-                                                                 {5, 7, 3, 0}
-        });
+        ByteMatrix matrix = getRowColumnMatrix();
 
-        ByteVector vecA = factory().createVector(new byte[] {8, 3, 1, 9});
-        ByteVector vecB = factory().createVector(new byte[] {4, 9, 6, 6});
-        ByteVector vecC = factory().createVector(new byte[] {9, 1, 1, 4});
-        ByteVector vecD = factory().createVector(new byte[] {5, 7, 3, 0});
+        ByteVector vecA = factory().createVector(new byte[] {});
+        ByteVector vecB = factory().createVector(new byte[] {});
+        ByteVector vecC = factory().createVector(new byte[] {});
+        ByteVector vecD = factory().createVector(new byte[] {});
 
-        assertEquals(vecA, matrix.getRow(0));
-        assertEquals(vecB, matrix.getRow(1));
-        assertEquals(vecC, matrix.getRow(2));
-        assertEquals(vecD, matrix.getRow(3));
+        assertEquals(vecA, matrix.getColumn(0, 0, 0));
+        assertEquals(vecB, matrix.getColumn(1, 0, 0));
+        assertEquals(vecC, matrix.getColumn(2, 0, 0));
+        assertEquals(vecD, matrix.getColumn(3, 0, 0));
+    }
+
+    @Test
+    public void testGetColumnInRangeOf_0_to_2() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {8, 4});
+        ByteVector vecB = factory().createVector(new byte[] {3, 9});
+        ByteVector vecC = factory().createVector(new byte[] {1, 6});
+        ByteVector vecD = factory().createVector(new byte[] {9, 6});
+
+        assertEquals(vecA, matrix.getColumn(0, 0, 2));
+        assertEquals(vecB, matrix.getColumn(1, 0, 2));
+        assertEquals(vecC, matrix.getColumn(2, 0, 2));
+        assertEquals(vecD, matrix.getColumn(3, 0, 2));
+    }
+
+    @Test
+    public void testGetColumnInRangeOf_0_to_4() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {8, 4, 9, 5});
+        ByteVector vecB = factory().createVector(new byte[] {3, 9, 1, 7});
+        ByteVector vecC = factory().createVector(new byte[] {1, 6, 1, 3});
+        ByteVector vecD = factory().createVector(new byte[] {9, 6, 4, 0});
+
+        assertEquals(vecA, matrix.getColumn(0, 0, 4));
+        assertEquals(vecB, matrix.getColumn(1, 0, 4));
+        assertEquals(vecC, matrix.getColumn(2, 0, 4));
+        assertEquals(vecD, matrix.getColumn(3, 0, 4));
+    }
+
+    @Test
+    public void testGetColumnInRangeOf_2_to_4() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {9, 5});
+        ByteVector vecB = factory().createVector(new byte[] {1, 7});
+        ByteVector vecC = factory().createVector(new byte[] {1, 3});
+        ByteVector vecD = factory().createVector(new byte[] {4, 0});
+
+        assertEquals(vecA, matrix.getColumn(0, 2, 4));
+        assertEquals(vecB, matrix.getColumn(1, 2, 4));
+        assertEquals(vecC, matrix.getColumn(2, 2, 4));
+        assertEquals(vecD, matrix.getColumn(3, 2, 4));
+    }
+
+    @Test
+    public void testGetColumnInRangeOf_4_to_4() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {});
+        ByteVector vecB = factory().createVector(new byte[] {});
+        ByteVector vecC = factory().createVector(new byte[] {});
+        ByteVector vecD = factory().createVector(new byte[] {});
+
+        assertEquals(vecA, matrix.getColumn(0, 4, 4));
+        assertEquals(vecB, matrix.getColumn(1, 4, 4));
+        assertEquals(vecC, matrix.getColumn(2, 4, 4));
+        assertEquals(vecD, matrix.getColumn(3, 4, 4));
     }
 
     @Test
