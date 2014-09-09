@@ -724,6 +724,17 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
     ByteVectorIterator iterator();
 
     /**
+     * Returns a {@code ByteVectorIterator} which allows the getting/setting of traversed elements between two indices.
+     * 
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return a {@code ByteVectorIterator}
+     */
+    ByteVectorIterator iterator(int fromIndex, int toIndex);
+
+    /**
      * Returns a burning vector iterator.
      * 
      * @return a burning vector iterator

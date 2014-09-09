@@ -115,11 +115,11 @@ public class BasicByteVector extends DenseByteVector {
     }
 
     @Override
-    public ByteVector resize(int length) {
+    public ByteVector resize(int $length) {
 
-        ensureLengthIsCorrect(length);
+        ensureLengthIsCorrect($length);
 
-        byte $self[] = new byte[length];
+        byte $self[] = new byte[$length];
         System.arraycopy(self, 0, $self, 0, Math.min($self.length, self.length));
 
         return new BasicByteVector($self);
@@ -158,40 +158,61 @@ public class BasicByteVector extends DenseByteVector {
     @Override
     public ByteVectorIterator iterator() {
 
-        return new ByteVectorIterator(length) {
+        return new BasicByteVectorIterator(0, length);
+    }
 
-            private int i = -1;
+    @Override
+    public ByteVectorIterator iterator(int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+        return new BasicByteVectorIterator(fromIndex, toIndex);
+    }
 
 
-            @Override
-            public int index() {
+    private final class BasicByteVectorIterator extends ByteVectorIterator {
 
-                return i;
-            }
+        private int i;
+        private final int end;
 
-            @Override
-            public byte get() {
 
-                return self[i];
-            }
+        /*
+         * requires valid indexes
+         */
+        BasicByteVectorIterator(int fromIndex, int toIndex) {
 
-            @Override
-            public void set(byte value) {
+            super(toIndex - fromIndex);
+            this.i = fromIndex - 1;
+            this.end = toIndex;
+        }
 
-                self[i] = value;
-            }
+        @Override
+        public int index() {
 
-            @Override
-            public boolean hasNext() {
+            return i;
+        }
 
-                return i + 1 < length;
-            }
+        @Override
+        public byte get() {
 
-            @Override
-            public Byte next() {
+            return self[i];
+        }
 
-                return self[++i];
-            }
-        };
+        @Override
+        public void set(byte value) {
+
+            self[i] = value;
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return i + 1 < end;
+        }
+
+        @Override
+        public Byte next() {
+
+            return self[++i];
+        }
     }
 }

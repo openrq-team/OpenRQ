@@ -122,20 +122,10 @@ public abstract class SparseByteVector extends AbstractByteVector {
 
         int nonZeros = 0;
 
-        ByteVectorIterator it = nonZeroIterator();
+        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         while (it.hasNext()) {
-            it.next(); // advance the iterator
-            final int currIndex = it.index();
-
-            // check if the current index is inside the range
-            if (fromIndex <= currIndex) {
-                if (currIndex < toIndex) {
-                    nonZeros++;
-                }
-                else {
-                    break; // we stop if the current index surpasses the range
-                }
-            }
+            it.next();
+            nonZeros++;
         }
 
         return nonZeros;
@@ -156,20 +146,10 @@ public abstract class SparseByteVector extends AbstractByteVector {
 
         checkIndexRangeBounds(fromIndex, toIndex);
 
-        ByteVectorIterator it = nonZeroIterator();
+        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         while (it.hasNext()) {
-            it.next(); // advance the iterator
-            final int currIndex = it.index();
-
-            // check if the current index is inside the range
-            if (fromIndex <= currIndex) {
-                if (currIndex < toIndex) {
-                    procedure.apply(currIndex, it.get());
-                }
-                else {
-                    break; // we stop if the current index surpasses the range
-                }
-            }
+            it.next();
+            procedure.apply(it.index(), it.get());
         }
     }
 
@@ -188,20 +168,10 @@ public abstract class SparseByteVector extends AbstractByteVector {
 
         checkIndexRangeBounds(fromIndex, toIndex);
 
-        ByteVectorIterator it = nonZeroIterator();
+        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         while (it.hasNext()) {
-            it.next(); // advance the iterator
-            final int currIndex = it.index();
-
-            // check if the current index is inside the range
-            if (fromIndex <= currIndex) {
-                if (currIndex < toIndex) {
-                    it.set(function.evaluate(currIndex, it.get()));
-                }
-                else {
-                    break; // we stop if the current index surpasses the range
-                }
-            }
+            it.next();
+            it.set(function.evaluate(it.index(), it.get()));
         }
     }
 
@@ -261,6 +231,17 @@ public abstract class SparseByteVector extends AbstractByteVector {
      * @return a non-zero iterator
      */
     public abstract ByteVectorIterator nonZeroIterator();
+
+    /**
+     * Returns a non-zero iterator between two indices.
+     * 
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return a non-zero iterator between two indices
+     */
+    public abstract ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex);
 
     /**
      * Returns a non-zero iterable instance. This method is useful in for-each loops.

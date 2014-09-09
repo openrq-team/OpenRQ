@@ -53,6 +53,7 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
@@ -1062,5 +1063,248 @@ public abstract class AbstractByteVectorTest {
         a.updateNonZero(new IndexModulus2Function(), 5, 5);
 
         assertEquals(b, a);
+    }
+
+    @Test
+    public void testIterator_1() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.iterator();
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(0, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(1, it.get());
+        assertEquals(1, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(2, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(2, it.get());
+        assertEquals(3, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(3, it.get());
+        assertEquals(4, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_1_InRangeOf_0_to_0() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.iterator(0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_1_InRangeOf_0_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.iterator(0, 3);
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(0, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(1, it.get());
+        assertEquals(1, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_1_InRangeOf_0_to_6() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.iterator(0, 6);
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(0, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(1, it.get());
+        assertEquals(1, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(2, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(2, it.get());
+        assertEquals(3, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(3, it.get());
+        assertEquals(4, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_1_InRangeOf_3_to_6() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.iterator(3, 6);
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(2, it.get());
+        assertEquals(3, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(3, it.get());
+        assertEquals(4, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(0, it.get());
+        assertEquals(5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_1_InRangeOf_6_to_6() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.iterator(6, 6);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_2() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.iterator();
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(1, it.get());
+        assertEquals(0, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(2, it.get());
+        assertEquals(1, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(3, it.get());
+        assertEquals(2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_2_InRangeOf_0_to_0() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.iterator(0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_2_InRangeOf_0_to_1() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.iterator(0, 1);
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(1, it.get());
+        assertEquals(0, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_2_InRangeOf_0_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.iterator(0, 3);
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(1, it.get());
+        assertEquals(0, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(2, it.get());
+        assertEquals(1, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(3, it.get());
+        assertEquals(2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_2_InRangeOf_1_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.iterator(1, 3);
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(2, it.get());
+        assertEquals(1, it.index());
+
+        assertTrue(it.hasNext());
+        it.next();
+        assertEquals(3, it.get());
+        assertEquals(2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_2_InRangeOf_3_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.iterator(3, 3);
+
+        assertFalse(it.hasNext());
     }
 }

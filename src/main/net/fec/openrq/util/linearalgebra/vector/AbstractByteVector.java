@@ -574,18 +574,22 @@ public abstract class AbstractByteVector implements ByteVector {
     public void each(VectorProcedure procedure, int fromIndex, int toIndex) {
 
         checkIndexRangeBounds(fromIndex, toIndex);
-        for (int i = fromIndex; i < toIndex; i++) {
-            procedure.apply(i, safeGet(i));
+
+        ByteVectorIterator it = iterator(fromIndex, toIndex);
+        while (it.hasNext()) {
+            it.next();
+            procedure.apply(it.index(), it.get());
         }
     }
 
     @Override
     public void eachNonZero(VectorProcedure procedure) {
 
-        for (int i = 0; i < length; i++) {
-            final byte value = safeGet(i);
+        ByteVectorIterator it = iterator();
+        while (it.hasNext()) {
+            final byte value = it.next();
             if (value != 0) {
-                procedure.apply(i, value);
+                procedure.apply(it.index(), value);
             }
         }
     }
@@ -594,10 +598,12 @@ public abstract class AbstractByteVector implements ByteVector {
     public void eachNonZero(VectorProcedure procedure, int fromIndex, int toIndex) {
 
         checkIndexRangeBounds(fromIndex, toIndex);
-        for (int i = fromIndex; i < toIndex; i++) {
-            final byte value = safeGet(i);
+
+        ByteVectorIterator it = iterator(fromIndex, toIndex);
+        while (it.hasNext()) {
+            final byte value = it.next();
             if (value != 0) {
-                procedure.apply(i, value);
+                procedure.apply(it.index(), value);
             }
         }
     }
@@ -623,8 +629,11 @@ public abstract class AbstractByteVector implements ByteVector {
     public void update(VectorFunction function, int fromIndex, int toIndex) {
 
         checkIndexRangeBounds(fromIndex, toIndex);
-        for (int i = fromIndex; i < toIndex; i++) {
-            safeSet(i, function.evaluate(i, safeGet(i)));
+
+        ByteVectorIterator it = iterator(fromIndex, toIndex);
+        while (it.hasNext()) {
+            it.next();
+            it.set(function.evaluate(it.index(), it.get()));
         }
     }
 
@@ -644,10 +653,12 @@ public abstract class AbstractByteVector implements ByteVector {
     public void updateNonZero(VectorFunction function, int fromIndex, int toIndex) {
 
         checkIndexRangeBounds(fromIndex, toIndex);
-        for (int i = fromIndex; i < toIndex; i++) {
-            final byte value = safeGet(i);
+
+        ByteVectorIterator it = iterator(fromIndex, toIndex);
+        while (it.hasNext()) {
+            final byte value = it.next();
             if (value != 0) {
-                safeSet(i, function.evaluate(i, value));
+                it.set(function.evaluate(it.index(), value));
             }
         }
     }
