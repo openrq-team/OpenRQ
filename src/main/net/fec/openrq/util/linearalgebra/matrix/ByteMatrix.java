@@ -1329,5 +1329,27 @@ public interface ByteMatrix extends Externalizable {
      */
     ByteVectorIterator rowIterator(int i, int fromColumn, int toColumn);
 
+    /**
+     * Returns a vector iterator over the non zero elements of a row of this matrix (no copies are performed).
+     * 
+     * @param i
+     *            The row index
+     * @return a non zero vector iterator
+     */
+    ByteVectorIterator nonZeroRowIterator(int i);
+
+    /**
+     * Returns a vector iterator over the non zero elements of a row of this matrix (no copies are performed).
+     * 
+     * @param i
+     *            The row index
+     * @param fromColumn
+     *            The starting column index (inclusive)
+     * @param toColumn
+     *            The ending column index (exclusive)
+     * @return a non zero vector iterator
+     */
+    ByteVectorIterator nonZeroRowIterator(int i, int fromColumn, int toColumn);
+
     // TODO column iterators
 }

@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 
 
@@ -56,28 +55,4 @@ public interface SparseByteMatrix extends ByteMatrix {
      * @return the density of this matrix
      */
     double density();
-
-    /**
-     * Returns a vector iterator over the non zero elements of a row of this matrix (no copies are performed).
-     * 
-     * @param i
-     *            The row index
-     * @return a non zero vector iterator
-     */
-    ByteVectorIterator nonZeroRowIterator(int i);
-
-    /**
-     * Returns a vector iterator over the non zero elements of a row of this matrix (no copies are performed).
-     * 
-     * @param i
-     *            The row index
-     * @param fromColumn
-     *            The starting column index (inclusive)
-     * @param toColumn
-     *            The ending column index (exclusive)
-     * @return a non zero vector iterator
-     */
-    ByteVectorIterator nonZeroRowIterator(int i, int fromColumn, int toColumn);
-
-    // TODO column iterators
 }
