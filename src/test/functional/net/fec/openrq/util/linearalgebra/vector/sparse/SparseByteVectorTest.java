@@ -41,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.vector.AbstractByteVectorTest;
+import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 import org.junit.Test;
 
@@ -62,20 +63,20 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
         ByteVectorIterator it = a.nonZeroIterator();
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 0", it.hasNext());
         it.next();
-        assertEquals(1, it.get());
-        assertEquals(1, it.index());
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 1", it.hasNext());
         it.next();
-        assertEquals(2, it.get());
-        assertEquals(3, it.index());
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 2", it.hasNext());
         it.next();
-        assertEquals(3, it.get());
-        assertEquals(4, it.index());
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -95,10 +96,10 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
         ByteVectorIterator it = a.nonZeroIterator(0, 3);
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 0", it.hasNext());
         it.next();
-        assertEquals(1, it.get());
-        assertEquals(1, it.index());
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -109,20 +110,20 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
         ByteVectorIterator it = a.nonZeroIterator(0, 6);
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 0", it.hasNext());
         it.next();
-        assertEquals(1, it.get());
-        assertEquals(1, it.index());
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 1", it.hasNext());
         it.next();
-        assertEquals(2, it.get());
-        assertEquals(3, it.index());
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 2", it.hasNext());
         it.next();
-        assertEquals(3, it.get());
-        assertEquals(4, it.index());
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -133,15 +134,15 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
         ByteVectorIterator it = a.nonZeroIterator(3, 6);
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 1", it.hasNext());
         it.next();
-        assertEquals(2, it.get());
-        assertEquals(3, it.index());
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 2", it.hasNext());
         it.next();
-        assertEquals(3, it.get());
-        assertEquals(4, it.index());
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -161,20 +162,20 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVectorIterator it = a.nonZeroIterator();
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 0", it.hasNext());
         it.next();
-        assertEquals(1, it.get());
-        assertEquals(0, it.index());
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 1", it.hasNext());
         it.next();
-        assertEquals(2, it.get());
-        assertEquals(1, it.index());
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 2", it.hasNext());
         it.next();
-        assertEquals(3, it.get());
-        assertEquals(2, it.index());
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -194,10 +195,10 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVectorIterator it = a.nonZeroIterator(0, 1);
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 0", it.hasNext());
         it.next();
-        assertEquals(1, it.get());
-        assertEquals(0, it.index());
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -208,20 +209,20 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVectorIterator it = a.nonZeroIterator(0, 3);
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 0", it.hasNext());
         it.next();
-        assertEquals(1, it.get());
-        assertEquals(0, it.index());
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 1", it.hasNext());
         it.next();
-        assertEquals(2, it.get());
-        assertEquals(1, it.index());
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 2", it.hasNext());
         it.next();
-        assertEquals(3, it.get());
-        assertEquals(2, it.index());
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -232,15 +233,15 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVectorIterator it = a.nonZeroIterator(1, 3);
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 1", it.hasNext());
         it.next();
-        assertEquals(2, it.get());
-        assertEquals(1, it.index());
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
 
-        assertTrue(it.hasNext());
+        assertTrue("hasNext 2", it.hasNext());
         it.next();
-        assertEquals(3, it.get());
-        assertEquals(2, it.index());
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
 
         assertFalse(it.hasNext());
     }
@@ -252,5 +253,259 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
         ByteVectorIterator it = a.nonZeroIterator(3, 3);
 
         assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroIterator_3() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator();
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroIterator_3_InRangeOf_0_to_0() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(0, 0);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroIterator_3_InRangeOf_0_to_1() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(0, 1);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroIterator_3_InRangeOf_0_to_3() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(0, 3);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroIterator_3_InRangeOf_1_to_3() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(1, 3);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroIterator_3_InRangeOf_3_to_3() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(3, 3);
+        assertFalse(it.hasNext());
+    }
+
+
+    // dummy values to iterator set() method in order to test consecutive calls to the method
+    private static final byte ZERO_DUMMY = -1;
+    private static final byte NONZERO_DUMMY = 0;
+
+
+    private static void iteratorSet(String msg, ByteVectorIterator it, byte value) {
+
+        it.set(value);
+        assertEquals(msg, value, it.get());
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_1() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {0, 0, 0, 4, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator();
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.cardinality());
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_1_InRangeOf_0_to_3() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {0, 0, 0, 2, 3, 0});
+        ByteVectorIterator it = a.nonZeroIterator(0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.cardinality());
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_1_InRangeOf_0_to_6() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {0, 0, 0, 4, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.cardinality());
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_1_InRangeOf_3_to_6() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {0, 1, 0, 4, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(3, 6);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.cardinality());
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_2() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
+        ByteVector b = factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.iterator();
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(0, a.cardinality());
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_2_InRangeOf_0_to_1() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
+        ByteVector b = factory().createVector(new byte[] {0, 2, 3});
+        ByteVectorIterator it = a.iterator(0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.cardinality());
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_2_InRangeOf_0_to_3() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
+        ByteVector b = factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.iterator(0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(0, a.cardinality());
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroIteratorModify_2_InRangeOf_1_to_3() {
+
+        SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 0});
+        ByteVectorIterator it = a.iterator(1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.cardinality());
+        assertEquals(a, b);
     }
 }

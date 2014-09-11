@@ -38,15 +38,9 @@ package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrixTest;
-import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
-import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
-import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
-import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 import org.junit.Test;
 

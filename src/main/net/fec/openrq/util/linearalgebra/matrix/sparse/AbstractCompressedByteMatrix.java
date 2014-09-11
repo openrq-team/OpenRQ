@@ -167,62 +167,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
     @Override
     public ByteVectorIterator nonZeroRowIterator(final int i) {
 
-        checkRowBounds(i);
-
-        return new ByteVectorIterator(columns()) {
-
-            private int cachedColIndex = -1;
-            private int j = -1;
-            private int k = 0;
-
-
-            @Override
-            public int index() {
-
-                return cachedColIndex;
-            }
-
-            @Override
-            public byte get() {
-
-                return safeGet(i, cachedColIndex);
-            }
-
-            @Override
-            public void set(byte value) {
-
-                safeSet(i, cachedColIndex, value);
-            }
-
-            @Override
-            public Byte next() {
-
-                j++;
-                k++;
-                cachedColIndex = j; // so that even after calling hasNext(), the current index remains the same
-                return get();
-            }
-
-            @Override
-            public boolean hasNext() {
-
-                return k < cardinality && hasNextNonZero();
-            }
-
-            private boolean hasNextNonZero() {
-
-                while (hasNotReachedTheEnd() && isZeroAt(i, j + 1)) {
-                    j++;
-                }
-
-                return hasNotReachedTheEnd();
-            }
-
-            private boolean hasNotReachedTheEnd() {
-
-                return j + 1 < columns();
-            }
-        };
+        return nonZeroRowIterator(i, 0, columns());
     }
 
     @Override
@@ -231,59 +176,75 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
         checkRowBounds(i);
         checkColumnRangeBounds(fromColumn, toColumn);
 
-        return new ByteVectorIterator(toColumn - fromColumn) {
-
-            private int cachedColIndex = fromColumn - 1;
-            private int j = fromColumn - 1;
-            private int k = 0;
+        return new NonZeroRowIterator(i, fromColumn, toColumn);
+    }
 
 
-            @Override
-            public int index() {
+    private final class NonZeroRowIterator extends ByteVectorIterator {
 
-                return cachedColIndex;
-            }
+        private final int i;
+        private int j;
+        private final int end;
+        private int nextJ;
+        private boolean hasNext;
 
-            @Override
-            public byte get() {
 
-                return safeGet(i, cachedColIndex);
-            }
+        /*
+         * Requires valid indices.
+         */
+        NonZeroRowIterator(int i, int fromColumn, int toColumn) {
 
-            @Override
-            public void set(byte value) {
+            super(toColumn - fromColumn);
 
-                safeSet(i, cachedColIndex, value);
-            }
+            this.i = i;
+            this.j = fromColumn;
+            this.end = toColumn;
+            this.nextJ = -1;
 
-            @Override
-            public Byte next() {
+            findNextNonZero(); // this method initializes j and hasNext properly
+        }
 
-                j++;
-                k++;
-                cachedColIndex = j; // so that even after calling hasNext(), the current index remains the same
-                return get();
-            }
+        @Override
+        public int index() {
 
-            @Override
-            public boolean hasNext() {
+            return nextJ;
+        }
 
-                return k < cardinality && hasNextNonZero();
-            }
+        @Override
+        public byte get() {
 
-            private boolean hasNextNonZero() {
+            return safeGet(i, nextJ);
+        }
 
-                while (hasNotReachedTheEnd() && isZeroAt(i, j + 1)) {
-                    j++;
+        @Override
+        public void set(byte value) {
+
+            safeSet(i, nextJ, value);
+        }
+
+        @Override
+        public Byte next() {
+
+            nextJ = j - 1;
+            findNextNonZero();
+            return get();
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return hasNext;
+        }
+
+        private void findNextNonZero() {
+
+            hasNext = false;
+            while (j < end) {
+                hasNext = nonZeroAt(i, j++);
+                if (hasNext) {
+                    break;
                 }
-
-                return hasNotReachedTheEnd();
             }
-
-            private boolean hasNotReachedTheEnd() {
-
-                return j + 1 < toColumn;
-            }
-        };
+        }
     }
 }
