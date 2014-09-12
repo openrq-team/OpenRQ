@@ -272,7 +272,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < result.columns(); j++) {
                 byte acc = 0;
-                ByteVectorIterator it = rowIterator(i);
+                ByteVectorIterator it = nonZeroRowIterator(i);
                 while (it.hasNext()) {
                     it.next();
                     final byte prod = aTimesB(it.get(), matrix.get(it.index(), j));
