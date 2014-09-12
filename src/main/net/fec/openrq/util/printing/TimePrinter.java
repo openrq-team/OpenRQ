@@ -71,12 +71,14 @@ public final class TimePrinter {
 
     public static void beginTimer() {
 
-        TL_INTERVAL.get().begin(System.nanoTime());
+        MutableTimeInterval mti = TL_INTERVAL.get();
+        mti.begin(System.nanoTime());
     }
 
     public static void markTimestamp() {
 
-        TL_INTERVAL.get().end(System.nanoTime());
+        long nanos = System.nanoTime();
+        TL_INTERVAL.get().end(nanos);
     }
 
     public static double getEllapsedTime(TimeUnit unit) {

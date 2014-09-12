@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
@@ -833,28 +834,28 @@ final class LinearSystem {
              * with the chosen row so that the chosen row is the first row that intersects V."
              */
 
-            int rLinha = chosenRow.position;
+            int rPrime = chosenRow.position;
 
             // if the chosen row is not 'i' already
-            if (rLinha != i)
+            if (rPrime != i)
             {
                 TimePrinter.beginTimer(); // DEBUG
 
-                // swap i with rLinha in A
-                A.swapRows(i, rLinha);
+                // swap i with rPrime in A
+                A.swapRows(i, rPrime);
 
-                // swap i with rLinha in X~
-                X.swapRows(i, rLinha);
+                // swap i with rPrime in X
+                X.swapRows(i, rPrime);
 
-                // decoding process - swap i with rLinha in d
+                // decoding process - swap i with rPrime in d
                 int auxIndex = d[i];
-                d[i] = d[rLinha];
-                d[rLinha] = auxIndex;
+                d[i] = d[rPrime];
+                d[rPrime] = auxIndex;
 
                 // update values in 'rows' map
                 Row other = rows.remove(i);
-                rows.put(rLinha, other);
-                other.position = rLinha;
+                rows.put(rPrime, other);
+                other.position = rPrime;
                 chosenRow.position = i;
 
                 TimePrinter.markTimestamp(); // DEBUG
@@ -966,30 +967,18 @@ final class LinearSystem {
                     byte betaOverAlpha = OctetOps.aDividedByB(beta, alpha);
 
                     // multiplication
-                    final ByteVector product = A.getRow(i, i, A.columns()); // we exclude zeros to the left of i
-                    product.updateNonZero(ByteVectors.asMulFunction(betaOverAlpha));
-
-                    class LinePlusProduct implements MatrixFunction {
-
-                        private final int columnOffset;
-
-
-                        LinePlusProduct(int columnOffset) {
-
-                            this.columnOffset = columnOffset;
-                        }
-
-                        @Override
-                        public byte evaluate(int notUsed, int j, byte value) {
-
-                            final int prodIndex = j - columnOffset;
-                            return OctetOps.aPlusB(product.get(prodIndex), value);
-                        }
-                    }
+                    final ByteVector product = A.getRow(i); // getRow is fast when the matrix is row compressed
+                    product.updateNonZero(ByteVectors.asMulFunction(betaOverAlpha), i, product.length());
 
                     // addition
-                    // we exclude zeros to the left of i
-                    A.updateRow(row, new LinePlusProduct(i), i, A.columns());
+                    ByteVectorIterator prodIt = product.iterator(i, product.length());
+                    ByteVectorIterator rowIt = A.rowIterator(row, i, A.columns());
+                    // both iterators have the same number of elements
+                    while (prodIt.hasNext()) { // && rowIt.hasNext()
+                        prodIt.next();
+                        rowIt.next();
+                        rowIt.set(OctetOps.aPlusB(rowIt.get(), prodIt.get()));
+                    }
 
                     // decoding process - (beta * D[d[i]]) + D[d[row]]
                     byte[] p = OctetOps.betaProduct(betaOverAlpha, D[d[i]]);
