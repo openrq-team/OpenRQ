@@ -297,6 +297,31 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public int nonZerosInColumn(int j, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        int nonZeros = columnPointers[j + 1] - columnPointers[j]; // upper bound
+
+        // discount non zeros to the left of the range
+        int k = columnPointers[j];
+        while (k < columnPointers[j + 1] && rowIndices[k] < fromRow) {
+            k++;
+            nonZeros--;
+        }
+
+        // discount non zeros to the right of the ranges
+        k = columnPointers[j + 1] - 1;
+        while (k >= columnPointers[j] && rowIndices[k] >= toRow) {
+            k--;
+            nonZeros--;
+        }
+
+        return nonZeros;
+    }
+
+    @Override
     public void each(MatrixProcedure procedure) {
 
         int k = 0;
