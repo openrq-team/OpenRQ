@@ -200,6 +200,23 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public void swapColumns(int i, int j, int fromRow, int toRow) {
+
+        checkColumnBounds(i);
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        if (i != j) {
+            ByteVector ii = getColumn(i); // getColumn is faster than the one with row indices
+            ByteVector jj = getColumn(j); // ""
+
+            final int length = toRow - fromRow;
+            setColumn(i, fromRow, jj, fromRow, length);
+            setColumn(j, fromRow, ii, fromRow, length);
+        }
+    }
+
+    @Override
     public ByteMatrix copy() {
 
         byte $values[] = new byte[align(cardinality)];

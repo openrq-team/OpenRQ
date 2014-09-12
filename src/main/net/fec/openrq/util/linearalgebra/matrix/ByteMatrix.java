@@ -123,6 +123,20 @@ public interface ByteMatrix extends Externalizable {
     void swapRows(int i, int j);
 
     /**
+     * Swaps the specified regions of rows of this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param j
+     *            the row index
+     * @param fromColumn
+     *            the starting column index (inclusive)
+     * @param toColumn
+     *            the ending column index (exclusive)
+     */
+    void swapRows(int i, int j, int fromColumn, int toColumn);
+
+    /**
      * Swaps the specified columns of this matrix.
      * 
      * @param i
@@ -131,6 +145,20 @@ public interface ByteMatrix extends Externalizable {
      *            the column index
      */
     void swapColumns(int i, int j);
+
+    /**
+     * Swaps the specified regions of columns of this matrix.
+     * 
+     * @param i
+     *            the column index
+     * @param j
+     *            the column index
+     * @param fromRow
+     *            the starting row index (inclusive)
+     * @param toRow
+     *            the ending row index (exclusive)
+     */
+    void swapColumns(int i, int j, int fromRow, int toRow);
 
     /**
      * Returns the number of rows of this matrix.
@@ -517,6 +545,22 @@ public interface ByteMatrix extends Externalizable {
     void setRow(int i, ByteVector vector);
 
     /**
+     * Copies given region of a vector into the specified region of a row of this matrix.
+     * 
+     * @param i
+     *            the row index
+     * @param fromColumn
+     *            the starting column index
+     * @param vector
+     *            the row represented as vector
+     * @param fromIndex
+     *            the starting vector index
+     * @param length
+     *            the number of bytes to be copied
+     */
+    void setRow(int i, int fromColumn, ByteVector vector, int fromIndex, int length);
+
+    /**
      * Copies given {@code vector} into the specified column of this matrix.
      * 
      * @param j
@@ -525,6 +569,22 @@ public interface ByteMatrix extends Externalizable {
      *            the column represented as vector
      */
     void setColumn(int j, ByteVector vector);
+
+    /**
+     * Copies given region of a vector into the specified region of a column of this matrix.
+     * 
+     * @param j
+     *            the column index
+     * @param fromRow
+     *            the starting row index
+     * @param vector
+     *            the column represented as vector
+     * @param fromIndex
+     *            the starting vector index
+     * @param length
+     *            the number of bytes to be copied
+     */
+    void setColumn(int j, int fromRow, ByteVector vector, int fromIndex, int length);
 
     /**
      * Creates the blank (an empty matrix with same size) matrix of this matrix.

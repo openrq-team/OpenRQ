@@ -126,6 +126,22 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     }
 
     @Override
+    public void swapRows(int i, int j, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkRowBounds(j);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        if (i != j) {
+            for (int k = fromColumn; k < toColumn; k++) {
+                byte tmp = self[i * columns + k];
+                self[i * columns + k] = self[j * columns + k];
+                self[j * columns + k] = tmp;
+            }
+        }
+    }
+
+    @Override
     public void swapColumns(int i, int j) {
 
         checkColumnBounds(i);
@@ -140,11 +156,41 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     }
 
     @Override
+    public void swapColumns(int i, int j, int fromRow, int toRow) {
+
+        checkColumnBounds(i);
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        if (i != j) {
+            for (int k = fromRow; k < toRow; k++) {
+                byte tmp = self[k * columns + i];
+                self[k * columns + i] = self[k * columns + j];
+                self[k * columns + j] = tmp;
+            }
+        }
+    }
+
+    @Override
     public ByteVector getRow(int i) {
 
         checkRowBounds(i);
+
         byte result[] = new byte[columns];
         System.arraycopy(self, i * columns, result, 0, columns);
+
+        return new BasicByteVector(result);
+    }
+
+    @Override
+    public ByteVector getRow(int i, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        final int length = toColumn - fromColumn;
+        byte[] result = new byte[length];
+        System.arraycopy(self, (i * columns) + fromColumn, result, 0, length);
 
         return new BasicByteVector(result);
     }

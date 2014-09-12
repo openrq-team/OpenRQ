@@ -189,6 +189,78 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testSetRow() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {{1, 2, 3, 4}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setRow(0, vector);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetRow_InRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setRow(0, 0, vector, 0, 0);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetRow_InRangeOf_0_to_2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {{1, 2, 0, 0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setRow(0, 0, vector, 0, 2);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetRow_InRangeOf_0_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {{1, 2, 3, 4}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setRow(0, 0, vector, 0, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetRow_InRangeOf_2_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {{0, 0, 3, 4}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setRow(0, 2, vector, 2, 2); // yes, the second 2 is the length
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetRow_InRangeOf_4_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setRow(0, 4, vector, 4, 0); // yes, 0 is the length
+
+        assertEquals(a, b);
+    }
+
+    @Test
     public void testGetColumn() {
 
         ByteMatrix matrix = getRowColumnMatrix();
@@ -282,6 +354,78 @@ public abstract class AbstractByteMatrixTest {
         assertEquals(vecB, matrix.getColumn(1, 4, 4));
         assertEquals(vecC, matrix.getColumn(2, 4, 4));
         assertEquals(vecD, matrix.getColumn(3, 4, 4));
+    }
+
+    @Test
+    public void testSetColumn() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] { {1}, {2}, {3}, {4}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setColumn(0, vector);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetColumn_InRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setColumn(0, 0, vector, 0, 0);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetColumn_InRangeOf_0_to_2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] { {1}, {2}, {0}, {0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setColumn(0, 0, vector, 0, 2);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetColumn_InRangeOf_0_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] { {1}, {2}, {3}, {4}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setColumn(0, 0, vector, 0, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetColumn_InRangeOf_2_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] { {0}, {0}, {3}, {4}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setColumn(0, 2, vector, 2, 2); // yes, the second 2 is the length
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetColumn_InRangeOf_4_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setColumn(0, 4, vector, 4, 0); // yes, 0 is the length
+
+        assertEquals(a, b);
     }
 
     @Test
@@ -527,6 +671,234 @@ public abstract class AbstractByteMatrixTest {
 
         b.swapColumns(1, 2);
         assertEquals(c, b);
+    }
+
+    @Test
+    public void testSwapRows() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {5, 6, 7, 8},
+                                                            {1, 2, 3, 4}
+        });
+
+        a.swapRows(0, 1);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapRows_InRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+
+        a.swapRows(0, 1, 0, 0);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapRows_InRangeOf_0_to_2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {5, 6, 3, 4},
+                                                            {1, 2, 7, 8}
+        });
+
+        a.swapRows(0, 1, 0, 2);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapRows_InRangeOf_0_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {5, 6, 7, 8},
+                                                            {1, 2, 3, 4}
+        });
+
+        a.swapRows(0, 1, 0, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapRows_InRangeOf_2_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 7, 8},
+                                                            {5, 6, 3, 4}
+        });
+
+        a.swapRows(0, 1, 2, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapRows_InRangeOf_4_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 2, 3, 4},
+                                                            {5, 6, 7, 8}
+        });
+
+        a.swapRows(0, 1, 4, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapColumns() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {5, 1},
+                                                            {6, 2},
+                                                            {7, 3},
+                                                            {8, 4}
+        });
+
+        a.swapColumns(0, 1);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapColumns_InRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+
+        a.swapColumns(0, 1, 0, 0);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapColumns_InRangeOf_0_to_2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {5, 1},
+                                                            {6, 2},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+
+        a.swapColumns(0, 1, 0, 2);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapColumns_InRangeOf_0_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {5, 1},
+                                                            {6, 2},
+                                                            {7, 3},
+                                                            {8, 4}
+        });
+
+        a.swapColumns(0, 1, 0, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapColumns_InRangeOf_2_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {7, 3},
+                                                            {8, 4}
+        });
+
+        a.swapColumns(0, 1, 2, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSwapColumns_InRangeOf_4_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 5},
+                                                            {2, 6},
+                                                            {3, 7},
+                                                            {4, 8}
+        });
+
+        a.swapColumns(0, 1, 4, 4);
+
+        assertEquals(a, b);
     }
 
     @Test

@@ -117,6 +117,7 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         checkRowBounds(i);
         checkRowBounds(j);
+
         if (i != j) {
             byte tmp[] = self[i];
             self[i] = self[j];
@@ -125,12 +126,46 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     }
 
     @Override
+    public void swapRows(int i, int j, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkRowBounds(j);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        if (i != j) {
+            final int length = toColumn - fromColumn;
+            byte[] tmp = new byte[length];
+
+            System.arraycopy(self[i], fromColumn, tmp, 0, length);
+            System.arraycopy(self[j], fromColumn, self[i], fromColumn, length);
+            System.arraycopy(tmp, 0, self[j], fromColumn, length);
+        }
+    }
+
+    @Override
     public void swapColumns(int i, int j) {
 
         checkColumnBounds(i);
         checkColumnBounds(j);
+
         if (i != j) {
             for (int ii = 0; ii < rows; ii++) {
+                byte tmp = self[ii][i];
+                self[ii][i] = self[ii][j];
+                self[ii][j] = tmp;
+            }
+        }
+    }
+
+    @Override
+    public void swapColumns(int i, int j, int fromRow, int toRow) {
+
+        checkColumnBounds(i);
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        if (i != j) {
+            for (int ii = fromRow; ii < toRow; ii++) {
                 byte tmp = self[ii][i];
                 self[ii][i] = self[ii][j];
                 self[ii][j] = tmp;
@@ -142,8 +177,22 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     public ByteVector getRow(int i) {
 
         checkRowBounds(i);
+
         byte result[] = new byte[columns];
         System.arraycopy(self[i], 0, result, 0, columns);
+
+        return new BasicByteVector(result);
+    }
+
+    @Override
+    public ByteVector getRow(int i, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        final int length = toColumn - fromColumn;
+        byte[] result = new byte[length];
+        System.arraycopy(self[i], fromColumn, result, 0, length);
 
         return new BasicByteVector(result);
     }
