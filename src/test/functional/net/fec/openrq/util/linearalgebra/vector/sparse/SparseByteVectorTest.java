@@ -417,7 +417,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVector b = factory().createVector(new byte[] {0, 0, 0});
-        ByteVectorIterator it = a.iterator();
+        ByteVectorIterator it = a.nonZeroIterator();
 
         assertTrue("hasNext 0", it.hasNext());
         it.next();
@@ -445,7 +445,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVector b = factory().createVector(new byte[] {0, 2, 3});
-        ByteVectorIterator it = a.iterator(0, 1);
+        ByteVectorIterator it = a.nonZeroIterator(0, 1);
 
         assertTrue("hasNext 0", it.hasNext());
         it.next();
@@ -463,7 +463,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVector b = factory().createVector(new byte[] {0, 0, 0});
-        ByteVectorIterator it = a.iterator(0, 3);
+        ByteVectorIterator it = a.nonZeroIterator(0, 3);
 
         assertTrue("hasNext 0", it.hasNext());
         it.next();
@@ -491,7 +491,7 @@ public abstract class SparseByteVectorTest extends AbstractByteVectorTest {
 
         SparseByteVector a = (SparseByteVector)factory().createVector(new byte[] {1, 2, 3});
         ByteVector b = factory().createVector(new byte[] {1, 0, 0});
-        ByteVectorIterator it = a.iterator(1, 3);
+        ByteVectorIterator it = a.nonZeroIterator(1, 3);
 
         assertTrue("hasNext 1", it.hasNext());
         it.next();

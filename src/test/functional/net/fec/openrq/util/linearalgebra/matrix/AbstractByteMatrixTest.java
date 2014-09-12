@@ -56,6 +56,7 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
@@ -3108,5 +3109,2068 @@ public abstract class AbstractByteMatrixTest {
         a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 5, 5);
 
         assertEquals(b, a);
+    }
+
+    private ByteMatrix iteratorMatrix_1() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {-1, 0, -1, -1, -1, -1},
+                                                    {0, 1, 0, 2, 3, 0},
+                                                    {-1, 0, -1, -1, -1, -1},
+                                                    {-1, 2, -1, -1, -1, -1},
+                                                    {-1, 3, -1, -1, -1, -1},
+                                                    {-1, 0, -1, -1, -1, -1}
+        });
+    }
+
+    @Test
+    public void testRowIterator_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.rowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 0, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 1, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 0, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        assertEquals("get 3", 2, it.get());
+        assertEquals("index 3", 3, it.index());
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        assertEquals("get 4", 3, it.get());
+        assertEquals("index 4", 4, it.index());
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        assertEquals("get 5", 0, it.get());
+        assertEquals("index 5", 5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_1_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.rowIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.rowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 0, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 1, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 0, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.rowIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 0, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 1, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 0, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        assertEquals("get 3", 2, it.get());
+        assertEquals("index 3", 3, it.index());
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        assertEquals("get 4", 3, it.get());
+        assertEquals("index 4", 4, it.index());
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        assertEquals("get 5", 0, it.get());
+        assertEquals("index 5", 5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.rowIterator(1, 3, 6);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        assertEquals("get 3", 2, it.get());
+        assertEquals("index 3", 3, it.index());
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        assertEquals("get 4", 3, it.get());
+        assertEquals("index 4", 4, it.index());
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        assertEquals("get 5", 0, it.get());
+        assertEquals("index 5", 5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_1_InRangeOf_6_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.rowIterator(1, 6, 6);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.columnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 0, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 1, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 0, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        assertEquals("get 3", 2, it.get());
+        assertEquals("index 3", 3, it.index());
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        assertEquals("get 4", 3, it.get());
+        assertEquals("index 4", 4, it.index());
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        assertEquals("get 5", 0, it.get());
+        assertEquals("index 5", 5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_1_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.columnIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.columnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 0, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 1, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 0, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.columnIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 0, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 1, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 0, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        assertEquals("get 3", 2, it.get());
+        assertEquals("index 3", 3, it.index());
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        assertEquals("get 4", 3, it.get());
+        assertEquals("index 4", 4, it.index());
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        assertEquals("get 5", 0, it.get());
+        assertEquals("index 5", 5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.columnIterator(1, 3, 6);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        assertEquals("get 3", 2, it.get());
+        assertEquals("index 3", 3, it.index());
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        assertEquals("get 4", 3, it.get());
+        assertEquals("index 4", 4, it.index());
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        assertEquals("get 5", 0, it.get());
+        assertEquals("index 5", 5, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_1_InRangeOf_6_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.columnIterator(1, 6, 6);
+
+        assertFalse(it.hasNext());
+    }
+
+    private ByteMatrix iteratorMatrix_2() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {-1, 1, -1},
+                                                    {1, 2, 3},
+                                                    {-1, 3, -1},
+        });
+    }
+
+    @Test
+    public void testRowIterator_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.rowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_2_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.rowIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.rowIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.rowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.rowIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testRowIterator_2_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.rowIterator(1, 3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.columnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_2_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.columnIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.columnIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.columnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.columnIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_2_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.columnIterator(1, 3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+
+    // dummy values to iterator set() method in order to test consecutive calls to the method
+    private static final byte ZERO_DUMMY = -1;
+    private static final byte NONZERO_DUMMY = 0;
+
+
+    private static void iteratorSet(String msg, ByteVectorIterator it, byte value) {
+
+        it.set(value);
+        assertEquals(msg, value, it.get());
+    }
+
+    @Test
+    public void testRowIteratorModify_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {1, 0, 0, 1, 0, 1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.rowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 0", it, NONZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)1);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 3", it, NONZERO_DUMMY);
+        iteratorSet("set 3", it, (byte)1);
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 4", it, ZERO_DUMMY);
+        iteratorSet("set 4", it, (byte)0);
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 5", it, NONZERO_DUMMY);
+        iteratorSet("set 5", it, (byte)1);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testRowIteratorModify_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {1, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.rowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 0", it, NONZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)1);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testRowIteratorModify_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {1, 0, 0, 1, 0, 1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.rowIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 0", it, NONZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)1);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 3", it, NONZERO_DUMMY);
+        iteratorSet("set 3", it, (byte)1);
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 4", it, ZERO_DUMMY);
+        iteratorSet("set 4", it, (byte)0);
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 5", it, NONZERO_DUMMY);
+        iteratorSet("set 5", it, (byte)1);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testRowIteratorModify_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 1, 0, 1, 0, 1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.rowIterator(1, 3, 6);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 3", it, NONZERO_DUMMY);
+        iteratorSet("set 3", it, (byte)1);
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 4", it, ZERO_DUMMY);
+        iteratorSet("set 4", it, (byte)0);
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 5", it, NONZERO_DUMMY);
+        iteratorSet("set 5", it, (byte)1);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1, -1, -1, -1},
+                                                            {0, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 1, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 1, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.columnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 0", it, NONZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)1);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 3", it, NONZERO_DUMMY);
+        iteratorSet("set 3", it, (byte)1);
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 4", it, ZERO_DUMMY);
+        iteratorSet("set 4", it, (byte)0);
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 5", it, NONZERO_DUMMY);
+        iteratorSet("set 5", it, (byte)1);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1, -1, -1, -1},
+                                                            {0, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.columnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 0", it, NONZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)1);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1, -1, -1, -1},
+                                                            {0, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 1, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 1, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.columnIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 0", it, NONZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)1);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 3", it, NONZERO_DUMMY);
+        iteratorSet("set 3", it, (byte)1);
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 4", it, ZERO_DUMMY);
+        iteratorSet("set 4", it, (byte)0);
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 5", it, NONZERO_DUMMY);
+        iteratorSet("set 5", it, (byte)1);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 1, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 1, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 1, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.columnIterator(1, 3, 6);
+
+        assertTrue("hasNext 3", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 3", it, NONZERO_DUMMY);
+        iteratorSet("set 3", it, (byte)1);
+
+        assertTrue("hasNext 4", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 4", it, ZERO_DUMMY);
+        iteratorSet("set 4", it, (byte)0);
+
+        assertTrue("hasNext 5", it.hasNext());
+        it.next();
+        iteratorSet("set dummy 5", it, NONZERO_DUMMY);
+        iteratorSet("set 5", it, (byte)1);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testRowIteratorModify_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {0, 5, 0},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.rowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)5);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testRowIteratorModify_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {0, 2, 3},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.rowIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testRowIteratorModify_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {0, 5, 0},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.rowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)5);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testRowIteratorModify_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {1, 5, 0},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.rowIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)5);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1},
+                                                            {1, 5, 3},
+                                                            {-1, 0, -1},
+        });
+
+        ByteVectorIterator it = a.columnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)5);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1},
+                                                            {1, 2, 3},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.columnIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1},
+                                                            {1, 5, 3},
+                                                            {-1, 0, -1},
+        });
+
+        ByteVectorIterator it = a.columnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)5);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testColumnIteratorModify_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {1, 5, 3},
+                                                            {-1, 0, -1},
+        });
+
+        ByteVectorIterator it = a.columnIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)5);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy set 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIterator_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroRowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_1_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 3, 6);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_1_InRangeOf_6_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 6, 6);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_1_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 1, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 3, 6);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 3, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 4, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_1_InRangeOf_6_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 6, 6);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroRowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_2_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIterator_2_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_2_InRangeOf_0_to_0() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 0);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        assertEquals("get 0", 1, it.get());
+        assertEquals("index 0", 0, it.index());
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        assertEquals("get 1", 2, it.get());
+        assertEquals("index 1", 1, it.index());
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        assertEquals("get 2", 3, it.get());
+        assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_2_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowAndColumnIterator_3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+        ByteVectorIterator rowIt = a.nonZeroRowIterator(1);
+        assertFalse("row", rowIt.hasNext());
+
+        ByteVectorIterator colIt = a.nonZeroColumnIterator(1);
+        assertFalse("column", colIt.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowAndColumnIterator_3_InRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+        ByteVectorIterator rowIt = a.nonZeroRowIterator(1, 0, 0);
+        assertFalse("row", rowIt.hasNext());
+
+        ByteVectorIterator colIt = a.nonZeroColumnIterator(1, 0, 0);
+        assertFalse("column", colIt.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowAndColumnIterator_3_InRangeOf_0_to_1() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+        ByteVectorIterator rowIt = a.nonZeroRowIterator(1, 0, 1);
+        assertFalse("row", rowIt.hasNext());
+
+        ByteVectorIterator colIt = a.nonZeroColumnIterator(1, 0, 1);
+        assertFalse("column", colIt.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowAndColumnIterator_3_InRangeOf_0_to_3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+        ByteVectorIterator rowIt = a.nonZeroRowIterator(1, 0, 3);
+        assertFalse("row", rowIt.hasNext());
+
+        ByteVectorIterator colIt = a.nonZeroColumnIterator(1, 0, 3);
+        assertFalse("column", colIt.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowAndColumnIterator_3_InRangeOf_1_to_3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+        ByteVectorIterator rowIt = a.nonZeroRowIterator(1, 1, 3);
+        assertFalse("row", rowIt.hasNext());
+
+        ByteVectorIterator colIt = a.nonZeroColumnIterator(1, 1, 3);
+        assertFalse("column", colIt.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowAndColumnIterator_3_InRangeOf_3_to_3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+        ByteVectorIterator rowIt = a.nonZeroRowIterator(1, 3, 3);
+        assertFalse("row", rowIt.hasNext());
+
+        ByteVectorIterator colIt = a.nonZeroColumnIterator(1, 3, 3);
+        assertFalse("column", colIt.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 0, 0, 4, 0, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 0, 0, 4, 0, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 1, 0, 4, 0, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 3, 6);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_1() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 4, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.nonZerosInColumn(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 2, -1, -1, -1, -1},
+                                                            {-1, 3, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.nonZerosInColumn(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_1_InRangeOf_0_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 0, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 4, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 6);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.nonZerosInColumn(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_1_InRangeOf_3_to_6() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {0, 1, 0, 2, 3, 0},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 4, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1},
+                                                            {-1, 0, -1, -1, -1, -1}
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 3, 6);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, NONZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)4);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.nonZerosInColumn(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {0, 0, 0},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(0, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {0, 2, 3},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {0, 0, 0},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(0, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroRowIteratorModify_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {1, 0, 0},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.nonZerosInRow(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_2() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1},
+                                                            {1, 0, 3},
+                                                            {-1, 0, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(0, a.nonZerosInColumn(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_2_InRangeOf_0_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1},
+                                                            {1, 2, 3},
+                                                            {-1, 3, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 1);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(2, a.nonZerosInColumn(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_2_InRangeOf_0_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 0, -1},
+                                                            {1, 0, 3},
+                                                            {-1, 0, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 0, 3);
+
+        assertTrue("hasNext 0", it.hasNext());
+        it.next();
+        iteratorSet("dummy 0", it, ZERO_DUMMY);
+        iteratorSet("set 0", it, (byte)0);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(0, a.nonZerosInColumn(1));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testNonZeroColumnIteratorModify_2_InRangeOf_1_to_3() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {-1, 1, -1},
+                                                            {1, 0, 3},
+                                                            {-1, 0, -1},
+        });
+
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 1, 3);
+
+        assertTrue("hasNext 1", it.hasNext());
+        it.next();
+        iteratorSet("dummy 1", it, ZERO_DUMMY);
+        iteratorSet("set 1", it, (byte)0);
+
+        assertTrue("hasNext 2", it.hasNext());
+        it.next();
+        iteratorSet("dummy 2", it, ZERO_DUMMY);
+        iteratorSet("set 2", it, (byte)0);
+
+        assertFalse(it.hasNext());
+
+        assertEquals(1, a.nonZerosInColumn(1));
+        assertEquals(a, b);
     }
 }

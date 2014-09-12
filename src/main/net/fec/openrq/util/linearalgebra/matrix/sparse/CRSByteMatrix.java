@@ -53,6 +53,7 @@ import java.io.ObjectOutput;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
@@ -186,7 +187,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     // =========================================================================
-    // Optimized multiplications that take advantage of sparsity in this matrix.
+    // Optimized multiplications that take advantage of row sparsity in matrix.
 
     @Override
     public ByteMatrix multiply(byte value) {
@@ -197,12 +198,53 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteMatrix multiply(byte value, Factory factory) {
 
+        ensureFactoryIsNotNull(factory);
+
         ByteMatrix result = blank(factory);
 
+        if (value != 0) {
+            for (int i = 0; i < rows; i++) {
+                ByteVectorIterator it = nonZeroRowIterator(i);
+                while (it.hasNext()) {
+                    it.next();
+                    final byte prod = aTimesB(value, it.get());
+                    result.set(i, it.index(), prod);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector multiply(ByteVector vector) {
+
+        return multiply(vector, factory);
+    }
+
+    @Override
+    public ByteVector multiply(ByteVector vector, Factory factory) {
+
+        ensureFactoryIsNotNull(factory);
+        ensureArgumentIsNotNull(vector, "vector");
+
+        if (columns != vector.length()) {
+            fail("Wrong vector length: " + vector.length() + ". Should be: " + columns + ".");
+        }
+
+        ByteVector result = factory.createVector(rows);
+
         for (int i = 0; i < rows; i++) {
-            for (int j = rowPointers[i]; j < rowPointers[i + 1]; j++) {
-                final byte prod = aTimesB(value, values[j]);
-                result.set(i, columnIndices[j], prod);
+            byte acc = 0;
+            ByteVectorIterator it = nonZeroRowIterator(i);
+            while (it.hasNext()) {
+                it.next();
+                final byte prod = aTimesB(it.get(), vector.get(it.index()));
+                acc = aPlusB(acc, prod);
+            }
+
+            if (acc != 0) {
+                result.set(i, acc);
             }
         }
 
@@ -230,8 +272,10 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < result.columns(); j++) {
                 byte acc = 0;
-                for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
-                    final byte prod = aTimesB(values[k], matrix.get(columnIndices[k], j));
+                ByteVectorIterator it = rowIterator(i);
+                while (it.hasNext()) {
+                    it.next();
+                    final byte prod = aTimesB(it.get(), matrix.get(it.index(), j));
                     acc = aPlusB(acc, prod);
                 }
 
@@ -244,40 +288,14 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         return result;
     }
 
-    @Override
-    public ByteVector multiply(ByteVector vector) {
-
-        return multiply(vector, factory);
-    }
-
-    @Override
-    public ByteVector multiply(ByteVector vector, Factory factory) {
-
-        ensureFactoryIsNotNull(factory);
-        ensureArgumentIsNotNull(vector, "vector");
-
-        if (columns != vector.length()) {
-            fail("Wrong vector length: " + vector.length() + ". Should be: " + columns + ".");
-        }
-
-        final ByteVector result = factory.createVector(rows);
-        for (int i = 0; i < rows; i++) {
-            byte acc = 0;
-            for (int j = rowPointers[i]; j < rowPointers[i + 1]; j++) {
-                final byte prod = aTimesB(values[j], vector.get(columnIndices[j]));
-                acc = aPlusB(acc, prod);
-            }
-
-            if (acc != 0) {
-                result.set(i, acc);
-            }
-        }
-
-        return result;
-    }
-
-    // Optimized multiplications that take advantage of sparsity in this matrix.
+    // Optimized multiplications that take advantage of row sparsity in matrix.
     // =========================================================================
+
+    @Override
+    public ByteMatrix transpose() {
+
+        return transpose(factory);
+    }
 
     @Override
     public ByteMatrix transpose(Factory factory) {
@@ -311,44 +329,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         System.arraycopy(columnIndices, rowPointers[i], rowIndices, 0, rowCardinality);
 
         return new CompressedByteVector(columns, rowCardinality, rowValues, rowIndices);
-    }
-
-    @Override
-    public ByteVector getRow(int i, Factory factory) {
-
-        checkRowBounds(i);
-        ensureFactoryIsNotNull(factory);
-
-        ByteVector result = factory.createVector(columns);
-
-        for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
-            result.set(columnIndices[k], values[k]);
-        }
-
-        return result;
-    }
-
-    @Override
-    public ByteVector getColumn(int j, Factory factory) {
-
-        checkColumnBounds(j);
-        ensureFactoryIsNotNull(factory);
-
-        ByteVector result = factory.createVector(rows);
-
-        int i = 0;
-        while (rowPointers[i] < cardinality) {
-
-            int k = searchForColumnIndex(j, rowPointers[i], rowPointers[i + 1]);
-
-            if (k < rowPointers[i + 1] && columnIndices[k] == j) {
-                result.set(i, values[k]);
-            }
-
-            i++;
-        }
-
-        return result;
     }
 
     @Override
@@ -463,23 +443,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void eachInRow(int i, MatrixProcedure procedure) {
-
-        checkRowBounds(i);
-
-        int k = rowPointers[i];
-        int valuesSoFar = rowPointers[i + 1];
-        for (int j = 0; j < columns; j++) {
-            if (k < valuesSoFar && j == columnIndices[k]) {
-                procedure.apply(i, j, values[k++]);
-            }
-            else {
-                procedure.apply(i, j, (byte)0);
-            }
-        }
-    }
-
-    @Override
     public void eachNonZero(MatrixProcedure procedure) {
 
         int nonZeroCount = 0, i = 0;
@@ -488,34 +451,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
                 procedure.apply(i, columnIndices[k], values[k]);
             }
             i++;
-        }
-    }
-
-    @Override
-    public void eachNonZeroInRow(int i, MatrixProcedure procedure) {
-
-        checkRowBounds(i);
-        for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
-            procedure.apply(i, columnIndices[k], values[k]);
-        }
-    }
-
-    @Override
-    public void eachNonZeroInRow(int i, MatrixProcedure procedure, int fromColumn, int toColumn) {
-
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
-
-        for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++) {
-            final int col = columnIndices[k];
-            if (fromColumn <= col) {
-                if (col < toColumn) {
-                    procedure.apply(i, col, values[k]);
-                }
-                else {
-                    break; // no need to check columns beyond the last one
-                }
-            }
         }
     }
 
@@ -828,5 +763,215 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         }
 
         return new CRSByteMatrix(newRows, newCols, newCardinality, newValues, newColumnIndices, newRowPointers);
+    }
+
+    @Override
+    public ByteVectorIterator rowIterator(int i) {
+
+        checkRowBounds(i);
+        return new RowIterator(i, 0, columns());
+    }
+
+    @Override
+    public ByteVectorIterator rowIterator(int i, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+        return new RowIterator(i, fromColumn, toColumn);
+    }
+
+
+    private final class RowIterator extends ByteVectorIterator {
+
+        private final int i;
+        private int j;
+        private final int end;
+        private int k;
+
+
+        /*
+         * Requires valid indices.
+         */
+        RowIterator(int i, int fromColumn, int toColumn) {
+
+            super(toColumn - fromColumn);
+
+            this.i = i;
+            this.j = fromColumn - 1;
+            this.end = toColumn;
+
+            setKToWithinRange(fromColumn);
+        }
+
+        private void setKToWithinRange(int fromColumn) {
+
+            /*
+             * only need to check the starting index
+             * if columnIndices[k] >= toColumn, then k will never be used
+             */
+
+            k = rowPointers[i];
+            while (k < rowPointers[i + 1] && columnIndices[k] < fromColumn) {
+                k++;
+            }
+        }
+
+        @Override
+        public int index() {
+
+            return j;
+        }
+
+        @Override
+        public byte get() {
+
+            if (k < rowPointers[i + 1] && columnIndices[k] == j) {
+                return values[k];
+            }
+            return 0;
+        }
+
+        @Override
+        public void set(byte value) {
+
+            if (k < rowPointers[i + 1] && columnIndices[k] == j) {
+                if (value == 0) {
+                    CRSByteMatrix.this.remove(k, i);
+                }
+                else {
+                    values[k] = value;
+                }
+            }
+            else {
+                CRSByteMatrix.this.insert(k, i, j, value);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return j + 1 < end;
+        }
+
+        @Override
+        public Byte next() {
+
+            j++;
+            if (k < rowPointers[i + 1] && columnIndices[k] == j - 1) {
+                k++;
+            }
+            return get();
+        }
+
+        @Override
+        protected int innerCursor() {
+
+            return k;
+        }
+    }
+
+
+    @Override
+    public ByteVectorIterator nonZeroRowIterator(int i) {
+
+        checkRowBounds(i);
+        return new NonZeroRowIterator(i, 0, columns());
+    }
+
+    @Override
+    public ByteVectorIterator nonZeroRowIterator(int i, int fromColumn, int toColumn) {
+
+        checkRowBounds(i);
+        checkColumnRangeBounds(fromColumn, toColumn);
+        return new NonZeroRowIterator(i, fromColumn, toColumn);
+    }
+
+
+    private final class NonZeroRowIterator extends ByteVectorIterator {
+
+        private final int i;
+        private boolean currentIsRemoved = false;
+        private int removedIndex;
+        private final int end;
+        private int k;
+
+
+        /*
+         * Requires valid indices.
+         */
+        NonZeroRowIterator(int i, int fromColumn, int toColumn) {
+
+            super(toColumn - fromColumn);
+
+            this.i = i;
+            this.currentIsRemoved = false;
+            this.removedIndex = -1;
+            this.end = toColumn;
+
+            setKToWithinRange(fromColumn);
+        }
+
+        private void setKToWithinRange(int fromColumn) {
+
+            /*
+             * only need to check the starting index
+             * if columnIndices[k] >= toColumn, then k will never be used
+             */
+
+            int kk = rowPointers[i];
+            while (kk < rowPointers[i + 1] && columnIndices[kk] < fromColumn) {
+                kk++;
+            }
+
+            k = kk - 1; // start at kk - 1 so the first next() call can increment k to kk
+        }
+
+        @Override
+        public int index() {
+
+            return currentIsRemoved ? removedIndex : columnIndices[k];
+        }
+
+        @Override
+        public byte get() {
+
+            return currentIsRemoved ? (byte)0 : values[k];
+        }
+
+        @Override
+        public void set(byte value) {
+
+            if (value == 0 && !currentIsRemoved) {
+                currentIsRemoved = true;
+                removedIndex = columnIndices[k];
+                CRSByteMatrix.this.remove(k--, i);
+            }
+            else if (value != 0 && !currentIsRemoved) {
+                values[k] = value;
+            }
+            else {
+                currentIsRemoved = false;
+                CRSByteMatrix.this.insert(++k, i, removedIndex, value);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return k + 1 < rowPointers[i + 1] && columnIndices[k + 1] < end;
+        }
+
+        @Override
+        public Byte next() {
+
+            currentIsRemoved = false;
+            return values[++k];
+        }
+
+        @Override
+        protected int innerCursor() {
+
+            return k;
+        }
     }
 }

@@ -1330,6 +1330,28 @@ public interface ByteMatrix extends Externalizable {
     ByteVectorIterator rowIterator(int i, int fromColumn, int toColumn);
 
     /**
+     * Returns a vector iterator over a column of this matrix (no copies are performed).
+     * 
+     * @param j
+     *            The column index
+     * @return a vector iterator
+     */
+    ByteVectorIterator columnIterator(int j);
+
+    /**
+     * Returns a vector iterator over a range of a column of this matrix (no copies are performed).
+     * 
+     * @param j
+     *            The column index
+     * @param fromRow
+     *            The starting row index (inclusive)
+     * @param toRow
+     *            The ending row index (exclusive)
+     * @return a vector iterator
+     */
+    ByteVectorIterator columnIterator(int j, int fromRow, int toRow);
+
+    /**
      * Returns a vector iterator over the non zero elements of a row of this matrix (no copies are performed).
      * 
      * @param i
@@ -1339,7 +1361,8 @@ public interface ByteMatrix extends Externalizable {
     ByteVectorIterator nonZeroRowIterator(int i);
 
     /**
-     * Returns a vector iterator over the non zero elements of a row of this matrix (no copies are performed).
+     * Returns a vector iterator over the non zero elements of a range of a row of this matrix (no copies are
+     * performed).
      * 
      * @param i
      *            The row index
@@ -1351,5 +1374,26 @@ public interface ByteMatrix extends Externalizable {
      */
     ByteVectorIterator nonZeroRowIterator(int i, int fromColumn, int toColumn);
 
-    // TODO column iterators
+    /**
+     * Returns a vector iterator over the non zero elements of a column of this matrix (no copies are performed).
+     * 
+     * @param j
+     *            The column index
+     * @return a non zero vector iterator
+     */
+    ByteVectorIterator nonZeroColumnIterator(int j);
+
+    /**
+     * Returns a vector iterator over the non zero elements of a range of a column of this matrix (no copies are
+     * performed).
+     * 
+     * @param j
+     *            The column index
+     * @param fromRow
+     *            The starting row index (inclusive)
+     * @param toRow
+     *            The ending row index (exclusive)
+     * @return a non zero vector iterator
+     */
+    ByteVectorIterator nonZeroColumnIterator(int j, int fromRow, int toRow);
 }

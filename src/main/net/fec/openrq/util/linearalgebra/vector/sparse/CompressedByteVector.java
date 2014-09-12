@@ -477,103 +477,6 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     @Override
-    public ByteVectorIterator nonZeroIterator() {
-
-        return new CompressedByteVectorNonZeroIterator(0, length);
-    }
-
-    @Override
-    public ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex) {
-
-        checkIndexRangeBounds(fromIndex, toIndex);
-        return new CompressedByteVectorNonZeroIterator(fromIndex, toIndex);
-    }
-
-
-    private final class CompressedByteVectorNonZeroIterator extends ByteVectorIterator {
-
-        private boolean currentIsRemoved = false;
-        private int removedIndex;
-        private final int end;
-        private int k;
-
-
-        CompressedByteVectorNonZeroIterator(int fromIndex, int toIndex) {
-
-            super(toIndex - fromIndex);
-            this.currentIsRemoved = false;
-            this.removedIndex = -1;
-            this.end = toIndex;
-
-            setKToWithinRange(fromIndex);
-        }
-
-        private void setKToWithinRange(int fromIndex) {
-
-            /*
-             * only need to check the starting index
-             * if k >= toIndex, then it will never be used
-             */
-
-            int kk = 0;
-            while (kk < cardinality && indices[kk] < fromIndex) {
-                kk++;
-            }
-
-            k = kk - 1; // start at kk - 1 so the first next() call can increment k to kk
-        }
-
-        @Override
-        public int index() {
-
-            return currentIsRemoved ? removedIndex : indices[k];
-        }
-
-        @Override
-        public byte get() {
-
-            return currentIsRemoved ? (byte)0 : values[k];
-        }
-
-        @Override
-        public void set(byte value) {
-
-            if (value == 0 && !currentIsRemoved) {
-                currentIsRemoved = true;
-                removedIndex = indices[k];
-                CompressedByteVector.this.remove(k--);
-            }
-            else if (value != 0 && !currentIsRemoved) {
-                values[k] = value;
-            }
-            else {
-                currentIsRemoved = false;
-                CompressedByteVector.this.insert(++k, removedIndex, value);
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-
-            return k + 1 < cardinality && indices[k + 1] < end;
-        }
-
-        @Override
-        public Byte next() {
-
-            currentIsRemoved = false;
-            return values[++k];
-        }
-
-        @Override
-        protected int innerCursor() {
-
-            return k;
-        }
-    }
-
-
-    @Override
     public ByteVectorIterator iterator() {
 
         return new CompressedByteVectorIterator(0, length);
@@ -595,7 +498,7 @@ public class CompressedByteVector extends SparseByteVector {
 
 
         /*
-         * Requires valid indices
+         * Requires valid indices.
          */
         CompressedByteVectorIterator(int fromIndex, int toIndex) {
 
@@ -664,6 +567,106 @@ public class CompressedByteVector extends SparseByteVector {
                 k++;
             }
             return get();
+        }
+
+        @Override
+        protected int innerCursor() {
+
+            return k;
+        }
+    }
+
+
+    @Override
+    public ByteVectorIterator nonZeroIterator() {
+
+        return new CompressedByteVectorNonZeroIterator(0, length);
+    }
+
+    @Override
+    public ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+        return new CompressedByteVectorNonZeroIterator(fromIndex, toIndex);
+    }
+
+
+    private final class CompressedByteVectorNonZeroIterator extends ByteVectorIterator {
+
+        private boolean currentIsRemoved;
+        private int removedIndex;
+        private final int end;
+        private int k;
+
+        /*
+         * Requires valid indices.
+         */
+        CompressedByteVectorNonZeroIterator(int fromIndex, int toIndex) {
+
+            super(toIndex - fromIndex);
+            
+            this.currentIsRemoved = false;
+            this.removedIndex = -1;
+            this.end = toIndex;
+
+            setKToWithinRange(fromIndex);
+        }
+
+        private void setKToWithinRange(int fromIndex) {
+
+            /*
+             * only need to check the starting index
+             * if k >= toIndex, then it will never be used
+             */
+
+            int kk = 0;
+            while (kk < cardinality && indices[kk] < fromIndex) {
+                kk++;
+            }
+
+            k = kk - 1; // start at kk - 1 so the first next() call can increment k to kk
+        }
+
+        @Override
+        public int index() {
+
+            return currentIsRemoved ? removedIndex : indices[k];
+        }
+
+        @Override
+        public byte get() {
+
+            return currentIsRemoved ? (byte)0 : values[k];
+        }
+
+        @Override
+        public void set(byte value) {
+
+            if (value == 0 && !currentIsRemoved) {
+                currentIsRemoved = true;
+                removedIndex = indices[k];
+                CompressedByteVector.this.remove(k--);
+            }
+            else if (value != 0 && !currentIsRemoved) {
+                values[k] = value;
+            }
+            else {
+                currentIsRemoved = false;
+                CompressedByteVector.this.insert(++k, removedIndex, value);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return k + 1 < cardinality && indices[k + 1] < end;
+        }
+
+        @Override
+        public Byte next() {
+
+            currentIsRemoved = false;
+            return values[++k];
         }
 
         @Override
