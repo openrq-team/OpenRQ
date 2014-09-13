@@ -318,22 +318,6 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
-    public void swapRows(int i, int j, int fromColumn, int toColumn) {
-
-        checkRowBounds(i);
-        checkRowBounds(j);
-        checkColumnRangeBounds(fromColumn, toColumn);
-
-        if (i != j) {
-            ByteVector ii = getRow(i, fromColumn, toColumn);
-            ByteVector jj = getRow(j, fromColumn, toColumn);
-
-            setRow(i, fromColumn, jj, 0, jj.length());
-            setRow(j, fromColumn, ii, 0, ii.length());
-        }
-    }
-
-    @Override
     public void swapColumns(int i, int j) {
 
         checkColumnBounds(i);
@@ -345,22 +329,6 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
             setColumn(i, jj);
             setColumn(j, ii);
-        }
-    }
-
-    @Override
-    public void swapColumns(int i, int j, int fromRow, int toRow) {
-
-        checkColumnBounds(i);
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
-
-        if (i != j) {
-            ByteVector ii = getColumn(i, fromRow, toRow);
-            ByteVector jj = getColumn(j, fromRow, toRow);
-
-            setColumn(i, fromRow, jj, 0, jj.length());
-            setColumn(j, fromRow, ii, 0, ii.length());
         }
     }
 

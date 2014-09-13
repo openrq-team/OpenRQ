@@ -123,20 +123,6 @@ public interface ByteMatrix extends Externalizable {
     void swapRows(int i, int j);
 
     /**
-     * Swaps the specified regions of rows of this matrix.
-     * 
-     * @param i
-     *            the row index
-     * @param j
-     *            the row index
-     * @param fromColumn
-     *            the starting column index (inclusive)
-     * @param toColumn
-     *            the ending column index (exclusive)
-     */
-    void swapRows(int i, int j, int fromColumn, int toColumn);
-
-    /**
      * Swaps the specified columns of this matrix.
      * 
      * @param i
@@ -145,20 +131,6 @@ public interface ByteMatrix extends Externalizable {
      *            the column index
      */
     void swapColumns(int i, int j);
-
-    /**
-     * Swaps the specified regions of columns of this matrix.
-     * 
-     * @param i
-     *            the column index
-     * @param j
-     *            the column index
-     * @param fromRow
-     *            the starting row index (inclusive)
-     * @param toRow
-     *            the ending row index (exclusive)
-     */
-    void swapColumns(int i, int j, int fromRow, int toRow);
 
     /**
      * Returns the number of rows of this matrix.
