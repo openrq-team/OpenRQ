@@ -361,6 +361,69 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public void swapColumns(int i, int j) {
+
+        checkColumnBounds(i);
+        checkColumnBounds(j);
+
+        if (i != j) {
+            final int left = Math.min(i, j);
+            final int right = Math.max(i, j);
+
+            for (int row = 0; row < rows(); row++) {
+                // positions of the left and right column indices in the columnIndices/values arrays
+                int leftPos = -1;
+                int rightPos = -1;
+
+                // search in the current row for the left and right column indices over the non zero values
+                // and store their positions in the columnIndices array
+                for (int k = rowPointers[row]; k < rowPointers[row + 1]; k++) {
+                    if (columnIndices[k] == left) {
+                        leftPos = k;
+                    }
+                    else if (columnIndices[k] == right) {
+                        rightPos = k;
+                        break; // indices beyond the rightmost one do not matter
+                    }
+                }
+
+                // if both positions were found
+                if (leftPos != -1 && rightPos != -1) {
+                    // only need to swap the non zero values, since the column indices remain fixed
+                    ArrayUtils.swapBytes(values, leftPos, rightPos);
+                }
+                else if (leftPos != -1) { // if only the left position was found
+                    columnIndices[leftPos] = right; // swap a zero value with a non zero
+                    // now we need to carry the updated column index to its correct position
+                    for (int k = leftPos; k + 1 < rowPointers[row + 1]; k++) {
+                        if (columnIndices[k] > columnIndices[k + 1]) {
+                            ArrayUtils.swapInts(columnIndices, k, k + 1);
+                            ArrayUtils.swapBytes(values, k, k + 1); // mirror the operation on the values array
+                        }
+                        else {
+                            break; // it is already at the correct position
+                        }
+                    }
+                }
+                else if (rightPos != -1) { // if only the right position was found
+                    columnIndices[rightPos] = left; // swap a zero value with a non zero
+                    // now we need to carry the updated column index to its correct position
+                    for (int k = rightPos; k - 1 >= rowPointers[row]; k--) {
+                        if (columnIndices[k] < columnIndices[k - 1]) {
+                            ArrayUtils.swapInts(columnIndices, k, k - 1);
+                            ArrayUtils.swapBytes(values, k, k - 1); // mirror the operation on the values array
+                        }
+                        else {
+                            break; // it is already at the correct position
+                        }
+                    }
+                }
+                // else nothing needs to be swapped
+            }
+        }
+    }
+
+    @Override
     public ByteMatrix copy() {
 
         byte $values[] = new byte[align(cardinality)];

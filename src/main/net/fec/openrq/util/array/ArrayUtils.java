@@ -266,17 +266,37 @@ public final class ArrayUtils {
         }
     }
 
-    private static void swapBytes(byte[] array, int a, int b) {
+    /**
+     * Swaps two bytes in an array of bytes.
+     * 
+     * @param array
+     *            The array of bytes
+     * @param a
+     *            One of the indices of the values to be swapped
+     * @param b
+     *            One of the indices of the values to be swapped
+     */
+    public static void swapBytes(byte[] array, int a, int b) {
 
-        byte tmp = array[a];
-        array[a] = array[b];
+        byte tmp = array[a]; // checks for null array and illegal a index
+        array[a] = array[b]; // checks for illegal b index before any changes can be made to the array
         array[b] = tmp;
     }
 
-    private static void swapInts(int[] array, int a, int b) {
+    /**
+     * Swaps two ints in an array of ints.
+     * 
+     * @param array
+     *            The array of ints
+     * @param a
+     *            One of the indices of the values to be swapped
+     * @param b
+     *            One of the indices of the values to be swapped
+     */
+    public static void swapInts(int[] array, int a, int b) {
 
-        int tmp = array[a];
-        array[a] = array[b];
+        int tmp = array[a]; // checks for null array and illegal a index
+        array[a] = array[b]; // checks for illegal b index before any changes can be made to the array
         array[b] = tmp;
     }
 
