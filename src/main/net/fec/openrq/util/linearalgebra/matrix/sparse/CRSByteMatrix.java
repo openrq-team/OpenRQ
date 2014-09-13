@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -332,19 +333,30 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void swapRows(int i, int j, int fromColumn, int toColumn) {
+    public void swapRows(int i, int j) {
 
         checkRowBounds(i);
         checkRowBounds(j);
-        checkColumnRangeBounds(fromColumn, toColumn);
 
         if (i != j) {
-            ByteVector ii = getRow(i); // getRow is faster than the one with column indices
-            ByteVector jj = getRow(j); // ""
+            // swap the column indices from the two rows
+            ArrayUtils.swapBlocks(columnIndices, rowPointers[i], rowPointers[i + 1], rowPointers[j], rowPointers[j + 1]);
 
-            final int length = toColumn - fromColumn;
-            setRow(i, fromColumn, jj, fromColumn, length);
-            setRow(j, fromColumn, ii, fromColumn, length);
+            // do the same for the values
+            ArrayUtils.swapBlocks(values, rowPointers[i], rowPointers[i + 1], rowPointers[j], rowPointers[j + 1]);
+
+            // figure out the difference between the new and the old cardinality of the row with lowest index
+            final int low = Math.min(i, j);
+            final int lowCardinality = rowPointers[low + 1] - rowPointers[low];
+            final int high = Math.max(i, j);
+            final int highCardinality = rowPointers[high + 1] - rowPointers[high];
+            final int diff = highCardinality - lowCardinality; // may be negative
+
+            // add the difference to all rows between low and high
+            // indices + 1 since the first position of rowPointers is always 0
+            for (int n = low + 1; n < high + 1; n++) {
+                rowPointers[n] += diff;
+            }
         }
     }
 

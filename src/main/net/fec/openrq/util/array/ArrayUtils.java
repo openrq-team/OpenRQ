@@ -187,9 +187,113 @@ public final class ArrayUtils {
             final T[] array = (T[])OBJECTS;
             return array;
         }
-
     }
 
+
+    /**
+     * Swaps two non intersecting blocks inside an array of bytes.
+     * 
+     * @param array
+     *            The array
+     * @param fromA
+     *            The starting index of block A (inclusive)
+     * @param toA
+     *            The ending index of block B (exclusive)
+     * @param fromB
+     *            The starting index of block B (inclusive)
+     * @param toB
+     *            The ending index of block B (exclusive)
+     */
+    public static void swapBlocks(byte[] array, int fromA, int toA, int fromB, int toB) {
+
+        checkArrayBlocksRanges(fromA, toA, fromB, toB, array.length);
+
+        final int lFrom = Math.min(fromA, fromB);
+        final int lTo = Math.min(toA, toB);
+        final int rFrom = Math.max(fromA, fromB);
+        final int rTo = Math.max(toA, toB);
+
+        reverseBytes(array, lFrom, lTo); // reverse the leftmost block
+        reverseBytes(array, lTo, rFrom); // reverse the region between the two blocks
+        reverseBytes(array, rFrom, rTo); // reverse the rightmost block
+
+        reverseBytes(array, lFrom, rTo); // reverse the total region spanning the two blocks
+    }
+
+    /**
+     * Swaps two non intersecting blocks inside an array of ints.
+     * 
+     * @param array
+     *            The array
+     * @param fromA
+     *            The starting index of block A (inclusive)
+     * @param toA
+     *            The ending index of block B (exclusive)
+     * @param fromB
+     *            The starting index of block B (inclusive)
+     * @param toB
+     *            The ending index of block B (exclusive)
+     */
+    public static void swapBlocks(int[] array, int fromA, int toA, int fromB, int toB) {
+
+        checkArrayBlocksRanges(fromA, toA, fromB, toB, array.length);
+
+        final int lFrom = Math.min(fromA, fromB);
+        final int lTo = Math.min(toA, toB);
+        final int rFrom = Math.max(fromA, fromB);
+        final int rTo = Math.max(toA, toB);
+
+        reverseInts(array, lFrom, lTo); // reverse the leftmost block
+        reverseInts(array, lTo, rFrom); // reverse the region between the two blocks
+        reverseInts(array, rFrom, rTo); // reverse the rightmost block
+
+        reverseInts(array, lFrom, rTo); // reverse the total region spanning the two blocks
+    }
+
+    // from is inclusive, to is exclusive
+    private static void reverseBytes(byte[] array, int from, int to) {
+
+        while (from < to) {
+            swapBytes(array, from++, --to);
+        }
+    }
+
+    // from is inclusive, to is exclusive
+    private static void reverseInts(int[] array, int from, int to) {
+
+        while (from < to) {
+            swapInts(array, from++, --to);
+        }
+    }
+
+    private static void swapBytes(byte[] array, int a, int b) {
+
+        byte tmp = array[a];
+        array[a] = array[b];
+        array[b] = tmp;
+    }
+
+    private static void swapInts(int[] array, int a, int b) {
+
+        int tmp = array[a];
+        array[a] = array[b];
+        array[b] = tmp;
+    }
+
+    private static void checkArrayBlocksRanges(int fromA, int toA, int fromB, int toB, int arrayLen) {
+
+        if (fromA < 0) throw new IndexOutOfBoundsException("fromA < 0");
+        if (toA < fromA) throw new IndexOutOfBoundsException("toA < fromA");
+        if (arrayLen < toA) throw new IndexOutOfBoundsException("toA > array length");
+
+        if (fromB < 0) throw new IndexOutOfBoundsException("fromB < 0");
+        if (toB < fromB) throw new IndexOutOfBoundsException("toB < fromB");
+        if (arrayLen < toB) throw new IndexOutOfBoundsException("toB > array length");
+
+        if (Math.max(fromA, fromB) < Math.min(toA, toB)) {
+            throw new IllegalArgumentException("the two blocks intersect");
+        }
+    }
 
     private ArrayUtils() {
 
