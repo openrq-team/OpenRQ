@@ -523,49 +523,38 @@ final class LinearSystem {
          */
 
         // maps the index of a row to an object Row (which stores that row's characteristics)
-        Map<Integer, Row> rows = new HashMap<>(M + 1, 1.0f);
-
-        // go through all matrix rows counting non-zeros
-        for (int row = 0; row < M; row++)
-        {
-
-            int nonZeros = 0, degree = 0;
-            boolean isHDPC = false;
-            int noCols = L - u;
-
-            Set<Integer> nodes = new HashSet<>(noCols);
-
-            // check all columns for non-zeros
-            for (int col = 0; col < noCols; col++)
-            {
-                if (A.get(row, col) == 0) {
-                    continue;
-                }
-                else
-                {
-                    // count the non-zero
-                    nonZeros++;
-
-                    // add to the degree of this row
-                    degree += OctetOps.UNSIGN(A.get(row, col));
-
-                    nodes.add(col);
-                }
-            }
-
+        final Map<Integer, Row> rows = new HashMap<>(M + 1, 1.0f);
+        for (int row = 0; row < M; row++) {
+            // retrieve the number of non-zeros in the row
+            final int nonZeros = A.nonZerosInRow(row, 0, L - u); // exclude last u columns
             // is this a HDPC row?
-            if (row < S || row >= S + H)
-            {
-                isHDPC = false;
-            }
-            else
-            {
-                isHDPC = true;
-            }
+            final boolean isHDPC = (row >= S && row < S + H);
 
             // this is an optimization
-            if (nonZeros == 2 && !isHDPC) rows.put(row, new Row(row, nonZeros, degree, isHDPC, nodes));
-            else rows.put(row, new Row(row, nonZeros, degree, isHDPC));
+            if (nonZeros == 2 && !isHDPC) {
+                int originalDegree = 0;
+                final Set<Integer> nodes = new HashSet<>(2 + 1, 1.0f); // we already know there are only 2 non zeros
+
+                ByteVectorIterator it = A.nonZeroRowIterator(row, 0, L - u);
+                while (it.hasNext()) {
+                    it.next();
+                    originalDegree += OctetOps.UNSIGN(it.get()); // add to the degree of this row
+                    nodes.add(it.index()); // add the column index to the nodes
+                }
+
+                rows.put(row, new Row(row, nonZeros, originalDegree, isHDPC, nodes));
+            }
+            else {
+                int originalDegree = 0;
+
+                ByteVectorIterator it = A.nonZeroRowIterator(row, 0, L - u);
+                while (it.hasNext()) {
+                    it.next();
+                    originalDegree += OctetOps.UNSIGN(it.get()); // add to the degree of this row
+                }
+
+                rows.put(row, new Row(row, nonZeros, originalDegree, isHDPC));
+            }
         }
 
         TimePrinter.markTimestamp(); // DEBUG
@@ -595,30 +584,21 @@ final class LinearSystem {
 
             TimePrinter.beginTimer(); // DEBUG
 
-            for (Map.Entry<Integer, Row> row : rows.entrySet()) {
-
-                Row temp = row.getValue();
-
-                if (temp.nonZeros != 0) allZeros = false;
-
-                if (temp.isHDPC && chosenRowsCounter < nonHDPCRows) continue;
+            for (Row row : rows.values()) {
+                if (row.nonZeros != 0) allZeros = false;
+                if (row.isHDPC && chosenRowsCounter < nonHDPCRows) continue;
 
                 // if it's an edge, then it must have exactly two 1's
-                // we must do this after the check above because HDPC rows are never edges
-                if (temp.nodes != null) two1s = true;
+                if (row.nodes != null) two1s = true;
 
-                if (temp.nonZeros < r && temp.nonZeros > 0) {
-
-                    chosenRow = temp;
+                if (row.nonZeros < r && row.nonZeros > 0) {
+                    chosenRow = row;
                     r = chosenRow.nonZeros;
                     minDegree = chosenRow.originalDegree;
                 }
-                else {
-                    if (temp.nonZeros == r && temp.originalDegree < minDegree) {
-
-                        chosenRow = temp;
-                        minDegree = chosenRow.originalDegree;
-                    }
+                else if (row.nonZeros == r && row.originalDegree < minDegree) {
+                    chosenRow = row;
+                    minDegree = chosenRow.originalDegree;
                 }
             }
 
@@ -977,8 +957,7 @@ final class LinearSystem {
             TimePrinter.beginTimer(); // DEBUG
 
             // update nonZeros
-            for (Row row : rows.values())
-            {
+            for (Row row : rows.values()) {
                 // update the non zero count
                 row.nonZeros = A.nonZerosInRow(row.position, i, L - u);
 
