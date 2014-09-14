@@ -36,7 +36,6 @@ import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
-import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.printing.TimePrinter;
@@ -1015,15 +1014,11 @@ final class LinearSystem {
                 }
                 else {
                     final Set<Integer> nodes = new HashSet<>(2 + 1, 1.0f); // we know there will only be two non zeros
-                    A.eachNonZeroInRow(row.position, new MatrixProcedure() {
-
-                        @Override
-                        @SuppressWarnings("unused")
-                        public void apply(int i, int j, byte value) {
-
-                            nodes.add(j); // add node to this edge (column index)
-                        }
-                    }, i, L - u);
+                    ByteVectorIterator it = A.nonZeroRowIterator(row.position, i, L - u);
+                    while (it.hasNext()) {
+                        it.next();
+                        nodes.add(it.index()); // add node to this edge (column index)
+                    }
 
                     row.nodes = nodes;
                 }
