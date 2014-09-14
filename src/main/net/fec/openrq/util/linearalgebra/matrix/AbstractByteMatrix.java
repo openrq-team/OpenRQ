@@ -941,6 +941,36 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public int[] nonZeroPositionsInRow(int i) {
+
+        int[] positions = new int[nonZerosInRow(i)];
+
+        int n = 0;
+        ByteVectorIterator it = nonZeroRowIterator(i);
+        while (it.hasNext()) {
+            it.next();
+            positions[n++] = it.index();
+        }
+
+        return positions;
+    }
+
+    @Override
+    public int[] nonZeroPositionsInRow(int i, int fromColumn, int toColumn) {
+
+        int[] positions = new int[nonZerosInRow(i, fromColumn, toColumn)];
+
+        int n = 0;
+        ByteVectorIterator it = nonZeroRowIterator(i, fromColumn, toColumn);
+        while (it.hasNext()) {
+            it.next();
+            positions[n++] = it.index();
+        }
+
+        return positions;
+    }
+
+    @Override
     public int nonZerosInColumn(int j) {
 
         ByteVectorIterator it = nonZeroColumnIterator(j);
@@ -964,6 +994,36 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         }
 
         return nonZeros;
+    }
+
+    @Override
+    public int[] nonZeroPositionsInColumn(int j) {
+
+        int[] positions = new int[nonZerosInColumn(j)];
+
+        int n = 0;
+        ByteVectorIterator it = nonZeroColumnIterator(j);
+        while (it.hasNext()) {
+            it.next();
+            positions[n++] = it.index();
+        }
+
+        return positions;
+    }
+
+    @Override
+    public int[] nonZeroPositionsInColumn(int j, int fromRow, int toRow) {
+
+        int[] positions = new int[nonZerosInColumn(j, fromRow, toRow)];
+
+        int n = 0;
+        ByteVectorIterator it = nonZeroColumnIterator(j, fromRow, toRow);
+        while (it.hasNext()) {
+            it.next();
+            positions[n++] = it.index();
+        }
+
+        return positions;
     }
 
     @Override

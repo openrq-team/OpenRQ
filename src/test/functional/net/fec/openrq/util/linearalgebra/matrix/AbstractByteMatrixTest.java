@@ -42,6 +42,7 @@ package net.fec.openrq.util.linearalgebra.matrix;
 
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -2231,6 +2232,146 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix nonZeroMatrix = nonZeroMatrix();
         assertEquals(0, nonZeroMatrix.nonZerosInColumn(2, 5, 5));
+    }
+
+    private ByteMatrix nonZeroPositionsInRowMatrix() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {0, 0, 0, 0},
+                                                    {0, 1, 1, 0},
+                                                    {1, 0, 0, 1},
+                                                    {1, 1, 1, 1}
+        });
+    }
+
+    @Test
+    public void testNonZeroPositionsInRow() {
+
+        ByteMatrix a = nonZeroPositionsInRowMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(0));
+        assertArrayEquals(new int[] {1, 2}, a.nonZeroPositionsInRow(1));
+        assertArrayEquals(new int[] {0, 3}, a.nonZeroPositionsInRow(2));
+        assertArrayEquals(new int[] {0, 1, 2, 3}, a.nonZeroPositionsInRow(3));
+    }
+
+    @Test
+    public void testNonZeroPositionsInRowInRangeOf_0_to_0() {
+
+        ByteMatrix a = nonZeroPositionsInRowMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(0, 0, 0));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(1, 0, 0));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(2, 0, 0));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(3, 0, 0));
+    }
+
+    @Test
+    public void testNonZeroPositionsInRowInRangeOf_0_to_2() {
+
+        ByteMatrix a = nonZeroPositionsInRowMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(0, 0, 2));
+        assertArrayEquals(new int[] {1}, a.nonZeroPositionsInRow(1, 0, 2));
+        assertArrayEquals(new int[] {0}, a.nonZeroPositionsInRow(2, 0, 2));
+        assertArrayEquals(new int[] {0, 1}, a.nonZeroPositionsInRow(3, 0, 2));
+    }
+
+    @Test
+    public void testNonZeroPositionsInRowInRangeOf_0_to_4() {
+
+        ByteMatrix a = nonZeroPositionsInRowMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(0, 0, 4));
+        assertArrayEquals(new int[] {1, 2}, a.nonZeroPositionsInRow(1, 0, 4));
+        assertArrayEquals(new int[] {0, 3}, a.nonZeroPositionsInRow(2, 0, 4));
+        assertArrayEquals(new int[] {0, 1, 2, 3}, a.nonZeroPositionsInRow(3, 0, 4));
+    }
+
+    @Test
+    public void testNonZeroPositionsInRowInRangeOf_2_to_4() {
+
+        ByteMatrix a = nonZeroPositionsInRowMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(0, 2, 4));
+        assertArrayEquals(new int[] {2}, a.nonZeroPositionsInRow(1, 2, 4));
+        assertArrayEquals(new int[] {3}, a.nonZeroPositionsInRow(2, 2, 4));
+        assertArrayEquals(new int[] {2, 3}, a.nonZeroPositionsInRow(3, 2, 4));
+    }
+
+    @Test
+    public void testNonZeroPositionsInRowInRangeOf_4_to_4() {
+
+        ByteMatrix a = nonZeroPositionsInRowMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(0, 4, 4));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(1, 4, 4));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(2, 4, 4));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(3, 4, 4));
+    }
+
+    private ByteMatrix nonZeroPositionsInColumnMatrix() {
+
+        return factory().createMatrix(new byte[][] {
+                                                    {0, 0, 1, 1},
+                                                    {0, 1, 0, 1},
+                                                    {0, 1, 0, 1},
+                                                    {0, 0, 1, 1}
+        });
+    }
+
+    @Test
+    public void testNonZeroPositionsInColumn() {
+
+        ByteMatrix a = nonZeroPositionsInColumnMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(0));
+        assertArrayEquals(new int[] {1, 2}, a.nonZeroPositionsInColumn(1));
+        assertArrayEquals(new int[] {0, 3}, a.nonZeroPositionsInColumn(2));
+        assertArrayEquals(new int[] {0, 1, 2, 3}, a.nonZeroPositionsInColumn(3));
+    }
+
+    @Test
+    public void testNonZeroPositionsInColumnInRangeOf_0_to_0() {
+
+        ByteMatrix a = nonZeroPositionsInColumnMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(0, 0, 0));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(1, 0, 0));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(2, 0, 0));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(3, 0, 0));
+    }
+
+    @Test
+    public void testNonZeroPositionsInColumnInRangeOf_0_to_2() {
+
+        ByteMatrix a = nonZeroPositionsInColumnMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(0, 0, 2));
+        assertArrayEquals(new int[] {1}, a.nonZeroPositionsInColumn(1, 0, 2));
+        assertArrayEquals(new int[] {0}, a.nonZeroPositionsInColumn(2, 0, 2));
+        assertArrayEquals(new int[] {0, 1}, a.nonZeroPositionsInColumn(3, 0, 2));
+    }
+
+    @Test
+    public void testNonZeroPositionsInColumnInRangeOf_0_to_4() {
+
+        ByteMatrix a = nonZeroPositionsInColumnMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(0, 0, 4));
+        assertArrayEquals(new int[] {1, 2}, a.nonZeroPositionsInColumn(1, 0, 4));
+        assertArrayEquals(new int[] {0, 3}, a.nonZeroPositionsInColumn(2, 0, 4));
+        assertArrayEquals(new int[] {0, 1, 2, 3}, a.nonZeroPositionsInColumn(3, 0, 4));
+    }
+
+    @Test
+    public void testNonZeroPositionsInColumnInRangeOf_2_to_4() {
+
+        ByteMatrix a = nonZeroPositionsInColumnMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(0, 2, 4));
+        assertArrayEquals(new int[] {2}, a.nonZeroPositionsInColumn(1, 2, 4));
+        assertArrayEquals(new int[] {3}, a.nonZeroPositionsInColumn(2, 2, 4));
+        assertArrayEquals(new int[] {2, 3}, a.nonZeroPositionsInColumn(3, 2, 4));
+    }
+
+    @Test
+    public void testNonZeroPositionsInColumnInRangeOf_4_to_4() {
+
+        ByteMatrix a = nonZeroPositionsInColumnMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(0, 4, 4));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(1, 4, 4));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(2, 4, 4));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(3, 4, 4));
     }
 
     private ByteMatrix initialMatrix() {

@@ -17,9 +17,7 @@ package net.fec.openrq;
 
 
 import java.io.PrintStream;
-import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.arithmetic.OctetOps;
+import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -462,13 +461,13 @@ final class LinearSystem {
         throws SingularMatrixException {
 
         // decoding parameters
-        int Ki = SystematicIndices.getKIndex(Kprime);
-        int S = SystematicIndices.S(Ki);
-        int H = SystematicIndices.H(Ki);
-        int W = SystematicIndices.W(Ki);
-        int L = Kprime + S + H;
-        int P = L - W;
-        int M = A.rows();
+        final int Ki = SystematicIndices.getKIndex(Kprime);
+        final int S = SystematicIndices.S(Ki);
+        final int H = SystematicIndices.H(Ki);
+        final int W = SystematicIndices.W(Ki);
+        final int L = Kprime + S + H;
+        final int P = L - W;
+        final int M = A.rows();
 
         // DEBUG
         // PRINTER.println(printVarDeclar(int.class, "Kprime", String.valueOf(Kprime)));
@@ -833,28 +832,25 @@ final class LinearSystem {
              * with the chosen row so that the chosen row is the first row that intersects V."
              */
 
-            int rPrime = chosenRow.position;
+            final int chosenRowPos = chosenRow.position;
 
             // if the chosen row is not 'i' already
-            if (rPrime != i)
-            {
+            if (chosenRowPos != i) {
                 TimePrinter.beginTimer(); // DEBUG
 
-                // swap i with rPrime in A
-                A.swapRows(i, rPrime);
+                // swap in A
+                A.swapRows(i, chosenRowPos);
 
-                // swap i with rPrime in X
-                X.swapRows(i, rPrime);
+                // swap in X
+                X.swapRows(i, chosenRowPos);
 
-                // decoding process - swap i with rPrime in d
-                int auxIndex = d[i];
-                d[i] = d[rPrime];
-                d[rPrime] = auxIndex;
+                // decoding process - swap in d
+                ArrayUtils.swapInts(d, i, chosenRowPos);
 
                 // update values in 'rows' map
                 Row other = rows.remove(i);
-                rows.put(rPrime, other);
-                other.position = rPrime;
+                rows.put(chosenRowPos, other);
+                other.position = chosenRowPos;
                 chosenRow.position = i;
 
                 TimePrinter.markTimestamp(); // DEBUG
@@ -870,63 +866,40 @@ final class LinearSystem {
 
             TimePrinter.beginTimer(); // DEBUG
 
-            // stack of non-zeros in the chosen row
-            Deque<Integer> nonZerosStack = new ArrayDeque<>(chosenRow.nonZeros);
-
-            // search the chosen row for the positions of the non-zeros
-            for (int nZ = 0, col = i; nZ < chosenRow.nonZeros; col++) // TODO the positions of the non-zeros could
-                                                                      // be stored as a Row attribute
-            {                                                         // this would spare wasting time in this for (little optimization)
-                if (A.get(i, col) == 0) { // a zero
-                    continue;
-                }
-                else
-                { // a non-zero
-                    nZ++;
-
-                    // add this non-zero's position to the stack
-                    nonZerosStack.push(col);
-                }
-            }
+            // an array with the positions (column indices) of the non-zeros
+            final int[] nonZeroPos = A.nonZeroPositionsInRow(i, i, L - u);
 
             /*
              * lets start swapping columns!
              */
 
-            // swap a non-zero's column to the first column in V
-            int column;
-            if (A.get(i, i) == 0) // is the first column in V already the place of a non-zero?
-            {
-                // column to be swapped
-                column = nonZerosStack.pop();
+            // is the first column in V already the place of a non-zero?
+            final int firstNZpos = nonZeroPos[0]; // the chosen row always has at least one non-zero
+            if (i != firstNZpos) {
+                // no, so swap the first column in V (i) with the first non-zero column
 
                 // swap columns
-                A.swapColumns(column, i);
-                X.swapColumns(column, i);
+                A.swapColumns(i, firstNZpos);
+                X.swapColumns(i, firstNZpos);
 
-                // decoding process - swap i and column in c
-                int auxIndex = c[i];
-                c[i] = c[column];
-                c[column] = auxIndex;
+                // decoding process - swap in c
+                ArrayUtils.swapInts(c, i, firstNZpos);
             }
-            else // it is, so let's remove 'i' from the stack
-            nonZerosStack.remove(i);
 
             // swap the remaining non-zeros' columns so that they're the last columns in V
-            for (int remainingNZ = nonZerosStack.size(); remainingNZ > 0; remainingNZ--)
-            {
-                // column to be swapped
-                column = nonZerosStack.pop();
+            for (int nzp = nonZeroPos.length - 1, currCol = L - u - 1; nzp > 0; nzp--, currCol--) {
+                // is the current column already the place of a non-zero?
+                final int currNZpos = nonZeroPos[nzp];
+                if (currCol != currNZpos) {
+                    // no, so swap the current column in V with the current non-zero column
 
-                // swap columns
-                A.swapColumns(column, L - u - remainingNZ);
-                X.swapColumns(column, L - u - remainingNZ);
+                    // swap columns
+                    A.swapColumns(currCol, currNZpos);
+                    X.swapColumns(currCol, currNZpos);
 
-                // decoding process - swap column with L-u-remainingNZ in c
-                int auxIndex = c[L - u - remainingNZ];
-                c[L - u - remainingNZ] = c[column];
-                c[column] = auxIndex;
-
+                    // decoding process - swap in c
+                    ArrayUtils.swapInts(c, currCol, currNZpos);
+                }
             }
 
             TimePrinter.markTimestamp(); // DEBUG

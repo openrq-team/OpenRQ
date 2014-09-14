@@ -865,6 +865,32 @@ public interface ByteMatrix extends Externalizable {
     int nonZerosInRow(int i, int fromColumn, int toColumn);
 
     /**
+     * Returns an array with the positions (column indices) of the non zero elements in the specified row of this
+     * matrix.
+     * 
+     * @param i
+     *            The row index
+     * @return an array with the positions (column indices) of the non zero elements in the specified row of this
+     *         matrix
+     */
+    int[] nonZeroPositionsInRow(int i);
+
+    /**
+     * Returns an array with the positions (column indices) of the non zero elements in a range of the specified row of
+     * this matrix.
+     * 
+     * @param i
+     *            The row index
+     * @param fromColumn
+     *            The starting column index (inclusive)
+     * @param toColumn
+     *            The ending column index (exclusive)
+     * @return an array with the positions (column indices) of the non zero elements in the specified row of this
+     *         matrix
+     */
+    int[] nonZeroPositionsInRow(int i, int fromColumn, int toColumn);
+
+    /**
      * Returns the number of non zero elements in the column of this matrix.
      * 
      * @param j
@@ -885,6 +911,32 @@ public interface ByteMatrix extends Externalizable {
      * @return the number of non zero elements in the range of column of this matrix
      */
     int nonZerosInColumn(int j, int fromRow, int toRow);
+
+    /**
+     * Returns an array with the positions (row indices) of the non zero elements in the specified column of this
+     * matrix.
+     * 
+     * @param j
+     *            The column index
+     * @return an array with the positions (row indices) of the non zero elements in the specified column of this
+     *         matrix
+     */
+    int[] nonZeroPositionsInColumn(int j);
+
+    /**
+     * Returns an array with the positions (row indices) of the non zero elements in a range of the specified column of
+     * this matrix.
+     * 
+     * @param j
+     *            The column index
+     * @param fromRow
+     *            The starting row index (inclusive)
+     * @param toRow
+     *            The ending row index (exclusive)
+     * @return an array with the positions (row indices) of the non zero elements in a range of the specified column of
+     *         this matrix
+     */
+    int[] nonZeroPositionsInColumn(int j, int fromRow, int toRow);
 
     /**
      * Applies given {@code procedure} to each element of this matrix.

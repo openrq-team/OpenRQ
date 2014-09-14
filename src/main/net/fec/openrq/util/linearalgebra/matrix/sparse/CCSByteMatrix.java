@@ -48,6 +48,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Arrays;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -319,6 +320,32 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         }
 
         return nonZeros;
+    }
+
+    @Override
+    public int[] nonZeroPositionsInColumn(int j) {
+
+        checkColumnBounds(j);
+        return Arrays.copyOfRange(rowIndices, columnPointers[j], columnPointers[j + 1]);
+    }
+
+    @Override
+    public int[] nonZeroPositionsInColumn(int j, int fromRow, int toRow) {
+
+        checkColumnBounds(j);
+        checkRowRangeBounds(fromRow, toRow);
+
+        int first = columnPointers[j];
+        while (first < columnPointers[j + 1] && rowIndices[first] < fromRow) {
+            first++;
+        }
+
+        int last = columnPointers[j + 1] - 1;
+        while (last >= columnPointers[j] && rowIndices[last] >= toRow) {
+            last--;
+        }
+
+        return Arrays.copyOfRange(rowIndices, first, last + 1);
     }
 
     @Override
