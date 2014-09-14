@@ -269,14 +269,14 @@ final class LinearSystem {
     static ByteMatrix generateConstraintMatrix(int Kprime, int overheadRows) {
 
         // calculate necessary parameters
-        int Ki = SystematicIndices.getKIndex(Kprime);
-        int S = SystematicIndices.S(Ki);
-        int H = SystematicIndices.H(Ki);
-        int W = SystematicIndices.W(Ki);
-        int L = Kprime + S + H;
-        int P = L - W;
-        int U = P - H;
-        int B = W - S;
+        final int Ki = SystematicIndices.getKIndex(Kprime);
+        final int S = SystematicIndices.S(Ki);
+        final int H = SystematicIndices.H(Ki);
+        final int W = SystematicIndices.W(Ki);
+        final int L = Kprime + S + H;
+        final int P = L - W;
+        final int U = P - H;
+        final int B = W - S;
 
         // allocate memory for the constraint matrix
         ByteMatrix A = getMatrixAfactory(L, overheadRows).createMatrix(L + overheadRows, L);
@@ -338,23 +338,26 @@ final class LinearSystem {
     {
 
         // allocate memory for the indexes
-        Set<Integer> indexes = new HashSet<>(Kprime);
+        final Set<Integer> indexes = new HashSet<>(Kprime);
 
         // parameters
-        int Ki = SystematicIndices.getKIndex(Kprime);
-        int S = SystematicIndices.S(Ki);
-        int H = SystematicIndices.H(Ki);
-        int W = SystematicIndices.W(Ki);
-        long L = Kprime + S + H;
-        long P = L - W;
-        long P1 = MatrixUtilities.ceilPrime(P);
+        final int Ki = SystematicIndices.getKIndex(Kprime);
+        final int S = SystematicIndices.S(Ki);
+        final int H = SystematicIndices.H(Ki);
+        final int W = SystematicIndices.W(Ki);
+        final long L = Kprime + S + H;
+        final long P = L - W;
+        final long P1 = MatrixUtilities.ceilPrime(P);
 
         // tuple parameters
-        long d = tuple.getD();
-        long a = tuple.getA();
+        final long d = tuple.getD();
+        final long a = tuple.getA();
+
         long b = tuple.getB();
-        long d1 = tuple.getD1();
-        long a1 = tuple.getA1();
+
+        final long d1 = tuple.getD1();
+        final long a1 = tuple.getA1();
+
         long b1 = tuple.getB1();
 
         /*
@@ -401,22 +404,25 @@ final class LinearSystem {
     {
 
         // necessary parameters
-        int Ki = SystematicIndices.getKIndex(Kprime);
-        int S = SystematicIndices.S(Ki);
-        int H = SystematicIndices.H(Ki);
-        int W = SystematicIndices.W(Ki);
-        long L = Kprime + S + H;
-        long P = L - W;
-        int P1 = (int)MatrixUtilities.ceilPrime(P);
-        long d = tuple.getD();
-        int a = (int)tuple.getA();
+        final int Ki = SystematicIndices.getKIndex(Kprime);
+        final int S = SystematicIndices.S(Ki);
+        final int H = SystematicIndices.H(Ki);
+        final int W = SystematicIndices.W(Ki);
+        final long L = Kprime + S + H;
+        final long P = L - W;
+        final int P1 = (int)MatrixUtilities.ceilPrime(P);
+        final long d = tuple.getD();
+        final int a = (int)tuple.getA();
+
         int b = (int)tuple.getB();
-        long d1 = tuple.getD1();
-        int a1 = (int)tuple.getA1();
+
+        final long d1 = tuple.getD1();
+        final int a1 = (int)tuple.getA1();
+
         int b1 = (int)tuple.getB1();
 
         // allocate memory and initialize the encoding symbol
-        byte[] result = Arrays.copyOf(C[b], T);
+        final byte[] result = Arrays.copyOf(C[b], T);
 
         /*
          * encoding -- refer to section 5.3.5.3 of RFC 6330
