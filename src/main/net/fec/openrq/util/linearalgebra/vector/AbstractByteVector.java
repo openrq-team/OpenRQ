@@ -46,6 +46,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static net.fec.openrq.util.linearalgebra.vector.ByteVectors.printVector;
 
+import java.util.Iterator;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
@@ -191,7 +192,7 @@ public abstract class AbstractByteVector implements ByteVector {
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = blank(factory);
-        ByteVectorIterator it = iterator();
+        ByteVectorIterator it = nonZeroIterator();
 
         while (it.hasNext()) {
             it.next();
@@ -204,7 +205,9 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void multiplyInPlace(byte value) {
 
-        ByteVectorIterator it = iterator();
+        // TODO: multiply by 0 = clear()
+        ByteVectorIterator it = nonZeroIterator();
+
         while (it.hasNext()) {
             it.next();
             it.set(aTimesB(it.get(), value));
@@ -535,11 +538,11 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public int nonZeros() {
 
+        ByteVectorIterator it = nonZeroIterator();
         int nonZeros = 0;
-        for (int i = 0; i < length; i++) {
-            if (safeGet(i) != 0) {
-                nonZeros++;
-            }
+        while (it.hasNext()) {
+            it.next();
+            nonZeros++;
         }
 
         return nonZeros;
@@ -548,13 +551,11 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public int nonZeros(int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, fromIndex);
-
+        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         int nonZeros = 0;
-        for (int i = fromIndex; i < toIndex; i++) {
-            if (safeGet(i) != 0) {
-                nonZeros++;
-            }
+        while (it.hasNext()) {
+            it.next();
+            nonZeros++;
         }
 
         return nonZeros;
@@ -573,8 +574,6 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void each(VectorProcedure procedure, int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
-
         ByteVectorIterator it = iterator(fromIndex, toIndex);
         while (it.hasNext()) {
             it.next();
@@ -585,26 +584,20 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void eachNonZero(VectorProcedure procedure) {
 
-        ByteVectorIterator it = iterator();
+        ByteVectorIterator it = nonZeroIterator();
         while (it.hasNext()) {
-            final byte value = it.next();
-            if (value != 0) {
-                procedure.apply(it.index(), value);
-            }
+            it.next();
+            procedure.apply(it.index(), it.get());
         }
     }
 
     @Override
     public void eachNonZero(VectorProcedure procedure, int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
-
-        ByteVectorIterator it = iterator(fromIndex, toIndex);
+        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         while (it.hasNext()) {
-            final byte value = it.next();
-            if (value != 0) {
-                procedure.apply(it.index(), value);
-            }
+            it.next();
+            procedure.apply(it.index(), it.get());
         }
     }
 
@@ -628,8 +621,6 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void update(VectorFunction function, int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
-
         ByteVectorIterator it = iterator(fromIndex, toIndex);
         while (it.hasNext()) {
             it.next();
@@ -640,26 +631,20 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void updateNonZero(VectorFunction function) {
 
-        ByteVectorIterator it = iterator();
+        ByteVectorIterator it = nonZeroIterator();
         while (it.hasNext()) {
-            final byte value = it.next();
-            if (value != 0) {
-                it.set(function.evaluate(it.index(), value));
-            }
+            it.next();
+            it.set(function.evaluate(it.index(), it.get()));
         }
     }
 
     @Override
     public void updateNonZero(VectorFunction function, int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
-
-        ByteVectorIterator it = iterator(fromIndex, toIndex);
+        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
         while (it.hasNext()) {
-            final byte value = it.next();
-            if (value != 0) {
-                it.set(function.evaluate(it.index(), value));
-            }
+            it.next();
+            it.set(function.evaluate(it.index(), it.get()));
         }
     }
 
@@ -735,6 +720,177 @@ public abstract class AbstractByteVector implements ByteVector {
     public byte min() {
 
         return fold(ByteVectors.mkMinAccumulator());
+    }
+
+    @Override
+    public ByteVectorIterator iterator() {
+
+        return new VectorIterator(0, length());
+    }
+
+    @Override
+    public ByteVectorIterator iterator(int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+        return new VectorIterator(fromIndex, toIndex);
+    }
+
+
+    private final class VectorIterator extends ByteVectorIterator {
+
+        private int i;
+        private final int end;
+
+
+        /*
+         * requires valid indexes
+         */
+        VectorIterator(int fromIndex, int toIndex) {
+
+            super(toIndex - fromIndex);
+            this.i = fromIndex - 1;
+            this.end = toIndex;
+        }
+
+        @Override
+        public int index() {
+
+            return i;
+        }
+
+        @Override
+        public byte get() {
+
+            return safeGet(i);
+        }
+
+        @Override
+        public void set(byte value) {
+
+            safeSet(i, value);
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return i + 1 < end;
+        }
+
+        @Override
+        public Byte next() {
+
+            i++;
+            return get();
+        }
+    }
+
+
+    @Override
+    public ByteVectorIterator nonZeroIterator() {
+
+        return new NonZeroVectorIterator(0, length());
+    }
+
+    @Override
+    public ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex) {
+
+        checkIndexRangeBounds(fromIndex, toIndex);
+        return new NonZeroVectorIterator(fromIndex, toIndex);
+    }
+
+
+    private final class NonZeroVectorIterator extends ByteVectorIterator {
+
+        private int index;
+        private final int end;
+        private int nextIndex;
+        private boolean hasNext;
+
+
+        /*
+         * Requires valid indices.
+         */
+        protected NonZeroVectorIterator(int fromIndex, int toIndex) {
+
+            super(toIndex - fromIndex);
+
+            this.index = -1;
+            this.end = toIndex;
+            this.nextIndex = fromIndex;
+
+            findNextNonZero(); // this method initializes nextIndex and hasNext properly
+        }
+
+        @Override
+        public int index() {
+
+            return index;
+        }
+
+        @Override
+        public byte get() {
+
+            return safeGet(index);
+        }
+
+        @Override
+        public void set(byte value) {
+
+            safeSet(index, value);
+        }
+
+        @Override
+        public Byte next() {
+
+            index = nextIndex - 1;
+            findNextNonZero();
+            return get();
+        }
+
+        @Override
+        public boolean hasNext() {
+
+            return hasNext;
+        }
+
+        private void findNextNonZero() {
+
+            hasNext = false;
+            while (nextIndex < end) {
+                hasNext = nonZeroAt(nextIndex++);
+                if (hasNext) {
+                    break;
+                }
+            }
+        }
+    }
+
+
+    @Override
+    public ByteVectorIterator burningIterator() {
+
+        return iteratorToBurning(iterator());
+    }
+
+    @Override
+    public ByteVectorIterator nonZeroBurningIterator() {
+
+        return iteratorToBurning(nonZeroIterator());
+    }
+
+    protected abstract ByteVectorIterator iteratorToBurning(ByteVectorIterator iterator);
+
+    @Override
+    public Iterable<Byte> skipZeros() {
+
+        return new Iterable<Byte>() {
+
+            @Override
+            public Iterator<Byte> iterator() {
+
+                return nonZeroIterator();
+            }
+        };
     }
 
     @Override

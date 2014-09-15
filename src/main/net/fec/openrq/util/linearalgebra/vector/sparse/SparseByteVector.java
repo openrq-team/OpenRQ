@@ -38,19 +38,12 @@ package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
-
-import java.util.Iterator;
-
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
-import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.io.VectorToBurningIterator;
 import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
-import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
-import net.fec.openrq.util.linearalgebra.vector.functor.VectorProcedure;
 import net.fec.openrq.util.linearalgebra.vector.operation.VectorOperation;
 import net.fec.openrq.util.linearalgebra.vector.operation.VectorVectorOperation;
 
@@ -116,59 +109,6 @@ public abstract class SparseByteVector extends AbstractByteVector {
     }
 
     @Override
-    public int nonZeros(int fromIndex, int toIndex) {
-
-        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
-        int nonZeros = 0;
-        while (it.hasNext()) {
-            it.next();
-            nonZeros++;
-        }
-
-        return nonZeros;
-    }
-
-    @Override
-    public void eachNonZero(VectorProcedure procedure) {
-
-        ByteVectorIterator it = nonZeroIterator();
-        while (it.hasNext()) {
-            it.next();
-            procedure.apply(it.index(), it.get());
-        }
-    }
-
-    @Override
-    public void eachNonZero(VectorProcedure procedure, int fromIndex, int toIndex) {
-
-        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
-        while (it.hasNext()) {
-            it.next();
-            procedure.apply(it.index(), it.get());
-        }
-    }
-
-    @Override
-    public void updateNonZero(VectorFunction function) {
-
-        ByteVectorIterator it = nonZeroIterator();
-        while (it.hasNext()) {
-            it.next();
-            it.set(function.evaluate(it.index(), it.get()));
-        }
-    }
-
-    @Override
-    public void updateNonZero(VectorFunction function, int fromIndex, int toIndex) {
-
-        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
-        while (it.hasNext()) {
-            it.next();
-            it.set(function.evaluate(it.index(), it.get()));
-        }
-    }
-
-    @Override
     public byte max() {
 
         byte max = foldNonZero(ByteVectors.mkMaxAccumulator());
@@ -193,78 +133,7 @@ public abstract class SparseByteVector extends AbstractByteVector {
     }
 
     @Override
-    public ByteVector multiply(byte value, Factory factory) {
-
-        ByteVector result = blank(factory);
-        ByteVectorIterator it = nonZeroIterator();
-
-        while (it.hasNext()) {
-            it.next();
-            result.set(it.index(), aTimesB(it.get(), value));
-        }
-
-        return result;
-    }
-
-    @Override
-    public void multiplyInPlace(byte value) {
-
-        // TODO: multiply by 0 = clear()
-        ByteVectorIterator it = nonZeroIterator();
-
-        while (it.hasNext()) {
-            it.next();
-            it.set(aTimesB(it.get(), value));
-        }
-    }
-
-    /**
-     * Returns a non-zero iterator.
-     * 
-     * @return a non-zero iterator
-     */
-    public abstract ByteVectorIterator nonZeroIterator();
-
-    /**
-     * Returns a non-zero iterator between two indices.
-     * 
-     * @param fromIndex
-     *            The starting index (inclusive)
-     * @param toIndex
-     *            The ending index (exclusive)
-     * @return a non-zero iterator between two indices
-     */
-    public abstract ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex);
-
-    /**
-     * Returns a non-zero iterable instance. This method is useful in for-each loops.
-     * 
-     * @return a non-zero iterable instance
-     */
-    public Iterable<Byte> skipZeros() {
-
-        return new Iterable<Byte>() {
-
-            @Override
-            public Iterator<Byte> iterator() {
-
-                return nonZeroIterator();
-            }
-        };
-    }
-
-    public ByteVectorIterator nonZeroBurningIterator() {
-
-        return iteratorToBurning(nonZeroIterator());
-    }
-
-    @Override
-    public ByteVectorIterator burningIterator() {
-
-        return iteratorToBurning(iterator());
-    }
-
-    private ByteVectorIterator iteratorToBurning(final ByteVectorIterator iterator) {
+    protected final ByteVectorIterator iteratorToBurning(final ByteVectorIterator iterator) {
 
         return new VectorToBurningIterator(iterator) {
 

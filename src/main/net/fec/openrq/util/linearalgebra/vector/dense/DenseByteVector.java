@@ -96,9 +96,9 @@ public abstract class DenseByteVector extends AbstractByteVector {
     }
 
     @Override
-    public ByteVectorIterator burningIterator() {
+    protected ByteVectorIterator iteratorToBurning(ByteVectorIterator iterator) {
 
-        return new VectorToBurningIterator(iterator()) {
+        return new VectorToBurningIterator(iterator) {
 
             @Override
             public void flush() {

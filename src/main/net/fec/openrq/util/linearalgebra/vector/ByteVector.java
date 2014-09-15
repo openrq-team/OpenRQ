@@ -735,11 +735,36 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
     ByteVectorIterator iterator(int fromIndex, int toIndex);
 
     /**
+     * Returns a non-zero iterator.
+     * 
+     * @return a non-zero iterator
+     */
+    ByteVectorIterator nonZeroIterator();
+
+    /**
+     * Returns a non-zero iterator between two indices.
+     * 
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return a non-zero iterator between two indices
+     */
+    ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex);
+
+    /**
      * Returns a burning vector iterator.
      * 
      * @return a burning vector iterator
      */
     ByteVectorIterator burningIterator();
+
+    /**
+     * Returns a non zero burning vector iterator.
+     * 
+     * @return a non zero burning vector iterator
+     */
+    ByteVectorIterator nonZeroBurningIterator();
 
     /**
      * Pipes this vector to a given {@code operation}.
@@ -765,4 +790,11 @@ public interface ByteVector extends Externalizable, Iterable<Byte> {
      * @return the result of an operation applied to this and {@code that} vector
      */
     <T> T pipeTo(VectorVectorOperation<T> operation, ByteVector that);
+
+    /**
+     * Returns a non-zero iterable instance. This method is useful in for-each loops.
+     * 
+     * @return a non-zero iterable instance
+     */
+    Iterable<Byte> skipZeros();
 }

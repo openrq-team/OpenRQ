@@ -1678,11 +1678,11 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
             super(toCursor - fromCursor);
 
             this.fixed = fixed;
-            this.cursor = fromCursor;
+            this.cursor = -1;
             this.end = toCursor;
-            this.nextCursor = -1;
+            this.nextCursor = fromCursor;
 
-            findNextNonZero(); // this method initializes cursor and hasNext properly
+            findNextNonZero(); // this method initializes nextCursor and hasNext properly
         }
 
         protected abstract byte fcGet(int fixed, int nextCursor);
@@ -1694,25 +1694,25 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         @Override
         public int index() {
 
-            return nextCursor;
+            return cursor;
         }
 
         @Override
         public byte get() {
 
-            return fcGet(fixed, nextCursor);
+            return fcGet(fixed, cursor);
         }
 
         @Override
         public void set(byte value) {
 
-            fcSet(fixed, nextCursor, value);
+            fcSet(fixed, cursor, value);
         }
 
         @Override
         public Byte next() {
 
-            nextCursor = cursor - 1;
+            cursor = nextCursor - 1;
             findNextNonZero();
             return get();
         }
@@ -1726,14 +1726,13 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         private void findNextNonZero() {
 
             hasNext = false;
-            while (cursor < end) {
-                hasNext = fcNonZeroAt(fixed, cursor++);
+            while (nextCursor < end) {
+                hasNext = fcNonZeroAt(fixed, nextCursor++);
                 if (hasNext) {
                     break;
                 }
             }
         }
-
     }
 
 

@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
@@ -152,67 +151,6 @@ public class BasicByteVector extends DenseByteVector {
 
         for (int i = 0; i < length; i++) {
             self[i] = in.readByte();
-        }
-    }
-
-    @Override
-    public ByteVectorIterator iterator() {
-
-        return new BasicByteVectorIterator(0, length);
-    }
-
-    @Override
-    public ByteVectorIterator iterator(int fromIndex, int toIndex) {
-
-        checkIndexRangeBounds(fromIndex, toIndex);
-        return new BasicByteVectorIterator(fromIndex, toIndex);
-    }
-
-
-    private final class BasicByteVectorIterator extends ByteVectorIterator {
-
-        private int i;
-        private final int end;
-
-
-        /*
-         * requires valid indexes
-         */
-        BasicByteVectorIterator(int fromIndex, int toIndex) {
-
-            super(toIndex - fromIndex);
-            this.i = fromIndex - 1;
-            this.end = toIndex;
-        }
-
-        @Override
-        public int index() {
-
-            return i;
-        }
-
-        @Override
-        public byte get() {
-
-            return self[i];
-        }
-
-        @Override
-        public void set(byte value) {
-
-            self[i] = value;
-        }
-
-        @Override
-        public boolean hasNext() {
-
-            return i + 1 < end;
-        }
-
-        @Override
-        public Byte next() {
-
-            return self[++i];
         }
     }
 }
