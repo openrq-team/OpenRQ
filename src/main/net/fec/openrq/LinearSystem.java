@@ -902,13 +902,17 @@ final class LinearSystem {
 
             // "the chosen row has entry alpha in the first column of V"
             final byte alpha = A.get(i, i);
+            final ByteVector rowVector = A.getRow(i); // getRow is fast when the matrix is row compressed
+
+            byte prevBeta = alpha;
+            byte beta;
 
             // let's look at all rows below the chosen one
-            for (int row = i + 1; row < M; row++) // TODO queue these row operations for when/if the row is chosen
+            for (int row = i + 1; row < M; row++)
             // Page35@RFC6330 1st Par.
             {
                 // "if a row below the chosen row has entry beta in the first column of V"
-                final byte beta = A.get(row, i);
+                beta = A.get(row, i);
 
                 // if it's already 0, no problem
                 if (beta == 0) {
@@ -921,25 +925,39 @@ final class LinearSystem {
                      * "then beta/alpha multiplied by the chosen row is added to this row"
                      */
 
+                    /*
+                     * Usually, we would copy the row i to a vector, every iteration, and update
+                     * the row vector by multiplying it by beta/alpha.
+                     * 
+                     * What we do instead is avoid the repeated copy and reuse the same row vector.
+                     * To do so, we update the row vector by multiplying it by beta/(previous beta),
+                     * where previous beta is equal to alpha at the first iteration.
+                     */
+
                     // division
-                    byte betaOverAlpha = OctetOps.aDividedByB(beta, alpha);
+                    byte betaOverPrevBeta = OctetOps.aDividedByB(beta, prevBeta);
+                    prevBeta = beta; // update the previous beta for the next iteration
 
                     // multiplication
-                    final ByteVector product = A.getRow(i); // getRow is fast when the matrix is row compressed
-                    product.updateNonZero(ByteVectors.asMulFunction(betaOverAlpha), i, product.length());
+                    rowVector.updateNonZero(ByteVectors.asMulFunction(betaOverPrevBeta), i, rowVector.length());
 
                     // addition
-                    ByteVectorIterator prodIt = product.iterator(i, product.length());
-                    ByteVectorIterator rowIt = A.rowIterator(row, i, A.columns());
-                    // both iterators have the same number of elements
-                    while (prodIt.hasNext()) { // && rowIt.hasNext()
-                        prodIt.next();
-                        rowIt.next();
-                        rowIt.set(OctetOps.aPlusB(rowIt.get(), prodIt.get()));
+                    final ByteVectorIterator it = rowVector.nonZeroIterator(i, rowVector.length());
+                    final MatrixFunction addition = new MatrixFunction() {
+
+                        @Override
+                        public byte evaluate(int i, int j, byte value) {
+
+                            return OctetOps.aPlusB(value, it.get());
+                        }
+                    };
+                    while (it.hasNext()) {
+                        it.next();
+                        A.update(row, it.index(), addition);
                     }
 
                     // decoding process - (beta * D[d[i]]) + D[d[row]]
-                    byte[] p = OctetOps.betaProduct(betaOverAlpha, D[d[i]]);
+                    byte[] p = OctetOps.betaProduct(betaOverPrevBeta, D[d[i]]);
                     MatrixUtilities.xorSymbolInPlace(D[d[row]], p);
                     // DEBUG
                     // PRINTER.println(
