@@ -1480,4 +1480,56 @@ public interface ByteMatrix extends Externalizable {
      * @return a non zero vector iterator
      */
     ByteVectorIterator nonZeroColumnIterator(int j, int fromRow, int toRow);
+
+    /**
+     * Adds one row to another.
+     * 
+     * @param row1
+     *            The index of the first row
+     * @param row2
+     *            The index of the second row
+     */
+    void addRowsInPlace(int row1, int row2);
+
+    /**
+     * Adds a range of one row to a range of another.
+     * 
+     * @param row1
+     *            The index of the first row
+     * @param row2
+     *            The index of the second row
+     * @param fromColumn
+     *            The starting column index (inclusive)
+     * @param toColumn
+     *            The ending column index (exclusive)
+     */
+    void addRowsInPlace(int row1, int row2, int fromColumn, int toColumn);
+
+    /**
+     * Multiplies a row by a given value and adds the result to another row.
+     * 
+     * @param row1Multiplier
+     *            The value to multiply the first row before it is added to the second row
+     * @param row1
+     *            The index of the first row
+     * @param row2
+     *            The index of the second row
+     */
+    void addRowsInPlace(byte row1Multiplier, int row1, int row2);
+
+    /**
+     * Multiplies a range of one row and adds the result to a range of another row.
+     * 
+     * @param row1Multiplier
+     *            The value to multiply the first row before it is added to the second row
+     * @param row1
+     *            The index of the first row
+     * @param row2
+     *            The index of the second row
+     * @param fromColumn
+     *            The starting column index (inclusive)
+     * @param toColumn
+     *            The ending column index (exclusive)
+     */
+    void addRowsInPlace(byte row1Multiplier, int row1, int row2, int fromColumn, int toColumn);
 }

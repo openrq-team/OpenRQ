@@ -208,6 +208,7 @@ final class LinearSystem {
     private static ByteMatrix generateGAMMA(int Kprime, int S)
     {
 
+        // FIXME this needs a more efficient representation since it is a lower triangular matrix
         ByteMatrix GAMMA = DENSE_FACTORY.createMatrix(Kprime + S, Kprime + S);
 
         for (int row = 0; row < Kprime + S; row++)
@@ -939,7 +940,9 @@ final class LinearSystem {
                     prevBeta = beta; // update the previous beta for the next iteration
 
                     // multiplication
-                    rowVector.updateNonZero(ByteVectors.asMulFunction(betaOverPrevBeta), i, rowVector.length());
+                    if (betaOverPrevBeta != 1) {
+                        rowVector.updateNonZero(ByteVectors.asMulFunction(betaOverPrevBeta), i, rowVector.length());
+                    }
 
                     // addition
                     final ByteVectorIterator it = rowVector.nonZeroIterator(i, rowVector.length());

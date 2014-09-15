@@ -1737,6 +1737,84 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
 
     @Override
+    public void addRowsInPlace(int row1, int row2) {
+
+        checkRowBounds(row1);
+        checkRowBounds(row2);
+
+        ByteVectorIterator row1It = rowIterator(row1);
+        ByteVectorIterator row2It = rowIterator(row2);
+        while (row1It.hasNext()) { // && row2It.hasNext()
+            row1It.next();
+            row2It.next();
+            row2It.set(aPlusB(row1It.get(), row2It.get()));
+        }
+    }
+
+    @Override
+    public void addRowsInPlace(int row1, int row2, int fromColumn, int toColumn) {
+
+        checkRowBounds(row1);
+        checkRowBounds(row2);
+        checkColumnRangeBounds(fromColumn, toColumn);
+
+        ByteVectorIterator row1It = rowIterator(row1, fromColumn, toColumn);
+        ByteVectorIterator row2It = rowIterator(row2, fromColumn, toColumn);
+        while (row1It.hasNext()) { // && row2It.hasNext()
+            row1It.next();
+            row2It.next();
+            row2It.set(aPlusB(row1It.get(), row2It.get()));
+        }
+    }
+
+    @Override
+    public void addRowsInPlace(byte row1Multiplier, int row1, int row2) {
+
+        if (row1Multiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
+            if (row1Multiplier == 1) { // if the multiplier is one, then a product is not required
+                addRowsInPlace(row1, row2);
+            }
+            else {
+                checkRowBounds(row1);
+                checkRowBounds(row2);
+
+                ByteVectorIterator row1It = rowIterator(row1);
+                ByteVectorIterator row2It = rowIterator(row2);
+                while (row1It.hasNext()) { // && row2It.hasNext()
+                    row1It.next();
+                    row2It.next();
+                    final byte prod = aTimesB(row1Multiplier, row1It.get());
+                    row2It.set(aPlusB(prod, row2It.get()));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void addRowsInPlace(byte row1Multiplier, int row1, int row2, int fromColumn, int toColumn) {
+
+        if (row1Multiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
+            if (row1Multiplier == 1) { // if the multiplier is one, then a product is not required
+                addRowsInPlace(row1, row2, fromColumn, toColumn);
+            }
+            else {
+                checkRowBounds(row1);
+                checkRowBounds(row2);
+                checkColumnRangeBounds(fromColumn, toColumn);
+
+                ByteVectorIterator row1It = rowIterator(row1, fromColumn, toColumn);
+                ByteVectorIterator row2It = rowIterator(row2, fromColumn, toColumn);
+                while (row1It.hasNext()) { // && row2It.hasNext()
+                    row1It.next();
+                    row2It.next();
+                    final byte prod = aTimesB(row1Multiplier, row1It.get());
+                    row2It.set(aPlusB(prod, row2It.get()));
+                }
+            }
+        }
+    }
+
+    @Override
     public int hashCode() {
 
         int result = 17;
