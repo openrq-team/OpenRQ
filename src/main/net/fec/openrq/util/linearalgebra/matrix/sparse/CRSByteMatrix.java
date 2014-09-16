@@ -55,8 +55,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.invariants.Invariants;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -76,19 +76,8 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
     private static final long serialVersionUID = 4071505L;
 
-    private static final int DEFAULT_COLUMN_SIZE = 8;
+    private final SparseRow[] rows;
 
-    private final byte columnValues[][];
-    private final int columnIndices[][];
-    private final int rowSizes[];
-    private final int minimumColumnSize;
-
-
-    private static int getMinimumColumnSize(int rows, int expectedCardinality) {
-
-        final int avgColumnCard = ExtraMath.ceilDiv(expectedCardinality, rows);
-        return Math.max(avgColumnCard, DEFAULT_COLUMN_SIZE);
-    }
 
     public CRSByteMatrix() {
 
@@ -124,14 +113,14 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             for (int j = 0; j < columns; j++) {
                 byte value = source.get(i, j);
                 if (value != 0) {
-                    getColumnValuesForInsertion(i, rowCard + 1)[rowCard] = value;
+                    colValuesForInsertion(i, rowCard + 1)[rowCard] = value;
                     getColumnIndicesForInsertion(i, rowCard + 1)[rowCard] = j;
                     rowCard++;
                     cardinality++;
                 }
             }
 
-            setRowSize(i, rowCard);
+            setRowCard(i, rowCard);
         }
     }
 
@@ -143,12 +132,11 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         this.cardinality = 0;
         this.columnIndices = new int[rows][];
         this.columnValues = new byte[rows][];
-        this.rowSizes = new int[rows];
-        this.minimumColumnSize = getMinimumColumnSize(rows, cardinality);
+        this.rowCardinalities = new int[rows];
 
         for (int i = 0; i < rows; i++) {
-            setColumnValues(i, ArrayUtils.EmptyArrayOf.bytes());
-            setColumnIndices(i, ArrayUtils.EmptyArrayOf.ints());
+            setColValues(i, EMPTY_COLUMN_VALUES);
+            setColIndices(i, EMPTY_COLUMN_INDICES);
         }
     }
 
@@ -166,8 +154,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         this.columnValues = Objects.requireNonNull(columnValues);
         this.columnIndices = Objects.requireNonNull(columnIndices);
-        this.rowSizes = Objects.requireNonNull(rowSizes);
-        this.minimumColumnSize = getMinimumColumnSize(rows, cardinality);
+        this.rowCardinalities = Objects.requireNonNull(rowSizes);
     }
 
     @Override
@@ -175,7 +162,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         final int k = searchForColumnIndex(j, i);
         if (hasEntry(k, i, j)) {
-            return getColumnValues(i)[k];
+            return colValues(i)[k];
         }
 
         return 0;
@@ -190,7 +177,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
                 remove(k, i);
             }
             else {
-                getColumnValues(i)[k] = value;
+                colValues(i)[k] = value;
             }
         }
         else {
@@ -687,21 +674,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         }
     }
 
-
-    private static final class ValueAndIndex {
-
-        final byte value;
-        final int index;
-
-
-        ValueAndIndex(byte value, int index) {
-
-            this.value = value;
-            this.index = index;
-        }
-    }
-
-
     @Override
     public void addRowsInPlace(int row1, int row2, int fromColumn, int toColumn) {
 
@@ -1172,100 +1144,68 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
 
     // requires valid index
-    private byte[] getColumnValues(int i) {
+    private byte[] colValues(int i) {
 
         return columnValues[i];
     }
 
     // requires valid index
-    private int[] getColumnIndices(int i) {
+    private int[] colIndices(int i) {
 
         return columnIndices[i];
     }
 
-    // requires valid index and non null values
-    private void setColumnValues(int i, byte[] values) {
+    // requires valid index
+    private int rowCard(int i) {
 
-        columnValues[i] = values;
-    }
-
-    // requires valid index and non null indices
-    private void setColumnIndices(int i, int[] indices) {
-
-        columnIndices[i] = indices;
-    }
-
-    // requires valid index and size
-    private byte[] getColumnValuesForInsertion(int i, int minSize) {
-
-        byte[] values = getColumnValues(i);
-        if (values.length < minSize) {
-            values = allocateNewColumnValues(minSize);
-            setColumnValues(i, values);
-        }
-
-        return values;
-    }
-
-    // requires valid index and size
-    private int[] getColumnIndicesForInsertion(int i, int minSize) {
-
-        int[] indices = getColumnIndices(i);
-        if (indices.length < minSize) {
-            indices = allocateNewColumnIndices(minSize);
-            setColumnIndices(i, indices);
-        }
-
-        return indices;
-    }
-
-    // requires valid size
-    private byte[] allocateNewColumnValues(int minSize) {
-
-        return new byte[Math.max(minSize, minimumColumnSize)];
-    }
-
-    // requires valid size
-    private int[] allocateNewColumnIndices(int minSize) {
-
-        return new int[Math.max(minSize, minimumColumnSize)];
+        return rowCardinalities[i];
     }
 
     // requires valid index
-    private int getRowSize(int i) {
+    private void setColValues(int i, byte[] values) {
 
-        return rowSizes[i];
+        columnValues[i] = Objects.requireNonNull(values);
     }
 
-    // requires valid index and size
-    private void setRowSize(int i, int size) {
+    // requires valid index
+    private void setColIndices(int i, int[] indices) {
 
-        rowSizes[i] = size;
+        columnIndices[i] = Objects.requireNonNull(indices);
     }
 
-    // requires valid index and amount
-    private void incrementRowSize(int i, int amount) {
+    // requires valid index and non negative size
+    private void setRowCard(int i, int size) {
 
-        rowSizes[i] += amount;
+        rowCardinalities[i] = size;
     }
 
-    // requires valid index and amount
-    private void decrementRowSize(int i, int amount) {
+    // requires valid index and non negative amount
+    private void incRowCard(int i, int amount) {
 
-        rowSizes[i] -= amount;
+        if (amount > Integer.MAX_VALUE - rowCardinalities[i]) {
+            throw new OutOfMemoryError("exceeded maximum row cardinality");
+        }
+
+        rowCardinalities[i] += amount;
+    }
+
+    // requires valid index and non negative amount
+    private void decRowCard(int i, int amount) {
+
+        rowCardinalities[i] -= amount;
     }
 
     // requires valid j and i
     private int searchForColumnIndex(int j, int i) {
 
-        return Arrays.binarySearch(getColumnIndices(i), j);
+        return Arrays.binarySearch(colIndices(i), j);
     }
 
     // requires valid i and j, and a k value obtained via
-    // searchForColumnIndex with indices of row i as argument
+    // searchForColumnIndex with j and i as arguments
     private boolean hasEntry(int k, int i, int j) {
 
-        return k >= 0 && getColumnIndices(i)[k] == j;
+        return k >= 0 && colIndices(i)[k] == j;
     }
 
     // requires a negative k value obtained via searchForColumnIndex
@@ -1273,5 +1213,41 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         // Arrays.binarySearch returns (-(insertion point) - 1)
         return -(k + 1);
+    }
+
+    // requires valid index and non negative capacity
+    private void ensureRowCapacity(int i, int minCapacity) {
+
+        if (colIndices(i) == EMPTY_COLUMN_INDICES) {
+            minCapacity = Math.max(DEFAULT_ROW_CAPACITY, minCapacity);
+        }
+    }
+
+
+    private static final class SparseRow {
+
+        private static final int DEFAULT_ROW_CAPACITY = 8;
+        private static final byte[] EMPTY_VALUES = ArrayUtils.EmptyArrayOf.bytes();
+
+        private byte[] values;
+        private int[] columnIndices;
+        private int cardinality;
+
+
+        SparseRow() {
+
+            this.values = EMPTY_VALUES;
+            this.columnIndices = ArrayUtils.EmptyArrayOf.ints();
+            this.cardinality = 0;
+        }
+
+        SparseRow(byte[] values, int[] columnIndices) {
+
+            Invariants.assertInvariants(values.length == columnIndices.length);
+
+            this.values = values;
+            this.columnIndices = columnIndices;
+            this.cardinality = values.length;
+        }
     }
 }

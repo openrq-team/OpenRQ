@@ -94,14 +94,14 @@ public final class ArrayUtils {
      */
     public static final class EmptyArrayOf {
 
-        private static final byte[] BYTES = new byte[0];
-        private static final char[] CHARS = new char[0];
-        private static final short[] SHORTS = new short[0];
-        private static final int[] INTS = new int[0];
-        private static final long[] LONGS = new long[0];
-        private static final float[] FLOATS = new float[0];
-        private static final double[] DOUBLES = new double[0];
-        private static final Object[] OBJECTS = new Object[0];
+        private static final byte[] BYTES = {};
+        private static final char[] CHARS = {};
+        private static final short[] SHORTS = {};
+        private static final int[] INTS = {};
+        private static final long[] LONGS = {};
+        private static final float[] FLOATS = {};
+        private static final double[] DOUBLES = {};
+        private static final Object[] OBJECTS = {};
 
 
         /**

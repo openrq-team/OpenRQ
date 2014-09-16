@@ -25,6 +25,53 @@ import java.math.BigInteger;
 public final class ExtraMath {
 
     /**
+     * <b>NOTE: Copied from {@code java.lang.Math} in Java 8.</b>
+     * <p>
+     * Returns the sum of its arguments, throwing an exception if the result overflows an {@code int}.
+     * 
+     * @param x
+     *            the first value
+     * @param y
+     *            the second value
+     * @return the result
+     * @throws ArithmeticException
+     *             if the result overflows an int
+     */
+    public static int addExact(int x, int y) {
+
+        int r = x + y;
+        // HD 2-12 Overflow iff both arguments have the opposite sign of the result
+        if (((x ^ r) & (y ^ r)) < 0) {
+            throw new ArithmeticException("integer overflow");
+        }
+        return r;
+    }
+
+    /**
+     * <b>NOTE: Copied from {@code java.lang.Math} in Java 8.</b>
+     * <p>
+     * Returns the sum of its arguments, throwing an exception if the result overflows a {@code long}.
+     * 
+     * @param x
+     *            the first value
+     * @param y
+     *            the second value
+     * @return the result
+     * @throws ArithmeticException
+     *             if the result overflows a long
+     * @since 1.8
+     */
+    public static long addExact(long x, long y) {
+
+        long r = x + y;
+        // HD 2-12 Overflow iff both arguments have the opposite sign of the result
+        if (((x ^ r) & (y ^ r)) < 0) {
+            throw new ArithmeticException("long overflow");
+        }
+        return r;
+    }
+
+    /**
      * Returns the ceiling value of an integer division (requires non-negative arguments).
      * 
      * @param num
