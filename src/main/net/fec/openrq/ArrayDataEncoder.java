@@ -53,7 +53,7 @@ public final class ArrayDataEncoder implements DataEncoder {
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
-        ArrayUtils.checkArrayBounds(offset, fecParams.dataLengthAsInt(), data.length);
+        ArrayUtils.checkOffsetLengthBounds(offset, fecParams.dataLengthAsInt(), data.length);
 
         return new ArrayDataEncoder(data, offset, fecParams);
     }

@@ -64,7 +64,7 @@ import net.fec.openrq.util.linearalgebra.matrix.source.IdentityMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.LoopbackMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.RandomMatrixSource;
-import net.fec.openrq.util.printing.appendable.PrintableAppendable;
+import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
 
 
 public final class ByteMatrices {
@@ -690,7 +690,7 @@ public final class ByteMatrices {
      */
     public static void printMatrix(ByteMatrix matrix, Appendable appendable) {
 
-        final PrintableAppendable output = PrintableAppendable.of(appendable);
+        final NoisyPrintableAppendable output = NoisyPrintableAppendable.of(appendable);
         final int R = matrix.rows();
         final int C = matrix.columns();
 

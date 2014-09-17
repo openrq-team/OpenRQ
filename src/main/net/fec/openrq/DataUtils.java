@@ -27,6 +27,7 @@ import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.parameters.ParameterIO;
 import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.collection.ImmutableList;
 import net.fec.openrq.util.numericaltype.SizeOf;
 
@@ -51,7 +52,8 @@ final class DataUtils {
     static <SB> ImmutableList<SB> partitionData(
         Class<SB> clazz,
         FECParameters fecParams,
-        SourceBlockSupplier<SB> supplier) {
+        SourceBlockSupplier<SB> supplier)
+    {
 
         return partitionData(clazz, fecParams, 0, supplier);
     }
@@ -68,7 +70,8 @@ final class DataUtils {
         Class<SB> clazz,
         FECParameters fecParams,
         int startOffset,
-        SourceBlockSupplier<SB> supplier) {
+        SourceBlockSupplier<SB> supplier)
+    {
 
         final int Kt = fecParams.totalSymbols();
         final int Z = fecParams.numberOfSourceBlocks();
@@ -155,9 +158,10 @@ final class DataUtils {
         byte[] symbols,
         int off,
         int len,
-        boolean copySymbols) {
+        boolean copySymbols)
+    {
 
-        ArrayUtils.checkArrayBounds(off, len, symbols.length);
+        Indexables.checkOffsetLengthBounds(off, len, symbols.length);
         return parsePacket(dec, sbn, esi, ByteBuffer.wrap(symbols, off, len), copySymbols);
     }
 
@@ -207,7 +211,7 @@ final class DataUtils {
      */
     static Parsed<EncodingPacket> parsePacket(DataDecoder dec, byte[] array, int off, int len, boolean copySymbols) {
 
-        ArrayUtils.checkArrayBounds(off, len, array.length);
+        ArrayUtils.checkOffsetLengthBounds(off, len, array.length);
         return parsePacket(dec, ByteBuffer.wrap(array, off, len), copySymbols);
     }
 
@@ -293,7 +297,8 @@ final class DataUtils {
         int esi,
         ByteBuffer symbols,
         int symbLen,
-        boolean copySymbols) {
+        boolean copySymbols)
+    {
 
         final int Z = dec.numberOfSourceBlocks();
         if (!ParameterChecker.isValidFECPayloadID(sbn, esi, Z)) {

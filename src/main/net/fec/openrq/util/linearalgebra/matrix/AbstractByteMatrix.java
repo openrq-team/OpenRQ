@@ -1922,14 +1922,4 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
         if (columns() < toColumn) throw new IndexOutOfBoundsException("columns() < toColumn");
     }
-
-    /*
-     * Requires non-negative length
-     */
-    protected void checkRegionOffsetAndLength(int regionOff, int regionLen, int length) {
-
-        if (regionOff < 0) throw new IndexOutOfBoundsException("region index < 0");
-        if (regionLen < 0) throw new IndexOutOfBoundsException("region length < 0");
-        if (length - regionOff < regionLen) throw new IndexOutOfBoundsException("region surpasses length");
-    }
 }

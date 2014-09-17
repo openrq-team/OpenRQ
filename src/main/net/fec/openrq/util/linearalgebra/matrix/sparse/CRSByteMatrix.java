@@ -55,8 +55,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.array.ArrayUtils;
-import net.fec.openrq.util.invariants.Invariants;
+import net.fec.openrq.util.checking.Invariants;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -1143,65 +1144,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
 
-    // requires valid index
-    private byte[] colValues(int i) {
-
-        return columnValues[i];
-    }
-
-    // requires valid index
-    private int[] colIndices(int i) {
-
-        return columnIndices[i];
-    }
-
-    // requires valid index
-    private int rowCard(int i) {
-
-        return rowCardinalities[i];
-    }
-
-    // requires valid index
-    private void setColValues(int i, byte[] values) {
-
-        columnValues[i] = Objects.requireNonNull(values);
-    }
-
-    // requires valid index
-    private void setColIndices(int i, int[] indices) {
-
-        columnIndices[i] = Objects.requireNonNull(indices);
-    }
-
-    // requires valid index and non negative size
-    private void setRowCard(int i, int size) {
-
-        rowCardinalities[i] = size;
-    }
-
-    // requires valid index and non negative amount
-    private void incRowCard(int i, int amount) {
-
-        if (amount > Integer.MAX_VALUE - rowCardinalities[i]) {
-            throw new OutOfMemoryError("exceeded maximum row cardinality");
-        }
-
-        rowCardinalities[i] += amount;
-    }
-
-    // requires valid index and non negative amount
-    private void decRowCard(int i, int amount) {
-
-        rowCardinalities[i] -= amount;
-    }
-
-    // requires valid j and i
-    private int searchForColumnIndex(int j, int i) {
-
-        return Arrays.binarySearch(colIndices(i), j);
-    }
-
-    // requires valid i and j, and a k value obtained via
     // searchForColumnIndex with j and i as arguments
     private boolean hasEntry(int k, int i, int j) {
 
@@ -1215,39 +1157,143 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         return -(k + 1);
     }
 
-    // requires valid index and non negative capacity
-    private void ensureRowCapacity(int i, int minCapacity) {
-
-        if (colIndices(i) == EMPTY_COLUMN_INDICES) {
-            minCapacity = Math.max(DEFAULT_ROW_CAPACITY, minCapacity);
-        }
-    }
-
 
     private static final class SparseRow {
 
         private static final int DEFAULT_ROW_CAPACITY = 8;
-        private static final byte[] EMPTY_VALUES = ArrayUtils.EmptyArrayOf.bytes();
 
         private byte[] values;
-        private int[] columnIndices;
+        private int[] columnIndices; // must always be sorted
         private int cardinality;
+
+        // since CRSByteMatrix is not thread safe, only one SearchEntry
+        // instance per row is required for all (sequential) searches
+        private final SearchEntry searchEntry;
 
 
         SparseRow() {
 
-            this.values = EMPTY_VALUES;
-            this.columnIndices = ArrayUtils.EmptyArrayOf.ints();
-            this.cardinality = 0;
+            this(ArrayUtils.EmptyArrayOf.bytes(), ArrayUtils.EmptyArrayOf.ints(), 0);
         }
 
-        SparseRow(byte[] values, int[] columnIndices) {
+        SparseRow(byte[] values, int[] columnIndices, int cardinality) {
 
             Invariants.assertInvariants(values.length == columnIndices.length);
+            Invariants.assertInvariants(cardinality >= 0 && cardinality <= values.length);
 
             this.values = values;
             this.columnIndices = columnIndices;
-            this.cardinality = values.length;
+            this.cardinality = cardinality;
+
+            this.searchEntry = new SearchEntry();
+        }
+
+        private SearchEntry getSearchEntry(int columnIndex) {
+
+            return searchEntry.search(columnIndex);
+        }
+
+        private void insert(int k, int j, byte value) {
+
+            if (value != 0) { // only nonzero values need to be inserted
+                if (values.length < ExtraMath.addExact(cardinality, 1)) {
+                    growup();
+                }
+
+                System.arraycopy(columnValues, k, columnValues, k + 1, cardinality - k);
+                System.arraycopy(columnIndices, k, columnIndices, k + 1, cardinality - k);
+
+                // for (int k = cardinality; k > position; k--) {
+                // values[k] = values[k - 1];
+                // columnIndices[k] = columnIndices[k - 1];
+                // }
+
+                columnValues[k] = value;
+                columnIndices[k] = j;
+
+                for (int ii = i + 1; ii < rows + 1; ii++) {
+                    rowPointers[ii]++;
+                }
+
+                cardinality++;
+            }
+        }
+
+        private void remove(int k, int i) {
+
+            cardinality--;
+
+            System.arraycopy(columnValues, k + 1, columnValues, k, cardinality - k);
+            System.arraycopy(columnIndices, k + 1, columnIndices, k, cardinality - k);
+
+            // for (int kk = k; kk < cardinality; kk++) {
+            // values[kk] = values[kk + 1];
+            // columnIndices[kk] = columnIndices[kk + 1];
+            // }
+
+            for (int ii = i + 1; ii < rows + 1; ii++) {
+                rowPointers[ii]--;
+            }
+        }
+
+        private void ensureCapacity(int minCapacity) {
+
+            if (columnValues.length == capacity()) {
+                // This should never happen
+                throw new IllegalStateException("This matrix can't grow up.");
+            }
+
+            int min = (
+                      (rows != 0 && columns > Integer.MAX_VALUE / rows) ?
+                                                                       Integer.MAX_VALUE :
+                                                                       (rows * columns)
+                      );
+            int capacity = Math.min(min, (cardinality * 3) / 2 + 1);
+
+            byte $values[] = new byte[capacity];
+            int $columnIndices[] = new int[capacity];
+
+            System.arraycopy(columnValues, 0, $values, 0, cardinality);
+            System.arraycopy(columnIndices, 0, $columnIndices, 0, cardinality);
+
+            columnValues = $values;
+            columnIndices = $columnIndices;
+        }
+
+
+        // class used for nonzero entry searches, and consequent value updates
+        private final class SearchEntry {
+
+            private int j;
+            private int k;
+
+
+            /*
+             * Requires valid column index.
+             */
+            SearchEntry search(int columnIndex) {
+
+                j = columnIndex;
+                k = Arrays.binarySearch(columnIndices, j);
+                return this;
+            }
+
+            boolean isNonZero() {
+
+                return k >= 0 && columnIndices[k] == j;
+            }
+
+            byte getValue() {
+
+                return isNonZero() ? values[k] : 0;
+            }
+
+            void update(byte value) {
+
+                if (value == 0) {
+
+                }
+            }
         }
     }
 }

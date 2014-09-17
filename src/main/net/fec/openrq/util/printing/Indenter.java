@@ -6,8 +6,8 @@ import java.nio.CharBuffer;
 import java.util.Formatter;
 import java.util.Objects;
 
-import net.fec.openrq.util.invariants.Invariants;
-import net.fec.openrq.util.printing.appendable.PrintableAppendable;
+import net.fec.openrq.util.checking.Invariants;
+import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
 
 
 /**
@@ -43,7 +43,7 @@ public final class Indenter {
     public static final char DEFAULT_INDENTATION_CHARACTER = ' ';
 
     private final Appendable originalAppendable;
-    private final PrintableAppendable output;
+    private final NoisyPrintableAppendable output;
 
     private final int maxLineWidth;
     private final int maxIndentLevel;
@@ -56,7 +56,7 @@ public final class Indenter {
     private Indenter(Appendable app, int maxLineWidth, int maxIndentLevel, String prefix, char indentChar) {
 
         this.originalAppendable = Objects.requireNonNull(app);
-        this.output = PrintableAppendable.of(app);
+        this.output = NoisyPrintableAppendable.of(app);
 
         validateMaxParams(maxLineWidth, maxIndentLevel);
         validatePrefix(prefix, maxLineWidth, maxIndentLevel);
@@ -258,7 +258,7 @@ public final class Indenter {
 
     private static final class LineBuffer {
 
-        private final PrintableAppendable output;
+        private final NoisyPrintableAppendable output;
         private final StringBuilder mainBuf;
         private final CharBuffer tempBuf;
 
@@ -267,7 +267,7 @@ public final class Indenter {
         private char lastChar;
 
 
-        LineBuffer(PrintableAppendable output, int lineWidth) {
+        LineBuffer(NoisyPrintableAppendable output, int lineWidth) {
 
             this.output = output;
             this.mainBuf = new StringBuilder(lineWidth);

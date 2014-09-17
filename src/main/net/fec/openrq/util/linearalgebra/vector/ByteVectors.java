@@ -58,7 +58,7 @@ import net.fec.openrq.util.linearalgebra.vector.source.ArrayVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.LoopbackVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.RandomVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
-import net.fec.openrq.util.printing.appendable.PrintableAppendable;
+import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
 
 
 public final class ByteVectors {
@@ -400,7 +400,7 @@ public final class ByteVectors {
      */
     public static void printVector(ByteVector vector, Appendable appendable) {
 
-        final PrintableAppendable output = PrintableAppendable.of(appendable);
+        final NoisyPrintableAppendable output = NoisyPrintableAppendable.of(appendable);
         final int N = vector.length();
 
         // this prints two lines, the first with indexes and the second with the actual values

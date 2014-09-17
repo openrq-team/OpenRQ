@@ -1,4 +1,4 @@
-package net.fec.openrq.util.invariants;
+package net.fec.openrq.util.checking;
 
 /**
  * This exception should never be caught. Its purpose is only to indicate development time errors.

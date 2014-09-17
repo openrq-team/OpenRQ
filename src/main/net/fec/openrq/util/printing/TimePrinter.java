@@ -21,8 +21,8 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 
+import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
 import net.fec.openrq.util.printing.appendable.PrintableAppendable;
-import net.fec.openrq.util.printing.appendable.QuietPrintableAppendable;
 
 
 /**
@@ -90,114 +90,116 @@ public final class TimePrinter {
 
     public static void printEllapsedTime(PrintStream ps, TimeUnit unit) {
 
-        printEllapsedTime(quiet(ps), unit);
+        printEllapsedTime(pa(ps), unit);
     }
 
     public static void printEllapsedTime(PrintWriter pw, TimeUnit unit) {
 
-        printEllapsedTime(quiet(pw), unit);
+        printEllapsedTime(pa(pw), unit);
     }
 
-    public static void printEllapsedTime(PrintableAppendable pa, TimeUnit unit) throws IOException {
+    public static void printEllapsedTime(PrintableAppendable pa, TimeUnit unit) {
 
         printEllapsedTime(pa, "", unit);
     }
 
-    public static void printEllapsedTime(QuietPrintableAppendable pa, TimeUnit unit) {
+    public static void printEllapsedTime(NoisyPrintableAppendable npa, TimeUnit unit) throws IOException {
 
-        printEllapsedTime(pa, "", unit);
+        printEllapsedTime(npa, "", unit);
     }
 
     // ======================== PRINT WITH PREFIX ======================== //
 
     public static void printEllapsedTime(PrintStream ps, String prefix, TimeUnit unit) {
 
-        printEllapsedTime(quiet(ps), prefix, unit);
+        printEllapsedTime(pa(ps), prefix, unit);
     }
 
     public static void printEllapsedTime(PrintWriter pw, String prefix, TimeUnit unit) {
 
-        printEllapsedTime(quiet(pw), prefix, unit);
+        printEllapsedTime(pa(pw), prefix, unit);
     }
 
-    public static void printEllapsedTime(PrintableAppendable pa, String prefix, TimeUnit unit) throws IOException {
+    public static void printEllapsedTime(PrintableAppendable pa, String prefix, TimeUnit unit) {
 
         _printEllapsedTime(pa, prefix, unit);
     }
 
-    public static void printEllapsedTime(QuietPrintableAppendable pa, String prefix, TimeUnit unit) {
+    public static void printEllapsedTime(NoisyPrintableAppendable npa, String prefix, TimeUnit unit) throws IOException {
 
-        _printEllapsedTime(pa, prefix, unit);
+        _printEllapsedTime(npa, prefix, unit);
     }
 
     // ======================== PRINT WITH NEW LINE ======================== //
 
     public static void printlnEllapsedTime(PrintStream ps, TimeUnit unit) {
 
-        printlnEllapsedTime(quiet(ps), unit);
+        printlnEllapsedTime(pa(ps), unit);
     }
 
     public static void printlnEllapsedTime(PrintWriter pw, TimeUnit unit) {
 
-        printlnEllapsedTime(quiet(pw), unit);
+        printlnEllapsedTime(pa(pw), unit);
     }
 
-    public static void printlnEllapsedTime(PrintableAppendable pa, TimeUnit unit) throws IOException {
+    public static void printlnEllapsedTime(PrintableAppendable pa, TimeUnit unit) {
 
         printlnEllapsedTime(pa, "", unit);
     }
 
-    public static void printlnEllapsedTime(QuietPrintableAppendable pa, TimeUnit unit) {
+    public static void printlnEllapsedTime(NoisyPrintableAppendable npa, TimeUnit unit) throws IOException {
 
-        printlnEllapsedTime(pa, "", unit);
+        printlnEllapsedTime(npa, "", unit);
     }
 
     // ======================== PRINT WITH PREFIX AND NEW LINE ======================== //
 
     public static void printlnEllapsedTime(PrintStream ps, String prefix, TimeUnit unit) {
 
-        printlnEllapsedTime(quiet(ps), prefix, unit);
+        printlnEllapsedTime(pa(ps), prefix, unit);
     }
 
     public static void printlnEllapsedTime(PrintWriter pw, String prefix, TimeUnit unit) {
 
-        printlnEllapsedTime(quiet(pw), prefix, unit);
+        printlnEllapsedTime(pa(pw), prefix, unit);
     }
 
-    public static void printlnEllapsedTime(PrintableAppendable pa, String prefix, TimeUnit unit) throws IOException {
+    public static void printlnEllapsedTime(PrintableAppendable pa, String prefix, TimeUnit unit) {
 
         _printEllapsedTime(pa, prefix, unit);
         pa.println();
     }
 
-    public static void printlnEllapsedTime(QuietPrintableAppendable qpa, String prefix, TimeUnit unit) {
+    public static void printlnEllapsedTime(NoisyPrintableAppendable npa, String prefix, TimeUnit unit)
+        throws IOException {
 
-        _printEllapsedTime(qpa, prefix, unit);
-        qpa.println();
+        _printEllapsedTime(npa, prefix, unit);
+        npa.println();
     }
 
     // ======================== DOES THE ACTUAL PRINTING ======================== //
 
-    private static void _printEllapsedTime(PrintableAppendable pa, String prefix, TimeUnit unit) throws IOException {
+    private static void _printEllapsedTime(PrintableAppendable pa, String prefix, TimeUnit unit) {
 
         pa.printf("%s%.03f %s", prefix, getEllapsedTime(unit), unit.name().toLowerCase());
     }
 
-    private static void _printEllapsedTime(QuietPrintableAppendable qpa, String prefix, TimeUnit unit) {
+    private static void _printEllapsedTime(NoisyPrintableAppendable npa, String prefix, TimeUnit unit)
+        throws IOException {
 
-        qpa.printf("%s%.03f %s", prefix, getEllapsedTime(unit), unit.name().toLowerCase());
+        npa.printf("%s%.03f %s", prefix, getEllapsedTime(unit), unit.name().toLowerCase());
     }
 
-    // ======================== QUIET WRAPPER ======================== //
+    // ======================== PRINTABLE APPENDABLE WRAPPER ======================== //
 
-    private static QuietPrintableAppendable quiet(PrintStream ps) {
+    private static PrintableAppendable pa(PrintStream ps) {
 
-        return QuietPrintableAppendable.of(ps, false);
+        return PrintableAppendable.of(ps, false);
     }
 
-    private static QuietPrintableAppendable quiet(PrintWriter pw) {
+    private static PrintableAppendable pa(PrintWriter pw) {
 
-        return QuietPrintableAppendable.of(pw, false);
+        return PrintableAppendable.of(pw, false);
     }
 
     private TimePrinter() {

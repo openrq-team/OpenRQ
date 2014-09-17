@@ -1,3 +1,18 @@
+/*
+ * Copyright 2014 Jose Lopes
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.fec.openrq.util.printing.appendable;
 
 
@@ -9,136 +24,216 @@ import java.nio.CharBuffer;
 
 
 /**
- * A class that wraps an Appendable object and provides methods for printing characters.
+ * A class that wraps an {@code Appendable} object and provides methods for printing characters.
+ * <p>
+ * The methods from this class do <b>not</b> throw an {@code IOException} if they detect an IO error from the underlying
+ * {@code Appendable} object. Instead, they ignore the error, but may be configured to print an exception stack trace to
+ * the standard error stream.
  * 
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  */
-public class PrintableAppendable implements Appendable {
+public final class PrintableAppendable extends NoisyPrintableAppendable {
 
-    public static PrintableAppendable of(Appendable appendable) {
+    public static PrintableAppendable of(Appendable appendable, boolean printStackTrace) {
 
         if (appendable instanceof PrintStream) {
-            return new PrintableAppendable(new PrintStreamWrapper<>((PrintStream)appendable));
+            return new PrintableAppendable(new PrintStreamWrapper<>((PrintStream)appendable), printStackTrace);
         }
         else if (appendable instanceof PrintWriter) {
-            return new PrintableAppendable(new PrintWriterWrapper<>((PrintWriter)appendable));
+            return new PrintableAppendable(new PrintWriterWrapper<>((PrintWriter)appendable), printStackTrace);
         }
         else if (appendable instanceof Writer) {
-            return new PrintableAppendable(new WriterWrapper<>((Writer)appendable));
+            return new PrintableAppendable(new WriterWrapper<>((Writer)appendable), printStackTrace);
         }
         else if (appendable instanceof StringBuilder) {
-            return new PrintableAppendable(new StringBuilderWrapper((StringBuilder)appendable));
+            return new PrintableAppendable(new StringBuilderWrapper((StringBuilder)appendable), printStackTrace);
         }
         else if (appendable instanceof StringBuffer) {
-            return new PrintableAppendable(new StringBufferWrapper((StringBuffer)appendable));
+            return new PrintableAppendable(new StringBufferWrapper((StringBuffer)appendable), printStackTrace);
         }
         else if (appendable instanceof CharBuffer) {
-            return new PrintableAppendable(new CharBufferWrapper<>((CharBuffer)appendable));
+            return new PrintableAppendable(new CharBufferWrapper<>((CharBuffer)appendable), printStackTrace);
         }
         else {
-            return new PrintableAppendable(new AppendableWrapper<>(appendable));
+            return new PrintableAppendable(new AppendableWrapper<>(appendable), printStackTrace);
         }
     }
 
+    public static PrintableAppendable ofNull() {
 
-    private final AppendableWrapper<?> wrapper;
-
-
-    PrintableAppendable(AppendableWrapper<?> wrapper) {
-
-        this.wrapper = wrapper;
+        return new PrintableAppendable(new NullWrapper(), false);
     }
 
-    public PrintableAppendable print(char c) throws IOException {
 
-        wrapper.print(c);
-        return this;
+    private boolean printStackTrace;
+
+
+    PrintableAppendable(AppendableWrapper<?> wrapper, boolean printStackTrace) {
+
+        super(wrapper);
+        this.printStackTrace = printStackTrace;
     }
 
-    public PrintableAppendable print(CharSequence csq) throws IOException {
+    @Override
+    public NoisyPrintableAppendable print(char c) {
 
-        wrapper.print(csq);
-        return this;
-    }
+        try {
+            super.print(c);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
 
-    public PrintableAppendable print(CharSequence csq, int start, int end) throws IOException {
-
-        wrapper.print(csq, start, end);
-        return this;
-    }
-
-    public PrintableAppendable print(char[] c) throws IOException {
-
-        wrapper.print(c);
-        return this;
-    }
-
-    public PrintableAppendable print(char[] c, int off, int len) throws IOException {
-
-        wrapper.print(c, off, len);
-        return this;
-    }
-
-    public PrintableAppendable println() throws IOException {
-
-        wrapper.println();
-        return this;
-    }
-
-    public PrintableAppendable println(char c) throws IOException {
-
-        wrapper.println(c);
-        return this;
-    }
-
-    public PrintableAppendable println(CharSequence csq) throws IOException {
-
-        wrapper.println(csq);
-        return this;
-    }
-
-    public PrintableAppendable println(CharSequence csq, int start, int end) throws IOException {
-
-        wrapper.println(csq, start, end);
-        return this;
-    }
-
-    public PrintableAppendable println(char[] c) throws IOException {
-
-        wrapper.println(c);
-        return this;
-    }
-
-    public PrintableAppendable println(char[] c, int off, int len) throws IOException {
-
-        wrapper.println(c, off, len);
-        return println();
-    }
-
-    public PrintableAppendable printf(String format, Object... args) throws IOException {
-
-        wrapper.printf(format, args);
         return this;
     }
 
     @Override
-    public final Appendable append(char c) throws IOException {
+    public NoisyPrintableAppendable print(char[] c) {
 
-        wrapper.append(c);
+        try {
+            super.print(c);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
         return this;
     }
 
     @Override
-    public final Appendable append(CharSequence csq) throws IOException {
+    public NoisyPrintableAppendable print(char[] c, int off, int len) {
 
-        wrapper.append(csq);
+        try {
+            super.print(c, off, len);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
         return this;
     }
 
     @Override
-    public final Appendable append(CharSequence csq, int start, int end) throws IOException {
+    public NoisyPrintableAppendable print(CharSequence csq) {
 
-        wrapper.append(csq, start, end);
+        try {
+            super.print(csq);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
         return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable print(CharSequence csq, int start, int end) {
+
+        try {
+            super.print(csq, start, end);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable printf(String format, Object... args) {
+
+        try {
+            super.printf(format, args);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable println() {
+
+        try {
+            super.println();
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable println(char c) {
+
+        try {
+            super.println(c);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable println(char[] c) {
+
+        try {
+            super.println(c);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable println(char[] c, int off, int len) {
+
+        try {
+            super.println(c, off, len);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable println(CharSequence csq) {
+
+        try {
+            super.println(csq);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    @Override
+    public NoisyPrintableAppendable println(CharSequence csq, int start, int end) {
+
+        try {
+            super.println(csq, start, end);
+        }
+        catch (IOException e) {
+            handleIOException(e);
+        }
+
+        return this;
+    }
+
+    private void handleIOException(IOException e) {
+
+        if (printStackTrace) {
+            e.printStackTrace();
+        }
     }
 }

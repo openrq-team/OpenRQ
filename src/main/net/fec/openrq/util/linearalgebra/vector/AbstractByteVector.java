@@ -976,16 +976,4 @@ public abstract class AbstractByteVector implements ByteVector {
 
         throw new IllegalArgumentException(message);
     }
-
-    protected void checkIndexBounds(int index) {
-
-        if (index < 0 || index >= length()) throw new IndexOutOfBoundsException("index is out of bounds");
-    }
-
-    protected void checkIndexRangeBounds(int fromIndex, int toIndex) {
-
-        if (fromIndex < 0) throw new IndexOutOfBoundsException("fromIndex < 0");
-        if (toIndex < fromIndex) throw new IndexOutOfBoundsException("toIndex < fromIndex");
-        if (length() < toIndex) throw new IndexOutOfBoundsException("length() < toIndex");
-    }
 }

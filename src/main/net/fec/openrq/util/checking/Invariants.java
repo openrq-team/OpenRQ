@@ -1,4 +1,4 @@
-package net.fec.openrq.util.invariants;
+package net.fec.openrq.util.checking;
 
 /**
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;

@@ -170,7 +170,7 @@ public final class SBDInfo {
      */
     public static Parsed<SBDInfo> parse(byte[] array, int off, int len, FECParameters fecParams) {
 
-        ArrayUtils.checkArrayBounds(off, len, array.length);
+        ArrayUtils.checkOffsetLengthBounds(off, len, array.length);
         return parse(ByteBuffer.wrap(array, off, len), fecParams);
     }
 
