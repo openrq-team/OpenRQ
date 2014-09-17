@@ -36,10 +36,6 @@
 package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -50,8 +46,6 @@ import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 
 
 public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseByteMatrix {
-
-    private static final long serialVersionUID = 4071505L;
 
     private byte self[][];
 
@@ -70,8 +64,8 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         this(source.rows(), source.columns());
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
+        for (int i = 0; i < rows(); i++) {
+            for (int j = 0; j < columns(); j++) {
                 self[i][j] = source.get(i, j);
             }
         }
@@ -133,7 +127,7 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
         Indexables.checkIndexBounds(j, columns());
 
         if (i != j) {
-            for (int ii = 0; ii < rows; ii++) {
+            for (int ii = 0; ii < rows(); ii++) {
                 byte tmp = self[ii][i];
                 self[ii][i] = self[ii][j];
                 self[ii][j] = tmp;
@@ -146,8 +140,8 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         Indexables.checkIndexBounds(i, rows());
 
-        byte result[] = new byte[columns];
-        System.arraycopy(self[i], 0, result, 0, columns);
+        byte result[] = new byte[columns()];
+        System.arraycopy(self[i], 0, result, 0, columns());
 
         return new BasicByteVector(result);
     }
@@ -176,15 +170,15 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         ensureDimensionsAreCorrect(rows, columns);
 
-        if (this.rows == rows && this.columns == columns) {
+        if (this.rows() == rows && this.columns() == columns) {
             return copy();
         }
 
         byte $self[][] = new byte[rows][columns];
 
-        for (int i = 0; i < Math.min(this.rows, rows); i++) {
+        for (int i = 0; i < Math.min(this.rows(), rows); i++) {
             System.arraycopy(self[i], 0, $self[i], 0,
-                Math.min(this.columns, columns));
+                Math.min(this.columns(), columns));
         }
 
         return new Basic2DByteMatrix($self);
@@ -193,40 +187,12 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public byte[][] toArray() {
 
-        byte result[][] = new byte[rows][columns];
+        byte result[][] = new byte[rows()][columns()];
 
-        for (int i = 0; i < rows; i++) {
-            System.arraycopy(self[i], 0, result[i], 0, columns);
+        for (int i = 0; i < rows(); i++) {
+            System.arraycopy(self[i], 0, result[i], 0, columns());
         }
 
         return result;
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-
-        out.writeInt(rows);
-        out.writeInt(columns);
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                out.writeByte(self[i][j]);
-            }
-        }
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException {
-
-        rows = in.readInt();
-        columns = in.readInt();
-
-        self = new byte[rows][columns];
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                self[i][j] = in.readByte();
-            }
-        }
     }
 }

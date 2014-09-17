@@ -78,7 +78,7 @@ public abstract class SparseByteVector extends AbstractByteVector {
      */
     public double density() {
 
-        return cardinality / (double)length;
+        return cardinality / (double)length();
     }
 
     @Override
@@ -112,7 +112,7 @@ public abstract class SparseByteVector extends AbstractByteVector {
     public byte max() {
 
         byte max = foldNonZero(ByteVectors.mkMaxAccumulator());
-        if (cardinality == length || aIsGreaterThanB(max, (byte)0)) {
+        if (cardinality == length() || aIsGreaterThanB(max, (byte)0)) {
             return max;
         }
         else {
@@ -124,7 +124,7 @@ public abstract class SparseByteVector extends AbstractByteVector {
     public byte min() {
 
         byte min = foldNonZero(ByteVectors.mkMinAccumulator());
-        if (cardinality == length || aIsLessThanB(min, (byte)0)) {
+        if (cardinality == length() || aIsLessThanB(min, (byte)0)) {
             return min;
         }
         else {
@@ -149,7 +149,7 @@ public abstract class SparseByteVector extends AbstractByteVector {
     @Override
     public ByteVector copy() {
 
-        return resize(length);
+        return resize(length());
     }
 
     @Override

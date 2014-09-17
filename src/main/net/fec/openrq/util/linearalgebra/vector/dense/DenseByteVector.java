@@ -90,7 +90,7 @@ public abstract class DenseByteVector extends AbstractByteVector {
     public void multiplyInPlace(byte value) {
 
         // TODO: multiply by 0 = clear()
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length(); i++) {
             safeSet(i, aTimesB(safeGet(i), value));
         }
     }

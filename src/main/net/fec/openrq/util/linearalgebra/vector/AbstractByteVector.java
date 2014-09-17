@@ -62,9 +62,8 @@ import net.fec.openrq.util.linearalgebra.vector.operation.VectorOperations;
 
 public abstract class AbstractByteVector implements ByteVector {
 
-    protected int length;
-
-    protected Factory factory;
+    private final int length;
+    private final Factory factory;
 
 
     protected AbstractByteVector(Factory factory, int length) {

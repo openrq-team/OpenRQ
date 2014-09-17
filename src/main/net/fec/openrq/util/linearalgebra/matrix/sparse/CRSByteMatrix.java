@@ -57,6 +57,7 @@ import java.util.Objects;
 
 import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.checking.Invariants;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
@@ -85,11 +86,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         this(0, 0);
     }
 
-    public CRSByteMatrix(int rows, int columns) {
-
-        this(rows, columns, 0);
-    }
-
     public CRSByteMatrix(int rows, int columns, byte array[]) {
 
         this(ByteMatrices.asArray1DSource(rows, columns, array));
@@ -107,80 +103,54 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
     public CRSByteMatrix(MatrixSource source) {
 
-        this(source.rows(), source.columns(), 0);
+        this(source.rows(), source.columns());
 
         for (int i = 0; i < rows(); i++) {
-            for (int j = 0; j < columns; j++) {
+            for (int j = 0; j < columns(); j++) {
                 byte value = source.get(i, j);
                 if (value != 0) {
-                    colValuesForInsertion(i, rowCard + 1)[rowCard] = value;
-                    getColumnIndicesForInsertion(i, rowCard + 1)[rowCard] = j;
-                    rowCard++;
-                    cardinality++;
+                    sparseRows[i].set(j, value);
                 }
             }
         }
     }
 
-    public CRSByteMatrix(int rows, int columns, int cardinality) {
+    public CRSByteMatrix(int rows, int columns) {
 
         super(LinearAlgebra.CRS_FACTORY, rows, columns);
-        ensureCardinalityIsCorrect(rows, columns, cardinality);
 
-        this.cardinality = 0;
-        this.columnIndices = new int[rows][];
-        this.columnValues = new byte[rows][];
-        this.rowCardinalities = new int[rows];
-
+        this.sparseRows = new SparseRow[rows];
         for (int i = 0; i < rows; i++) {
-            setColValues(i, EMPTY_COLUMN_VALUES);
-            setColIndices(i, EMPTY_COLUMN_INDICES);
+            sparseRows[i] = new SparseRow();
         }
     }
 
-    public CRSByteMatrix(int rows,
-        int columns,
-        int cardinality,
-        byte columnValues[][],
-        int columnIndices[][],
-        int rowSizes[]) {
+    public CRSByteMatrix(int rows, int columns, byte columnValues[][], int columnIndices[][], int[] rowCardinalities) {
 
         super(LinearAlgebra.CRS_FACTORY, rows, columns);
-        ensureCardinalityIsCorrect(rows, columns, cardinality);
 
-        this.cardinality = cardinality;
+        this.sparseRows = new SparseRow[rows];
+        for (int i = 0; i < rows; i++) {
+            sparseRows[i] = new SparseRow(columnValues[i], columnIndices[i], rowCardinalities[i]);
+        }
+    }
 
-        this.columnValues = Objects.requireNonNull(columnValues);
-        this.columnIndices = Objects.requireNonNull(columnIndices);
-        this.rowCardinalities = Objects.requireNonNull(rowSizes);
+    private CRSByteMatrix(int rows, int columns, SparseRow[] sparseRows) {
+
+        super(LinearAlgebra.CRS_FACTORY, rows, columns);
+        this.sparseRows = Objects.requireNonNull(sparseRows);
     }
 
     @Override
     public byte safeGet(int i, int j) {
 
-        final int k = searchForColumnIndex(j, i);
-        if (hasEntry(k, i, j)) {
-            return colValues(i)[k];
-        }
-
-        return 0;
+        return sparseRows[i].get(j);
     }
 
     @Override
     public void safeSet(int i, int j, byte value) {
 
-        final int k = searchForColumnIndex(j, i);
-        if (hasEntry(k, i, j)) {
-            if (value == 0) {
-                remove(k, i);
-            }
-            else {
-                colValues(i)[k] = value;
-            }
-        }
-        else {
-            insert(getInsertionPoint(k), i, j, value);
-        }
+        sparseRows[i].set(j, value);
     }
 
     // =========================================================================
@@ -200,7 +170,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         ByteMatrix result = blank(factory);
 
         if (value != 0) {
-            for (int i = 0; i < sparseRows; i++) {
+            for (int i = 0; i < rows(); i++) {
                 ByteVectorIterator it = nonZeroRowIterator(i);
                 while (it.hasNext()) {
                     it.next();
@@ -225,13 +195,13 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         ensureFactoryIsNotNull(factory);
         ensureArgumentIsNotNull(vector, "vector");
 
-        if (columns != vector.length()) {
-            fail("Wrong vector length: " + vector.length() + ". Should be: " + columns + ".");
+        if (columns() != vector.length()) {
+            fail("Wrong vector length: " + vector.length() + ". Should be: " + columns() + ".");
         }
 
-        ByteVector result = factory.createVector(sparseRows);
+        ByteVector result = factory.createVector(rows());
 
-        for (int i = 0; i < sparseRows; i++) {
+        for (int i = 0; i < rows(); i++) {
             byte acc = 0;
             ByteVectorIterator it = nonZeroRowIterator(i);
             while (it.hasNext()) {
@@ -260,13 +230,13 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         ensureFactoryIsNotNull(factory);
         ensureArgumentIsNotNull(matrix, "matrix");
 
-        if (columns != matrix.rows()) {
+        if (columns() != matrix.rows()) {
             fail("Wrong matrix dimensions: " + matrix.rows() + "x" + matrix.columns() +
-                 ". Should be: " + columns + "x_.");
+                 ". Should be: " + columns() + "x_.");
         }
 
-        final ByteMatrix result = factory.createMatrix(sparseRows, matrix.columns());
-        for (int i = 0; i < sparseRows; i++) {
+        final ByteMatrix result = factory.createMatrix(rows(), matrix.columns());
+        for (int i = 0; i < rows(); i++) {
             for (int j = 0; j < result.columns(); j++) {
                 byte acc = 0;
                 ByteVectorIterator it = nonZeroRowIterator(i);
@@ -299,14 +269,14 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         ensureFactoryIsNotNull(factory);
 
-        ByteMatrix result = factory.createMatrix(columns, sparseRows);
+        ByteMatrix result = factory.createMatrix(columns(), rows());
 
-        int nonZeroCount = 0, i = 0;
-        while (nonZeroCount < cardinality) {
-            for (int k = rowPointers[i]; k < rowPointers[i + 1]; k++, nonZeroCount++) {
-                result.set(columnIndices[k], i, columnValues[k]);
+        for (int i = 0; i < rows(); i++) {
+            ByteVectorIterator it = nonZeroRowIterator(i);
+            while (it.hasNext()) {
+                it.next();
+                result.set(it.index(), i, it.get());
             }
-            i++;
         }
 
         return result;
@@ -315,45 +285,19 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteVector getRow(int i) {
 
-        checkRowBounds(i);
+        Indexables.checkIndexBounds(i, rows());
 
-        int rowCardinality = rowPointers[i + 1] - rowPointers[i];
-
-        byte rowValues[] = new byte[rowCardinality];
-        int rowIndices[] = new int[rowCardinality];
-
-        System.arraycopy(columnValues, rowPointers[i], rowValues, 0, rowCardinality);
-        System.arraycopy(columnIndices, rowPointers[i], rowIndices, 0, rowCardinality);
-
-        return new CompressedByteVector(columns, rowCardinality, rowValues, rowIndices);
+        final SparseRow row = sparseRows[i];
+        return new CompressedByteVector(columns(), row.nonZeros(), row.copyOfValues(), row.copyOfColumnIndices());
     }
 
     @Override
     public void swapRows(int i, int j) {
 
-        checkRowBounds(i);
-        checkRowBounds(j);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkIndexBounds(j, rows());
 
-        if (i != j) {
-            // swap the column indices from the two rows
-            ArrayUtils.swapBlocks(columnIndices, rowPointers[i], rowPointers[i + 1], rowPointers[j], rowPointers[j + 1]);
-
-            // do the same for the values
-            ArrayUtils.swapBlocks(columnValues, rowPointers[i], rowPointers[i + 1], rowPointers[j], rowPointers[j + 1]);
-
-            // figure out the difference between the new and the old cardinality of the row with lowest index
-            final int low = Math.min(i, j);
-            final int lowCardinality = rowPointers[low + 1] - rowPointers[low];
-            final int high = Math.max(i, j);
-            final int highCardinality = rowPointers[high + 1] - rowPointers[high];
-            final int diff = highCardinality - lowCardinality; // may be negative
-
-            // add the difference to all rows between low and high
-            // indices + 1 since the first position of rowPointers is always 0
-            for (int n = low + 1; n < high + 1; n++) {
-                rowPointers[n] += diff;
-            }
-        }
+        ArrayUtils.swapObjects(sparseRows, i, j);
     }
 
     @Override
@@ -422,15 +366,12 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteMatrix copy() {
 
-        byte $values[] = new byte[align(cardinality)];
-        int $columnIndices[] = new int[align(cardinality)];
-        int $rowPointers[] = new int[sparseRows + 1];
+        final SparseRow[] sparseRowsCopy = new SparseRow[rows()];
+        for (int i = 0; i < rows(); i++) {
+            sparseRowsCopy[i] = sparseRows[i].clone();
+        }
 
-        System.arraycopy(columnValues, 0, $values, 0, cardinality);
-        System.arraycopy(columnIndices, 0, $columnIndices, 0, cardinality);
-        System.arraycopy(rowPointers, 0, $rowPointers, 0, sparseRows + 1);
-
-        return new CRSByteMatrix(sparseRows, columns, cardinality, $values, $columnIndices, $rowPointers);
+        return new CRSByteMatrix(rows(), columns(), sparseRowsCopy);
     }
 
     @Override
@@ -438,111 +379,57 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         ensureDimensionsAreCorrect(rows, columns);
 
-        if (this.sparseRows == rows && this.columns == columns) {
-            return copy();
-        }
+        if (columns() == columns) {
+            final SparseRow[] otherSparseRows = new SparseRow[rows];
 
-        if (this.sparseRows >= rows && this.columns >= columns) {
+            int i;
+            for (i = 0; i < Math.min(rows(), rows); i++) {
+                otherSparseRows[i] = sparseRows[i].clone();
+            }
 
-            byte $values[] = new byte[align(cardinality)];
-            int $columnIndices[] = new int[align(cardinality)];
-            int $rowPointers[] = new int[rows + 1];
-
-            int $cardinality = 0;
-
-            int k = 0, i = 0;
-            while (k < cardinality && i < rows) {
-
-                $rowPointers[i] = $cardinality;
-
-                for (int j = rowPointers[i]; j < rowPointers[i + 1]
-                                             && columnIndices[j] < columns; j++, k++) {
-
-                    $values[$cardinality] = columnValues[j];
-                    $columnIndices[$cardinality] = columnIndices[j];
-                    $cardinality++;
+            if (rows > rows()) {
+                for (; i < rows; i++) {
+                    otherSparseRows[i] = new SparseRow();
                 }
-                i++;
             }
 
-            $rowPointers[rows] = $cardinality;
-
-            return new CRSByteMatrix(rows, columns, $cardinality, $values, $columnIndices, $rowPointers);
+            return new CRSByteMatrix(rows, columns, otherSparseRows);
         }
-
-        if (this.sparseRows < rows) {
-            byte $values[] = new byte[align(cardinality)];
-            int $columnIndices[] = new int[align(cardinality)];
-            int $rowPointers[] = new int[rows + 1];
-
-            System.arraycopy(columnValues, 0, $values, 0, cardinality);
-            System.arraycopy(columnIndices, 0, $columnIndices, 0, cardinality);
-            System.arraycopy(rowPointers, 0, $rowPointers, 0, this.sparseRows + 1);
-
-            for (int i = this.sparseRows; i < rows + 1; i++) {
-                $rowPointers[i] = cardinality;
-            }
-
-            return new CRSByteMatrix(rows, columns, cardinality, $values, $columnIndices, $rowPointers);
+        else {
+            return super.resize(rows, columns);
         }
-
-        // TODO: think about cardinality in align call
-        byte $values[] = new byte[align(cardinality)];
-        int $columnIndices[] = new int[align(cardinality)];
-        int $rowPointers[] = new int[rows + 1];
-
-        System.arraycopy(columnValues, 0, $values, 0, cardinality);
-        System.arraycopy(columnIndices, 0, $columnIndices, 0, cardinality);
-        System.arraycopy(rowPointers, 0, $rowPointers, 0, this.sparseRows + 1);
-
-        return new CRSByteMatrix(rows, columns, cardinality, $values, $columnIndices, $rowPointers);
     }
 
     @Override
     public boolean nonZeroAt(int i, int j) {
 
         checkBounds(i, j);
-        final int k = searchForColumnIndex(j, rowPointers[i], rowPointers[i + 1]);
-        return k < rowPointers[i + 1] && columnIndices[k] == j;
+        return sparseRows[i].isNonZero(j);
     }
 
     @Override
     public int nonZerosInRow(int i) {
 
-        checkRowBounds(i);
-        return rowPointers[i + 1] - rowPointers[i];
+        Indexables.checkIndexBounds(i, rows());
+
+        return sparseRows[i].nonZeros();
     }
 
     @Override
     public int nonZerosInRow(int i, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
-        int nonZeros = rowPointers[i + 1] - rowPointers[i]; // upper bound
-
-        // discount non zeros to the left of the range
-        int k = rowPointers[i];
-        while (k < rowPointers[i + 1] && columnIndices[k] < fromColumn) {
-            k++;
-            nonZeros--;
-        }
-
-        // discount non zeros to the right of the ranges
-        k = rowPointers[i + 1] - 1;
-        while (k >= rowPointers[i] && columnIndices[k] >= toColumn) {
-            k--;
-            nonZeros--;
-        }
-
-        return nonZeros;
+        return sparseRows[i].nonZeros(fromColumn, toColumn);
     }
 
     @Override
     public int[] nonZeroPositionsInRow(int i) {
 
-        checkRowBounds(i);
-        return Arrays.copyOfRange(columnIndices, rowPointers[i], rowPointers[i + 1]);
+        Indexables.checkIndexBounds(i, rows());
+
+        return sparseRows[i].copyOfColumnIndices();
     }
 
     @Override
@@ -786,8 +673,8 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         int min = (
                   (sparseRows != 0 && columns > Integer.MAX_VALUE / sparseRows) ?
-                                                                   Integer.MAX_VALUE :
-                                                                   (sparseRows * columns)
+                                                                               Integer.MAX_VALUE :
+                                                                               (sparseRows * columns)
                   );
         int capacity = Math.min(min, (cardinality * 3) / 2 + 1);
 
@@ -1171,9 +1058,82 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             this.searchEntry = new SearchEntry();
         }
 
-        private SearchEntry getSearchEntry(int columnIndex) {
+        private SearchEntry searchByIndex(int j) {
 
-            return searchEntry.search(columnIndex);
+            return searchEntry.search(j);
+        }
+
+        int nonZeros() {
+
+            return cardinality;
+        }
+
+        // requires valid indices
+        int nonZeros(int fromColumn, int toColumn) {
+
+            int nonZeros = cardinality; // upper bound
+
+            // discount non zeros to the left of the range
+            for (int i = 0; i < cardinality && columnIndices[i] < fromColumn; i++) {
+                nonZeros--;
+            }
+
+            // discount non zeros to the right of the ranges
+            for (int i = cardinality - 1; i >= 0 && columnIndices[i] >= toColumn; i--) {
+                nonZeros--;
+            }
+
+            return nonZeros;
+        }
+
+        // requires valid index
+        boolean isNonZero(int j) {
+
+            return searchByIndex(j).isNonZero();
+        }
+
+        // requires valid index
+        byte get(int j) {
+
+            return searchByIndex(j).value();
+        }
+
+        // requires valid index
+        void set(int j, byte value) {
+
+            searchByIndex(j).update(value);
+        }
+
+        // require valid indexes
+        void update(int i, int j, MatrixFunction function) {
+
+            SearchEntry entry = searchByIndex(j);
+            entry.update(function.evaluate(i, j, entry.value()));
+        }
+
+        byte[] copyOfValues() {
+
+            return Arrays.copyOf(values, cardinality);
+        }
+
+        int[] copyOfColumnIndices() {
+
+            return Arrays.copyOf(columnIndices, cardinality);
+        }
+
+        int[] copyOfColumnIndices(int fromColumn, int toColumn) {
+
+            int first = 0;
+            while (first < cardinality && columnIndices[first] < fromColumn) {
+                first++;
+            }
+
+            int last = cardinality - 1;
+            while (last >= 0 && columnIndices[last] >= toColumn) {
+                last--;
+            }
+
+            return Arrays.copyOfRange(columnIndices, first, last + 1);
         }
 
         private void insert(int k, int j, byte value) {
@@ -1225,6 +1185,12 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             }
         }
 
+        @Override
+        protected SparseRow clone() {
+
+            return new SparseRow(copyOfValues(), copyOfColumnIndices(), cardinality);
+        }
+
 
         // class used for nonzero entry searches, and consequent value updates
         private final class SearchEntry {
@@ -1236,10 +1202,10 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             /*
              * Requires valid column index.
              */
-            SearchEntry search(int columnIndex) {
+            SearchEntry search(int j) {
 
-                j = columnIndex;
-                k = Arrays.binarySearch(columnIndices, j);
+                this.j = j;
+                this.k = Arrays.binarySearch(columnIndices, j);
                 return this;
             }
 
@@ -1263,7 +1229,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
                 if (isNonZero()) {
                     if (value != 0) {
                         values[k] = value;
-                        columnIndices[k] = j;
                     }
                     else {
                         remove(k);

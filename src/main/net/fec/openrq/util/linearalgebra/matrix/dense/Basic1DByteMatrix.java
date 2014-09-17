@@ -36,10 +36,6 @@
 package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -50,8 +46,6 @@ import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 
 
 public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseByteMatrix {
-
-    private static final long serialVersionUID = 4071505L;
 
     private byte self[];
 
@@ -70,9 +64,9 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         this(source.rows(), source.columns());
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                self[i * columns + j] = source.get(i, j);
+        for (int i = 0; i < rows(); i++) {
+            for (int j = 0; j < columns(); j++) {
+                self[i * columns() + j] = source.get(i, j);
             }
         }
     }
@@ -82,9 +76,9 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
         this(array.length, array[0].length);
 
         int offset = 0;
-        for (int i = 0; i < rows; i++) {
-            System.arraycopy(array[i], 0, self, offset, columns);
-            offset += columns;
+        for (int i = 0; i < rows(); i++) {
+            System.arraycopy(array[i], 0, self, offset, columns());
+            offset += columns();
         }
     }
 
@@ -103,13 +97,13 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     protected byte safeGet(int i, int j) {
 
-        return self[i * columns + j];
+        return self[i * columns() + j];
     }
 
     @Override
     protected void safeSet(int i, int j, byte value) {
 
-        self[i * columns + j] = value;
+        self[i * columns() + j] = value;
     }
 
     @Override
@@ -118,10 +112,10 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
         Indexables.checkIndexBounds(i, rows());
         Indexables.checkIndexBounds(i, rows());
         if (i != j) {
-            for (int k = 0; k < columns; k++) {
-                byte tmp = self[i * columns + k];
-                self[i * columns + k] = self[j * columns + k];
-                self[j * columns + k] = tmp;
+            for (int k = 0; k < columns(); k++) {
+                byte tmp = self[i * columns() + k];
+                self[i * columns() + k] = self[j * columns() + k];
+                self[j * columns() + k] = tmp;
             }
         }
     }
@@ -132,10 +126,10 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
         Indexables.checkIndexBounds(i, columns());
         Indexables.checkIndexBounds(j, columns());
         if (i != j) {
-            for (int k = 0; k < rows; k++) {
-                byte tmp = self[k * columns + i];
-                self[k * columns + i] = self[k * columns + j];
-                self[k * columns + j] = tmp;
+            for (int k = 0; k < rows(); k++) {
+                byte tmp = self[k * columns() + i];
+                self[k * columns() + i] = self[k * columns() + j];
+                self[k * columns() + j] = tmp;
             }
         }
     }
@@ -145,8 +139,8 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         Indexables.checkIndexBounds(i, rows());
 
-        byte result[] = new byte[columns];
-        System.arraycopy(self, i * columns, result, 0, columns);
+        byte result[] = new byte[columns()];
+        System.arraycopy(self, i * columns(), result, 0, columns());
 
         return new BasicByteVector(result);
     }
@@ -159,7 +153,7 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         final int length = toColumn - fromColumn;
         byte[] result = new byte[length];
-        System.arraycopy(self, (i * columns) + fromColumn, result, 0, length);
+        System.arraycopy(self, (i * columns()) + fromColumn, result, 0, length);
 
         return new BasicByteVector(result);
     }
@@ -167,9 +161,9 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public ByteMatrix copy() {
 
-        byte $self[] = new byte[rows * columns];
-        System.arraycopy(self, 0, $self, 0, rows * columns);
-        return new Basic1DByteMatrix(rows, columns, $self);
+        byte $self[] = new byte[rows() * columns()];
+        System.arraycopy(self, 0, $self, 0, rows() * columns());
+        return new Basic1DByteMatrix(rows(), columns(), $self);
     }
 
     @Override
@@ -177,24 +171,24 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         ensureDimensionsAreCorrect(rows, columns);
 
-        if (this.rows == rows && this.columns == columns) {
+        if (this.rows() == rows && this.columns() == columns) {
             return copy();
         }
 
-        if (this.rows < rows && this.columns == columns) {
+        if (this.rows() < rows && this.columns() == columns) {
             byte $self[] = new byte[rows * columns];
-            System.arraycopy(self, 0, $self, 0, this.rows * columns);
+            System.arraycopy(self, 0, $self, 0, this.rows() * columns);
 
             return new Basic1DByteMatrix(rows, columns, $self);
         }
 
         byte[] $self = new byte[rows * columns];
 
-        int columnSize = columns < this.columns ? columns : this.columns;
-        int rowSize = rows < this.rows ? rows : this.rows;
+        int columnSize = columns < this.columns() ? columns : this.columns();
+        int rowSize = rows < this.rows() ? rows : this.rows();
 
         for (int i = 0; i < rowSize; i++) {
-            System.arraycopy(self, i * this.columns, $self, i * columns,
+            System.arraycopy(self, i * this.columns(), $self, i * columns,
                 columnSize);
         }
 
@@ -204,38 +198,14 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public byte[][] toArray() {
 
-        byte result[][] = new byte[rows][columns];
+        byte result[][] = new byte[rows()][columns()];
 
         int offset = 0;
-        for (int i = 0; i < rows; i++) {
-            System.arraycopy(self, offset, result[i], 0, columns);
-            offset += columns;
+        for (int i = 0; i < rows(); i++) {
+            System.arraycopy(self, offset, result[i], 0, columns());
+            offset += columns();
         }
 
         return result;
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-
-        out.writeInt(rows);
-        out.writeInt(columns);
-
-        for (int i = 0; i < rows * columns; i++) {
-            out.writeByte(self[i]);
-        }
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException {
-
-        rows = in.readInt();
-        columns = in.readInt();
-
-        self = new byte[rows * columns];
-
-        for (int i = 0; i < rows * columns; i++) {
-            self[i] = in.readByte();
-        }
     }
 }

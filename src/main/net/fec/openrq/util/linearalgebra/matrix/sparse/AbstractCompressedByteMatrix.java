@@ -55,7 +55,7 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
     protected final long capacity() {
 
-        return ((long)rows) * columns;
+        return ((long)rows()) * columns();
     }
 
     @Override

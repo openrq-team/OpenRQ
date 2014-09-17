@@ -59,7 +59,7 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
  * <a href="http://mathworld.wolfram.com/Matrix.html"> http://mathworld.wolfram.com/Matrix.html </a>
  * </p>
  */
-public interface ByteMatrix extends Externalizable {
+public interface ByteMatrix {
 
     /**
      * Gets the specified element of this matrix.

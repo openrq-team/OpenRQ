@@ -36,10 +36,6 @@
 package net.fec.openrq.util.linearalgebra.vector.dense;
 
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
@@ -47,8 +43,6 @@ import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 
 
 public class BasicByteVector extends DenseByteVector {
-
-    private static final long serialVersionUID = 4071505L;
 
     private byte self[];
 
@@ -67,7 +61,7 @@ public class BasicByteVector extends DenseByteVector {
 
         this(source.length());
 
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length(); i++) {
             self[i] = source.get(i);
         }
     }
@@ -111,7 +105,7 @@ public class BasicByteVector extends DenseByteVector {
     @Override
     public ByteVector copy() {
 
-        return resize(length);
+        return resize(length());
     }
 
     @Override
@@ -128,30 +122,8 @@ public class BasicByteVector extends DenseByteVector {
     @Override
     public byte[] toArray() {
 
-        byte result[] = new byte[length];
-        System.arraycopy(self, 0, result, 0, length);
+        byte result[] = new byte[length()];
+        System.arraycopy(self, 0, result, 0, length());
         return result;
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-
-        out.writeInt(length);
-
-        for (int i = 0; i < length; i++) {
-            out.writeByte(self[i]);
-        }
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException {
-
-        length = in.readInt();
-
-        self = new byte[length];
-
-        for (int i = 0; i < length; i++) {
-            self[i] = in.readByte();
-        }
     }
 }

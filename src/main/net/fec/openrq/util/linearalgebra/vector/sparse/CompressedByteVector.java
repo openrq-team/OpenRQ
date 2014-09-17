@@ -40,11 +40,6 @@ package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -57,8 +52,6 @@ import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 
 
 public class CompressedByteVector extends SparseByteVector {
-
-    private static final long serialVersionUID = 4071505L;
 
     private static final int MINIMUM_SIZE = 32;
 
@@ -90,7 +83,7 @@ public class CompressedByteVector extends SparseByteVector {
 
         this(source.length(), 0);
 
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length(); i++) {
             byte value = source.get(i);
             if (value != 0) {
 
@@ -162,7 +155,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVector multiply(byte value) {
 
-        return multiply(value, factory);
+        return multiply(value, factory());
     }
 
     @Override
@@ -181,7 +174,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVector multiply(ByteMatrix matrix) {
 
-        return multiply(matrix, factory);
+        return multiply(matrix, factory());
     }
 
     @Override
@@ -189,9 +182,9 @@ public class CompressedByteVector extends SparseByteVector {
 
         ensureArgumentIsNotNull(matrix, "matrix");
 
-        if (length != matrix.rows()) {
+        if (length() != matrix.rows()) {
             fail("Wrong matrix dimensions: " + matrix.rows() + "x" + matrix.columns() +
-                 ". Should be: " + length + "x_.");
+                 ". Should be: " + length() + "x_.");
         }
 
         ByteVector result = factory.createVector(matrix.columns());
@@ -287,7 +280,7 @@ public class CompressedByteVector extends SparseByteVector {
 
         ensureLengthIsCorrect($length);
 
-        int $cardinality = ($length > this.length) ? cardinality : searchForIndex($length);
+        int $cardinality = ($length > this.length()) ? cardinality : searchForIndex($length);
 
         byte $values[] = new byte[align($length, $cardinality)];
         int $indices[] = new int[align($length, $cardinality)];
@@ -302,7 +295,7 @@ public class CompressedByteVector extends SparseByteVector {
     public void each(VectorProcedure procedure) {
 
         int k = 0;
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length(); i++) {
             if (k < cardinality && indices[k] == i) {
                 procedure.apply(i, values[k++]);
             }
@@ -340,35 +333,6 @@ public class CompressedByteVector extends SparseByteVector {
         }
         else {
             insert(k, i, function.evaluate(i, (byte)0));
-        }
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-
-        out.writeInt(length);
-        out.writeInt(cardinality);
-
-        for (int i = 0; i < cardinality; i++) {
-            out.writeInt(indices[i]);
-            out.writeByte(values[i]);
-        }
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException {
-
-        length = in.readInt();
-        cardinality = in.readInt();
-
-        int alignedSize = align(length, cardinality);
-
-        values = new byte[alignedSize];
-        indices = new int[alignedSize];
-
-        for (int i = 0; i < cardinality; i++) {
-            indices[i] = in.readInt();
-            values[i] = in.readByte();
         }
     }
 
@@ -450,12 +414,12 @@ public class CompressedByteVector extends SparseByteVector {
 
     private void growup() {
 
-        if (values.length == length) {
+        if (values.length == length()) {
             // This should never happen
             throw new IllegalStateException("This vector can't grow up.");
         }
 
-        int capacity = Math.min(length, (cardinality * 3) / 2 + 1);
+        int capacity = Math.min(length(), (cardinality * 3) / 2 + 1);
 
         byte $values[] = new byte[capacity];
         int $indices[] = new int[capacity];
@@ -481,7 +445,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVectorIterator iterator() {
 
-        return new CompressedByteVectorIterator(0, length);
+        return new CompressedByteVectorIterator(0, length());
     }
 
     @Override
@@ -582,7 +546,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVectorIterator nonZeroIterator() {
 
-        return new CompressedByteVectorNonZeroIterator(0, length);
+        return new CompressedByteVectorNonZeroIterator(0, length());
     }
 
     @Override

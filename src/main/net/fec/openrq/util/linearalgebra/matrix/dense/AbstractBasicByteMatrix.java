@@ -56,8 +56,8 @@ public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix impleme
     @Override
     public ByteMatrix multiply(ByteMatrix matrix, Factory factory) {
 
-        if (matrix instanceof DenseByteMatrix && (rows % BLOCKSIZE == 0)
-            && (columns % BLOCKSIZE == 0)
+        if (matrix instanceof DenseByteMatrix && (rows() % BLOCKSIZE == 0)
+            && (columns() % BLOCKSIZE == 0)
             && (matrix.columns() % BLOCKSIZE == 0)) {
 
             return multiplyBlockedWith64(matrix, factory);
@@ -68,10 +68,10 @@ public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix impleme
 
     private ByteMatrix multiplyBlockedWith64(ByteMatrix matrix, Factory factory) {
 
-        ByteMatrix result = factory.createMatrix(rows, matrix.columns());
+        ByteMatrix result = factory.createMatrix(rows(), matrix.columns());
 
-        for (int i = 0; i < rows; i += BLOCKSIZE) {
-            for (int k = 0; k < columns; k += BLOCKSIZE) {
+        for (int i = 0; i < rows(); i += BLOCKSIZE) {
+            for (int k = 0; k < columns(); k += BLOCKSIZE) {
                 for (int j = 0; j < matrix.columns(); j += BLOCKSIZE) {
                     for (int u = 0; u < BLOCKSIZE; u++) {
                         for (int w = 0; w < BLOCKSIZE; w++) {

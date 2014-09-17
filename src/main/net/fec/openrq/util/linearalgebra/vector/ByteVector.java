@@ -55,7 +55,7 @@ import net.fec.openrq.util.linearalgebra.vector.operation.VectorVectorOperation;
 /**
  * The byte vector interface.
  */
-public interface ByteVector extends Externalizable, Iterable<Byte> {
+public interface ByteVector extends Iterable<Byte> {
 
     /**
      * Gets the specified element of this vector.

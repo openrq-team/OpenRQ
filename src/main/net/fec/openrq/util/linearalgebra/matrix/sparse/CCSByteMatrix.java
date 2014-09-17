@@ -45,9 +45,6 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
 import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Arrays;
 
 import net.fec.openrq.util.checking.Indexables;
@@ -66,8 +63,6 @@ import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedByteVector;
  * This is a CCS (Compressed Column Storage) matrix class.
  */
 public class CCSByteMatrix extends AbstractCompressedByteMatrix implements SparseByteMatrix {
-
-    private static final long serialVersionUID = 4071505L;
 
     private static final int MINIMUM_SIZE = 32;
 
@@ -105,7 +100,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         this(source.rows(), source.columns(), 0);
 
-        for (int j = 0; j < columns; j++) {
+        for (int j = 0; j < columns(); j++) {
             columnPointers[j] = cardinality;
             for (int i = 0; i < rows; i++) {
                 byte value = source.get(i, j);
@@ -210,9 +205,9 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         System.arraycopy(values, 0, $values, 0, cardinality);
         System.arraycopy(rowIndices, 0, $rowIndices, 0, cardinality);
-        System.arraycopy(columnPointers, 0, $columnPointers, 0, columns + 1);
+        System.arraycopy(columnPointers, 0, $columnPointers, 0, columns() + 1);
 
-        return new CCSByteMatrix(rows, columns, cardinality, $values, $rowIndices, $columnPointers);
+        return new CCSByteMatrix(rows(), columns(), cardinality, $values, $rowIndices, $columnPointers);
     }
 
     @Override
@@ -220,11 +215,11 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         ensureDimensionsAreCorrect(rows, columns);
 
-        if (this.rows == rows && this.columns == columns) {
+        if (this.rows() == rows && this.columns() == columns) {
             return copy();
         }
 
-        if (this.rows >= rows && this.columns >= columns) {
+        if (this.rows() >= rows && this.columns() >= columns) {
 
             // TODO: think about cardinality in align call
             byte $values[] = new byte[align(cardinality)];
@@ -253,7 +248,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             return new CCSByteMatrix(rows, columns, $cardinality, $values, $rowIndices, $columnPointers);
         }
 
-        if (this.columns < columns) {
+        if (this.columns() < columns) {
 
             byte $values[] = new byte[align(cardinality)];
             int $rowIndices[] = new int[align(cardinality)];
@@ -262,9 +257,9 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
             System.arraycopy(values, 0, $values, 0, cardinality);
             System.arraycopy(rowIndices, 0, $rowIndices, 0, cardinality);
             System.arraycopy(columnPointers, 0, $columnPointers, 0,
-                this.columns + 1);
+                this.columns() + 1);
 
-            for (int i = this.columns; i < columns + 1; i++) {
+            for (int i = this.columns(); i < columns + 1; i++) {
                 $columnPointers[i] = cardinality;
             }
 
@@ -278,7 +273,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         System.arraycopy(values, 0, $values, 0, cardinality);
         System.arraycopy(rowIndices, 0, $rowIndices, 0, cardinality);
-        System.arraycopy(columnPointers, 0, $columnPointers, 0, this.columns + 1);
+        System.arraycopy(columnPointers, 0, $columnPointers, 0, this.columns() + 1);
 
         return new CCSByteMatrix(rows, columns, cardinality, $values, $rowIndices, $columnPointers);
     }
@@ -353,9 +348,9 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     public void each(MatrixProcedure procedure) {
 
         int k = 0;
-        for (int j = 0; j < columns; j++) {
+        for (int j = 0; j < columns(); j++) {
             int valuesSoFar = columnPointers[j + 1];
-            for (int i = 0; i < rows; i++) {
+            for (int i = 0; i < rows(); i++) {
                 if (k < valuesSoFar && i == rowIndices[k]) {
                     procedure.apply(i, j, values[k++]);
                 }
@@ -418,45 +413,6 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         }
     }
 
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-
-        out.writeInt(rows);
-        out.writeInt(columns);
-        out.writeInt(cardinality);
-
-        int nonZeroCount = 0, j = 0;
-        while (nonZeroCount < cardinality) {
-            for (int k = columnPointers[j]; k < columnPointers[j + 1]; k++, nonZeroCount++) {
-                out.writeInt(rowIndices[k]);
-                out.writeInt(j);
-                out.writeByte(values[k]);
-            }
-            j++;
-        }
-    }
-
-    @Override
-    public void readExternal(ObjectInput in) throws IOException {
-
-        rows = in.readInt();
-        columns = in.readInt();
-        cardinality = in.readInt();
-
-        int alignedSize = align(cardinality);
-
-        values = new byte[alignedSize];
-        rowIndices = new int[alignedSize];
-        columnPointers = new int[columns + 1];
-
-        for (int k = 0; k < cardinality; k++) {
-            rowIndices[k] = in.readInt();
-            int j = in.readInt();
-            values[k] = in.readByte();
-            columnPointers[j + 1] = k + 1;
-        }
-    }
-
     private int searchForRowIndex(int i, int left, int right) {
 
         if (left == right) {
@@ -508,7 +464,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         values[k] = value;
         rowIndices[k] = i;
 
-        for (int jj = j + 1; jj < columns + 1; jj++) {
+        for (int jj = j + 1; jj < columns() + 1; jj++) {
             columnPointers[jj]++;
         }
 
@@ -527,7 +483,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         // rowIndices[kk] = rowIndices[kk + 1];
         // }
 
-        for (int jj = j + 1; jj < columns + 1; jj++) {
+        for (int jj = j + 1; jj < columns() + 1; jj++) {
             columnPointers[jj]--;
         }
     }
@@ -540,9 +496,9 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         }
 
         int min = (
-                  (rows != 0 && columns > Integer.MAX_VALUE / rows) ?
-                                                                   Integer.MAX_VALUE :
-                                                                   (rows * columns)
+                  (rows() != 0 && columns() > Integer.MAX_VALUE / rows()) ?
+                                                                         Integer.MAX_VALUE :
+                                                                         (rows() * columns())
                   );
         int capacity = Math.min(min, (cardinality * 3) / 2 + 1);
 

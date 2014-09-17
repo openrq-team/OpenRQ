@@ -63,8 +63,8 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 public abstract class AbstractByteMatrix implements ByteMatrix {
 
-    protected int rows;
-    protected int columns;
+    private final int rows;
+    private final int columns;
 
     protected Factory factory;
 
