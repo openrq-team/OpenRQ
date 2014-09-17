@@ -35,7 +35,7 @@ import java.util.Set;
 import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.numericaltype.SizeOf;
 import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
@@ -93,8 +93,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param serInfo
      *            A serializable object containing source block decoder information
@@ -122,8 +121,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing source block decoder information
@@ -151,8 +149,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing source block decoder information
@@ -170,7 +167,7 @@ public final class SBDInfo {
      */
     public static Parsed<SBDInfo> parse(byte[] array, int off, int len, FECParameters fecParams) {
 
-        ArrayUtils.checkOffsetLengthBounds(off, len, array.length);
+        Indexables.checkOffsetLengthBounds(off, len, array.length);
         return parse(ByteBuffer.wrap(array, off, len), fecParams);
     }
 
@@ -188,8 +185,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param buffer
      *            A buffer containing source block decoder information
@@ -235,8 +231,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is read from the input, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -285,8 +280,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is read from the channel, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -437,12 +431,10 @@ public final class SBDInfo {
      * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
      * <ul>
      * <li>{@code obj} is non-null
-     * <li>and {@code obj} is an instance of {@code SBDInfo}
-     * <li>and {@code this}.{@link #sourceBlockNumber()} == {@code obj.sourceBlockNumber()}
-     * <li>and {@code this}.{@link #state()}{@code .equals(obj.state())}
-     * <li>and {@code this}.{@link #missingSourceSymbols()}{@code .equals(obj.missingSourceSymbols())}
-     * <li>and {@code this}.{@link #availableRepairSymbols()}{@code .equals(obj.availableRepairSymbols())}
-     * </ul>
+     * <li>and {@code obj} is an instance of {@code SBDInfo} <li>and {@code this}.{@link #sourceBlockNumber()} ==
+     * {@code obj.sourceBlockNumber()} <li>and {@code this}.{@link #state()}{@code .equals(obj.state())} <li>and
+     * {@code this}.{@link #missingSourceSymbols()}{@code .equals(obj.missingSourceSymbols())} <li>and {@code this}.
+     * {@link #availableRepairSymbols()}{@code .equals(obj.availableRepairSymbols())} </ul>
      */
     @Override
     public boolean equals(Object obj) {
@@ -496,9 +488,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The array will contain the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -521,9 +512,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -550,9 +540,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -585,9 +574,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The buffer will contain the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -611,9 +599,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -650,9 +637,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -689,9 +675,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by

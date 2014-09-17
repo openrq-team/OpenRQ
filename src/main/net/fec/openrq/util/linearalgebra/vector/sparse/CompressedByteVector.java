@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -216,8 +217,8 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public void swap(int i, int j) {
 
-        checkIndexBounds(i);
-        checkIndexBounds(j);
+        Indexables.checkIndexBounds(i, length());
+        Indexables.checkIndexBounds(j, length());
 
         if (i == j) {
             return;
@@ -322,7 +323,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public void update(int i, VectorFunction function) {
 
-        checkIndexBounds(i);
+        Indexables.checkIndexBounds(i, length());
 
         int k = searchForIndex(i);
 
@@ -374,7 +375,8 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public boolean nonZeroAt(int i) {
 
-        checkIndexBounds(i);
+        Indexables.checkIndexBounds(i, length());
+
         int k = searchForIndex(i);
         return k < cardinality && indices[k] == i;
     }
@@ -485,7 +487,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVectorIterator iterator(int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
         return new CompressedByteVectorIterator(fromIndex, toIndex);
     }
 
@@ -586,7 +588,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
         return new CompressedByteVectorNonZeroIterator(fromIndex, toIndex);
     }
 
@@ -598,13 +600,14 @@ public class CompressedByteVector extends SparseByteVector {
         private final int end;
         private int k;
 
+
         /*
          * Requires valid indices.
          */
         CompressedByteVectorNonZeroIterator(int fromIndex, int toIndex) {
 
             super(toIndex - fromIndex);
-            
+
             this.currentIsRemoved = false;
             this.removedIndex = -1;
             this.end = toIndex;

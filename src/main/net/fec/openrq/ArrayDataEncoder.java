@@ -22,7 +22,7 @@ import net.fec.openrq.DataUtils.SourceBlockSupplier;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
-import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.collection.ImmutableList;
 
 
@@ -53,7 +53,7 @@ public final class ArrayDataEncoder implements DataEncoder {
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
-        ArrayUtils.checkOffsetLengthBounds(offset, fecParams.dataLengthAsInt(), data.length);
+        Indexables.checkOffsetLengthBounds(offset, fecParams.dataLengthAsInt(), data.length);
 
         return new ArrayDataEncoder(data, offset, fecParams);
     }

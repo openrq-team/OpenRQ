@@ -50,6 +50,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 
 import java.util.Random;
 
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.AdvancedMatrixPredicate;
@@ -147,7 +148,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getRow(int i, Factory factory) {
 
-        checkRowBounds(i);
+        Indexables.checkIndexBounds(i, rows());
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(columns);
@@ -170,8 +171,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getRow(int i, int fromColumn, int toColumn, Factory factory) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(toColumn - fromColumn);
@@ -194,7 +195,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getColumn(int j, Factory factory) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(rows);
@@ -217,8 +218,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVector getColumn(int j, int fromRow, int toRow, Factory factory) {
 
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(toRow - fromRow);
@@ -235,7 +236,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void setRow(int i, ByteVector row) {
 
-        checkRowBounds(i);
+        Indexables.checkIndexBounds(i, rows());
         ensureArgumentIsNotNull(row, "vector");
 
         if (columns != row.length()) {
@@ -254,9 +255,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void setRow(int i, int fromColumn, ByteVector row, int fromIndex, int length) {
 
-        checkRowBounds(i);
-        checkRegionOffsetAndLength(fromColumn, length, columns());
-        checkRegionOffsetAndLength(fromIndex, length, row.length());
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkOffsetLengthBounds(fromColumn, length, columns());
+        Indexables.checkOffsetLengthBounds(fromIndex, length, row.length());
 
         ByteVectorIterator newIt = row.iterator(fromIndex, fromIndex + length);
         ByteVectorIterator oldIt = rowIterator(i, fromColumn, fromColumn + length);
@@ -270,7 +271,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void setColumn(int j, ByteVector column) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         ensureArgumentIsNotNull(column, "vector");
 
         if (rows != column.length()) {
@@ -289,9 +290,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void setColumn(int j, int fromRow, ByteVector column, int fromIndex, int length) {
 
-        checkColumnBounds(j);
-        checkRegionOffsetAndLength(fromRow, length, rows());
-        checkRegionOffsetAndLength(fromIndex, length, column.length());
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkOffsetLengthBounds(fromRow, length, rows());
+        Indexables.checkOffsetLengthBounds(fromIndex, length, column.length());
 
         ByteVectorIterator newIt = column.iterator(fromIndex, fromIndex + length);
         ByteVectorIterator oldIt = columnIterator(j, fromRow, fromRow + length);
@@ -305,8 +306,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void swapRows(int i, int j) {
 
-        checkRowBounds(i);
-        checkRowBounds(j);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkIndexBounds(j, rows());
 
         if (i != j) {
             ByteVector ii = getRow(i);
@@ -320,8 +321,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void swapColumns(int i, int j) {
 
-        checkColumnBounds(i);
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(i, columns());
+        Indexables.checkIndexBounds(j, columns());
 
         if (i != j) {
             ByteVector ii = getColumn(i);
@@ -812,8 +813,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         Factory factory)
     {
 
-        checkRowRangeBounds(fromRow, untilRow);
-        checkColumnRangeBounds(fromColumn, untilColumn);
+        Indexables.checkFromToBounds(fromRow, untilRow, rows());
+        Indexables.checkFromToBounds(fromColumn, untilColumn, columns());
         ensureFactoryIsNotNull(factory);
 
         ByteMatrix result = factory.createMatrix(untilRow - fromRow, untilColumn - fromColumn);
@@ -1430,17 +1431,17 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
-    public ByteVectorIterator rowIterator(final int i) {
+    public ByteVectorIterator rowIterator(int i) {
 
-        checkRowBounds(i);
+        Indexables.checkIndexBounds(i, rows());
         return new RowIterator(i, 0, columns());
     }
 
     @Override
-    public ByteVectorIterator rowIterator(final int i, final int fromColumn, final int toColumn) {
+    public ByteVectorIterator rowIterator(int i, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
         return new RowIterator(i, fromColumn, toColumn);
     }
 
@@ -1472,15 +1473,15 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVectorIterator columnIterator(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         return new ColumnIterator(j, 0, rows());
     }
 
     @Override
     public ByteVectorIterator columnIterator(int j, int fromRow, int toRow) {
 
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
         return new ColumnIterator(j, fromRow, toRow);
     }
 
@@ -1570,15 +1571,15 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVectorIterator nonZeroRowIterator(final int i) {
 
-        checkRowBounds(i);
+        Indexables.checkIndexBounds(i, rows());
         return new NonZeroRowIterator(i, 0, columns());
     }
 
     @Override
     public ByteVectorIterator nonZeroRowIterator(final int i, final int fromColumn, final int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
         return new NonZeroRowIterator(i, fromColumn, toColumn);
     }
 
@@ -1616,15 +1617,15 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public ByteVectorIterator nonZeroColumnIterator(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         return new NonZeroColumnIterator(j, 0, rows());
     }
 
     @Override
     public ByteVectorIterator nonZeroColumnIterator(int j, int fromRow, int toRow) {
 
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
         return new NonZeroColumnIterator(j, fromRow, toRow);
     }
 
@@ -1739,8 +1740,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void addRowsInPlace(int row1, int row2) {
 
-        checkRowBounds(row1);
-        checkRowBounds(row2);
+        Indexables.checkIndexBounds(row1, rows());
+        Indexables.checkIndexBounds(row2, rows());
 
         ByteVectorIterator row1It = rowIterator(row1);
         ByteVectorIterator row2It = rowIterator(row2);
@@ -1754,9 +1755,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     @Override
     public void addRowsInPlace(int row1, int row2, int fromColumn, int toColumn) {
 
-        checkRowBounds(row1);
-        checkRowBounds(row2);
-        checkColumnRangeBounds(fromColumn, toColumn);
+        Indexables.checkIndexBounds(row1, rows());
+        Indexables.checkIndexBounds(row2, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
         ByteVectorIterator row1It = rowIterator(row1, fromColumn, toColumn);
         ByteVectorIterator row2It = rowIterator(row2, fromColumn, toColumn);
@@ -1775,8 +1776,8 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
                 addRowsInPlace(row1, row2);
             }
             else {
-                checkRowBounds(row1);
-                checkRowBounds(row2);
+                Indexables.checkIndexBounds(row1, rows());
+                Indexables.checkIndexBounds(row2, rows());
 
                 ByteVectorIterator row1It = rowIterator(row1);
                 ByteVectorIterator row2It = rowIterator(row2);
@@ -1798,9 +1799,9 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
                 addRowsInPlace(row1, row2, fromColumn, toColumn);
             }
             else {
-                checkRowBounds(row1);
-                checkRowBounds(row2);
-                checkColumnRangeBounds(fromColumn, toColumn);
+                Indexables.checkIndexBounds(row1, rows());
+                Indexables.checkIndexBounds(row2, rows());
+                Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
                 ByteVectorIterator row1It = rowIterator(row1, fromColumn, toColumn);
                 ByteVectorIterator row2It = rowIterator(row2, fromColumn, toColumn);
@@ -1895,31 +1896,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
     protected void checkBounds(int row, int column) {
 
-        checkRowBounds(row);
-        checkColumnBounds(column);
-    }
-
-    protected void checkRowBounds(int row) {
-
-        if (row < 0 || row >= rows()) throw new IndexOutOfBoundsException("row index is out of bounds");
-    }
-
-    protected void checkRowRangeBounds(int fromRow, int toRow) {
-
-        if (fromRow < 0) throw new IndexOutOfBoundsException("fromRow < 0");
-        if (toRow < fromRow) throw new IndexOutOfBoundsException("toRow < fromRow");
-        if (rows() < toRow) throw new IndexOutOfBoundsException("rows() < toRow");
-    }
-
-    protected void checkColumnBounds(int column) {
-
-        if (column < 0 || column >= columns()) throw new IndexOutOfBoundsException("column index is out of bounds");
-    }
-
-    protected void checkColumnRangeBounds(int fromColumn, int toColumn) {
-
-        if (fromColumn < 0) throw new IndexOutOfBoundsException("fromColumn < 0");
-        if (toColumn < fromColumn) throw new IndexOutOfBoundsException("toColumn < fromColumn");
-        if (columns() < toColumn) throw new IndexOutOfBoundsException("columns() < toColumn");
+        Indexables.checkIndexBounds(row, rows());
+        Indexables.checkIndexBounds(column, columns());
     }
 }

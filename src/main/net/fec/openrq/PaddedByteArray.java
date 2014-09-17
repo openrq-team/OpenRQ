@@ -19,6 +19,7 @@ package net.fec.openrq;
 import java.nio.BufferOverflowException;
 
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.checking.Indexables;
 
 
 /**
@@ -32,7 +33,7 @@ final class PaddedByteArray {
 
     static PaddedByteArray newArray(byte[] array, int off, int len, int paddedLen) {
 
-        ArrayUtils.checkOffsetLengthBounds(off, len, array.length);
+        Indexables.checkOffsetLengthBounds(off, len, array.length);
         if (paddedLen < 0) throw new IllegalArgumentException("negative padded length");
 
         return new PaddedByteArray(array, off, len, paddedLen);
@@ -105,13 +106,13 @@ final class PaddedByteArray {
 
     byte get(int index) {
 
-        ArrayUtils.checkIndexBounds(index, length());
+        Indexables.checkIndexBounds(index, length());
         return safeGet(index);
     }
 
     void set(int index, byte value) {
 
-        ArrayUtils.checkIndexBounds(index, length());
+        Indexables.checkIndexBounds(index, length());
         safeSet(index, value);
     }
 
@@ -169,8 +170,8 @@ final class PaddedByteArray {
 
     private static final void checkIndexAndArray(int index, int length, byte[] dst, int off, int len) {
 
-        ArrayUtils.checkIndexBounds(index, length);
-        ArrayUtils.checkOffsetLengthBounds(off, len, dst.length);
+        Indexables.checkIndexBounds(index, length);
+        Indexables.checkOffsetLengthBounds(off, len, dst.length);
 
         final int remaining = length - index;
         if (len > remaining) throw new BufferOverflowException();

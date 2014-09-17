@@ -49,6 +49,7 @@ import static net.fec.openrq.util.linearalgebra.vector.ByteVectors.printVector;
 import java.util.Iterator;
 import java.util.Random;
 
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -77,7 +78,7 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public final byte get(int i) {
 
-        checkIndexBounds(i);
+        Indexables.checkIndexBounds(i, length());
         return safeGet(i);
     }
 
@@ -86,7 +87,7 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public final void set(int i, byte value) {
 
-        checkIndexBounds(i);
+        Indexables.checkIndexBounds(i, length());
         safeSet(i, value);
     }
 
@@ -95,8 +96,8 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void swap(int i, int j) {
 
-        checkIndexBounds(i);
-        checkIndexBounds(j);
+        Indexables.checkIndexBounds(i, length());
+        Indexables.checkIndexBounds(j, length());
 
         if (i != j) {
             byte s = safeGet(i);
@@ -479,7 +480,7 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public ByteVector slice(int from, int until, Factory factory) {
 
-        checkIndexRangeBounds(from, until);
+        Indexables.checkFromToBounds(from, until, length());
         ensureFactoryIsNotNull(factory);
 
         ByteVector result = factory.createVector(until - from);
@@ -524,14 +525,14 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public boolean isZeroAt(int i) {
 
-        checkIndexBounds(i);
+        Indexables.checkIndexBounds(i, length());
         return safeGet(i) == 0;
     }
 
     @Override
     public boolean nonZeroAt(int i) {
 
-        checkIndexBounds(i);
+        Indexables.checkIndexBounds(i, length());
         return safeGet(i) != 0;
     }
 
@@ -604,7 +605,7 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void update(int i, VectorFunction function) {
 
-        checkIndexBounds(i);
+        Indexables.checkIndexBounds(i, length());
         safeSet(i, function.evaluate(i, safeGet(i)));
     }
 
@@ -731,7 +732,7 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public ByteVectorIterator iterator(int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
         return new VectorIterator(fromIndex, toIndex);
     }
 
@@ -794,7 +795,7 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex) {
 
-        checkIndexRangeBounds(fromIndex, toIndex);
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
         return new NonZeroVectorIterator(fromIndex, toIndex);
     }
 

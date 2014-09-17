@@ -42,42 +42,26 @@ import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
 
 public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix implements SparseByteMatrix {
 
-    protected int cardinality;
-
-
     public AbstractCompressedByteMatrix(Factory factory, int rows, int columns) {
 
         super(factory, rows, columns);
     }
 
     @Override
-    public int cardinality() {
-
-        return cardinality;
-    }
-
-    @Override
     public double density() {
 
-        return cardinality / (double)(rows * columns);
+        return (double)cardinality() / capacity();
     }
 
-    protected long capacity() {
+    protected final long capacity() {
 
         return ((long)rows) * columns;
     }
 
-    protected void ensureCardinalityIsCorrect(long rows, long columns, long cardinality) {
+    @Override
+    public final int nonZeros() {
 
-        if (cardinality < 0) {
-            fail("Cardinality should be positive: " + cardinality + ".");
-        }
-
-        long capacity = rows * columns;
-
-        if (cardinality > capacity) {
-            fail("Cardinality should be less then or equal to capacity: " + cardinality + ".");
-        }
+        return cardinality();
     }
 
     @Override
@@ -88,10 +72,4 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
     @Override
     public abstract boolean nonZeroAt(int i, int j);
-
-    @Override
-    public int nonZeros() {
-
-        return cardinality();
-    }
 }

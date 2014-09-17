@@ -211,7 +211,7 @@ final class DataUtils {
      */
     static Parsed<EncodingPacket> parsePacket(DataDecoder dec, byte[] array, int off, int len, boolean copySymbols) {
 
-        ArrayUtils.checkOffsetLengthBounds(off, len, array.length);
+        Indexables.checkOffsetLengthBounds(off, len, array.length);
         return parsePacket(dec, ByteBuffer.wrap(array, off, len), copySymbols);
     }
 

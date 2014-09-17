@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
@@ -97,8 +98,8 @@ public class BasicByteVector extends DenseByteVector {
     @Override
     public void swap(int i, int j) {
 
-        checkIndexBounds(i);
-        checkIndexBounds(j);
+        Indexables.checkIndexBounds(i, length());
+        Indexables.checkIndexBounds(j, length());
 
         if (i != j) {
             byte d = self[i];

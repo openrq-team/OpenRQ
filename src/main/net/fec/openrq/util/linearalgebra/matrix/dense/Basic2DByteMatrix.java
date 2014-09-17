@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -115,8 +116,8 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public void swapRows(int i, int j) {
 
-        checkRowBounds(i);
-        checkRowBounds(j);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkIndexBounds(j, rows());
 
         if (i != j) {
             byte tmp[] = self[i];
@@ -128,8 +129,8 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public void swapColumns(int i, int j) {
 
-        checkColumnBounds(i);
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(i, columns());
+        Indexables.checkIndexBounds(j, columns());
 
         if (i != j) {
             for (int ii = 0; ii < rows; ii++) {
@@ -143,7 +144,7 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public ByteVector getRow(int i) {
 
-        checkRowBounds(i);
+        Indexables.checkIndexBounds(i, rows());
 
         byte result[] = new byte[columns];
         System.arraycopy(self[i], 0, result, 0, columns);
@@ -154,8 +155,8 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
     @Override
     public ByteVector getRow(int i, int fromColumn, int toColumn) {
 
-        checkRowBounds(i);
-        checkColumnRangeBounds(fromColumn, toColumn);
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
         final int length = toColumn - fromColumn;
         byte[] result = new byte[length];

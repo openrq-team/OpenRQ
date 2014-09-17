@@ -50,6 +50,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Arrays;
 
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -187,7 +188,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteVector getColumn(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
 
         int columnCardinality = columnPointers[j + 1] - columnPointers[j];
 
@@ -293,15 +294,15 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public int nonZerosInColumn(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         return columnPointers[j + 1] - columnPointers[j];
     }
 
     @Override
     public int nonZerosInColumn(int j, int fromRow, int toRow) {
 
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
 
         int nonZeros = columnPointers[j + 1] - columnPointers[j]; // upper bound
 
@@ -325,15 +326,15 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public int[] nonZeroPositionsInColumn(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         return Arrays.copyOfRange(rowIndices, columnPointers[j], columnPointers[j + 1]);
     }
 
     @Override
     public int[] nonZeroPositionsInColumn(int j, int fromRow, int toRow) {
 
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
 
         int first = columnPointers[j];
         while (first < columnPointers[j + 1] && rowIndices[first] < fromRow) {
@@ -601,7 +602,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public byte maxInColumn(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
 
         byte max = minByte();
 
@@ -622,7 +623,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public byte minInColumn(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
 
         byte min = minByte();
 
@@ -692,15 +693,15 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteVectorIterator columnIterator(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         return new ColumnIterator(j, 0, rows());
     }
 
     @Override
     public ByteVectorIterator columnIterator(int j, int fromRow, int toRow) {
 
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
         return new ColumnIterator(j, fromRow, toRow);
     }
 
@@ -798,15 +799,15 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteVectorIterator nonZeroColumnIterator(int j) {
 
-        checkColumnBounds(j);
+        Indexables.checkIndexBounds(j, columns());
         return new NonZeroColumnIterator(j, 0, rows());
     }
 
     @Override
     public ByteVectorIterator nonZeroColumnIterator(int j, int fromRow, int toRow) {
 
-        checkColumnBounds(j);
-        checkRowRangeBounds(fromRow, toRow);
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
         return new NonZeroColumnIterator(j, fromRow, toRow);
     }
 
