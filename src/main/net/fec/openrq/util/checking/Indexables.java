@@ -33,9 +33,18 @@ public final class Indexables {
      */
     public static void checkFromToBounds(int from, int to, int length) {
 
-        if (from < 0 || to < from || length < to) {
+        if (to < from) {
+            throw new IllegalArgumentException(getIllegalFromToMsg(from, to));
+        }
+        if (from < 0 || length < to) {
             throw new IndexOutOfBoundsException(getFromToBoundsMsg(from, to, length));
         }
+    }
+
+    // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
+    private static String getIllegalFromToMsg(int from, int to) {
+
+        return "to < from (" + to + " < " + from + ")";
     }
 
     // separate method in order to avoid the string concatenation in cases where the exception is NOT thrown
