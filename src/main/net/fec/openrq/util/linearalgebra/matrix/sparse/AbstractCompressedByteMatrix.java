@@ -36,8 +36,11 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
+import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 
 
 public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix implements SparseByteMatrix {
@@ -72,4 +75,28 @@ public abstract class AbstractCompressedByteMatrix extends AbstractByteMatrix im
 
     @Override
     public abstract boolean nonZeroAt(int i, int j);
+
+    @Override
+    public final byte max() {
+
+        byte max = foldNonZero(ByteMatrices.mkMaxAccumulator());
+        if (cardinality() == capacity() || aIsGreaterThanB(max, (byte)0)) {
+            return max;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    @Override
+    public final byte min() {
+
+        byte min = foldNonZero(ByteMatrices.mkMinAccumulator());
+        if (cardinality() == capacity() || aIsLessThanB(min, (byte)0)) {
+            return min;
+        }
+        else {
+            return 0;
+        }
+    }
 }

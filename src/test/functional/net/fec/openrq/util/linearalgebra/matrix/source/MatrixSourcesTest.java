@@ -39,7 +39,6 @@ package net.fec.openrq.util.linearalgebra.matrix.source;
 import static org.junit.Assert.assertEquals;
 import net.fec.openrq.util.linearalgebra.factory.Basic1DFactory;
 import net.fec.openrq.util.linearalgebra.factory.Basic2DFactory;
-import net.fec.openrq.util.linearalgebra.factory.CCSFactory;
 import net.fec.openrq.util.linearalgebra.factory.CRSFactory;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -51,7 +50,7 @@ public class MatrixSourcesTest {
 
     public static final Factory[] FACTORIES = {
                                                new Basic1DFactory(), new Basic2DFactory(),
-                                               new CRSFactory(), new CCSFactory()
+                                               new CRSFactory()//, new CCSFactory()
     };
 
 

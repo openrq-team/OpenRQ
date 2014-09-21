@@ -38,7 +38,6 @@ package net.fec.openrq.util.linearalgebra;
 
 import net.fec.openrq.util.linearalgebra.factory.Basic1DFactory;
 import net.fec.openrq.util.linearalgebra.factory.Basic2DFactory;
-import net.fec.openrq.util.linearalgebra.factory.CCSFactory;
 import net.fec.openrq.util.linearalgebra.factory.CRSFactory;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 
@@ -83,10 +82,10 @@ public final class LinearAlgebra {
      */
     public static final Factory CRS_FACTORY = new CRSFactory();
 
-    /**
-     * The {@link net.fec.openrq.util.linearalgebra.factory.CCSFactory} singleton instance.
-     */
-    public static final Factory CCS_FACTORY = new CCSFactory();
+//    /**
+//     * The {@link net.fec.openrq.util.linearalgebra.factory.CCSFactory} singleton instance.
+//     */
+//    public static final Factory CCS_FACTORY = new CCSFactory();
 
     /**
      * The default dense factory singleton instance. References the {@link LinearAlgebra#BASIC2D_FACTORY}.
@@ -107,6 +106,6 @@ public final class LinearAlgebra {
      * The array with all factories available.
      */
     public static final Factory FACTORIES[] = {
-                                               BASIC1D_FACTORY, BASIC2D_FACTORY, CRS_FACTORY, CCS_FACTORY
+                                               BASIC1D_FACTORY, BASIC2D_FACTORY, CRS_FACTORY, //CCS_FACTORY
     };
 }

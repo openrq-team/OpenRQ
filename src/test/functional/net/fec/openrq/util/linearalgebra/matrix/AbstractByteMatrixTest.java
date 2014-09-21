@@ -47,13 +47,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
@@ -1683,28 +1676,6 @@ public abstract class AbstractByteMatrixTest {
         });
 
         assertEquals(b, a.blank());
-    }
-
-    @Test
-    public void testSerialization() throws IOException, ClassNotFoundException {
-
-        ByteMatrix a = factory().createMatrix(new byte[][] {
-                                                            {0, 0, 3},
-                                                            {0, 0, 6},
-                                                            {0, 0, 9}
-        });
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = new ObjectOutputStream(bos);
-        out.writeObject(a);
-        out.close();
-
-        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-        ObjectInput in = new ObjectInputStream(bis);
-        ByteMatrix b = (ByteMatrix)in.readObject();
-        in.close();
-
-        assertEquals(a, b);
     }
 
     @Test

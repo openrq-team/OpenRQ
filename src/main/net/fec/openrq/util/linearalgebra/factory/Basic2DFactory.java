@@ -46,9 +46,6 @@ import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 
 public class Basic2DFactory extends BasicFactory {
 
-    private static final long serialVersionUID = 4071505L;
-
-
     @Override
     public ByteMatrix createMatrix() {
 

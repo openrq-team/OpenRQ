@@ -46,9 +46,6 @@ import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 
 public abstract class BasicFactory extends Factory {
 
-    private static final long serialVersionUID = 4071505L;
-
-
     @Override
     public ByteVector createVector() {
 

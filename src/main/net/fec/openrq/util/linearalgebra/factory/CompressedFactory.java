@@ -46,8 +46,6 @@ import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedByteVector;
 
 public abstract class CompressedFactory extends Factory {
 
-    private static final long serialVersionUID = 4071505L;
-
     public static final int DENSITY = 4;
 
 

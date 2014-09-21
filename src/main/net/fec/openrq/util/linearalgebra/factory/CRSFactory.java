@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -46,9 +45,6 @@ import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSByteMatrix;
 
 
 public class CRSFactory extends CompressedFactory {
-
-    private static final long serialVersionUID = 4071505L;
-
 
     @Override
     public ByteMatrix createMatrix() {
@@ -89,23 +85,24 @@ public class CRSFactory extends CompressedFactory {
     @Override
     public ByteMatrix createConstantMatrix(int rows, int columns, byte value) {
 
-        int size = rows * columns;
-
-        byte values[] = new byte[size];
-        int columnIndices[] = new int[size];
-        int rowPointers[] = new int[rows + 1];
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                values[i * columns + j] = value;
-                columnIndices[i * columns + j] = j;
-            }
-            rowPointers[i] = columns * i;
+        if (value == 0) {
+            return new CRSByteMatrix(rows, columns);
         }
+        else {
+            byte[][] columnValues = new byte[rows][columns];
+            int[][] columnIndices = new int[rows][columns];
+            int[] rowCardinalities = new int[rows];
 
-        rowPointers[rows] = size;
+            for (int i = 0; i < rows; i++) {
+                rowCardinalities[i] = columns;
+                for (int j = 0; j < columns; j++) {
+                    columnValues[i][j] = value;
+                    columnIndices[i][j] = j;
+                }
+            }
 
-        return new CRSByteMatrix(rows, columns, size, values, columnIndices, rowPointers);
+            return new CRSByteMatrix(rows, columns, columnValues, columnIndices, rowCardinalities);
+        }
     }
 
     @Override
@@ -113,55 +110,26 @@ public class CRSFactory extends CompressedFactory {
 
         int cardinality = (rows * columns) / DENSITY;
 
-        byte values[] = new byte[cardinality];
-        int columnIndices[] = new int[cardinality];
-        int rowPointers[] = new int[rows + 1];
-
-        int kk = cardinality / rows;
-        int indices[] = new int[kk];
-
-        int k = 0;
-        for (int i = 0; i < rows; i++) {
-
-            rowPointers[i] = k;
-
-            for (int ii = 0; ii < kk; ii++) {
-                indices[ii] = random.nextInt(columns);
-            }
-
-            Arrays.sort(indices);
-
-            int previous = -1;
-            for (int ii = 0; ii < kk; ii++) {
-
-                if (indices[ii] == previous) {
-                    continue;
-                }
-
-                values[k] = (byte)random.nextInt();
-                columnIndices[k++] = indices[ii];
-                previous = indices[ii];
-            }
+        ByteMatrix matrix = new CRSByteMatrix(rows, columns);
+        for (; cardinality > 0; cardinality--) {
+            final int i = random.nextInt(rows);
+            final int j = random.nextInt(columns);
+            matrix.set(i, j, (byte)random.nextInt());
         }
 
-        rowPointers[rows] = cardinality;
-
-        return new CRSByteMatrix(rows, columns, cardinality, values, columnIndices, rowPointers);
+        return matrix;
     }
 
     @Override
     public ByteMatrix createRandomSymmetricMatrix(int size, Random random) {
 
-        // TODO: Issue 15
-
         int cardinality = (size * size) / DENSITY;
 
-        ByteMatrix matrix = new CRSByteMatrix(size, size, cardinality);
-
+        ByteMatrix matrix = new CRSByteMatrix(size, size);
         for (int k = 0; k < cardinality / 2; k++) {
-            int i = random.nextInt(size);
-            int j = random.nextInt(size);
-            byte value = (byte)random.nextInt();
+            final int i = random.nextInt(size);
+            final int j = random.nextInt(size);
+            final byte value = (byte)random.nextInt();
 
             matrix.set(i, j, value);
             matrix.set(j, i, value);
@@ -193,60 +161,39 @@ public class CRSFactory extends CompressedFactory {
             throw new IllegalArgumentException("Sides of blocks are incompatible!");
         }
 
-        int rows = a.rows() + c.rows(), cols = a.columns() + b.columns();
-        ArrayList<Byte> values = new ArrayList<>();
-        ArrayList<Integer> columnIndices = new ArrayList<>();
-        int rowPointers[] = new int[rows + 1];
-
-        int k = 0;
-        rowPointers[0] = 0;
-        byte current = 0;
+        final int rows = a.rows() + c.rows();
+        final int cols = a.columns() + b.columns();
+        ByteMatrix matrix = new CRSByteMatrix(rows, cols);
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 if ((i < a.rows()) && (j < a.columns())) {
-                    current = a.get(i, j);
+                    matrix.set(i, j, a.get(i, j));
                 }
                 if ((i < a.rows()) && (j > a.columns())) {
-                    current = b.get(i, j);
+                    matrix.set(i, j, b.get(i, j));
                 }
                 if ((i > a.rows()) && (j < a.columns())) {
-                    current = c.get(i, j);
+                    matrix.set(i, j, c.get(i, j));
                 }
                 if ((i > a.rows()) && (j > a.columns())) {
-                    current = d.get(i, j);
-                }
-                if (current != 0) {
-                    values.add(current);
-                    columnIndices.add(j);
-                    k++;
+                    matrix.set(i, j, d.get(i, j));
                 }
             }
-            rowPointers[i + 1] = k;
-        }
-        byte valuesArray[] = new byte[values.size()];
-        int colIndArray[] = new int[columnIndices.size()];
-        for (int i = 0; i < values.size(); i++) {
-            valuesArray[i] = values.get(i);
-            colIndArray[i] = columnIndices.get(i);
         }
 
-        return new CRSByteMatrix(rows, cols, k, valuesArray, colIndArray, rowPointers);
+        return matrix;
     }
 
     @Override
     public ByteMatrix createDiagonalMatrix(byte[] diagonal) {
 
-        int size = diagonal.length;
-        int columnIndices[] = new int[size];
-        int rowPointers[] = new int[size + 1];
+        final int size = diagonal.length;
 
+        ByteMatrix matrix = new CRSByteMatrix(size, size);
         for (int i = 0; i < size; i++) {
-            columnIndices[i] = i;
-            rowPointers[i] = i;
+            matrix.set(i, i, diagonal[i]);
         }
 
-        rowPointers[size] = size;
-
-        return new CRSByteMatrix(size, size, size, diagonal, columnIndices, rowPointers);
+        return matrix;
     }
 }

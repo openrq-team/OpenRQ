@@ -19,7 +19,6 @@ package net.fec.openrq.util.linearalgebra.matrix;
 import net.fec.openrq.util.linearalgebra.matrix.dense.Basic1DByteMatrixTest;
 import net.fec.openrq.util.linearalgebra.matrix.dense.Basic2DByteMatrixTest;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSourcesTest;
-import net.fec.openrq.util.linearalgebra.matrix.sparse.CCSByteMatrixTest;
 import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSByteMatrixTest;
 
 import org.junit.runner.RunWith;
@@ -32,7 +31,7 @@ import org.junit.runners.Suite.SuiteClasses;
                Basic1DByteMatrixTest.class,
                Basic2DByteMatrixTest.class,
                MatrixSourcesTest.class,
-               CCSByteMatrixTest.class,
+               //CCSByteMatrixTest.class,
                CRSByteMatrixTest.class
 })
 public class LinearAlgebraMatrixSuite {

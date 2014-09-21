@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
-import java.io.Serializable;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -45,7 +44,7 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 
 
-public abstract class Factory implements Serializable {
+public abstract class Factory {
 
     /**
      * Creates an empty matrix.

@@ -46,7 +46,6 @@ import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
 import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
-import java.io.IOException;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
@@ -58,7 +57,7 @@ import net.fec.openrq.util.linearalgebra.vector.source.ArrayVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.LoopbackVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.RandomVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
-import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
+import net.fec.openrq.util.printing.appendable.PrintableAppendable;
 
 
 public final class ByteVectors {
@@ -400,23 +399,18 @@ public final class ByteVectors {
      */
     public static void printVector(ByteVector vector, Appendable appendable) {
 
-        final NoisyPrintableAppendable output = NoisyPrintableAppendable.of(appendable);
+        final PrintableAppendable output = PrintableAppendable.of(appendable, true);
         final int N = vector.length();
 
         // this prints two lines, the first with indexes and the second with the actual values
         // (this only works fine for indices less than 100)
-        try {
-            for (int j = 0; j < N; j++)
-                output.printf("* %02d ", j);
+        for (int j = 0; j < N; j++)
+            output.printf("* %02d ", j);
 
-            output.println('|');
+        output.println('|');
 
-            for (int j = 0; j < N; j++)
-                output.printf("| %02x ", vector.get(j));
-            output.println('|');
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        for (int j = 0; j < N; j++)
+            output.printf("| %02x ", vector.get(j));
+        output.println('|');
     }
 }

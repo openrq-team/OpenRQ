@@ -49,7 +49,6 @@ import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
 import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
-import java.io.IOException;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
@@ -64,7 +63,9 @@ import net.fec.openrq.util.linearalgebra.matrix.source.IdentityMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.LoopbackMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.RandomMatrixSource;
-import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
+import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
+import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
+import net.fec.openrq.util.printing.appendable.PrintableAppendable;
 
 
 public final class ByteMatrices {
@@ -365,7 +366,7 @@ public final class ByteMatrices {
     /**
      * Makes a minimum matrix accumulator that accumulates the minimum of matrix elements.
      * 
-     * @return a minimum vector accumulator
+     * @return a minimum matrix accumulator
      */
     public static MatrixAccumulator mkMinAccumulator() {
 
@@ -393,7 +394,7 @@ public final class ByteMatrices {
     /**
      * Makes a maximum matrix accumulator that accumulates the maximum of matrix elements.
      * 
-     * @return a maximum vector accumulator
+     * @return a maximum matrix accumulator
      */
     public static MatrixAccumulator mkMaxAccumulator() {
 
@@ -526,6 +527,94 @@ public final class ByteMatrices {
             public void apply(int i, int j, byte value) {
 
                 accumulator.update(i, j, value);
+            }
+        };
+    }
+
+    /**
+     * Creates a row vector source from a matrix source and a row index.
+     * 
+     * @param source
+     * @param row
+     * @return a row vector source from a matrix source and a row index
+     */
+    public static VectorSource asRowVectorSource(final MatrixSource source, final int row) {
+
+        return new VectorSource() {
+
+            @Override
+            public int length() {
+
+                return source.columns();
+            }
+
+            @Override
+            public byte get(int j) {
+
+                return source.get(row, j);
+            }
+        };
+    }
+
+    /**
+     * Creates a column vector source from a matrix source and a column index.
+     * 
+     * @param source
+     * @param column
+     * @return a column vector source from a matrix source and a column index
+     */
+    public static VectorSource asColumnVectorSource(final MatrixSource source, final int column) {
+
+        return new VectorSource() {
+
+            @Override
+            public int length() {
+
+                return source.rows();
+            }
+
+            @Override
+            public byte get(int i) {
+
+                return source.get(i, column);
+            }
+        };
+    }
+
+    /**
+     * Creates a row vector function from a matrix function and a row index.
+     * 
+     * @param function
+     * @param row
+     * @return a row vector function from a matrix function and a row index
+     */
+    public static VectorFunction asRowVectorFunction(final MatrixFunction function, final int row) {
+
+        return new VectorFunction() {
+
+            @Override
+            public byte evaluate(int j, byte value) {
+
+                return function.evaluate(row, j, value);
+            }
+        };
+    }
+
+    /**
+     * Creates a column vector function from a matrix function and a column index.
+     * 
+     * @param function
+     * @param column
+     * @return a column vector function from a matrix function and a column index
+     */
+    public static VectorFunction asColumnVectorFunction(final MatrixFunction function, final int column) {
+
+        return new VectorFunction() {
+
+            @Override
+            public byte evaluate(int i, byte value) {
+
+                return function.evaluate(i, column, value);
             }
         };
     }
@@ -690,28 +779,23 @@ public final class ByteMatrices {
      */
     public static void printMatrix(ByteMatrix matrix, Appendable appendable) {
 
-        final NoisyPrintableAppendable output = NoisyPrintableAppendable.of(appendable);
+        final PrintableAppendable output = PrintableAppendable.of(appendable, true);
         final int R = matrix.rows();
         final int C = matrix.columns();
 
         // this prints a line with column indexes and a line for each row preceded by a row index
         // (this only works fine for indices less than 100)
-        try {
-            output.printf("   ");
+        output.printf("   ");
+        for (int j = 0; j < C; j++)
+            output.printf("* %02d ", j);
+
+        output.println('|');
+
+        for (int i = 0; i < R; i++) {
+            output.printf("%02d)", i);
             for (int j = 0; j < C; j++)
-                output.printf("* %02d ", j);
-
+                output.printf("| %02X ", matrix.get(i, j));
             output.println('|');
-
-            for (int i = 0; i < R; i++) {
-                output.printf("%02d)", i);
-                for (int j = 0; j < C; j++)
-                    output.printf("| %02X ", matrix.get(i, j));
-                output.println('|');
-            }
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }

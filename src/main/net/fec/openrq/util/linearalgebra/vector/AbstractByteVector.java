@@ -562,6 +562,36 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
+    public int[] nonZeroPositions() {
+
+        int[] positions = new int[nonZeros()];
+
+        ByteVectorIterator it = nonZeroIterator();
+        int i = 0;
+        while (it.hasNext()) {
+            it.next();
+            positions[i++] = it.index();
+        }
+
+        return positions;
+    }
+
+    @Override
+    public int[] nonZeroPositions(int fromIndex, int toIndex) {
+
+        int[] positions = new int[nonZeros(fromIndex, toIndex)];
+
+        ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
+        int i = 0;
+        while (it.hasNext()) {
+            it.next();
+            positions[i++] = it.index();
+        }
+
+        return positions;
+    }
+
+    @Override
     public void each(VectorProcedure procedure) {
 
         ByteVectorIterator it = iterator();

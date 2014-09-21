@@ -39,8 +39,6 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import java.io.Externalizable;
-
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -544,6 +542,24 @@ public interface ByteVector extends Iterable<Byte> {
      * @return the number of non zero elements in a range of this matrix
      */
     int nonZeros(int fromIndex, int toIndex);
+
+    /**
+     * Returns an array with the positions (indices) of the non zero elements of this vector.
+     * 
+     * @return an array with the positions (indices) of the non zero elements of this vector
+     */
+    int[] nonZeroPositions();
+
+    /**
+     * Returns an array with the positions (indices) of the non zero elements in a range of this vector.
+     * 
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return an array with the positions (indices) of the non zero elements in a range of this vector
+     */
+    int[] nonZeroPositions(int fromIndex, int toIndex);
 
     /**
      * Applies given {@code procedure} to each element of this vector.

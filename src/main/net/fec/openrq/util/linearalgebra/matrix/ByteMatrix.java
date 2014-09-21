@@ -41,8 +41,6 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import java.io.Externalizable;
-
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.AdvancedMatrixPredicate;
