@@ -156,6 +156,13 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
+    public void addInPlace(int i, byte value) {
+
+        Indexables.checkIndexBounds(i, length());
+        set(i, aPlusB(get(i), value));
+    }
+
+    @Override
     public ByteVector add(ByteVector vector) {
 
         return add(vector, factory);

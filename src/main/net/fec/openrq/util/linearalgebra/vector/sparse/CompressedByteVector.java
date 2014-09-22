@@ -262,6 +262,13 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     @Override
+    public void addInPlace(int i, byte value) {
+
+        SearchEntry entry = searchByIndex(i);
+        entry.update(aPlusB(entry.value(), value));
+    }
+
+    @Override
     public void update(int i, VectorFunction function) {
 
         SearchEntry entry = searchByIndex(i);

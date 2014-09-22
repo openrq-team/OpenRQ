@@ -123,6 +123,16 @@ public interface ByteVector extends Iterable<Byte> {
     void addInPlace(byte value);
 
     /**
+     * Adds given {@code value} to the element of this vector at position i
+     * 
+     * @param i
+     *            The index of the element to be updated
+     * @param value
+     *            the right hand value for addition
+     */
+    void addInPlace(int i, byte value);
+
+    /**
      * Adds given {@code vector} (X) to this vector (Y).
      * 
      * @param vector
