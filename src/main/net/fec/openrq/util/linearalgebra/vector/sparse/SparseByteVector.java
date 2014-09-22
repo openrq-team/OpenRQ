@@ -39,8 +39,6 @@ package net.fec.openrq.util.linearalgebra.vector.sparse;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
-import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
-import net.fec.openrq.util.linearalgebra.io.VectorToBurningIterator;
 import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
@@ -130,20 +128,6 @@ public abstract class SparseByteVector extends AbstractByteVector {
         else {
             return 0;
         }
-    }
-
-    @Override
-    protected final ByteVectorIterator iteratorToBurning(final ByteVectorIterator iterator) {
-
-        return new VectorToBurningIterator(iterator) {
-
-            @Override
-            public void flush() {
-
-                // fast flush
-                SparseByteVector.this.cardinality = innerCursor() + 1;
-            }
-        };
     }
 
     @Override

@@ -39,8 +39,6 @@ package net.fec.openrq.util.linearalgebra.vector.dense;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
-import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
-import net.fec.openrq.util.linearalgebra.io.VectorToBurningIterator;
 import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.operation.VectorOperation;
@@ -93,21 +91,5 @@ public abstract class DenseByteVector extends AbstractByteVector {
         for (int i = 0; i < length(); i++) {
             safeSet(i, aTimesB(safeGet(i), value));
         }
-    }
-
-    @Override
-    protected ByteVectorIterator iteratorToBurning(ByteVectorIterator iterator) {
-
-        return new VectorToBurningIterator(iterator) {
-
-            @Override
-            public void flush() {
-
-                // fast flush
-                for (int i = innerCursor() + 1; i < length; i++) {
-                    DenseByteVector.this.safeSet(i, (byte)0);
-                }
-            }
-        };
     }
 }

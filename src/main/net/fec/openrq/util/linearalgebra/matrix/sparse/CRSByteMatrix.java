@@ -57,7 +57,6 @@ import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
-import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedByteVector;
 
 
 /**
@@ -65,7 +64,7 @@ import net.fec.openrq.util.linearalgebra.vector.sparse.CompressedByteVector;
  */
 public class CRSByteMatrix extends AbstractCompressedByteMatrix implements SparseByteMatrix {
 
-    private final SparseRows sparseRows;
+    private final SparseVectors sparseRows;
 
 
     public CRSByteMatrix() {
@@ -93,28 +92,23 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         this(source.rows(), source.columns());
 
         for (int i = 0; i < rows(); i++) {
-            for (int j = 0; j < columns(); j++) {
-                byte value = source.get(i, j);
-                if (value != 0) {
-                    sparseRows.set(i, j, value);
-                }
-            }
+            sparseRows.initializeVector(i, ByteMatrices.asRowVectorSource(source, i));
         }
     }
 
     public CRSByteMatrix(int rows, int columns) {
 
         super(LinearAlgebra.CRS_FACTORY, rows, columns);
-        this.sparseRows = new SparseRows(rows);
+        this.sparseRows = new SparseVectors(rows, columns);
     }
 
     public CRSByteMatrix(int rows, int columns, byte columnValues[][], int columnIndices[][], int[] rowCardinalities) {
 
         super(LinearAlgebra.CRS_FACTORY, rows, columns);
-        this.sparseRows = new SparseRows(columnValues, columnIndices, rowCardinalities);
+        this.sparseRows = new SparseVectors(rows, columns, columnValues, columnIndices, rowCardinalities);
     }
 
-    private CRSByteMatrix(int rows, int columns, SparseRows sparseRows) {
+    private CRSByteMatrix(int rows, int columns, SparseVectors sparseRows) {
 
         super(LinearAlgebra.CRS_FACTORY, rows, columns);
         this.sparseRows = Objects.requireNonNull(sparseRows);
@@ -125,7 +119,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         int cardinality = 0;
         for (int i = 0; i < rows(); i++) {
-            cardinality += sparseRows.nonZeros(i);
+            cardinality += sparseRows.vectorR(i).nonZeros();
         }
 
         return cardinality;
@@ -134,13 +128,13 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public byte safeGet(int i, int j) {
 
-        return sparseRows.get(i, j);
+        return sparseRows.vectorR(i).get(j);
     }
 
     @Override
     public void safeSet(int i, int j, byte value) {
 
-        sparseRows.set(i, j, value);
+        sparseRows.vectorRW(i).set(j, value);
     }
 
     // =========================================================================
@@ -277,11 +271,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         Indexables.checkIndexBounds(i, rows());
 
-        return new CompressedByteVector(
-            columns(),
-            sparseRows.nonZeros(i),
-            sparseRows.copyOfValues(i),
-            sparseRows.copyOfColumnIndices(i));
+        return sparseRows.vectorR(i).copy();
     }
 
     @Override
@@ -290,7 +280,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         Indexables.checkIndexBounds(i, rows());
         Indexables.checkIndexBounds(j, rows());
 
-        sparseRows.swapRows(i, j);
+        sparseRows.swapVectors(i, j);
     }
 
     @Override
@@ -300,10 +290,8 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         Indexables.checkIndexBounds(j, columns());
 
         if (i != j) {
-            final int left = Math.min(i, j);
-            final int right = Math.max(i, j);
             for (int row = 0; row < rows(); row++) {
-                sparseRows.swapElements(row, left, right);
+                sparseRows.vectorR(row).swap(i, j); // vectorR because swap is non-destructive in empty vectors
             }
         }
     }
@@ -311,7 +299,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteMatrix copy() {
 
-        return new CRSByteMatrix(rows(), columns(), sparseRows.clone());
+        return new CRSByteMatrix(rows(), columns(), sparseRows.copy());
     }
 
     @Override
@@ -319,7 +307,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         checkBounds(i, j);
 
-        return sparseRows.isNonZero(i, j);
+        return sparseRows.vectorR(i).nonZeroAt(j);
     }
 
     @Override
@@ -327,7 +315,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         Indexables.checkIndexBounds(i, rows());
 
-        return sparseRows.nonZeros(i);
+        return sparseRows.vectorR(i).nonZeros();
     }
 
     @Override
@@ -336,7 +324,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         Indexables.checkIndexBounds(i, rows());
         Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
-        return sparseRows.nonZeros(i, fromColumn, toColumn);
+        return sparseRows.vectorR(i).nonZeros(fromColumn, toColumn);
     }
 
     @Override
@@ -344,7 +332,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         Indexables.checkIndexBounds(i, rows());
 
-        return sparseRows.copyOfColumnIndices(i);
+        return sparseRows.vectorR(i).nonZeroPositions();
     }
 
     @Override
@@ -353,7 +341,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         Indexables.checkIndexBounds(i, rows());
         Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
-        return sparseRows.copyOfColumnIndices(i, fromColumn, toColumn);
+        return sparseRows.vectorR(i).nonZeroPositions(fromColumn, toColumn);
     }
 
     @Override
@@ -383,7 +371,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public void safeUpdate(int i, int j, MatrixFunction function) {
 
-        sparseRows.update(i, j, function);
+        sparseRows.vectorRW(i).update(j, ByteMatrices.asRowVectorFunction(function, i));
     }
 
     @Override
@@ -430,7 +418,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     public byte maxInRow(int i) {
 
         byte max = foldNonZeroInRow(i, ByteMatrices.mkMaxAccumulator());
-        if (sparseRows.nonZeros(i) == columns() || aIsGreaterThanB(max, (byte)0)) {
+        if (sparseRows.vectorR(i).nonZeros() == columns() || aIsGreaterThanB(max, (byte)0)) {
             return max;
         }
         else {
@@ -442,7 +430,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     public byte minInRow(int i) {
 
         byte min = foldNonZeroInRow(i, ByteMatrices.mkMinAccumulator());
-        if (sparseRows.nonZeros(i) == columns() || aIsLessThanB(min, (byte)0)) {
+        if (sparseRows.vectorR(i).nonZeros() == columns() || aIsLessThanB(min, (byte)0)) {
             return min;
         }
         else {
@@ -454,7 +442,7 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     public ByteVectorIterator rowIterator(int i) {
 
         Indexables.checkIndexBounds(i, rows());
-        return sparseRows.iterator(i, 0, columns());
+        return sparseRows.vectorRW(i).iterator();
     }
 
     @Override
@@ -462,14 +450,14 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         Indexables.checkIndexBounds(i, rows());
         Indexables.checkFromToBounds(fromColumn, toColumn, columns());
-        return sparseRows.iterator(i, fromColumn, toColumn);
+        return sparseRows.vectorRW(i).iterator(fromColumn, toColumn);
     }
 
     @Override
     public ByteVectorIterator nonZeroRowIterator(int i) {
 
         Indexables.checkIndexBounds(i, rows());
-        return sparseRows.nonZeroIterator(i, 0, columns());
+        return sparseRows.vectorRW(i).nonZeroIterator();
     }
 
     @Override
@@ -477,6 +465,6 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
 
         Indexables.checkIndexBounds(i, rows());
         Indexables.checkFromToBounds(fromColumn, toColumn, columns());
-        return sparseRows.nonZeroIterator(i, fromColumn, toColumn);
+        return sparseRows.vectorRW(i).nonZeroIterator(fromColumn, toColumn);
     }
 }

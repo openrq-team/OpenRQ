@@ -84,6 +84,8 @@ questions.
         
         <javac srcdir="${bench.src_dirs}" destdir="${bench.build_dir}"
                classpath=".:${jmh-core.jar}:${jmh-generator-annprocess.jar}"
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
                includeAntRuntime="false"/>
                
         <subant target="-benchmark-post-compile" buildpath="." failonerror="true"/>

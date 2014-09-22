@@ -231,15 +231,6 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
-    public void hadamardProductInPlace(ByteVector vector) {
-
-        ensureArgumentIsNotNull(vector, "vector");
-        ensureVectorIsSimilar(vector);
-
-        pipeTo(VectorOperations.inPlaceHadamardProduct(), vector);
-    }
-
-    @Override
     public ByteVector multiply(ByteMatrix matrix) {
 
         return multiply(matrix, factory);
@@ -895,20 +886,6 @@ public abstract class AbstractByteVector implements ByteVector {
         }
     }
 
-
-    @Override
-    public ByteVectorIterator burningIterator() {
-
-        return iteratorToBurning(iterator());
-    }
-
-    @Override
-    public ByteVectorIterator nonZeroBurningIterator() {
-
-        return iteratorToBurning(nonZeroIterator());
-    }
-
-    protected abstract ByteVectorIterator iteratorToBurning(ByteVectorIterator iterator);
 
     @Override
     public Iterable<Byte> skipZeros() {

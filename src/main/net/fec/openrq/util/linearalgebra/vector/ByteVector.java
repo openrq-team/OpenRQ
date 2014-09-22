@@ -199,14 +199,6 @@ public interface ByteVector extends Iterable<Byte> {
     ByteVector hadamardProduct(ByteVector vector, Factory factory);
 
     /**
-     * Calculates the Hadamard (element-wise) product of this vector and given {@code vector} in-place.
-     * 
-     * @param vector
-     *            the right hand vector for Hadamard product
-     */
-    void hadamardProductInPlace(ByteVector vector);
-
-    /**
      * Multiples this vector (X) by given {@code matrix} (A).
      * 
      * @param matrix
@@ -767,20 +759,6 @@ public interface ByteVector extends Iterable<Byte> {
      * @return a non-zero iterator between two indices
      */
     ByteVectorIterator nonZeroIterator(int fromIndex, int toIndex);
-
-    /**
-     * Returns a burning vector iterator.
-     * 
-     * @return a burning vector iterator
-     */
-    ByteVectorIterator burningIterator();
-
-    /**
-     * Returns a non zero burning vector iterator.
-     * 
-     * @return a non zero burning vector iterator
-     */
-    ByteVectorIterator nonZeroBurningIterator();
 
     /**
      * Pipes this vector to a given {@code operation}.

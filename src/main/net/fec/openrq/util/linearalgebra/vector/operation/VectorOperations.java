@@ -38,7 +38,6 @@ package net.fec.openrq.util.linearalgebra.vector.operation;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
-import net.fec.openrq.util.linearalgebra.vector.operation.inplace.InPlaceHadamardProduct;
 import net.fec.openrq.util.linearalgebra.vector.operation.inplace.InPlaceVectorFromVectorSubtraction;
 import net.fec.openrq.util.linearalgebra.vector.operation.inplace.InPlaceVectorToVectorAddition;
 import net.fec.openrq.util.linearalgebra.vector.operation.ooplace.OoPlaceHadamardProduct;
@@ -56,11 +55,6 @@ public final class VectorOperations {
     public static VectorVectorOperation<ByteVector> ooPlaceVectorToVectorAddition(Factory factory) {
 
         return new OoPlaceVectorToVectorAddition(factory);
-    }
-
-    public static VectorVectorOperation<Void> inPlaceHadamardProduct() {
-
-        return new InPlaceHadamardProduct();
     }
 
     public static VectorVectorOperation<ByteVector> ooPlaceHadamardProduct(Factory factory) {

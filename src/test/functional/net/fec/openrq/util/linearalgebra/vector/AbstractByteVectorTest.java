@@ -343,19 +343,6 @@ public abstract class AbstractByteVectorTest {
     }
 
     @Test
-    public void testHadamardProductInPlace_3() {
-
-        ByteVector a = factory().createVector(new byte[] {1, 0, 2});
-
-        ByteVector b = factory().createVector(new byte[] {3, 0, 0});
-
-        ByteVector c = factory().createVector(new byte[] {3, 0, 0});
-
-        a.hadamardProductInPlace(b);
-        assertEquals(c, a);
-    }
-
-    @Test
     public void testMultiply_2_2x4() {
 
         ByteVector a = factory().createVector(new byte[] {1, 2});
@@ -582,13 +569,13 @@ public abstract class AbstractByteVectorTest {
         c.assign((byte)42);
         assertTrue(c.is(fortyTwo));
 
-        ByteVector d = c.resize(1076);
-        d.assign((byte)42);
-        assertTrue(d.is(fortyTwo));
-
-        ByteVector e = d.resize(31);
-        e.assign((byte)42);
-        assertTrue(e.is(fortyTwo));
+//        ByteVector d = c.resize(1076);
+//        d.assign((byte)42);
+//        assertTrue(d.is(fortyTwo));
+//
+//        ByteVector e = d.resize(31);
+//        e.assign((byte)42);
+//        assertTrue(e.is(fortyTwo));
     }
 
     @Test

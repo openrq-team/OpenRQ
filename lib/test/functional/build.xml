@@ -59,6 +59,8 @@ limitations under the License.
         
         <javac srcdir="${func.src_dirs}" destdir="${func.build_dir}"
                classpath=".:${junit-core.jar}:${hamcrest-core.jar}"
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
                includeAntRuntime="false"/>
 
         <subant target="-functional-post-compile" buildpath="." failonerror="true"/>

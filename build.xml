@@ -21,6 +21,9 @@ limitations under the License.
 
 <!-- ================ Properties initialization ================ -->
     <property name="version" value="3.2"/>
+
+    <property name="javac-debug" value="off"/>
+    <property name="javac-debuglevel" value="source"/>
     
     <property name="top.src_dir" location="src"/>
     <property name="top.build_dir" location="build"/>
@@ -81,6 +84,8 @@ limitations under the License.
         <mkdir dir="${main.build_dir}"/>
         <javac srcdir="${main.src_dir}" destdir="${main.build_dir}"
                classpath="."
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
                includeAntRuntime="false"/>
         <copy todir="${main.build_dir}">
             <fileset dir="${main.src_dir}" excludes="**/*.java"/>
@@ -96,6 +101,18 @@ limitations under the License.
 
     </target>
 
+    <target name="srcjar" depends="build"
+
+            description="Compile the main Java classes and pack them into a Jar file (include source files).">
+
+        <delete file="${main.jar_file}"/>
+        <jar destfile="${main.jar_file}" duplicate="preserve">
+            <fileset dir="${main.build_dir}"/>
+            <fileset dir="${main.src_dir}"/>
+        </jar>
+
+    </target>
+
 
 <!-- ================ Optional targets ================ -->
     <target name="buildopt"
@@ -105,6 +122,8 @@ limitations under the License.
         <mkdir dir="${main.build_dir}"/>
         <javac srcdir="${main.src_dir}:${opt.src_dir}" destdir="${main.build_dir}"
                classpath="."
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
                includeAntRuntime="false"/>
         <copy todir="${main.build_dir}">
             <fileset dir="${main.src_dir}" excludes="*.java"/>
@@ -117,6 +136,18 @@ limitations under the License.
 
         <delete file="${opt.jar_file}"/>
         <jar destfile="${opt.jar_file}" basedir="${main.build_dir}"/>
+
+    </target>
+
+    <target name="srcjaropt" depends="buildopt"
+            description="Compile the main and optional Java classes and pack them into a Jar file (include source files).">
+
+        <delete file="${opt.jar_file}"/>
+        <jar destfile="${opt.jar_file}" duplicate="preserve">
+            <fileset dir="${main.build_dir}"/>
+            <fileset dir="${main.src_dir}"/>
+            <fileset dir="${opt.src_dir}"/>
+        </jar>
 
     </target>
 

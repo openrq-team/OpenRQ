@@ -250,13 +250,13 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     @Override
-    public byte safeGet(int i) {
+    protected byte safeGet(int i) {
 
         return searchByIndex(i).value();
     }
 
     @Override
-    public void safeSet(int i, byte value) {
+    protected void safeSet(int i, byte value) {
 
         searchByIndex(i).update(value);
     }
@@ -397,23 +397,26 @@ public class CompressedByteVector extends SparseByteVector {
     // requires non-negative extraElements
     private void ensureCapacity(int extraElements) {
 
-        final int newCapacity = getNewCapacity(extraElements);
+        final int minCapacity = ExtraMath.addExact(cardinality, extraElements);
+        final int oldCapacity = values.length;
 
-        final byte[] newValues = new byte[newCapacity];
-        final int[] newIndices = new int[newCapacity];
+        if (minCapacity > oldCapacity) {
+            final int newCapacity = getNewCapacity(minCapacity, oldCapacity);
 
-        System.arraycopy(values, 0, newValues, 0, cardinality);
-        System.arraycopy(indices, 0, newIndices, 0, cardinality);
+            final byte[] newValues = new byte[newCapacity];
+            final int[] newIndices = new int[newCapacity];
 
-        values = newValues;
-        indices = newIndices;
+            System.arraycopy(values, 0, newValues, 0, cardinality);
+            System.arraycopy(indices, 0, newIndices, 0, cardinality);
+
+            values = newValues;
+            indices = newIndices;
+        }
     }
 
     // requires non-negative extraElements
-    private int getNewCapacity(int extraElements) {
+    private static int getNewCapacity(int minCapacity, int oldCapacity) {
 
-        final int minCapacity = ExtraMath.addExact(cardinality, extraElements);
-        final int oldCapacity = values.length;
         if (oldCapacity == 0) {
             return Math.max(minCapacity, DEFAULT_CAPACITY);
         }
