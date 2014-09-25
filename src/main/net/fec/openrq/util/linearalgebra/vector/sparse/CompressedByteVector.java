@@ -161,12 +161,12 @@ public class CompressedByteVector extends SparseByteVector {
 
     private SearchEntry searchByIndex(int i) {
 
-        return new SearchEntry().search(i);
+        return new SearchEntry(i);
     }
 
     private SearchRange searchByRange(int from, int to) {
 
-        return new SearchRange().search(from, to);
+        return new SearchRange(from, to);
     }
 
     // =========================================================================
@@ -240,12 +240,14 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public int nonZeros(int from, int to) {
 
+        Indexables.checkFromToBounds(from, to, length());
         return searchByRange(from, to).rangeLength();
     }
 
     @Override
     public boolean nonZeroAt(int i) {
 
+        Indexables.checkIndexBounds(i, length());
         return searchByIndex(i).isNonZero();
     }
 
@@ -264,6 +266,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public void addInPlace(int i, byte value) {
 
+        Indexables.checkIndexBounds(i, length());
         SearchEntry entry = searchByIndex(i);
         entry.update(aPlusB(entry.value(), value));
     }
@@ -271,6 +274,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public void update(int i, VectorFunction function) {
 
+        Indexables.checkIndexBounds(i, length());
         SearchEntry entry = searchByIndex(i);
         entry.update(function.evaluate(i, entry.value()));
     }
@@ -284,6 +288,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public int[] nonZeroPositions(int from, int to) {
 
+        Indexables.checkFromToBounds(from, to, length());
         SearchRange range = searchByRange(from, to);
         return Arrays.copyOfRange(indices, range.fromK(), range.toK());
     }
@@ -352,6 +357,145 @@ public class CompressedByteVector extends SparseByteVector {
         final int $indices[] = Arrays.copyOf(this.indices, $cardinality);
 
         return new CompressedByteVector($length, $cardinality, $values, $indices);
+    }
+
+    @Override
+    public void addInPlace(ByteVector vector) {
+
+        if (vector instanceof CompressedByteVector) {
+            ensureVectorIsSimilar(vector);
+            _addInPlace((byte)1, (CompressedByteVector)vector);
+        }
+        else {
+            super.addInPlace(vector);
+        }
+    }
+
+    @Override
+    public void addInPlace(ByteVector vector, int fromIndex, int toIndex) {
+
+        if (vector instanceof CompressedByteVector) {
+            ensureVectorIsSimilar(vector, fromIndex, toIndex);
+            _addInPlace((byte)1, (CompressedByteVector)vector, fromIndex, toIndex);
+        }
+        else {
+            super.addInPlace(vector, fromIndex, toIndex);
+        }
+    }
+
+    @Override
+    public void addInPlace(byte multiplier, ByteVector vector) {
+
+        if (vector instanceof CompressedByteVector) {
+            ensureVectorIsSimilar(vector);
+            _addInPlace(multiplier, (CompressedByteVector)vector);
+        }
+        else {
+            super.addInPlace(multiplier, vector);
+        }
+    }
+
+    @Override
+    public void addInPlace(byte multiplier, ByteVector vector, int fromIndex, int toIndex) {
+
+        if (vector instanceof CompressedByteVector) {
+            ensureVectorIsSimilar(vector, fromIndex, toIndex);
+            _addInPlace(multiplier, (CompressedByteVector)vector, fromIndex, toIndex);
+        }
+        else {
+            super.addInPlace(multiplier, vector, fromIndex, toIndex);
+        }
+    }
+
+    private void _addInPlace(byte multiplier, CompressedByteVector vector) {
+
+        _addInPlace(multiplier, vector, 0, this.cardinality(), 0, vector.cardinality());
+    }
+
+    /*
+     * Requires valid indices.
+     */
+    private void _addInPlace(byte multiplier, CompressedByteVector vector, int fromIndex, int toIndex) {
+
+        final SearchRange thisRange = this.searchByRange(fromIndex, toIndex);
+        final SearchRange otherRange = vector.searchByRange(fromIndex, toIndex);
+        _addInPlace(multiplier, vector, thisRange.fromK(), thisRange.toK(), otherRange.fromK(), otherRange.toK());
+    }
+
+    /*
+     * Requires valid indices in respect to both vectors' cardinalities.
+     */
+    private void _addInPlace(
+        final byte multiplier,
+        final CompressedByteVector vector,
+        final int thisFrom,
+        final int thisTo,
+        final int otherFrom,
+        final int otherTo)
+    {
+
+        // if the multiplier is zero, or if the other vector only has zeros, then nothing needs to be added
+        if (multiplier != 0 && otherTo > otherFrom) {
+            final byte[] thisValues = this.values;
+            final int[] thisIndices = this.indices;
+
+            final byte[] otherValues = vector.values;
+            final int[] otherIndices = vector.indices;
+
+            // allocate with the maximum capacity from both vectors
+            final ValueIndexList list = new ValueIndexList(Math.max(thisValues.length, otherValues.length));
+
+            /*
+             * Let's build a list with the new values resulting from the addition.
+             * Only values whose indices in both vectors are the same need to be added,
+             * the remaining are simply copied to the list, going by index order.
+             */
+
+            // first copy all elements before thisFrom
+            list.bulkAdd(thisValues, thisIndices, 0, otherFrom);
+
+            int th = thisFrom;
+            int ot = otherFrom;
+            while (th < thisTo || ot < otherTo) {
+                if (!(ot < otherTo)) { // only values/indices from this vector remain
+                    list.add(thisValues[th], thisIndices[th]);
+                    th++;
+                }
+                else if (!(th < thisTo)) { // only values/indices from the other vector remain
+                    list.add(aTimesB(multiplier, otherValues[ot]), otherIndices[ot]);
+                    ot++;
+                }
+                else {
+                    final int thisIndex = thisIndices[th];
+                    final int otherIndex = otherIndices[ot];
+
+                    if (thisIndex < otherIndex) {
+                        list.add(thisValues[th], thisIndex);
+                        th++;
+                    }
+                    else if (otherIndex < thisIndex) {
+                        list.add(aTimesB(multiplier, otherValues[ot]), otherIndex);
+                        ot++;
+                    }
+                    else {
+                        final byte sum = aPlusB(aTimesB(multiplier, otherValues[ot]), thisValues[th]);
+                        if (sum != 0) {
+                            list.add(sum, thisIndex);
+                        }
+                        th++;
+                        ot++;
+                    }
+                }
+            }
+
+            // lastly copy all elements from thisTo to this.cardinality
+            list.bulkAdd(thisValues, thisIndices, thisTo, this.cardinality());
+
+            // update this vector with the new values/indices
+            this.values = list.values();
+            this.indices = list.indices();
+            this.cardinality = list.cardinality();
+        }
     }
 
     @Override
@@ -428,26 +572,98 @@ public class CompressedByteVector extends SparseByteVector {
             return Math.max(minCapacity, DEFAULT_CAPACITY);
         }
         else {
-            return Math.max(minCapacity, oldCapacity + (oldCapacity / 2));
+            return Math.max(minCapacity, ExtraMath.addExact(oldCapacity, oldCapacity / 2));
         }
     }
 
 
+    // class used for vector to vector addition
+    private static final class ValueIndexList {
+
+        private byte[] values;
+        private int[] indices;
+        private int cardinality;
+
+
+        ValueIndexList(int length) {
+
+            this.values = new byte[length];
+            this.indices = new int[length];
+            this.cardinality = 0;
+        }
+
+        byte[] values() {
+
+            return values;
+        }
+
+        int[] indices() {
+
+            return indices;
+        }
+
+        int cardinality() {
+
+            return cardinality;
+        }
+
+        void add(byte newValue, int newIndex) {
+
+            ensureCapacity(+1);
+            values[cardinality] = newValue;
+            indices[cardinality] = newIndex;
+            cardinality++;
+        }
+
+        /*
+         * Requires valid from and to indices.
+         */
+        void bulkAdd(byte[] newValues, int[] newIndices, int from, int to) {
+
+            if (to > from) {
+                final int len = to - from;
+                ensureCapacity(+len);
+                System.arraycopy(newValues, from, values, cardinality, len);
+                System.arraycopy(newIndices, from, indices, cardinality, len);
+                cardinality += len;
+            }
+        }
+
+        // requires non-negative extraElements
+        private void ensureCapacity(int extraElements) {
+
+            final int minCapacity = ExtraMath.addExact(cardinality, extraElements);
+            final int oldCapacity = values.length;
+
+            if (minCapacity > oldCapacity) {
+                final int newCapacity = getNewCapacity(minCapacity, oldCapacity);
+
+                final byte[] newValues = new byte[newCapacity];
+                final int[] newIndices = new int[newCapacity];
+
+                System.arraycopy(values, 0, newValues, 0, cardinality);
+                System.arraycopy(indices, 0, newIndices, 0, cardinality);
+
+                values = newValues;
+                indices = newIndices;
+            }
+        }
+    }
+
     // class used for nonzero entry searches, and consequent value updates
     private final class SearchEntry {
 
-        private int i;
-        private int k;
+        private final int i;
+        private final int k;
 
 
         /*
          * Requires valid index.
          */
-        SearchEntry search(int i) {
+        SearchEntry(int i) {
 
             this.i = i;
             this.k = binarySearch(i);
-            return this;
         }
 
         boolean isNonZero() {
@@ -479,18 +695,17 @@ public class CompressedByteVector extends SparseByteVector {
     // class used for nonzero entry searches between a specified index range
     private final class SearchRange {
 
-        private int fromK;
-        private int toK;
+        private final int fromK;
+        private final int toK;
 
 
         /*
          * Requires valid indices.
          */
-        SearchRange search(int from, int to) {
+        SearchRange(int from, int to) {
 
             this.fromK = getEntry(binarySearch(from));
             this.toK = getEntry(binarySearch(to));
-            return this;
         }
 
         int fromK() {

@@ -40,6 +40,7 @@ import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.operation.inplace.InPlaceVectorFromVectorSubtraction;
 import net.fec.openrq.util.linearalgebra.vector.operation.inplace.InPlaceVectorToVectorAddition;
+import net.fec.openrq.util.linearalgebra.vector.operation.inplace.InPlaceVectorToVectorAdditionWithMultiplier;
 import net.fec.openrq.util.linearalgebra.vector.operation.ooplace.OoPlaceHadamardProduct;
 import net.fec.openrq.util.linearalgebra.vector.operation.ooplace.OoPlaceVectorFromVectorSubtraction;
 import net.fec.openrq.util.linearalgebra.vector.operation.ooplace.OoPlaceVectorToVectorAddition;
@@ -50,6 +51,25 @@ public final class VectorOperations {
     public static VectorVectorOperation<Void> inPlaceVectorToVectorAddition() {
 
         return new InPlaceVectorToVectorAddition();
+    }
+
+    public static VectorVectorOperation<Void> inPlaceVectorToVectorAddition(int from, int to) {
+
+        return new InPlaceVectorToVectorAddition(from, to);
+    }
+
+    public static VectorVectorOperation<Void> inPlaceVectorToVectorAdditionWithMultiplier(byte bMultiplier) {
+
+        return new InPlaceVectorToVectorAdditionWithMultiplier(bMultiplier);
+    }
+
+    public static VectorVectorOperation<Void> inPlaceVectorToVectorAdditionWithMultiplier(
+        byte bMultiplier,
+        int from,
+        int to)
+    {
+
+        return new InPlaceVectorToVectorAdditionWithMultiplier(bMultiplier, from, to);
     }
 
     public static VectorVectorOperation<ByteVector> ooPlaceVectorToVectorAddition(Factory factory) {

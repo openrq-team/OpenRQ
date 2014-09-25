@@ -387,73 +387,41 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
-    public void addRowsInPlace(int row1, int row2) {
+    public void addRowsInPlace(int srcRow, int destRow) {
 
-        Indexables.checkIndexBounds(row1, rows());
-        Indexables.checkIndexBounds(row2, rows());
+        Indexables.checkIndexBounds(srcRow, rows());
+        Indexables.checkIndexBounds(destRow, rows());
 
-        ByteVectorIterator it = nonZeroRowIterator(row1);
-        while (it.hasNext()) {
-            it.next();
-            sparseRows.vectorRW(row2).addInPlace(it.index(), it.get());
-        }
+        sparseRows.vectorRW(destRow).addInPlace(sparseRows.vectorR(srcRow));
     }
 
     @Override
-    public void addRowsInPlace(int row1, int row2, int fromColumn, int toColumn) {
+    public void addRowsInPlace(int srcRow, int destRow, int fromColumn, int toColumn) {
 
-        Indexables.checkIndexBounds(row1, rows());
-        Indexables.checkIndexBounds(row2, rows());
+        Indexables.checkIndexBounds(srcRow, rows());
+        Indexables.checkIndexBounds(destRow, rows());
         Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
-        ByteVectorIterator it = nonZeroRowIterator(row1, fromColumn, toColumn);
-        while (it.hasNext()) {
-            it.next();
-            sparseRows.vectorRW(row2).addInPlace(it.index(), it.get());
-        }
+        sparseRows.vectorRW(destRow).addInPlace(sparseRows.vectorR(srcRow), fromColumn, toColumn);
     }
 
     @Override
-    public void addRowsInPlace(byte row1Multiplier, int row1, int row2) {
+    public void addRowsInPlace(byte srcMultiplier, int srcRow, int destRow) {
 
-        if (row1Multiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
-            if (row1Multiplier == 1) { // if the multiplier is one, then a product is not required
-                addRowsInPlace(row1, row2);
-            }
-            else {
-                Indexables.checkIndexBounds(row1, rows());
-                Indexables.checkIndexBounds(row2, rows());
+        Indexables.checkIndexBounds(srcRow, rows());
+        Indexables.checkIndexBounds(destRow, rows());
 
-                ByteVectorIterator it = nonZeroRowIterator(row1);
-                while (it.hasNext()) {
-                    it.next();
-                    final byte prod = aTimesB(row1Multiplier, it.get());
-                    sparseRows.vectorRW(row2).addInPlace(it.index(), prod);
-                }
-            }
-        }
+        sparseRows.vectorRW(destRow).addInPlace(srcMultiplier, sparseRows.vectorR(srcRow));
     }
 
     @Override
-    public void addRowsInPlace(byte row1Multiplier, int row1, int row2, int fromColumn, int toColumn) {
+    public void addRowsInPlace(byte srcMultiplier, int srcRow, int destRow, int fromColumn, int toColumn) {
 
-        if (row1Multiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
-            if (row1Multiplier == 1) { // if the multiplier is one, then a product is not required
-                addRowsInPlace(row1, row2);
-            }
-            else {
-                Indexables.checkIndexBounds(row1, rows());
-                Indexables.checkIndexBounds(row2, rows());
-                Indexables.checkFromToBounds(fromColumn, toColumn, columns());
+        Indexables.checkIndexBounds(srcRow, rows());
+        Indexables.checkIndexBounds(destRow, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
-                ByteVectorIterator it = nonZeroRowIterator(row1, fromColumn, toColumn);
-                while (it.hasNext()) {
-                    it.next();
-                    final byte prod = aTimesB(row1Multiplier, it.get());
-                    sparseRows.vectorRW(row2).addInPlace(it.index(), prod);
-                }
-            }
-        }
+        sparseRows.vectorRW(destRow).addInPlace(srcMultiplier, sparseRows.vectorR(srcRow), fromColumn, toColumn);
     }
 
     @Override

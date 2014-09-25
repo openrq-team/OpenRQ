@@ -254,20 +254,172 @@ public abstract class AbstractByteVectorTest {
     @Test
     public void testAddInPlace_3() {
 
-        ByteVector a1 = factory().createVector(new byte[] {0, 0, 3});
-        ByteVector a2 = factory().createVector(new byte[] {0, 0, 3});
+        ByteVector a = factory().createVector(new byte[] {0, 0, 3});
+        ByteVector b = factory().createVector(new byte[] {7, 7, 4});
 
-        ByteVector b = factory().createVector(new byte[] {0, 5, 0});
+        a.addInPlace((byte)7);
+        assertEquals(b, a);
+    }
 
-        ByteVector c = factory().createVector(new byte[] {7, 7, 4});
+    @Test
+    public void testAddInPlace() {
 
-        ByteVector d = factory().createVector(new byte[] {0, 5, 3});
+        ByteVector a = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {0, 0, 3, 0, 1, 3, 1});
 
-        a1.addInPlace((byte)7);
-        assertEquals(c, a1);
+        a.addInPlace(b);
+        assertEquals(c, a);
+    }
 
-        a2.addInPlace(b);
-        assertEquals(d, a2);
+    @Test
+    public void testAddInPlaceInRangeOf_0_to_0() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+
+        a.addInPlace(b, 0, 0);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceInRangeOf_0_to_4() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {0, 0, 3, 0, 0, 3, 0});
+
+        a.addInPlace(b, 0, 4);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceInRangeOf_0_to_7() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {0, 0, 3, 0, 1, 3, 1});
+
+        a.addInPlace(b, 0, 7);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceInRangeOf_4_to_4() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+
+        a.addInPlace(b, 4, 4);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceInRangeOf_4_to_7() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {1, 0, 2, 0, 1, 3, 1});
+
+        a.addInPlace(b, 4, 7);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceInRangeOf_7_to_7() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {1, 0, 2, 0, 0, 3, 0});
+
+        a.addInPlace(b, 7, 7);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceWithMultiplier() {
+
+        ByteVector a = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {0, 0, 5, 0, 7, 3, 7});
+        byte multiplier = 7;
+
+        a.addInPlace(multiplier, b);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceWithMultiplierInRangeOf_0_to_0() {
+
+        ByteVector a = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        byte multiplier = 7;
+
+        a.addInPlace(multiplier, b, 0, 0);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceWithMultiplierInRangeOf_0_to_4() {
+
+        ByteVector a = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {0, 0, 5, 0, 0, 3, 0});
+        byte multiplier = 7;
+
+        a.addInPlace(multiplier, b, 0, 4);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceWithMultiplierInRangeOf_0_to_7() {
+
+        ByteVector a = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {0, 0, 5, 0, 7, 3, 7});
+        byte multiplier = 7;
+
+        a.addInPlace(multiplier, b, 0, 7);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceWithMultiplierInRangeOf_4_to_4() {
+
+        ByteVector a = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        byte multiplier = 7;
+
+        a.addInPlace(multiplier, b, 4, 4);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceWithMultiplierInRangeOf_4_to_7() {
+
+        ByteVector a = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {7, 0, 2, 0, 7, 3, 7});
+        byte multiplier = 7;
+
+        a.addInPlace(multiplier, b, 4, 7);
+        assertEquals(c, a);
+    }
+
+    @Test
+    public void testAddInPlaceWithMultiplierInRangeOf_7_to_7() {
+
+        ByteVector a = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        ByteVector b = factory().createVector(new byte[] {1, 0, 1, 0, 1, 0, 1});
+        ByteVector c = factory().createVector(new byte[] {7, 0, 2, 0, 0, 3, 0});
+        byte multiplier = 7;
+
+        a.addInPlace(multiplier, b, 7, 7);
+        assertEquals(c, a);
     }
 
     @Test
@@ -569,13 +721,13 @@ public abstract class AbstractByteVectorTest {
         c.assign((byte)42);
         assertTrue(c.is(fortyTwo));
 
-//        ByteVector d = c.resize(1076);
-//        d.assign((byte)42);
-//        assertTrue(d.is(fortyTwo));
-//
-//        ByteVector e = d.resize(31);
-//        e.assign((byte)42);
-//        assertTrue(e.is(fortyTwo));
+        // ByteVector d = c.resize(1076);
+        // d.assign((byte)42);
+        // assertTrue(d.is(fortyTwo));
+        //
+        // ByteVector e = d.resize(31);
+        // e.assign((byte)42);
+        // assertTrue(e.is(fortyTwo));
     }
 
     @Test
@@ -604,6 +756,13 @@ public abstract class AbstractByteVectorTest {
 
         ByteVector a = factory().createVector(new byte[] {0, 1, -1, 0, 0});
         assertEquals(2, a.nonZeros(0, 5));
+    }
+
+    @Test
+    public void testNonZerosInRangeOf_2_to_2() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, -1, 0, 0});
+        assertEquals(0, a.nonZeros(2, 2));
     }
 
     @Test
@@ -713,6 +872,21 @@ public abstract class AbstractByteVectorTest {
     }
 
     @Test
+    public void testEachInRangeOf_2_to_2() {
+
+        final ByteVector initial = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = a.blank();
+        final ByteVector c = factory().createVector(new byte[] {0, 0, 0, 0, 0});
+
+        a.each(new SetterProcedure(b), 2, 2);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
     public void testEachInRangeOf_2_to_5() {
 
         final ByteVector initial = factory().createVector(new byte[] {0, 1, 2, 3, 4});
@@ -803,6 +977,17 @@ public abstract class AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 0, 1, 0});
 
         a.update(new IndexModulus2Function(), 0, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateInRangeOf_2_to_2() {
+
+        final ByteVector a = factory().createVector(new byte[] {7, 7, 7, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {7, 7, 7, 7, 7});
+
+        a.update(new IndexModulus2Function(), 2, 2);
 
         assertEquals(b, a);
     }
@@ -931,6 +1116,21 @@ public abstract class AbstractByteVectorTest {
     }
 
     @Test
+    public void testEachNonZeroInRangeOf_2_to_2() {
+
+        final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
+
+        final ByteVector a = initial.copy();
+        final ByteVector b = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+        final ByteVector c = factory().createVector(new byte[] {0, 1, 2, 3, 4});
+
+        a.eachNonZero(new SetterProcedure(b), 2, 2);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller vector
+        assertEquals(c, b);
+    }
+
+    @Test
     public void testEachNonZeroInRangeOf_2_to_5() {
 
         final ByteVector initial = factory().createVector(new byte[] {7, 0, 0, 7, 7});
@@ -1000,6 +1200,17 @@ public abstract class AbstractByteVectorTest {
         final ByteVector b = factory().createVector(new byte[] {0, 1, 0, 1, 0});
 
         a.updateNonZero(new IndexModulus2Function(), 0, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInRangeOf_2_to_2() {
+
+        final ByteVector a = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+        final ByteVector b = factory().createVector(new byte[] {0, 7, 0, 7, 7});
+
+        a.updateNonZero(new IndexModulus2Function(), 2, 2);
 
         assertEquals(b, a);
     }
@@ -1138,6 +1349,15 @@ public abstract class AbstractByteVectorTest {
     }
 
     @Test
+    public void testIterator_1_InRangeOf_3_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.iterator(3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testIterator_1_InRangeOf_3_to_6() {
 
         ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
@@ -1237,6 +1457,15 @@ public abstract class AbstractByteVectorTest {
         it.next();
         assertEquals("get 2", 3, it.get());
         assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testIterator_2_InRangeOf_1_to_1() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.iterator(1, 1);
 
         assertFalse(it.hasNext());
     }
@@ -1600,6 +1829,15 @@ public abstract class AbstractByteVectorTest {
     }
 
     @Test
+    public void testNonZeroIterator_1_InRangeOf_3_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
+        ByteVectorIterator it = a.nonZeroIterator(3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testNonZeroIterator_1_InRangeOf_3_to_6() {
 
         ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 3, 0});
@@ -1699,6 +1937,15 @@ public abstract class AbstractByteVectorTest {
     }
 
     @Test
+    public void testNonZeroIterator_2_InRangeOf_1_to_1() {
+
+        ByteVector a = factory().createVector(new byte[] {1, 2, 3});
+        ByteVectorIterator it = a.nonZeroIterator(1, 1);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testNonZeroIterator_2_InRangeOf_1_to_3() {
 
         ByteVector a = factory().createVector(new byte[] {1, 2, 3});
@@ -1755,6 +2002,14 @@ public abstract class AbstractByteVectorTest {
 
         ByteVector a = factory().createVector(new byte[] {0, 0, 0});
         ByteVectorIterator it = a.nonZeroIterator(0, 3);
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroIterator_3_InRangeOf_1_to_1() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 0, 0});
+        ByteVectorIterator it = a.nonZeroIterator(1, 1);
         assertFalse(it.hasNext());
     }
 

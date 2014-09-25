@@ -1482,52 +1482,52 @@ public interface ByteMatrix {
     /**
      * Adds one row to another.
      * 
-     * @param row1
-     *            The index of the first row
-     * @param row2
-     *            The index of the second row
+     * @param sourceRow
+     *            The index of the adder row
+     * @param destRow
+     *            The index of the row being added in place
      */
-    void addRowsInPlace(int row1, int row2);
+    void addRowsInPlace(int sourceRow, int destRow);
 
     /**
      * Adds a range of one row to a range of another.
      * 
-     * @param row1
-     *            The index of the first row
-     * @param row2
-     *            The index of the second row
+     * @param sourceRow
+     *            The index of the adder row
+     * @param destRow
+     *            The index of the row being added in place
      * @param fromColumn
      *            The starting column index (inclusive)
      * @param toColumn
      *            The ending column index (exclusive)
      */
-    void addRowsInPlace(int row1, int row2, int fromColumn, int toColumn);
+    void addRowsInPlace(int sourceRow, int destRow, int fromColumn, int toColumn);
 
     /**
      * Multiplies a row by a given value and adds the result to another row.
      * 
-     * @param row1Multiplier
-     *            The value to multiply the first row before it is added to the second row
-     * @param row1
-     *            The index of the first row
-     * @param row2
-     *            The index of the second row
+     * @param sourceMultiplier
+     *            The value to multiply the source row before it is added to the destination row
+     * @param sourceRow
+     *            The index of the adder row
+     * @param destRow
+     *            The index of the row being added in place
      */
-    void addRowsInPlace(byte row1Multiplier, int row1, int row2);
+    void addRowsInPlace(byte sourceMultiplier, int sourceRow, int destRow);
 
     /**
      * Multiplies a range of one row and adds the result to a range of another row.
      * 
-     * @param row1Multiplier
-     *            The value to multiply the first row before it is added to the second row
-     * @param row1
-     *            The index of the first row
-     * @param row2
-     *            The index of the second row
+     * @param sourceMultiplier
+     *            The value to multiply the source row before it is added to the destination row
+     * @param sourceRow
+     *            The index of the adder row
+     * @param destRow
+     *            The index of the row being added in place
      * @param fromColumn
      *            The starting column index (inclusive)
      * @param toColumn
      *            The ending column index (exclusive)
      */
-    void addRowsInPlace(byte row1Multiplier, int row1, int row2, int fromColumn, int toColumn);
+    void addRowsInPlace(byte sourceMultiplier, int sourceRow, int destRow, int fromColumn, int toColumn);
 }

@@ -151,6 +151,22 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testGetRowInRangeOf_2_to_2() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {});
+        ByteVector vecB = factory().createVector(new byte[] {});
+        ByteVector vecC = factory().createVector(new byte[] {});
+        ByteVector vecD = factory().createVector(new byte[] {});
+
+        assertEquals(vecA, matrix.getRow(0, 2, 2));
+        assertEquals(vecB, matrix.getRow(1, 2, 2));
+        assertEquals(vecC, matrix.getRow(2, 2, 2));
+        assertEquals(vecD, matrix.getRow(3, 2, 2));
+    }
+
+    @Test
     public void testGetRowInRangeOf_2_to_4() {
 
         ByteMatrix matrix = getRowColumnMatrix();
@@ -226,6 +242,18 @@ public abstract class AbstractByteMatrixTest {
         ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
 
         a.setRow(0, 0, vector, 0, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetRow_InRangeOf_2_to_2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {{0, 0, 0, 0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setRow(0, 0, vector, 2, 0); // yes, 0 is the length
 
         assertEquals(a, b);
     }
@@ -319,6 +347,22 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testGetColumnInRangeOf_2_to_2() {
+
+        ByteMatrix matrix = getRowColumnMatrix();
+
+        ByteVector vecA = factory().createVector(new byte[] {});
+        ByteVector vecB = factory().createVector(new byte[] {});
+        ByteVector vecC = factory().createVector(new byte[] {});
+        ByteVector vecD = factory().createVector(new byte[] {});
+
+        assertEquals(vecA, matrix.getColumn(0, 2, 2));
+        assertEquals(vecB, matrix.getColumn(1, 2, 2));
+        assertEquals(vecC, matrix.getColumn(2, 2, 2));
+        assertEquals(vecD, matrix.getColumn(3, 2, 2));
+    }
+
+    @Test
     public void testGetColumnInRangeOf_2_to_4() {
 
         ByteMatrix matrix = getRowColumnMatrix();
@@ -394,6 +438,18 @@ public abstract class AbstractByteMatrixTest {
         ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
 
         a.setColumn(0, 0, vector, 0, 4);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void testSetColumn_InRangeOf_2_to_2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteMatrix b = factory().createMatrix(new byte[][] { {0}, {0}, {0}, {0}});
+        ByteVector vector = factory().createVector(new byte[] {1, 2, 3, 4});
+
+        a.setColumn(0, 0, vector, 2, 0); // yes, 0 is the length
 
         assertEquals(a, b);
     }
@@ -2129,6 +2185,13 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testNonZerosInRowInRangeOf_2_to_2() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(0, nonZeroMatrix.nonZerosInRow(2, 2, 2));
+    }
+
+    @Test
     public void testNonZerosInRowInRangeOf_2_to_5() {
 
         final ByteMatrix nonZeroMatrix = nonZeroMatrix();
@@ -2189,6 +2252,13 @@ public abstract class AbstractByteMatrixTest {
 
         final ByteMatrix nonZeroMatrix = nonZeroMatrix();
         assertEquals(2, nonZeroMatrix.nonZerosInColumn(2, 0, 5));
+    }
+
+    @Test
+    public void testNonZerosInColumnInRangeOf_2_to_2() {
+
+        final ByteMatrix nonZeroMatrix = nonZeroMatrix();
+        assertEquals(0, nonZeroMatrix.nonZerosInColumn(2, 2, 2));
     }
 
     @Test
@@ -2253,6 +2323,16 @@ public abstract class AbstractByteMatrixTest {
         assertArrayEquals(new int[] {1, 2}, a.nonZeroPositionsInRow(1, 0, 4));
         assertArrayEquals(new int[] {0, 3}, a.nonZeroPositionsInRow(2, 0, 4));
         assertArrayEquals(new int[] {0, 1, 2, 3}, a.nonZeroPositionsInRow(3, 0, 4));
+    }
+
+    @Test
+    public void testNonZeroPositionsInRowInRangeOf_2_to_2() {
+
+        ByteMatrix a = nonZeroPositionsInRowMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(0, 2, 2));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(1, 2, 2));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(2, 2, 2));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInRow(3, 2, 2));
     }
 
     @Test
@@ -2323,6 +2403,16 @@ public abstract class AbstractByteMatrixTest {
         assertArrayEquals(new int[] {1, 2}, a.nonZeroPositionsInColumn(1, 0, 4));
         assertArrayEquals(new int[] {0, 3}, a.nonZeroPositionsInColumn(2, 0, 4));
         assertArrayEquals(new int[] {0, 1, 2, 3}, a.nonZeroPositionsInColumn(3, 0, 4));
+    }
+
+    @Test
+    public void testNonZeroPositionsInColumnInRangeOf_2_to_2() {
+
+        ByteMatrix a = nonZeroPositionsInColumnMatrix();
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(0, 2, 2));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(1, 2, 2));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(2, 2, 2));
+        assertArrayEquals(new int[] {}, a.nonZeroPositionsInColumn(3, 2, 2));
     }
 
     @Test
@@ -2466,6 +2556,24 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testEachInRowInRangeOf_1_to_1() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = minusOneMatrix(a);
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1}
+        });
+
+        a.eachInRow(1, new SetterProcedure(b), 1, 1);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
     public void testEachInRowInRangeOf_1_to_3() {
 
         final ByteMatrix initial = initialMatrix();
@@ -2568,6 +2676,24 @@ public abstract class AbstractByteMatrixTest {
         });
 
         a.eachInColumn(1, new SetterProcedure(b), 0, 3);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachInColumnInRangeOf_1_to_1() {
+
+        final ByteMatrix initial = initialMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = minusOneMatrix(a);
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1},
+                                                                  {-1, -1, -1}
+        });
+
+        a.eachInColumn(1, new SetterProcedure(b), 1, 1);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller matrix
         assertEquals(c, b);
@@ -2725,6 +2851,21 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testUpdateRowInRangeOf_1_to_1() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateRow(1, new IndexModulus2Function(a), 1, 1);
+
+        assertEquals(b, a);
+    }
+
+    @Test
     public void testUpdateRowInRangeOf_1_to_3() {
 
         final ByteMatrix a = allNinesMatrix();
@@ -2810,6 +2951,21 @@ public abstract class AbstractByteMatrixTest {
         });
 
         a.updateColumn(1, new IndexModulus2Function(a), 0, 3);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateColumnInRangeOf_1_to_1() {
+
+        final ByteMatrix a = allNinesMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9},
+                                                                  {9, 9, 9}
+        });
+
+        a.updateColumn(1, new IndexModulus2Function(a), 1, 1);
 
         assertEquals(b, a);
     }
@@ -3025,6 +3181,26 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testEachNonZeroInRowInRangeOf_2_to_2() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInRow(2, new SetterProcedure(b), 2, 2);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
     public void testEachNonZeroInRowInRangeOf_2_to_5() {
 
         final ByteMatrix initial = initialNonZeroMatrix();
@@ -3139,6 +3315,26 @@ public abstract class AbstractByteMatrixTest {
         });
 
         a.eachNonZeroInColumn(2, new SetterProcedure(b), 0, 5);
+
+        assertEquals(initial, a); // check if each wrongly modifies the caller matrix
+        assertEquals(c, b);
+    }
+
+    @Test
+    public void testEachNonZeroInColumnInRangeOf_2_to_2() {
+
+        final ByteMatrix initial = initialNonZeroMatrix();
+        final ByteMatrix a = initial.copy();
+        final ByteMatrix b = bMatrix();
+        final ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3},
+                                                                  {3, 3, 3, 3, 3}
+        });
+
+        a.eachNonZeroInColumn(2, new SetterProcedure(b), 2, 2);
 
         assertEquals(initial, a); // check if each wrongly modifies the caller matrix
         assertEquals(c, b);
@@ -3270,6 +3466,23 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testUpdateNonZeroInRowInRangeOf_2_to_2() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInRow(2, new IndexModulus2Function(a), 2, 2);
+
+        assertEquals(b, a);
+    }
+
+    @Test
     public void testUpdateNonZeroInRowInRangeOf_2_to_5() {
 
         final ByteMatrix a = initialNonZeroMatrix();
@@ -3367,6 +3580,23 @@ public abstract class AbstractByteMatrixTest {
         });
 
         a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 0, 5);
+
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testUpdateNonZeroInColumnInRangeOf_2_to_2() {
+
+        final ByteMatrix a = initialNonZeroMatrix();
+        final ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                                  {5, 5, 9, 5, 5},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {9, 0, 9, 0, 9},
+                                                                  {5, 5, 0, 5, 5},
+                                                                  {5, 5, 9, 5, 5}
+        });
+
+        a.updateNonZeroInColumn(2, new IndexModulus2Function(a), 2, 2);
 
         assertEquals(b, a);
     }
@@ -3529,6 +3759,15 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testRowIterator_1_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.rowIterator(1, 3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testRowIterator_1_InRangeOf_3_to_6() {
 
         ByteMatrix a = iteratorMatrix_1();
@@ -3673,6 +3912,15 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testColumnIterator_1_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.columnIterator(1, 3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testColumnIterator_1_InRangeOf_3_to_6() {
 
         ByteMatrix a = iteratorMatrix_1();
@@ -3786,6 +4034,15 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testRowIterator_2_InRangeOf_1_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.rowIterator(1, 1, 1);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testRowIterator_2_InRangeOf_1_to_3() {
 
         ByteMatrix a = iteratorMatrix_2();
@@ -3880,6 +4137,15 @@ public abstract class AbstractByteMatrixTest {
         it.next();
         assertEquals("get 2", 3, it.get());
         assertEquals("index 2", 2, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testColumnIterator_2_InRangeOf_1_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.columnIterator(1, 1, 1);
 
         assertFalse(it.hasNext());
     }
@@ -4562,6 +4828,15 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testNonZeroRowIterator_1_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 3, 3);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testNonZeroRowIterator_1_InRangeOf_3_to_6() {
 
         ByteMatrix a = iteratorMatrix_1();
@@ -4656,6 +4931,15 @@ public abstract class AbstractByteMatrixTest {
         it.next();
         assertEquals("get 2", 3, it.get());
         assertEquals("index 2", 4, it.index());
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void testNonZeroColumnIterator_1_InRangeOf_3_to_3() {
+
+        ByteMatrix a = iteratorMatrix_1();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 3, 3);
 
         assertFalse(it.hasNext());
     }
@@ -4760,6 +5044,15 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testNonZeroRowIterator_2_InRangeOf_1_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroRowIterator(1, 1, 1);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testNonZeroRowIterator_2_InRangeOf_1_to_3() {
 
         ByteMatrix a = iteratorMatrix_2();
@@ -4859,6 +5152,15 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testNonZeroColumnIterator_2_InRangeOf_1_to_1() {
+
+        ByteMatrix a = iteratorMatrix_2();
+        ByteVectorIterator it = a.nonZeroColumnIterator(1, 1, 1);
+
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testNonZeroColumnIterator_2_InRangeOf_1_to_3() {
 
         ByteMatrix a = iteratorMatrix_2();
@@ -4943,6 +5245,21 @@ public abstract class AbstractByteMatrixTest {
         assertFalse("row", rowIt.hasNext());
 
         ByteVectorIterator colIt = a.nonZeroColumnIterator(1, 0, 3);
+        assertFalse("column", colIt.hasNext());
+    }
+
+    @Test
+    public void testNonZeroRowAndColumnIterator_3_InRangeOf_1_to_1() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 0},
+                                                            {0, 0, 0},
+                                                            {0, 0, 0}
+        });
+        ByteVectorIterator rowIt = a.nonZeroRowIterator(1, 1, 1);
+        assertFalse("row", rowIt.hasNext());
+
+        ByteVectorIterator colIt = a.nonZeroColumnIterator(1, 1, 1);
         assertFalse("column", colIt.hasNext());
     }
 
@@ -5466,5 +5783,236 @@ public abstract class AbstractByteMatrixTest {
 
         assertEquals(1, a.nonZerosInColumn(1));
         assertEquals(a, b);
+    }
+
+    @Test
+    public void testAddRowsInPlace() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 3, 0, 1, 3, 1},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+
+        a.addRowsInPlace(1, 0);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceInRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+
+        a.addRowsInPlace(1, 0, 0, 0);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceInRangeOf_0_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 3, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+
+        a.addRowsInPlace(1, 0, 0, 4);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceInRangeOf_0_to_7() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0, 0, 3, 0, 1, 3, 1},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+
+        a.addRowsInPlace(1, 0, 0, 7);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceInRangeOf_4_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+
+        a.addRowsInPlace(1, 0, 4, 4);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceInRangeOf_4_to_7() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 1, 3, 1},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+
+        a.addRowsInPlace(1, 0, 4, 7);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceInRangeOf_7_to_7() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+
+        a.addRowsInPlace(1, 0, 7, 7);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceWithMultiplier() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {6, 0, 5, 0, 7, 3, 7},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        byte multiplier = 7;
+
+        a.addRowsInPlace(multiplier, 1, 0);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceWithMultiplierInRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        byte multiplier = 7;
+
+        a.addRowsInPlace(multiplier, 1, 0, 0, 0);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceWithMultiplierInRangeOf_0_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {6, 0, 5, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        byte multiplier = 7;
+
+        a.addRowsInPlace(multiplier, 1, 0, 0, 4);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceWithMultiplierInRangeOf_0_to_7() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {6, 0, 5, 0, 7, 3, 7},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        byte multiplier = 7;
+
+        a.addRowsInPlace(multiplier, 1, 0, 0, 7);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceWithMultiplierInRangeOf_4_to_4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        byte multiplier = 7;
+
+        a.addRowsInPlace(multiplier, 1, 0, 4, 4);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceWithMultiplierInRangeOf_4_to_7() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 7, 3, 7},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        byte multiplier = 7;
+
+        a.addRowsInPlace(multiplier, 1, 0, 4, 7);
+        assertEquals(b, a);
+    }
+
+    @Test
+    public void testAddRowsInPlaceWithMultiplierInRangeOf_7_to_7() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1, 0, 2, 0, 0, 3, 0},
+                                                            {1, 0, 1, 0, 1, 0, 1}
+        });
+        byte multiplier = 7;
+
+        a.addRowsInPlace(multiplier, 1, 0, 7, 7);
+        assertEquals(b, a);
     }
 }

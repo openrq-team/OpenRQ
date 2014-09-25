@@ -161,6 +161,43 @@ public interface ByteVector extends Iterable<Byte> {
     void addInPlace(ByteVector vector);
 
     /**
+     * Adds a range of given {@code vector} (X) to a range of this vector (Y) in-place.
+     * 
+     * @param vector
+     *            the right hand vector for addition
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     */
+    void addInPlace(ByteVector vector, int fromIndex, int toIndex);
+
+    /**
+     * Multiplies by a given value the given {@code vector} (X) and adds the result to this vector (Y) in-place.
+     * 
+     * @param multiplier
+     *            The value to multiply the given vector before it is added to this vector
+     * @param vector
+     *            the right hand vector for addition
+     */
+    void addInPlace(byte multiplier, ByteVector vector);
+
+    /**
+     * Multiplies by a given value a range of given {@code vector} (X) and adds the result to a range of this vector (Y)
+     * in-place.
+     * 
+     * @param multiplier
+     *            The value to multiply the given vector before it is added to this vector
+     * @param vector
+     *            the right hand vector for addition
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     */
+    void addInPlace(byte multiplier, ByteVector vector, int fromIndex, int toIndex);
+
+    /**
      * Multiplies this vector (X) by given {@code value} (v).
      * 
      * @param value

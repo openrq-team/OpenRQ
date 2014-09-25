@@ -404,13 +404,13 @@ public final class ByteVectors {
 
         // this prints two lines, the first with indexes and the second with the actual values
         // (this only works fine for indices less than 100)
-        for (int j = 0; j < N; j++)
-            output.printf("* %02d ", j);
+        // for (int j = 0; j < N; j++)
+        // output.printf("* %02d ", j);
 
-        output.println('|');
+        // output.println('|');
 
         for (int j = 0; j < N; j++)
-            output.printf("| %02x ", vector.get(j));
+            output.printf("| %02X ", vector.get(j));
         output.println('|');
     }
 }

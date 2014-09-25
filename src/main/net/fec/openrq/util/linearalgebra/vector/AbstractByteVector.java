@@ -188,6 +188,33 @@ public abstract class AbstractByteVector implements ByteVector {
     }
 
     @Override
+    public void addInPlace(ByteVector vector, int fromIndex, int toIndex) {
+
+        ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector, fromIndex, toIndex);
+
+        pipeTo(VectorOperations.inPlaceVectorToVectorAddition(fromIndex, toIndex), vector);
+    }
+
+    @Override
+    public void addInPlace(byte multiplier, ByteVector vector) {
+
+        ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector);
+
+        pipeTo(VectorOperations.inPlaceVectorToVectorAdditionWithMultiplier(multiplier), vector);
+    }
+
+    @Override
+    public void addInPlace(byte multiplier, ByteVector vector, int fromIndex, int toIndex) {
+
+        ensureArgumentIsNotNull(vector, "vector");
+        ensureVectorIsSimilar(vector, fromIndex, toIndex);
+
+        pipeTo(VectorOperations.inPlaceVectorToVectorAdditionWithMultiplier(multiplier, fromIndex, toIndex), vector);
+    }
+
+    @Override
     public ByteVector multiply(byte value) {
 
         return multiply(value, factory);
@@ -977,6 +1004,12 @@ public abstract class AbstractByteVector implements ByteVector {
         if (length != that.length()) {
             fail("Wong vector length: " + that.length() + ". Should be: " + length + ".");
         }
+    }
+
+    protected void ensureVectorIsSimilar(ByteVector that, int fromIndex, int toIndex) {
+
+        Indexables.checkFromToBounds(fromIndex, toIndex, this.length());
+        Indexables.checkFromToBounds(fromIndex, toIndex, that.length());
     }
 
     protected void ensureArgumentIsNotNull(Object argument, String name) {

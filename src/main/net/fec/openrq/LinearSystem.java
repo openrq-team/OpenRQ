@@ -508,7 +508,7 @@ final class LinearSystem {
          */
 
         final PrintStream timerPrintable = System.out; // DEBUG
-        // final QuietPrintableAppendable timerPrintable = QuietPrintableAppendable.ofNull(); // DEBUG
+        // final PrintableAppendable timerPrintable = PrintableAppendable.ofNull(); // DEBUG
 
         /*
          * First phase

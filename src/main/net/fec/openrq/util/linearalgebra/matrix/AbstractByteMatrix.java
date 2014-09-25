@@ -1738,78 +1738,78 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
 
     @Override
-    public void addRowsInPlace(int row1, int row2) {
+    public void addRowsInPlace(int srcRow, int destRow) {
 
-        Indexables.checkIndexBounds(row1, rows());
-        Indexables.checkIndexBounds(row2, rows());
+        Indexables.checkIndexBounds(srcRow, rows());
+        Indexables.checkIndexBounds(destRow, rows());
 
-        ByteVectorIterator row1It = rowIterator(row1);
-        ByteVectorIterator row2It = rowIterator(row2);
-        while (row1It.hasNext()) { // && row2It.hasNext()
-            row1It.next();
-            row2It.next();
-            row2It.set(aPlusB(row1It.get(), row2It.get()));
+        ByteVectorIterator srcIt = rowIterator(srcRow);
+        ByteVectorIterator destIt = rowIterator(destRow);
+        while (srcIt.hasNext()) { // && destIt.hasNext()
+            srcIt.next();
+            destIt.next();
+            destIt.set(aPlusB(srcIt.get(), destIt.get()));
         }
     }
 
     @Override
-    public void addRowsInPlace(int row1, int row2, int fromColumn, int toColumn) {
+    public void addRowsInPlace(int srcRow, int destRow, int fromColumn, int toColumn) {
 
-        Indexables.checkIndexBounds(row1, rows());
-        Indexables.checkIndexBounds(row2, rows());
+        Indexables.checkIndexBounds(srcRow, rows());
+        Indexables.checkIndexBounds(destRow, rows());
         Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
-        ByteVectorIterator row1It = rowIterator(row1, fromColumn, toColumn);
-        ByteVectorIterator row2It = rowIterator(row2, fromColumn, toColumn);
-        while (row1It.hasNext()) { // && row2It.hasNext()
-            row1It.next();
-            row2It.next();
-            row2It.set(aPlusB(row1It.get(), row2It.get()));
+        ByteVectorIterator srcIt = rowIterator(srcRow, fromColumn, toColumn);
+        ByteVectorIterator destIt = rowIterator(destRow, fromColumn, toColumn);
+        while (srcIt.hasNext()) { // && destIt.hasNext()
+            srcIt.next();
+            destIt.next();
+            destIt.set(aPlusB(srcIt.get(), destIt.get()));
         }
     }
 
     @Override
-    public void addRowsInPlace(byte row1Multiplier, int row1, int row2) {
+    public void addRowsInPlace(byte srcMultiplier, int srcRow, int destRow) {
 
-        if (row1Multiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
-            if (row1Multiplier == 1) { // if the multiplier is one, then a product is not required
-                addRowsInPlace(row1, row2);
+        if (srcMultiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
+            if (srcMultiplier == 1) { // if the multiplier is one, then a product is not required
+                addRowsInPlace(srcRow, destRow);
             }
             else {
-                Indexables.checkIndexBounds(row1, rows());
-                Indexables.checkIndexBounds(row2, rows());
+                Indexables.checkIndexBounds(srcRow, rows());
+                Indexables.checkIndexBounds(destRow, rows());
 
-                ByteVectorIterator row1It = rowIterator(row1);
-                ByteVectorIterator row2It = rowIterator(row2);
-                while (row1It.hasNext()) { // && row2It.hasNext()
-                    row1It.next();
-                    row2It.next();
-                    final byte prod = aTimesB(row1Multiplier, row1It.get());
-                    row2It.set(aPlusB(prod, row2It.get()));
+                ByteVectorIterator srcIt = rowIterator(srcRow);
+                ByteVectorIterator destIt = rowIterator(destRow);
+                while (srcIt.hasNext()) { // && destIt.hasNext()
+                    srcIt.next();
+                    destIt.next();
+                    final byte prod = aTimesB(srcMultiplier, srcIt.get());
+                    destIt.set(aPlusB(prod, destIt.get()));
                 }
             }
         }
     }
 
     @Override
-    public void addRowsInPlace(byte row1Multiplier, int row1, int row2, int fromColumn, int toColumn) {
+    public void addRowsInPlace(byte srcMultiplier, int srcRow, int destRow, int fromColumn, int toColumn) {
 
-        if (row1Multiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
-            if (row1Multiplier == 1) { // if the multiplier is one, then a product is not required
-                addRowsInPlace(row1, row2, fromColumn, toColumn);
+        if (srcMultiplier != 0) { // if the multiplier is zero, then nothing needs to be added to row2
+            if (srcMultiplier == 1) { // if the multiplier is one, then a product is not required
+                addRowsInPlace(srcRow, destRow, fromColumn, toColumn);
             }
             else {
-                Indexables.checkIndexBounds(row1, rows());
-                Indexables.checkIndexBounds(row2, rows());
+                Indexables.checkIndexBounds(srcRow, rows());
+                Indexables.checkIndexBounds(destRow, rows());
                 Indexables.checkFromToBounds(fromColumn, toColumn, columns());
 
-                ByteVectorIterator row1It = rowIterator(row1, fromColumn, toColumn);
-                ByteVectorIterator row2It = rowIterator(row2, fromColumn, toColumn);
-                while (row1It.hasNext()) { // && row2It.hasNext()
-                    row1It.next();
-                    row2It.next();
-                    final byte prod = aTimesB(row1Multiplier, row1It.get());
-                    row2It.set(aPlusB(prod, row2It.get()));
+                ByteVectorIterator srcIt = rowIterator(srcRow, fromColumn, toColumn);
+                ByteVectorIterator destIt = rowIterator(destRow, fromColumn, toColumn);
+                while (srcIt.hasNext()) { // && destIt.hasNext()
+                    srcIt.next();
+                    destIt.next();
+                    final byte prod = aTimesB(srcMultiplier, srcIt.get());
+                    destIt.set(aPlusB(prod, destIt.get()));
                 }
             }
         }
