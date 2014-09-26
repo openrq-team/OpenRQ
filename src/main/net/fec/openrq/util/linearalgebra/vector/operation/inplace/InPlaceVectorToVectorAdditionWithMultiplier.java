@@ -19,7 +19,6 @@ package net.fec.openrq.util.linearalgebra.vector.operation.inplace;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
-import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.dense.DenseByteVector;
 import net.fec.openrq.util.linearalgebra.vector.operation.VectorVectorOperation;
 import net.fec.openrq.util.linearalgebra.vector.operation.inplace.Indexers.Indexer;
@@ -52,7 +51,7 @@ public class InPlaceVectorToVectorAdditionWithMultiplier extends VectorVectorOpe
         // these.andAlsoSubtract(those);
         while (it.hasNext()) {
             it.next();
-            a.update(it.index(), ByteVectors.asPlusFunction(multB(it.get())));
+            a.addInPlace(it.index(), multB(it.get()));
         }
         return null;
     }
@@ -89,6 +88,6 @@ public class InPlaceVectorToVectorAdditionWithMultiplier extends VectorVectorOpe
 
     private byte multB(byte bValue) {
 
-        return aTimesB(bValue, bMultiplier);
+        return aTimesB(bMultiplier, bValue);
     }
 }
