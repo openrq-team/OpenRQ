@@ -564,8 +564,8 @@ final class LinearSystem {
             }
         }
 
-        TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(timerPrintable, "1st(a): ", TimeUnit.MILLISECONDS); // DEBUG
+        // TimePrinter.markTimestamp(); // DEBUG
+        // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(a): ", TimeUnit.MILLISECONDS); // DEBUG
 
         // at most L steps
         while (i + u != L)
@@ -589,7 +589,7 @@ final class LinearSystem {
              * find r
              */
 
-            TimePrinter.beginTimer(); // DEBUG
+            // TimePrinter.beginTimer(); // DEBUG
 
             for (Row row : rows.values()) {
                 if (row.nonZeros != 0) allZeros = false;
@@ -609,8 +609,9 @@ final class LinearSystem {
                 }
             }
 
-            TimePrinter.markTimestamp(); // DEBUG
-            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; find r)", TimeUnit.MILLISECONDS); // DEBUG
+            // TimePrinter.markTimestamp(); // DEBUG
+            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; find r)",
+            // TimeUnit.MILLISECONDS); // DEBUG
 
             if (allZeros) {// DECODING FAILURE
                 throw new SingularMatrixException(
@@ -621,7 +622,7 @@ final class LinearSystem {
              * choose the row
              */
 
-            TimePrinter.beginTimer(); // DEBUG
+            // TimePrinter.beginTimer(); // DEBUG
 
             if (r == 2 && two1s) {
 
@@ -800,9 +801,9 @@ final class LinearSystem {
 
                 chosenRowsCounter++;
 
-                TimePrinter.markTimestamp(); // DEBUG
-                TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; choose row)",
-                    TimeUnit.MILLISECONDS); // DEBUG
+                // TimePrinter.markTimestamp(); // DEBUG
+                // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; choose row)",
+                // TimeUnit.MILLISECONDS); // DEBUG
             }
             else {
 
@@ -823,7 +824,7 @@ final class LinearSystem {
 
             // if the chosen row is not 'i' already
             if (chosenRowPos != i) {
-                TimePrinter.beginTimer(); // DEBUG
+                // TimePrinter.beginTimer(); // DEBUG
 
                 // swap in A
                 A.swapRows(i, chosenRowPos);
@@ -840,9 +841,9 @@ final class LinearSystem {
                 other.position = chosenRowPos;
                 chosenRow.position = i;
 
-                TimePrinter.markTimestamp(); // DEBUG
-                TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap rows)",
-                    TimeUnit.MILLISECONDS); // DEBUG
+                // TimePrinter.markTimestamp(); // DEBUG
+                // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap rows)",
+                // TimeUnit.MILLISECONDS); // DEBUG
             }
 
             /*
@@ -851,7 +852,7 @@ final class LinearSystem {
              * appear in the last columns of V."
              */
 
-            TimePrinter.beginTimer(); // DEBUG
+            // TimePrinter.beginTimer(); // DEBUG
 
             // an array with the positions (column indices) of the non-zeros
             final int[] nonZeroPos = A.nonZeroPositionsInRow(i, i, L - u);
@@ -889,9 +890,9 @@ final class LinearSystem {
                 }
             }
 
-            TimePrinter.markTimestamp(); // DEBUG
-            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap columns)",
-                TimeUnit.MILLISECONDS); // DEBUG
+            // TimePrinter.markTimestamp(); // DEBUG
+            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap columns)",
+            // TimeUnit.MILLISECONDS); // DEBUG
 
             /*
              * "... if a row below the chosen row has entry beta in the first column of V, and the chosen
@@ -899,7 +900,7 @@ final class LinearSystem {
              * row is added to this row to leave a zero value in the first column of V."
              */
 
-            TimePrinter.beginTimer(); // DEBUG
+            // TimePrinter.beginTimer(); // DEBUG
 
             // "the chosen row has entry alpha in the first column of V"
             final byte alpha = A.get(i, i);
@@ -940,9 +941,9 @@ final class LinearSystem {
                 }
             }
 
-            TimePrinter.markTimestamp(); // DEBUG
-            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; row add/mult)",
-                TimeUnit.MILLISECONDS); // DEBUG
+            // TimePrinter.markTimestamp(); // DEBUG
+            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; row add/mult)",
+            // TimeUnit.MILLISECONDS); // DEBUG
 
             /*
              * "Finally, i is incremented by 1 and u is incremented by r-1, which completes the step."
@@ -950,7 +951,7 @@ final class LinearSystem {
             i++;
             u += r - 1;
 
-            TimePrinter.beginTimer(); // DEBUG
+            // TimePrinter.beginTimer(); // DEBUG
 
             // update nonZeros
             for (Row row : rows.values()) {
@@ -972,10 +973,13 @@ final class LinearSystem {
                 }
             }
 
-            TimePrinter.markTimestamp(); // DEBUG
-            TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; update non zeros)",
-                TimeUnit.MILLISECONDS); // DEBUG
+            // TimePrinter.markTimestamp(); // DEBUG
+            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; update non zeros)",
+            // TimeUnit.MILLISECONDS); // DEBUG
         }
+
+        TimePrinter.markTimestamp(); // DEBUG
+        TimePrinter.printlnEllapsedTime(timerPrintable, "1st: ", TimeUnit.MILLISECONDS); // DEBUG
 
         // END OF FIRST PHASE
 
