@@ -51,6 +51,9 @@ final class LinearSystem {
     private static final long A_SPARSE_THRESHOLD = 1L;
     private static final long MT_SPARSE_THRESHOLD = 1L;
 
+    // private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
+    private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
+
 
     private static Factory getMatrixAfactory(int L, int overheadRows) {
 
@@ -192,7 +195,7 @@ final class LinearSystem {
         }
 
         for (int row = 0; row < H; row++) {
-            MT.set(row, Kprime + S - 1, (byte)OctetOps.getExp(row));
+            MT.set(row, Kprime + S - 1, OctetOps.alphaPower(row));
         }
 
         return MT;
@@ -216,7 +219,7 @@ final class LinearSystem {
             for (int col = 0; col < Kprime + S; col++)
             {
                 if (row >= col) {
-                    GAMMA.set(row, col, (byte)OctetOps.getExp((row - col) % 256));
+                    GAMMA.set(row, col, OctetOps.alphaPower((row - col) % 256));
                 }
             }
         }
@@ -279,6 +282,9 @@ final class LinearSystem {
         final int U = P - H;
         final int B = W - S;
 
+        TIMER_PRINTABLE.println(); // DEBUG
+        TimePrinter.beginTimer(); // DEBUG
+
         // allocate memory for the constraint matrix
         ByteMatrix A = getMatrixAfactory(L, overheadRows).createMatrix(L + overheadRows, L);
 
@@ -322,6 +328,9 @@ final class LinearSystem {
 
         // initialize G_ENC
         initializeG_ENC(A, S, H, L, Kprime);
+
+        TimePrinter.markTimestamp(); // DEBUG
+        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "constraint matrix gen: ", TimeUnit.MILLISECONDS); // DEBUG
 
         // return the constraint matrix
         return A;
@@ -507,14 +516,11 @@ final class LinearSystem {
          * DECODING
          */
 
-        final PrintStream timerPrintable = System.out; // DEBUG
-        // final PrintableAppendable timerPrintable = PrintableAppendable.ofNull(); // DEBUG
-
         /*
          * First phase
          */
 
-        timerPrintable.println(); // DEBUG
+        TIMER_PRINTABLE.println(); // DEBUG
         TimePrinter.beginTimer(); // DEBUG
 
         // counts how many rows have been chosen already
@@ -565,7 +571,7 @@ final class LinearSystem {
         }
 
         // TimePrinter.markTimestamp(); // DEBUG
-        // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(a): ", TimeUnit.MILLISECONDS); // DEBUG
+        // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(a): ", TimeUnit.MILLISECONDS); // DEBUG
 
         // at most L steps
         while (i + u != L)
@@ -610,7 +616,7 @@ final class LinearSystem {
             }
 
             // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; find r)",
+            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; find r)",
             // TimeUnit.MILLISECONDS); // DEBUG
 
             if (allZeros) {// DECODING FAILURE
@@ -802,7 +808,7 @@ final class LinearSystem {
                 chosenRowsCounter++;
 
                 // TimePrinter.markTimestamp(); // DEBUG
-                // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; choose row)",
+                // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; choose row)",
                 // TimeUnit.MILLISECONDS); // DEBUG
             }
             else {
@@ -842,7 +848,7 @@ final class LinearSystem {
                 chosenRow.position = i;
 
                 // TimePrinter.markTimestamp(); // DEBUG
-                // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap rows)",
+                // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; swap rows)",
                 // TimeUnit.MILLISECONDS); // DEBUG
             }
 
@@ -891,7 +897,7 @@ final class LinearSystem {
             }
 
             // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; swap columns)",
+            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; swap columns)",
             // TimeUnit.MILLISECONDS); // DEBUG
 
             /*
@@ -942,7 +948,7 @@ final class LinearSystem {
             }
 
             // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; row add/mult)",
+            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; row add/mult)",
             // TimeUnit.MILLISECONDS); // DEBUG
 
             /*
@@ -974,12 +980,12 @@ final class LinearSystem {
             }
 
             // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(timerPrintable, "1st(iter " + (i + u) + "; update non zeros)",
+            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; update non zeros)",
             // TimeUnit.MILLISECONDS); // DEBUG
         }
 
         TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(timerPrintable, "1st: ", TimeUnit.MILLISECONDS); // DEBUG
+        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st: ", TimeUnit.MILLISECONDS); // DEBUG
 
         // END OF FIRST PHASE
 
@@ -1015,7 +1021,7 @@ final class LinearSystem {
          */
 
         TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(timerPrintable, "2nd: ", TimeUnit.MILLISECONDS); // DEBUG
+        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "2nd: ", TimeUnit.MILLISECONDS); // DEBUG
 
         // END OF SECOND PHASE
 
@@ -1063,7 +1069,7 @@ final class LinearSystem {
         // A[row] = XA[row];
 
         TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(timerPrintable, "3rd: ", TimeUnit.MILLISECONDS); // DEBUG
+        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "3rd: ", TimeUnit.MILLISECONDS); // DEBUG
 
         /*
          * Fourth phase
@@ -1104,7 +1110,7 @@ final class LinearSystem {
         }
 
         TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(timerPrintable, "4th: ", TimeUnit.MILLISECONDS); // DEBUG
+        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "4th: ", TimeUnit.MILLISECONDS); // DEBUG
 
         /*
          * Fifth phase
@@ -1167,7 +1173,7 @@ final class LinearSystem {
         }
 
         TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(timerPrintable, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
+        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
 
         // use the already allocated matrix for the matrix C
         final byte[][] C = noOverheadD;

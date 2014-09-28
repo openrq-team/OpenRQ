@@ -31,19 +31,9 @@ public final class OctetOps {
         return UnsignedTypes.getUnsignedByte(b);
     }
 
-    public static int getExp(int i) {
-
-        return OCT_EXP[i];
-    }
-
     public static byte alphaPower(int i) {
 
         return (byte)getExp(i);
-    }
-
-    public static int getLog(int i) {
-
-        return OCT_LOG[i];
     }
 
     public static byte aPlusB(byte u, byte v) {
@@ -214,6 +204,11 @@ public final class OctetOps {
         }
     }
 
+    private static int getExp(int i) {
+
+        return OCT_EXP[i];
+    }
+
 
     private static final int[] OCT_EXP =
     {
@@ -253,6 +248,13 @@ public final class OctetOps {
      22, 44, 88, 176, 125, 250, 233, 207, 131, 27, 54, 108, 216, 173, 71,
      142
     };
+
+
+    private static int getLog(int i) {
+
+        return OCT_LOG[i];
+    }
+
 
     private static final int[] OCT_LOG =
     {
