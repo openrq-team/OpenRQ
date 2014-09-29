@@ -31,7 +31,6 @@ import org.junit.runners.Suite.SuiteClasses;
                ParametersBoundsSuite.class,
                OpenRQClassTest.class,
                DataIntegrityCheckTest.class,
-               PInactivationDecodingTest.class,
                ReadWriteSuite.class
 })
 public class AllTests {
