@@ -94,7 +94,7 @@ public class CCSFactory extends CompressedFactory {
             int[] colCardinalities = new int[columns];
 
             for (int j = 0; j < columns; j++) {
-                colCardinalities[j] = columns;
+                colCardinalities[j] = rows;
                 for (int i = 0; i < rows; i++) {
                     rowValues[j][i] = value;
                     rowIndices[j][i] = i;

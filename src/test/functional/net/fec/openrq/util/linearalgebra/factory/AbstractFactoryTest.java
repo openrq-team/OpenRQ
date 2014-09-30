@@ -67,8 +67,8 @@ public abstract class AbstractFactoryTest extends TestCase {
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++)
             {
-                assertEquals(b.get(i, j), 0);
-                assertEquals(d.get(i, j), 0);
+                assertEquals(0, b.get(i, j));
+                assertEquals(0, d.get(i, j));
             }
         }
     }
@@ -104,7 +104,7 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.columns(); j++) {
-                assertEquals(a.get(i, j), 10);
+                assertEquals(10, a.get(i, j));
             }
         }
     }
@@ -119,7 +119,7 @@ public abstract class AbstractFactoryTest extends TestCase {
 
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.columns(); j++) {
-                assertEquals(a.get(i, j), 20);
+                assertEquals(20, a.get(i, j));
             }
         }
     }
@@ -162,10 +162,10 @@ public abstract class AbstractFactoryTest extends TestCase {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 if (i == j) {
-                    assertEquals(a.get(i, j), 1);
+                    assertEquals(1, a.get(i, j));
                 }
                 else {
-                    assertEquals(a.get(i, j), 0);
+                    assertEquals(0, a.get(i, j));
                 }
             }
         }
@@ -186,7 +186,7 @@ public abstract class AbstractFactoryTest extends TestCase {
                     assertEquals(diagonal[i], a.get(i, j));
                 }
                 else {
-                    assertEquals(a.get(i, j), 0);
+                    assertEquals(0, a.get(i, j));
                 }
             }
         }
@@ -204,7 +204,7 @@ public abstract class AbstractFactoryTest extends TestCase {
         assertEquals(5, c.length());
 
         for (int i = 0; i < b.length(); i++) {
-            assertEquals(b.get(i), 0);
+            assertEquals(0, b.get(i));
         }
     }
 
@@ -217,10 +217,10 @@ public abstract class AbstractFactoryTest extends TestCase {
         assertEquals(3, a.length());
         assertEquals(1, b.length());
 
-        assertEquals(b.get(0), 3);
+        assertEquals(3, b.get(0));
 
         for (int i = 0; i < 3; i++) {
-            assertEquals(a.get(i), 3);
+            assertEquals(3, a.get(i));
         }
     }
 

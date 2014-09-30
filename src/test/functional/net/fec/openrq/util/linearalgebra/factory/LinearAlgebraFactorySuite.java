@@ -25,7 +25,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({
                Basic1DFactoryTest.class,
                Basic2DFactoryTest.class,
-               //CCSFactoryTest.class,
+               CCSFactoryTest.class,
                CRSFactoryTest.class
 })
 public class LinearAlgebraFactorySuite {
