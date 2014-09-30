@@ -54,6 +54,7 @@ public abstract class SparseByteVector extends AbstractByteVector {
     public SparseByteVector(int length, int cardinality) {
 
         super(LinearAlgebra.SPARSE_FACTORY, length);
+        ensureCardinalityIsCorrect(length, cardinality);
         this.cardinality = cardinality;
     }
 
@@ -146,5 +147,18 @@ public abstract class SparseByteVector extends AbstractByteVector {
     public <T> T pipeTo(VectorVectorOperation<T> operation, ByteVector that) {
 
         return that.pipeTo(operation.curry(this));
+    }
+
+    /*
+     * Requires valid length.
+     */
+    protected void ensureCardinalityIsCorrect(int length, int cardinality) {
+
+        if (cardinality < 0) {
+            fail("Wrong vector cardinality: " + length);
+        }
+        if (cardinality > length) {
+            fail("Wrong vector cardinality: must not exceed vector length");
+        }
     }
 }

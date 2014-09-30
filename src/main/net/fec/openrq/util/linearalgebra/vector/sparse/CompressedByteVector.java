@@ -44,7 +44,6 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import java.util.Arrays;
 
 import net.fec.openrq.util.arithmetic.ExtraMath;
-import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -53,14 +52,45 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
+import net.fec.openrq.util.numericaltype.UnsignedTypes;
 
 
 public class CompressedByteVector extends SparseByteVector {
 
     private static final int DEFAULT_CAPACITY = 8;
 
-    private byte values[];
-    private int indices[]; // must always be sorted
+    private static final int INDEX_SHIFT = Byte.SIZE;
+    private static final int MAX_LENGTH = 1 << (31 - INDEX_SHIFT);
+
+
+    private static int toNonZero(byte value, int index) {
+
+        return (index << INDEX_SHIFT) | UnsignedTypes.getUnsignedByte(value);
+    }
+
+    private static byte getValue(int nonzero) {
+
+        return (byte)UnsignedTypes.getUnsignedByte(nonzero);
+    }
+
+    private static int getIndex(int nonzero) {
+
+        return nonzero >>> INDEX_SHIFT;
+    }
+
+    private static int updateValue(int nonzero, byte value) {
+
+        final int indexMask = ((int)UnsignedTypes.MAX_UNSIGNED_INT_VALUE) << INDEX_SHIFT;
+        return (nonzero & indexMask) | UnsignedTypes.getUnsignedByte(value);
+    }
+
+    private static int updateIndex(int nonzero, int index) {
+
+        return (index << INDEX_SHIFT) | UnsignedTypes.getUnsignedByte(nonzero);
+    }
+
+
+    private int nonzeros[]; // must always be sorted
 
 
     public CompressedByteVector() {
@@ -91,10 +121,18 @@ public class CompressedByteVector extends SparseByteVector {
             byte value = source.get(i);
             if (value != 0) {
                 ensureCapacity(+1);
-                values[cardinality] = value;
-                indices[cardinality] = i;
+                nonzeros[cardinality] = toNonZero(value, i);
                 cardinality++;
             }
+        }
+    }
+
+    public CompressedByteVector(int length, int cardinality, byte values[], int indices[]) {
+
+        this(length, cardinality);
+
+        for (int i = 0; i < cardinality; i++) {
+            nonzeros[i] = toNonZero(values[i], indices[i]);
         }
     }
 
@@ -102,16 +140,15 @@ public class CompressedByteVector extends SparseByteVector {
 
         super(length, cardinality);
 
-        this.values = new byte[cardinality];
-        this.indices = new int[cardinality];
+        if (length > MAX_LENGTH) fail("Maximum length exceeded.");
+        this.nonzeros = new int[cardinality];
     }
 
-    public CompressedByteVector(int length, int cardinality, byte values[], int indices[]) {
+    private CompressedByteVector(int length, int cardinality, int[] nonzeros) {
 
         super(length, cardinality);
 
-        this.values = values;
-        this.indices = indices;
+        this.nonzeros = nonzeros;
     }
 
     /**
@@ -156,7 +193,24 @@ public class CompressedByteVector extends SparseByteVector {
      */
     private int binarySearch(int i) {
 
-        return Arrays.binarySearch(indices, 0, cardinality, i);
+        int low = 0;
+        int high = cardinality - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            int midInd = getIndex(nonzeros[mid]);
+
+            if (midInd < i) {
+                low = mid + 1;
+            }
+            else if (midInd > i) {
+                high = mid - 1;
+            }
+            else {
+                return mid; // key found
+            }
+        }
+        return -(low + 1);  // key not found.
     }
 
     private SearchEntry searchByIndex(int i) {
@@ -282,7 +336,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public int[] nonZeroPositions() {
 
-        return Arrays.copyOf(indices, cardinality);
+        return extractIndices(0, cardinality);
     }
 
     @Override
@@ -290,7 +344,17 @@ public class CompressedByteVector extends SparseByteVector {
 
         Indexables.checkFromToBounds(from, to, length());
         SearchRange range = searchByRange(from, to);
-        return Arrays.copyOfRange(indices, range.fromK(), range.toK());
+        return extractIndices(range.fromK(), range.toK());
+    }
+
+    private int[] extractIndices(int fromK, int toK) {
+
+        final int[] indices = new int[toK - fromK];
+        for (int i = fromK; i < toK; i++) {
+            indices[i - fromK] = getIndex(nonzeros[i]);
+        }
+
+        return indices;
     }
 
     @Override
@@ -310,38 +374,37 @@ public class CompressedByteVector extends SparseByteVector {
             // if both positions were found
             if (hasEntry(leftPos) && hasEntry(rightPos)) {
                 // only need to swap the non zero values, since the column indices remain fixed
-                ArrayUtils.swapBytes(values, leftPos, rightPos);
+                final byte leftValue = getValue(nonzeros[leftPos]);
+                final byte rightValue = getValue(nonzeros[rightPos]);
+                nonzeros[leftPos] = updateValue(nonzeros[leftPos], rightValue);
+                nonzeros[rightPos] = updateValue(nonzeros[rightPos], leftValue);
             }
             else if (hasEntry(leftPos)) { // if only the left position was found
                 // store temporarily the current value at leftPos
-                byte tempLeftValue = values[leftPos];
+                int prevLeftNonzero = nonzeros[leftPos];
 
                 // the new position of the element at leftPos is the position
                 // immediately before the insertion position of rightPos
                 final int newLeftPos = getEntry(rightPos) - 1;
 
                 // shift the elements between leftPos and newLeftPos by one to the left
-                System.arraycopy(indices, leftPos + 1, indices, leftPos, newLeftPos - leftPos);
-                System.arraycopy(values, leftPos + 1, values, leftPos, newLeftPos - leftPos);
+                System.arraycopy(nonzeros, leftPos + 1, nonzeros, leftPos, newLeftPos - leftPos);
 
                 // update the element at newLeftPos with the new value/position
-                indices[newLeftPos] = right;
-                values[newLeftPos] = tempLeftValue;
+                nonzeros[newLeftPos] = updateIndex(prevLeftNonzero, right);
             }
             else if (hasEntry(rightPos)) { // if only the right position was found
                 // store temporarily the current value at rightPos
-                byte tempRightValue = values[rightPos];
+                int prevRightNonzero = nonzeros[rightPos];
 
                 // the new position of the element at rightPos is the insertion position of leftPos
                 final int newRightPos = getEntry(leftPos);
 
                 // shift the elements between newRightPos and rightPos by one to the right
-                System.arraycopy(indices, newRightPos, indices, newRightPos + 1, rightPos - newRightPos);
-                System.arraycopy(values, newRightPos, values, newRightPos + 1, rightPos - newRightPos);
+                System.arraycopy(nonzeros, newRightPos, nonzeros, newRightPos + 1, rightPos - newRightPos);
 
                 // update the element at newRightPos with the new value/position
-                indices[newRightPos] = left;
-                values[newRightPos] = tempRightValue;
+                nonzeros[newRightPos] = updateIndex(prevRightNonzero, left);
             }
             // else nothing needs to be swapped
         }
@@ -353,10 +416,9 @@ public class CompressedByteVector extends SparseByteVector {
         ensureLengthIsCorrect($length);
 
         final int $cardinality = ($length >= this.length()) ? this.cardinality : getEntry(binarySearch($length));
-        final byte $values[] = Arrays.copyOf(this.values, $cardinality);
-        final int $indices[] = Arrays.copyOf(this.indices, $cardinality);
+        final int $nonzeros[] = Arrays.copyOf(this.nonzeros, $cardinality);
 
-        return new CompressedByteVector($length, $cardinality, $values, $indices);
+        return new CompressedByteVector($length, $cardinality, $nonzeros);
     }
 
     @Override
@@ -390,11 +452,9 @@ public class CompressedByteVector extends SparseByteVector {
         if (value != 0) { // only nonzero values need to be inserted
             ensureCapacity(+1);
 
-            System.arraycopy(values, k, values, k + 1, cardinality - k);
-            System.arraycopy(indices, k, indices, k + 1, cardinality - k);
+            System.arraycopy(nonzeros, k, nonzeros, k + 1, cardinality - k);
 
-            values[k] = value;
-            indices[k] = i;
+            nonzeros[k] = toNonZero(value, i);
             cardinality++;
         }
     }
@@ -402,27 +462,20 @@ public class CompressedByteVector extends SparseByteVector {
     private void removeNonZero(int k) {
 
         cardinality--;
-        System.arraycopy(values, k + 1, values, k, cardinality - k);
-        System.arraycopy(indices, k + 1, indices, k, cardinality - k);
+        System.arraycopy(nonzeros, k + 1, nonzeros, k, cardinality - k);
     }
 
     // requires non-negative extraElements
     private void ensureCapacity(int extraElements) {
 
         final int minCapacity = ExtraMath.addExact(cardinality, extraElements);
-        final int oldCapacity = values.length;
+        final int oldCapacity = nonzeros.length;
 
         if (minCapacity > oldCapacity) {
             final int newCapacity = getNewCapacity(minCapacity, oldCapacity);
-
-            final byte[] newValues = new byte[newCapacity];
-            final int[] newIndices = new int[newCapacity];
-
-            System.arraycopy(values, 0, newValues, 0, cardinality);
-            System.arraycopy(indices, 0, newIndices, 0, cardinality);
-
-            values = newValues;
-            indices = newIndices;
+            final int[] newNonzeros = new int[newCapacity];
+            System.arraycopy(nonzeros, 0, newNonzeros, 0, cardinality);
+            nonzeros = newNonzeros;
         }
     }
 
@@ -461,14 +514,14 @@ public class CompressedByteVector extends SparseByteVector {
 
         byte value() {
 
-            return isNonZero() ? values[k] : 0;
+            return isNonZero() ? getValue(nonzeros[k]) : 0;
         }
 
         void update(byte value) {
 
             if (isNonZero()) {
                 if (value != 0) {
-                    values[k] = value;
+                    nonzeros[k] = updateValue(nonzeros[k], value);
                 }
                 else {
                     removeNonZero(k);
@@ -549,7 +602,7 @@ public class CompressedByteVector extends SparseByteVector {
         @Override
         public byte get() {
 
-            return isCurrentNonZero() ? values[k] : 0;
+            return isCurrentNonZero() ? getValue(nonzeros[k]) : 0;
         }
 
         @Override
@@ -557,7 +610,7 @@ public class CompressedByteVector extends SparseByteVector {
 
             if (isCurrentNonZero()) {
                 if (value != 0) {
-                    values[k] = value;
+                    nonzeros[k] = updateValue(nonzeros[k], value);
                 }
                 else {
                     removeNonZero(k);
@@ -592,7 +645,7 @@ public class CompressedByteVector extends SparseByteVector {
 
         private boolean isCurrentNonZero() {
 
-            return k < cardinality && indices[k] == i;
+            return k < cardinality && getIndex(nonzeros[k]) == i;
         }
     }
 
@@ -630,13 +683,13 @@ public class CompressedByteVector extends SparseByteVector {
         @Override
         public int index() {
 
-            return currentIsRemoved ? removedIndex : indices[k];
+            return currentIsRemoved ? removedIndex : getIndex(nonzeros[k]);
         }
 
         @Override
         public byte get() {
 
-            return currentIsRemoved ? 0 : values[k];
+            return currentIsRemoved ? 0 : getValue(nonzeros[k]);
         }
 
         @Override
@@ -644,11 +697,11 @@ public class CompressedByteVector extends SparseByteVector {
 
             if (value == 0 && !currentIsRemoved) {
                 currentIsRemoved = true;
-                removedIndex = indices[k];
+                removedIndex = getIndex(nonzeros[k]);
                 removeNonZero(k--);
             }
             else if (value != 0 && !currentIsRemoved) {
-                values[k] = value;
+                nonzeros[k] = updateValue(nonzeros[k], value);
             }
             else {
                 currentIsRemoved = false;
@@ -659,14 +712,14 @@ public class CompressedByteVector extends SparseByteVector {
         @Override
         public boolean hasNext() {
 
-            return k + 1 < cardinality && indices[k + 1] < end;
+            return k + 1 < cardinality && getIndex(nonzeros[k + 1]) < end;
         }
 
         @Override
         public Byte next() {
 
             currentIsRemoved = false;
-            return values[++k];
+            return getValue(nonzeros[++k]);
         }
 
         @Override
