@@ -36,6 +36,7 @@
 package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
+import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -114,9 +115,7 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
         Indexables.checkIndexBounds(j, rows());
 
         if (i != j) {
-            byte tmp[] = self[i];
-            self[i] = self[j];
-            self[j] = tmp;
+            ArrayUtils.swapObjects(self, i, j);
         }
     }
 
@@ -128,9 +127,7 @@ public class Basic2DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
         if (i != j) {
             for (int ii = 0; ii < rows(); ii++) {
-                byte tmp = self[ii][i];
-                self[ii][i] = self[ii][j];
-                self[ii][j] = tmp;
+                ArrayUtils.swapBytes(self[ii], i, j);
             }
         }
     }

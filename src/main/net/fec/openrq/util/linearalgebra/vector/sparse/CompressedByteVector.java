@@ -60,6 +60,7 @@ public class CompressedByteVector extends SparseByteVector {
     private static final int DEFAULT_CAPACITY = 8;
 
     private static final int INDEX_SHIFT = Byte.SIZE;
+    private static final int INDEX_MASK = ((int)UnsignedTypes.MAX_UNSIGNED_INT_VALUE) << INDEX_SHIFT;
     private static final int MAX_LENGTH = 1 << (31 - INDEX_SHIFT);
 
 
@@ -80,8 +81,7 @@ public class CompressedByteVector extends SparseByteVector {
 
     private static int updateValue(int nonzero, byte value) {
 
-        final int indexMask = ((int)UnsignedTypes.MAX_UNSIGNED_INT_VALUE) << INDEX_SHIFT;
-        return (nonzero & indexMask) | UnsignedTypes.getUnsignedByte(value);
+        return (nonzero & INDEX_MASK) | UnsignedTypes.getUnsignedByte(value);
     }
 
     private static int updateIndex(int nonzero, int index) {

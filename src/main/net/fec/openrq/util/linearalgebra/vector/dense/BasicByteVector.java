@@ -36,6 +36,7 @@
 package net.fec.openrq.util.linearalgebra.vector.dense;
 
 
+import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
@@ -96,9 +97,7 @@ public class BasicByteVector extends DenseByteVector {
         Indexables.checkIndexBounds(j, length());
 
         if (i != j) {
-            byte d = self[i];
-            self[i] = self[j];
-            self[j] = d;
+            ArrayUtils.swapBytes(self, i, j);
         }
     }
 
