@@ -256,6 +256,37 @@ public interface ByteMatrix {
      */
     ByteMatrix multiply(ByteMatrix matrix, Factory factory);
 
+    ByteMatrix multiply(
+        ByteMatrix matrix,
+        int fromThisRow,
+        int toThisRow,
+        int fromThisColumn,
+        int toThisColumn,
+        int fromOtherRow,
+        int toOtherRow,
+        int fromOtherColumn,
+        int toOtherColumn);
+
+    ByteMatrix multiply(
+        ByteMatrix matrix,
+        int fromThisRow,
+        int toThisRow,
+        int fromThisColumn,
+        int toThisColumn,
+        int fromOtherRow,
+        int toOtherRow,
+        int fromOtherColumn,
+        int toOtherColumn,
+        Factory factory);
+
+    ByteVector multiplyRow(int i, ByteMatrix matrix);
+
+    ByteVector multiplyRow(int i, ByteMatrix matrix, Factory factory);
+
+    ByteVector multiplyRow(int i, ByteMatrix matrix, int fromColumn, int toColumn);
+
+    ByteVector multiplyRow(int i, ByteMatrix matrix, int fromColumn, int toColumn, Factory factory);
+
     /**
      * Subtracts given {@code value} (v) from every element of this matrix (A).
      * 

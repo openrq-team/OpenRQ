@@ -74,7 +74,7 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
 
     public Basic1DByteMatrix(byte array[][]) {
 
-        this(array.length, array[0].length);
+        this(array.length, array.length == 0 ? 0 : array[0].length);
 
         int offset = 0;
         for (int i = 0; i < rows(); i++) {

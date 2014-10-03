@@ -36,9 +36,7 @@
 package net.fec.openrq.util.linearalgebra.vector.dense;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
-import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.operation.VectorOperation;
@@ -70,26 +68,4 @@ public abstract class DenseByteVector extends AbstractByteVector {
      * @return array representation of this vector
      */
     public abstract byte[] toArray();
-
-    @Override
-    public ByteVector multiply(byte value, Factory factory) {
-
-        ensureFactoryIsNotNull(factory);
-        ByteVector result = blank(factory);
-
-        for (int i = 0; i < length(); i++) {
-            result.set(i, aTimesB(safeGet(i), value));
-        }
-
-        return result;
-    }
-
-    @Override
-    public void multiplyInPlace(byte value) {
-
-        // TODO: multiply by 0 = clear()
-        for (int i = 0; i < length(); i++) {
-            safeSet(i, aTimesB(safeGet(i), value));
-        }
-    }
 }

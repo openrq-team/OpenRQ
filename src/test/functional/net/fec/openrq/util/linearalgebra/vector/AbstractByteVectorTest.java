@@ -526,6 +526,79 @@ public abstract class AbstractByteVectorTest {
     }
 
     @Test
+    public void testMultiply_5_0x0_InRangeOf_0_to_0() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 1});
+        ByteMatrix b = factory().createMatrix(new byte[][] {});
+        ByteVector c = factory().createVector(new byte[] {});
+
+        assertEquals(c, a.multiply(b, 0, 0));
+    }
+
+    @Test
+    public void testMultiply_5_3x1_InRangeOf_0_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 1});
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0},
+                                                            {3},
+                                                            {0}
+        });
+        ByteVector c = factory().createVector(new byte[] {3});
+
+        assertEquals(c, a.multiply(b, 0, 3));
+    }
+
+    @Test
+    public void testMultiply_5_5x1_InRangeOf_0_to_5() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 1});
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0},
+                                                            {3},
+                                                            {0},
+                                                            {3},
+                                                            {0}
+        });
+        ByteVector c = factory().createVector(new byte[] {5});
+
+        assertEquals(c, a.multiply(b, 0, 5));
+    }
+
+    @Test
+    public void testMultiply_5_0x0_InRangeOf_3_to_3() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 1});
+        ByteMatrix b = factory().createMatrix(new byte[][] {});
+        ByteVector c = factory().createVector(new byte[] {});
+
+        assertEquals(c, a.multiply(b, 3, 3));
+    }
+
+    @Test
+    public void testMultiply_5_2x1_InRangeOf_3_to_5() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 1});
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {0},
+                                                            {3}
+        });
+        ByteVector c = factory().createVector(new byte[] {3});
+
+        assertEquals(c, a.multiply(b, 3, 5));
+    }
+
+    @Test
+    public void testMultiply_5_0x0_InRangeOf_5_to_5() {
+
+        ByteVector a = factory().createVector(new byte[] {0, 1, 0, 2, 1});
+        ByteMatrix b = factory().createMatrix(new byte[][] {});
+        ByteVector c = factory().createVector(new byte[] {});
+
+        assertEquals(c, a.multiply(b, 5, 5));
+    }
+
+    @Test
     public void testProduct_3() {
 
         ByteVector a = factory().createVector(new byte[] {2, 4, 6});

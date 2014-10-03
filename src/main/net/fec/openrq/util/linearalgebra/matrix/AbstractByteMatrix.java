@@ -66,7 +66,7 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     private final int rows;
     private final int columns;
 
-    protected Factory factory;
+    private final Factory factory;
 
 
     protected AbstractByteMatrix(Factory factory, int rows, int columns) {
@@ -448,15 +448,15 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
         ByteVector result = factory.createVector(rows);
 
         for (int i = 0; i < rows; i++) {
-
             byte acc = 0;
-
             for (int j = 0; j < columns; j++) {
                 final byte prod = aTimesB(safeGet(i, j), vector.get(j));
                 acc = aPlusB(acc, prod);
             }
 
-            result.set(i, acc);
+            if (acc != 0) {
+                result.set(i, acc);
+            }
         }
 
         return result;
@@ -481,21 +481,157 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
 
         ByteMatrix result = factory.createMatrix(rows, matrix.columns());
 
-        for (int j = 0; j < matrix.columns(); j++) {
-
-            ByteVector column = matrix.getColumn(j);
-
-            for (int i = 0; i < rows; i++) {
-
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < result.columns(); j++) {
                 byte acc = 0;
-
                 for (int k = 0; k < columns; k++) {
-                    final byte prod = aTimesB(safeGet(i, k), column.get(k));
+                    final byte prod = aTimesB(safeGet(i, k), matrix.get(k, j));
                     acc = aPlusB(acc, prod);
                 }
 
-                result.set(i, j, acc);
+                if (acc != 0) {
+                    result.set(i, j, acc);
+                }
             }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteMatrix multiply(
+        ByteMatrix matrix,
+        int fromThisRow,
+        int toThisRow,
+        int fromThisColumn,
+        int toThisColumn,
+        int fromOtherRow,
+        int toOtherRow,
+        int fromOtherColumn,
+        int toOtherColumn)
+    {
+
+        return multiply(
+            matrix,
+            fromThisRow, toThisRow,
+            fromThisColumn, toThisColumn,
+            fromOtherRow, toOtherRow,
+            fromOtherColumn, toOtherColumn,
+            factory);
+    }
+
+    @Override
+    public ByteMatrix multiply(
+        ByteMatrix matrix,
+        int fromThisRow,
+        int toThisRow,
+        int fromThisColumn,
+        int toThisColumn,
+        int fromOtherRow,
+        int toOtherRow,
+        int fromOtherColumn,
+        int toOtherColumn,
+        Factory factory)
+    {
+
+        ensureFactoryIsNotNull(factory);
+        ensureArgumentIsNotNull(matrix, "matrix");
+        Indexables.checkFromToBounds(fromThisRow, toThisRow, rows);
+        Indexables.checkFromToBounds(fromThisColumn, toThisColumn, columns);
+        Indexables.checkFromToBounds(fromOtherRow, fromOtherRow, matrix.rows());
+        Indexables.checkFromToBounds(fromOtherColumn, toOtherColumn, matrix.columns());
+
+        if ((toThisColumn - fromThisColumn) != (toOtherRow - fromOtherRow)) {
+            fail("Wrong matrix dimensions: " +
+                 (toOtherRow - fromOtherRow) + "x" + (toOtherColumn - fromOtherColumn) +
+                 ". Should be: " + (toThisColumn - fromThisColumn) + "x_.");
+        }
+
+        ByteMatrix result = factory.createMatrix(toThisRow - fromThisRow, toOtherColumn - fromOtherColumn);
+
+        for (int i = fromThisRow; i < toThisRow; i++) {
+            for (int j = fromOtherColumn; j < toOtherColumn; j++) {
+                byte acc = 0;
+                for (int k = fromThisColumn; k < toThisColumn; k++) {
+                    final byte prod = aTimesB(safeGet(i, k), matrix.get(k, j));
+                    acc = aPlusB(acc, prod);
+                }
+
+                if (acc != 0) {
+                    result.set(i - fromThisRow, j - fromOtherColumn, acc);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector multiplyRow(int i, ByteMatrix matrix) {
+
+        return multiplyRow(i, matrix, factory);
+    }
+
+    @Override
+    public ByteVector multiplyRow(int i, ByteMatrix matrix, Factory factory) {
+
+        ensureFactoryIsNotNull(factory);
+        ensureArgumentIsNotNull(matrix, "matrix");
+
+        if (columns != matrix.rows()) {
+            fail("Wrong matrix dimensions: " + matrix.rows() + "x" + matrix.columns() +
+                 ". Should be: " + columns + "x_.");
+        }
+
+        ByteVector result = factory.createVector(matrix.columns());
+
+        for (int j = 0; j < matrix.columns(); j++) {
+            byte acc = 0;
+
+            ByteVectorIterator it = rowIterator(i);
+            while (it.hasNext()) {
+                it.next();
+                final byte prod = aTimesB(it.get(), matrix.get(it.index(), j));
+                acc = aPlusB(acc, prod);
+            }
+
+            result.set(j, acc);
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector multiplyRow(int i, ByteMatrix matrix, int fromColumn, int toColumn) {
+
+        return multiplyRow(i, matrix, fromColumn, toColumn, factory);
+    }
+
+    @Override
+    public ByteVector multiplyRow(int i, ByteMatrix matrix, int fromColumn, int toColumn, Factory factory) {
+
+        ensureFactoryIsNotNull(factory);
+        ensureArgumentIsNotNull(matrix, "matrix");
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
+
+        if ((toColumn - fromColumn) != matrix.rows()) {
+            fail("Wrong matrix dimensions: " + matrix.rows() + "x" + matrix.columns() +
+                 ". Should be: " + (toColumn - fromColumn) + "x_.");
+        }
+
+        ByteVector result = factory.createVector(matrix.columns());
+
+        for (int j = 0; j < matrix.columns(); j++) {
+            byte acc = 0;
+
+            ByteVectorIterator it = rowIterator(i, fromColumn, toColumn);
+            while (it.hasNext()) {
+                it.next();
+                final byte prod = aTimesB(it.get(), matrix.get(it.index() - fromColumn, j));
+                acc = aPlusB(acc, prod);
+            }
+
+            result.set(j, acc);
         }
 
         return result;

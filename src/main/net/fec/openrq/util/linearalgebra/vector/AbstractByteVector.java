@@ -228,13 +228,14 @@ public abstract class AbstractByteVector implements ByteVector {
     public ByteVector multiply(byte value, Factory factory) {
 
         ensureFactoryIsNotNull(factory);
-
         ByteVector result = blank(factory);
-        ByteVectorIterator it = nonZeroIterator();
 
-        while (it.hasNext()) {
-            it.next();
-            result.set(it.index(), aTimesB(it.get(), value));
+        if (value != 0) {
+            ByteVectorIterator it = iterator();
+            while (it.hasNext()) {
+                it.next();
+                result.set(it.index(), aTimesB(value, it.get()));
+            }
         }
 
         return result;
@@ -243,12 +244,15 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void multiplyInPlace(byte value) {
 
-        // TODO: multiply by 0 = clear()
-        ByteVectorIterator it = nonZeroIterator();
-
-        while (it.hasNext()) {
-            it.next();
-            it.set(aTimesB(it.get(), value));
+        if (value == 0) {
+            clear();
+        }
+        else {
+            ByteVectorIterator it = iterator();
+            while (it.hasNext()) {
+                it.next();
+                it.set(aTimesB(it.get(), value));
+            }
         }
     }
 
@@ -288,11 +292,48 @@ public abstract class AbstractByteVector implements ByteVector {
         ByteVector result = factory.createVector(matrix.columns());
 
         for (int j = 0; j < matrix.columns(); j++) {
-
             byte acc = 0;
 
-            for (int i = 0; i < matrix.rows(); i++) {
-                final byte prod = aTimesB(safeGet(i), matrix.get(i, j));
+            ByteVectorIterator it = iterator();
+            while (it.hasNext()) {
+                it.next();
+                final byte prod = aTimesB(it.get(), matrix.get(it.index(), j));
+                acc = aPlusB(acc, prod);
+            }
+
+            result.set(j, acc);
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector multiply(ByteMatrix matrix, int fromIndex, int toIndex) {
+
+        return multiply(matrix, fromIndex, toIndex, factory);
+    }
+
+    @Override
+    public ByteVector multiply(ByteMatrix matrix, int fromIndex, int toIndex, Factory factory) {
+
+        ensureFactoryIsNotNull(factory);
+        ensureArgumentIsNotNull(matrix, "matrix");
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
+
+        if ((toIndex - fromIndex) != matrix.rows()) {
+            fail("Wrong matrix dimensions: " + matrix.rows() + "x" + matrix.columns() +
+                 ". Should be: " + (toIndex - fromIndex) + "x_.");
+        }
+
+        ByteVector result = factory.createVector(matrix.columns());
+
+        for (int j = 0; j < matrix.columns(); j++) {
+            byte acc = 0;
+
+            ByteVectorIterator it = iterator(fromIndex, toIndex);
+            while (it.hasNext()) {
+                it.next();
+                final byte prod = aTimesB(it.get(), matrix.get(it.index() - fromIndex, j));
                 acc = aPlusB(acc, prod);
             }
 

@@ -21,10 +21,7 @@ import java.util.Arrays;
 
 import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.array.ArrayUtils;
-import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-import net.fec.openrq.util.linearalgebra.vector.ByteVector;
-import net.fec.openrq.util.linearalgebra.vector.dense.DenseByteVector;
 
 
 /**
@@ -174,41 +171,6 @@ final class MatrixUtilities {
         }
     }
 
-    /**
-     * Multiplies a sub-matrix of Matrix A by a sub-matrix of Matrix B. Requires the number
-     * of columns in A's sub-matrix to be equal to the number of rows in B's sub-matrix.
-     * 
-     * @param A
-     *            Matrix A
-     * @param first_rowA
-     * @param first_colA
-     * @param last_rowA
-     * @param last_colA
-     * @param B
-     *            Matrix B
-     * @param first_rowB
-     * @param first_colB
-     * @param last_rowB
-     * @param last_colB
-     * @return A*B
-     */
-    static ByteMatrix multiplyMatrices(ByteMatrix A, int first_rowA, int last_rowA, int first_colA, int last_colA,
-        ByteMatrix B, int first_rowB, int last_rowB, int first_colB, int last_colB) {
-
-        // if ((last_colA - first_colA) != (last_rowB - first_rowB)) throw new
-        // RuntimeException("Illegal matrix dimensions.");
-
-        final int[] aRowIndices = getIndicesFromRange(first_rowA, last_rowA);
-        final int[] aColIndices = getIndicesFromRange(first_colA, last_colA);
-        final ByteMatrix subA = A.select(aRowIndices, aColIndices);
-
-        final int[] bRowIndices = getIndicesFromRange(first_rowB, last_rowB);
-        final int[] bColIndices = getIndicesFromRange(first_colB, last_colB);
-        final ByteMatrix subB = B.select(bRowIndices, bColIndices);
-
-        return subA.multiply(subB);
-    }
-
     private static int[] getIndicesFromRange(int from, int to) {
 
         if (from < 0 || to < from) {
@@ -250,29 +212,6 @@ final class MatrixUtilities {
         }
 
         return result;
-    }
-
-    /**
-     * Multiplies a row (<code>line</code>) by a vector.
-     * The number of columns in <code>line</code> must be equal to the number of rows
-     * in <code>vector</coder>
-     * 
-     * @param line
-     * @param line_length
-     * @param vector
-     * @return a vector
-     */
-    static byte[] multiplyByteLineBySymbolVector(ByteVector line, int line_length, byte[][] vector) {
-
-        final ByteVector subLine = line.resize(line_length);
-        final byte[][] subVector = new byte[line_length][];
-        for (int i = 0; i < line_length; i++) {
-            subVector[i] = vector[i];
-        }
-
-        final ByteMatrix vecMatrix = LinearAlgebra.BASIC2D_FACTORY.createMatrix(subVector);
-        final DenseByteVector result = (DenseByteVector)subLine.multiply(vecMatrix, LinearAlgebra.DENSE_FACTORY);
-        return result.toArray();
     }
 
     /**

@@ -266,6 +266,34 @@ public interface ByteVector extends Iterable<Byte> {
     ByteVector multiply(ByteMatrix matrix, Factory factory);
 
     /**
+     * Multiples a region of this vector (X) by given {@code matrix} (A).
+     * 
+     * @param matrix
+     *            the right hand matrix for multiplication
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @return X * A
+     */
+    ByteVector multiply(ByteMatrix matrix, int fromIndex, int toIndex);
+
+    /**
+     * Multiples a region of this vector (X) by given {@code matrix} (A).
+     * 
+     * @param matrix
+     *            the right hand matrix for multiplication
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     * @param factory
+     *            the factory of result vector
+     * @return X * A
+     */
+    ByteVector multiply(ByteMatrix matrix, int fromIndex, int toIndex, Factory factory);
+
+    /**
      * Subtracts given {@code value} (v) from this vector (X).
      * 
      * @param value

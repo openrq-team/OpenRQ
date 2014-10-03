@@ -236,6 +236,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVector multiply(byte value, Factory factory) {
 
+        ensureFactoryIsNotNull(factory);
         ByteVector result = blank(factory);
 
         if (value != 0) {
@@ -250,6 +251,21 @@ public class CompressedByteVector extends SparseByteVector {
     }
 
     @Override
+    public void multiplyInPlace(byte value) {
+
+        if (value == 0) {
+            clear();
+        }
+        else {
+            ByteVectorIterator it = nonZeroIterator();
+            while (it.hasNext()) {
+                it.next();
+                it.set(aTimesB(it.get(), value));
+            }
+        }
+    }
+
+    @Override
     public ByteVector multiply(ByteMatrix matrix) {
 
         return multiply(matrix, factory());
@@ -258,6 +274,7 @@ public class CompressedByteVector extends SparseByteVector {
     @Override
     public ByteVector multiply(ByteMatrix matrix, Factory factory) {
 
+        ensureFactoryIsNotNull(factory);
         ensureArgumentIsNotNull(matrix, "matrix");
 
         if (length() != matrix.rows()) {
@@ -274,6 +291,42 @@ public class CompressedByteVector extends SparseByteVector {
             while (it.hasNext()) {
                 it.next();
                 final byte prod = aTimesB(it.get(), matrix.get(it.index(), j));
+                acc = aPlusB(acc, prod);
+            }
+
+            result.set(j, acc);
+        }
+
+        return result;
+    }
+
+    @Override
+    public ByteVector multiply(ByteMatrix matrix, int fromIndex, int toIndex) {
+
+        return multiply(matrix, fromIndex, toIndex, factory());
+    }
+
+    @Override
+    public ByteVector multiply(ByteMatrix matrix, int fromIndex, int toIndex, Factory factory) {
+
+        ensureFactoryIsNotNull(factory);
+        ensureArgumentIsNotNull(matrix, "matrix");
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
+
+        if ((toIndex - fromIndex) != matrix.rows()) {
+            fail("Wrong matrix dimensions: " + matrix.rows() + "x" + matrix.columns() +
+                 ". Should be: " + (toIndex - fromIndex) + "x_.");
+        }
+
+        ByteVector result = factory.createVector(matrix.columns());
+
+        for (int j = 0; j < matrix.columns(); j++) {
+            byte acc = 0;
+
+            ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
+            while (it.hasNext()) {
+                it.next();
+                final byte prod = aTimesB(it.get(), matrix.get(it.index() - fromIndex, j));
                 acc = aPlusB(acc, prod);
             }
 

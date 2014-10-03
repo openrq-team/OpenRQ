@@ -125,4 +125,9 @@ public class BasicByteVector extends DenseByteVector {
         System.arraycopy(self, 0, result, 0, length());
         return result;
     }
+
+    public byte[] getInternalArray() {
+
+        return self;
+    }
 }

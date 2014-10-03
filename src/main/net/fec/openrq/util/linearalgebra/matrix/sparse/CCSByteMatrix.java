@@ -138,7 +138,7 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     @Override
     public ByteMatrix transpose() {
 
-        return transpose(factory);
+        return transpose(factory());
     }
 
     @Override

@@ -1050,6 +1050,149 @@ public abstract class AbstractByteMatrixTest {
     }
 
     @Test
+    public void testMultiply_4x4_4x4_InRangeOf_0x0_to_0x0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {8, 3, 1, 9},
+                                                            {4, 9, 6, 6},
+                                                            {9, 1, 1, 4},
+                                                            {5, 7, 3, 0}
+        });
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {4, 9, 0, 3},
+                                                            {6, 7, 7, 6},
+                                                            {9, 4, 3, 3},
+                                                            {4, 4, 1, 6}
+        });
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {});
+
+        assertEquals(c, a.multiply(b, 0, 0, 0, 0, 0, 0, 0, 0));
+    }
+
+    @Test
+    public void testMultiply_4x4_4x4_InRangeOf_0x0_to_2x2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {8, 3, 1, 9},
+                                                            {4, 9, 6, 6},
+                                                            {9, 1, 1, 4},
+                                                            {5, 7, 3, 0}
+        });
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {4, 9, 0, 3},
+                                                            {6, 7, 7, 6},
+                                                            {9, 4, 3, 3},
+                                                            {4, 4, 1, 6}
+        });
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                            {42, 65},
+                                                            {38, 27},
+        });
+
+        assertEquals(c, a.multiply(b, 0, 2, 0, 2, 0, 2, 0, 2));
+    }
+
+    @Test
+    public void testMultiply_4x4_4x4_InRangeOf_0x0_to_4x4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {8, 3, 1, 9},
+                                                            {4, 9, 6, 6},
+                                                            {9, 1, 1, 4},
+                                                            {5, 7, 3, 0}
+        });
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {4, 9, 0, 3},
+                                                            {6, 7, 7, 6},
+                                                            {9, 4, 3, 3},
+                                                            {4, 4, 1, 6}
+        });
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                            {7, 97, 3, 39},
+                                                            {8, 27, 51, 36},
+                                                            {59, 82, 0, 6},
+                                                            {29, 52, 16, 24}
+        });
+
+        assertEquals(c, a.multiply(b, 0, 4, 0, 4, 0, 4, 0, 4));
+    }
+
+    @Test
+    public void testMultiply_4x4_4x4_InRangeOf_2x2_to_2x2() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {8, 3, 1, 9},
+                                                            {4, 9, 6, 6},
+                                                            {9, 1, 1, 4},
+                                                            {5, 7, 3, 0}
+        });
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {4, 9, 0, 3},
+                                                            {6, 7, 7, 6},
+                                                            {9, 4, 3, 3},
+                                                            {4, 4, 1, 6}
+        });
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {});
+
+        assertEquals(c, a.multiply(b, 2, 2, 2, 2, 2, 2, 2, 2));
+    }
+
+    @Test
+    public void testMultiply_4x4_4x4_InRangeOf_2x2_to_4x4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {8, 3, 1, 9},
+                                                            {4, 9, 6, 6},
+                                                            {9, 1, 1, 4},
+                                                            {5, 7, 3, 0}
+        });
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {4, 9, 0, 3},
+                                                            {6, 7, 7, 6},
+                                                            {9, 4, 3, 3},
+                                                            {4, 4, 1, 6}
+        });
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {
+                                                            {7, 27},
+                                                            {5, 5}
+        });
+
+        assertEquals(c, a.multiply(b, 2, 4, 2, 4, 2, 4, 2, 4));
+    }
+
+    @Test
+    public void testMultiply_4x4_4x4_InRangeOf_4x4_to_4x4() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {
+                                                            {8, 3, 1, 9},
+                                                            {4, 9, 6, 6},
+                                                            {9, 1, 1, 4},
+                                                            {5, 7, 3, 0}
+        });
+
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {4, 9, 0, 3},
+                                                            {6, 7, 7, 6},
+                                                            {9, 4, 3, 3},
+                                                            {4, 4, 1, 6}
+        });
+
+        ByteMatrix c = factory().createMatrix(new byte[][] {});
+
+        assertEquals(c, a.multiply(b, 4, 4, 4, 4, 4, 4, 4, 4));
+    }
+
+    @Test
     public void testMultiply_4x1_1x4() {
 
         ByteMatrix a = factory().createMatrix(new byte[][] {
@@ -1153,6 +1296,95 @@ public abstract class AbstractByteMatrixTest {
         });
 
         assertEquals(c, a.multiply(b));
+    }
+
+    @Test
+    public void testMultiply_5_5x1() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 1, 0, 2, 1}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1},
+                                                            {3},
+                                                            {0},
+                                                            {3},
+                                                            {0}
+        });
+        ByteVector c = factory().createVector(new byte[] {5});
+
+        assertEquals(c, a.multiplyRow(0, b));
+    }
+
+    @Test
+    public void testMultiply_5_0x0_InRangeOf_0_to_0() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 1, 0, 2, 1}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {});
+        ByteVector c = factory().createVector(new byte[] {});
+
+        assertEquals(c, a.multiplyRow(0, b, 0, 0));
+    }
+
+    @Test
+    public void testMultiply_5_3x1_InRangeOf_0_to_3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 1, 0, 2, 1}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1},
+                                                            {3},
+                                                            {0}
+        });
+        ByteVector c = factory().createVector(new byte[] {3});
+
+        assertEquals(c, a.multiplyRow(0, b, 0, 3));
+    }
+
+    @Test
+    public void testMultiply_5_5x1_InRangeOf_0_to_5() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 1, 0, 2, 1}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1},
+                                                            {3},
+                                                            {0},
+                                                            {3},
+                                                            {0}
+        });
+        ByteVector c = factory().createVector(new byte[] {5});
+
+        assertEquals(c, a.multiplyRow(0, b, 0, 5));
+    }
+
+    @Test
+    public void testMultiply_5_0x0_InRangeOf_3_to_3() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 1, 0, 2, 1}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {});
+        ByteVector c = factory().createVector(new byte[] {});
+
+        assertEquals(c, a.multiplyRow(0, b, 3, 3));
+    }
+
+    @Test
+    public void testMultiply_5_2x1_InRangeOf_3_to_5() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 1, 0, 2, 1}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {
+                                                            {1},
+                                                            {3}
+        });
+        ByteVector c = factory().createVector(new byte[] {1});
+
+        assertEquals(c, a.multiplyRow(0, b, 3, 5));
+    }
+
+    @Test
+    public void testMultiply_5_0x0_InRangeOf_5_to_5() {
+
+        ByteMatrix a = factory().createMatrix(new byte[][] {{0, 1, 0, 2, 1}});
+        ByteMatrix b = factory().createMatrix(new byte[][] {});
+        ByteVector c = factory().createVector(new byte[] {});
+
+        assertEquals(c, a.multiplyRow(0, b, 5, 5));
     }
 
     @Test

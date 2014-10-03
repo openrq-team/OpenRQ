@@ -37,6 +37,7 @@ import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
+import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.printing.TimePrinter;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
@@ -1028,37 +1029,39 @@ final class LinearSystem {
         TimePrinter.beginTimer(); // DEBUG
 
         // decoding process
-        byte[][] noOverheadD = new byte[L][];
+        byte[][] Di = new byte[i][]; // contains the first i symbols of D
         // DEBUG
         // PRINTER.println(
-        // printVarDeclar(byte[][].class, "E", "new byte[" + L + "][]"));
-
-        // create a copy of D
-        for (int index = 0; index < L; index++) {
-            noOverheadD[index] = D[d[index]];
+        // printVarDeclar(byte[][].class, "E", "new byte[" + i + "][]"));
+        for (int index = 0; index < i; index++) {
+            Di[index] = D[d[index]];
             // DEBUG
             // PRINTER.println(
             // "E[" + index + "]=" + "D[" + d[index] + "];");
         }
 
+        ByteMatrix DiMatrix = LinearAlgebra.BASIC2D_FACTORY.createMatrix(Di);
+        // DEBUG
+        // PRINTER.println(
+        // printVarDeclar(ByteMatrix.class, "F", "LinearAlgebra.BASIC2D_FACTORY.createMatrix(E)"));
+
         for (int row = 0; row < i; row++) {
             // multiply X[row] by D
-            D[d[row]] = MatrixUtilities.multiplyByteLineBySymbolVector(X.getRow(row), i, noOverheadD);
+            BasicByteVector prod = (BasicByteVector)X.multiplyRow(row, DiMatrix, 0, i, LinearAlgebra.BASIC1D_FACTORY);
+            D[d[row]] = prod.getInternalArray();
             // DEBUG
             // PRINTER.println(
-            // "D[" + d[row] + "]=multiplyByteLineBySymbolVector(" +
-            // printByteArray(X[row]) + "," + i + "," + "E);");
+            // "D[" + d[row] +
+            // "]=((BasicByteVector)X.multiplyRow(" + row + ",F,0," + i +
+            // ",LinearAlgebra.BASIC1D_FACTORY)).getInternalArray();");
         }
 
         /*
          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
          */
 
-        // This multiplies X by A and stores the product in X (this destroys X)
-        // Utilities.multiplyMatricesHack(X, 0, i, 0, i, A, 0, i, 0, L, X, 0, i, 0, L);
-
         // A can be safely re-assigned because the product matrix has the same dimensions of A
-        A = MatrixUtilities.multiplyMatrices(X, 0, i, 0, i, A, 0, i, 0, L);
+        A = X.multiply(A, 0, i, 0, i, 0, i, 0, L);
 
         // copy the product X to A
         // for (int row = 0; row < i; row++)
@@ -1172,7 +1175,7 @@ final class LinearSystem {
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
 
         // use the already allocated matrix for the matrix C
-        final byte[][] C = noOverheadD;
+        final byte[][] C = new byte[L][];
 
         // reorder C
         for (int index = 0; index < L; index++) {
