@@ -17,13 +17,13 @@
 package net.fec.openrq;
 
 
+import java.util.Arrays;
+
 import net.fec.openrq.util.arithmetic.OctetOps;
+import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
-import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
-import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.dense.DenseByteVector;
 
 
@@ -280,98 +280,70 @@ final class MatrixUtilities {
      * form. The operations are also performed in matrix D, with indices in d.
      * 
      * @param A
-     * @param first_row
-     * @param last_row
-     * @param first_col
-     * @param last_col
+     * @param fromRow
+     * @param toRow
+     * @param fromCol
+     * @param toCol
      * @param d
      * @param D
      */
     static void reduceToRowEchelonForm(
         ByteMatrix A,
-        final int first_row,
-        final int last_row,
-        final int first_col,
-        final int last_col,
+        final int fromRow,
+        final int toRow,
+        final int fromCol,
+        final int toCol,
         int[] d,
         byte[][] D) {
 
-        int lead = 0;
-        int rowCount = last_row - first_row;
-        int columnCount = last_col - first_col;
-
-        for (int r = 0; r < rowCount; r++) {
-
-            if (columnCount <= lead) return;
+        int lead = fromCol;
+        for (int r = fromRow; r < toRow; r++) {
+            if (lead >= toCol) {
+                return;
+            }
 
             int i = r;
-            while (A.get(i + first_row, lead + first_col) == 0) {
-
+            while (A.isZeroAt(i, lead)) {
                 i++;
-
-                if (rowCount == i) {
-
+                if (i == toRow) {
                     i = r;
                     lead++;
-                    if (columnCount == lead) return;
+                    if (lead >= toCol) {
+                        return;
+                    }
                 }
             }
 
             if (i != r) {
-
-                A.swapRows(i + first_row, r + first_row);
-
+                A.swapRows(i, r);
                 // decoding process - swap d[i] with d[r] in d
-                int auxIndex = d[i + first_row];
-                d[i + first_row] = d[r + first_row];
-                d[r + first_row] = auxIndex;
-
+                ArrayUtils.swapInts(d, i, r);
             }
 
-            byte beta = A.get(r + first_row, lead + first_col);
+            byte beta = A.get(r, lead);
             if (beta != 0) {
-                // byte[] / byte
-                A.updateRow(r + first_row, ByteMatrices.asDivFunction(beta), first_col, last_col);
-
+                A.divideRowInPlace(r, beta, fromCol, toCol);
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
                 // byte[] / beta
-                final int dIndex = d[r + first_row];
+                final int dIndex = d[r];
                 OctetOps.betaDivision(beta, D[dIndex], D[dIndex]); // in place division
                 // DEBUG
                 // PRINTER.println(
                 // "betaDivision((byte)" + beta + ",D[" + dIndex + "],D[" + dIndex + "]);");
             }
 
-            for (i = 0; i < rowCount; i++) {
-
-                beta = A.get(i + first_row, lead + first_col);
-
+            for (i = fromRow; i < toRow; i++) {
                 if (i != r) {
+                    beta = A.get(i, lead);
+
                     // U_lower[i] - (U_lower[i][lead] * U_lower[r])
-                    final ByteVector product = A.getRow(r + first_row, first_col, last_col);
-                    product.update(ByteVectors.asMulFunction(beta));
-
-                    A.updateRow(i + first_row,
-                        new MatrixFunction() {
-
-                            @Override
-                            public byte evaluate(int notUsed, int col, byte value) {
-
-                                return OctetOps.aMinusB(value, product.get(col - first_col));
-                            }
-                        },
-                        first_col,
-                        last_col);
-
+                    // NOTE: here, subtraction is the same as addition
+                    A.addRowsInPlace(beta, r, i, fromCol, toCol);
                     // decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
-                    byte[] p = OctetOps.betaProduct(beta, D[d[r + first_row]]);
-                    addSymbolsInPlace(D[d[i + first_row]], p);
+                    addSymbolsWithMultiplierInPlace(beta, D[d[r]], D[d[i]]);
                     // DEBUG
-                    // PRINTER.println(
-                    // printVarDeclar(byte[].class, "p",
-                    // "betaProduct((byte)" + beta + ",D[" + d[r + first_row] + "])"));
-                    // PRINTER.println(
-                    // "xorSymbolInPlace(D[" + d[i + first_row] + "],p);");
+                    // PRINTER.println("addSymbolsWithMultiplierInPlace(" + beta + ",D[" + d[r] + "],D[" + d[i] +
+                    // "]);");
                 }
             }
 
@@ -393,63 +365,69 @@ final class MatrixUtilities {
         }
     }
 
-    static byte[] addSymbols(byte[] s1, byte[] s2) {
+    static byte[] addSymbols(byte[] left, byte[] right) {
 
         /*
-         * if(s1.length != s2.length){
+         * if(left.length != right.length){
          * throw new IllegalArgumentException("Symbols must be of the same size.");
          * }
          */
 
-        byte[] xor = new byte[s1.length];
+        byte[] xor = new byte[left.length];
 
-        for (int i = 0; i < s1.length; i++) {
-            xor[i] = OctetOps.aPlusB(s1[i], s2[i]);
+        for (int i = 0; i < left.length; i++) {
+            xor[i] = OctetOps.aPlusB(left[i], right[i]);
         }
 
         return xor;
     }
 
-    static byte[] addSymbolsWithMultiplier(byte[] s1, byte[] s2, byte s2Multiplier) {
+    static byte[] addSymbolsWithMultiplier(byte leftMultiplier, byte[] left, byte[] right) {
 
         /*
-         * if(s1.length != s2.length){
+         * if(left.length != right.length){
          * throw new IllegalArgumentException("Symbols must be of the same size.");
          * }
          */
+        if (leftMultiplier != 0) {
+            byte[] xor = new byte[left.length];
 
-        byte[] xor = new byte[s1.length];
+            for (int i = 0; i < left.length; i++) {
+                xor[i] = OctetOps.aPlusB(OctetOps.aTimesB(leftMultiplier, left[i]), right[i]);
+            }
 
-        for (int i = 0; i < s1.length; i++) {
-            xor[i] = OctetOps.aPlusB(s1[i], OctetOps.aTimesB(s2Multiplier, s2[i]));
+            return xor;
         }
-
-        return xor;
-    }
-
-    static void addSymbolsInPlace(byte[] s1, byte[] s2) {
-
-        /*
-         * if(s1.length != s2.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        for (int i = 0; i < s1.length; i++) {
-            s1[i] = OctetOps.aPlusB(s1[i], s2[i]);
+        else {
+            return Arrays.copyOf(right, right.length);
         }
     }
 
-    static void addSymbolsWithMultiplierInPlace(byte[] s1, byte[] s2, byte s2Multiplier) {
+    static void addSymbolsInPlace(byte[] src, byte[] dest) {
 
         /*
-         * if(s1.length != s2.length){
+         * if(src.length != dest.length){
          * throw new IllegalArgumentException("Symbols must be of the same size.");
          * }
          */
 
-        for (int i = 0; i < s1.length; i++) {
-            s1[i] = OctetOps.aPlusB(s1[i], OctetOps.aTimesB(s2Multiplier, s2[i]));
+        for (int i = 0; i < dest.length; i++) {
+            dest[i] = OctetOps.aPlusB(src[i], dest[i]);
+        }
+    }
+
+    static void addSymbolsWithMultiplierInPlace(byte srcMultiplier, byte[] src, byte[] dest) {
+
+        /*
+         * if(src.length != dest.length){
+         * throw new IllegalArgumentException("Symbols must be of the same size.");
+         * }
+         */
+
+        if (srcMultiplier != 0) {
+            for (int i = 0; i < dest.length; i++) {
+                dest[i] = OctetOps.aPlusB(OctetOps.aTimesB(srcMultiplier, src[i]), dest[i]);
+            }
         }
     }
 
@@ -572,7 +550,7 @@ final class MatrixUtilities {
 
                 temp = OctetOps.betaProduct(alpha, b[row]);
 
-                MatrixUtilities.addSymbolsInPlace(b[i], temp);
+                MatrixUtilities.addSymbolsInPlace(temp, b[i]);
 
                 for (int j = row; j < ROWS; j++) {
 
@@ -593,7 +571,7 @@ final class MatrixUtilities {
                 // i*num_cols+j
                 byte[] temp = OctetOps.betaProduct(A[i][j], x[j], 0, num_cols);
 
-                MatrixUtilities.addSymbolsInPlace(sum, temp);
+                MatrixUtilities.addSymbolsInPlace(temp, sum);
             }
 
             byte[] temp = MatrixUtilities.addSymbols(b[i], sum);

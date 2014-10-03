@@ -202,7 +202,9 @@ public abstract class AbstractByteVector implements ByteVector {
         ensureArgumentIsNotNull(vector, "vector");
         ensureVectorIsSimilar(vector);
 
-        pipeTo(VectorOperations.inPlaceVectorToVectorAdditionWithMultiplier(multiplier), vector);
+        if (multiplier != 0) {
+            pipeTo(VectorOperations.inPlaceVectorToVectorAdditionWithMultiplier(multiplier), vector);
+        }
     }
 
     @Override
@@ -211,7 +213,9 @@ public abstract class AbstractByteVector implements ByteVector {
         ensureArgumentIsNotNull(vector, "vector");
         ensureVectorIsSimilar(vector, fromIndex, toIndex);
 
-        pipeTo(VectorOperations.inPlaceVectorToVectorAdditionWithMultiplier(multiplier, fromIndex, toIndex), vector);
+        if (multiplier != 0) {
+            pipeTo(VectorOperations.inPlaceVectorToVectorAdditionWithMultiplier(multiplier, fromIndex, toIndex), vector);
+        }
     }
 
     @Override
@@ -380,10 +384,26 @@ public abstract class AbstractByteVector implements ByteVector {
     @Override
     public void divideInPlace(byte value) {
 
-        ByteVectorIterator it = iterator();
-        while (it.hasNext()) {
-            it.next();
-            it.set(aDividedByB(it.get(), value));
+        if (value != 1) {
+            ByteVectorIterator it = iterator();
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
+        }
+    }
+
+    @Override
+    public void divideInPlace(byte value, int fromIndex, int toIndex) {
+
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
+
+        if (value != 1) {
+            ByteVectorIterator it = iterator(fromIndex, toIndex);
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
         }
     }
 

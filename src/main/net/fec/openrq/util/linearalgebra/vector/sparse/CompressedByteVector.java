@@ -38,6 +38,7 @@
 package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
+import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 
@@ -323,6 +324,32 @@ public class CompressedByteVector extends SparseByteVector {
         Indexables.checkIndexBounds(i, length());
         SearchEntry entry = searchByIndex(i);
         entry.update(aPlusB(entry.value(), value));
+    }
+
+    @Override
+    public void divideInPlace(byte value) {
+
+        if (value != 1) {
+            ByteVectorIterator it = nonZeroIterator();
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
+        }
+    }
+
+    @Override
+    public void divideInPlace(byte value, int fromIndex, int toIndex) {
+
+        Indexables.checkFromToBounds(fromIndex, toIndex, length());
+
+        if (value != 1) {
+            ByteVectorIterator it = nonZeroIterator(fromIndex, toIndex);
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
+        }
     }
 
     @Override

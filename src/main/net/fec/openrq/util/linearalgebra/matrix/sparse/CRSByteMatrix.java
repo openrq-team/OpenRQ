@@ -267,6 +267,23 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public void divideRowInPlace(int i, byte value) {
+
+        Indexables.checkIndexBounds(i, rows());
+
+        sparseRows.vectorRW(i).divideInPlace(value);
+    }
+
+    @Override
+    public void divideRowInPlace(int i, byte value, int fromColumn, int toColumn) {
+
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
+
+        sparseRows.vectorRW(i).divideInPlace(value, fromColumn, toColumn);
+    }
+
+    @Override
     public ByteVector getRow(int i) {
 
         Indexables.checkIndexBounds(i, rows());

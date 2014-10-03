@@ -624,6 +624,76 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public void divideInPlace(byte value) {
+
+        if (value != 1) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    safeSet(i, j, aDividedByB(safeGet(i, j), value));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void divideRowInPlace(int i, byte value) {
+
+        Indexables.checkIndexBounds(i, rows());
+
+        if (value != 1) {
+            ByteVectorIterator it = rowIterator(i);
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
+        }
+    }
+
+    @Override
+    public void divideRowInPlace(int i, byte value, int fromColumn, int toColumn) {
+
+        Indexables.checkIndexBounds(i, rows());
+        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
+
+        if (value != 1) {
+            ByteVectorIterator it = rowIterator(i, fromColumn, toColumn);
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
+        }
+    }
+
+    @Override
+    public void divideColumnInPlace(int j, byte value) {
+
+        Indexables.checkIndexBounds(j, columns());
+
+        if (value != 1) {
+            ByteVectorIterator it = columnIterator(j);
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
+        }
+    }
+
+    @Override
+    public void divideColumnInPlace(int j, byte value, int fromRow, int toRow) {
+
+        Indexables.checkIndexBounds(j, columns());
+        Indexables.checkFromToBounds(fromRow, toRow, rows());
+
+        if (value != 1) {
+            ByteVectorIterator it = columnIterator(j, fromRow, toRow);
+            while (it.hasNext()) {
+                it.next();
+                it.set(aDividedByB(it.get(), value));
+            }
+        }
+    }
+
+    @Override
     public byte trace() {
 
         byte result = 0;

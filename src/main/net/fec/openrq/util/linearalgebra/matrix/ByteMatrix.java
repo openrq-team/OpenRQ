@@ -357,6 +357,62 @@ public interface ByteMatrix {
     ByteMatrix divide(byte value, Factory factory);
 
     /**
+     * Divides every element of a row of this matrix (A) by given {@code value} (v).
+     * 
+     * @param i
+     *            A row index
+     * @param value
+     *            the right hand value for division
+     */
+    void divideRowInPlace(int i, byte value);
+
+    /**
+     * Divides every element of a range of a row of this matrix (A) by given {@code value} (v).
+     * 
+     * @param i
+     *            A row index
+     * @param value
+     *            the right hand value for division
+     * @param fromColumn
+     *            The starting column index (inclusive)
+     * @param toColumn
+     *            The ending column index (exclusive)
+     */
+    void divideRowInPlace(int i, byte value, int fromColumn, int toColumn);
+
+    /**
+     * Divides every element of a column of this matrix (A) by given {@code value} (v).
+     * 
+     * @param j
+     *            A column index
+     * @param value
+     *            the right hand value for division
+     */
+    void divideColumnInPlace(int j, byte value);
+
+    /**
+     * Divides every element of a range of a column of this matrix (A) by given {@code value} (v).
+     * 
+     * @param j
+     *            A column index
+     * @param value
+     *            the right hand value for division
+     * @param fromRow
+     *            The starting row index
+     * @param toRow
+     *            The ending row index
+     */
+    void divideColumnInPlace(int j, byte value, int fromRow, int toRow);
+
+    /**
+     * Divides every element of this matrix (A) by given {@code value} (v).
+     * 
+     * @param value
+     *            the right hand value for division
+     */
+    void divideInPlace(byte value);
+
+    /**
      * Calculates the trace of this matrix.
      * <p>
      * See <a href="http://mathworld.wolfram.com/MatrixTrace.html"> http://mathworld.wolfram.com/MatrixTrace.html</a>

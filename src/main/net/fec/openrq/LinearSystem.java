@@ -441,13 +441,13 @@ final class LinearSystem {
         for (long j = 0; j < d; j++)
         {
             b = (b + a) % W;
-            MatrixUtilities.addSymbolsInPlace(result, C[b]);
+            MatrixUtilities.addSymbolsInPlace(C[b], result);
         }
 
         while (b1 >= P)
             b1 = (b1 + a1) % P1;
 
-        MatrixUtilities.addSymbolsInPlace(result, C[W + b1]);
+        MatrixUtilities.addSymbolsInPlace(C[W + b1], result);
 
         for (long j = 1; j < d1; j++)
         {
@@ -455,7 +455,7 @@ final class LinearSystem {
                 b1 = (b1 + a1) % P1;
             while (b1 >= P);
 
-            MatrixUtilities.addSymbolsInPlace(result, C[W + b1]);
+            MatrixUtilities.addSymbolsInPlace(C[W + b1], result);
         }
 
         return result;
@@ -936,13 +936,10 @@ final class LinearSystem {
                     A.addRowsInPlace(betaOverAlpha, i, row);
 
                     // decoding process - D[d[row]] + (betaOverAlpha * D[d[i]])
-                    MatrixUtilities.addSymbolsWithMultiplierInPlace(D[d[row]], D[d[i]], betaOverAlpha);
+                    MatrixUtilities.addSymbolsWithMultiplierInPlace(betaOverAlpha, D[d[i]], D[d[row]]);
                     // DEBUG
-                    // PRINTER.println(
-                    // printVarDeclar(byte[].class, "p",
-                    // "betaProduct((byte)" + balpha + ",D[" + d[i] + "])"));
-                    // PRINTER.println(
-                    // "xorSymbolInPlace(D[" + d[row] + "],p);");
+                    // PRINTER.println("MatrixUtilities.addSymbolsWithMultiplierInPlace(" + betaOverAlpha + ",D[" + d[i]
+                    // + "],D[" + d[row] + "]);");
                 }
             }
 
@@ -1097,7 +1094,7 @@ final class LinearSystem {
 
                     // decoding process - (beta * D[d[j]]) + D[d[row]]
                     byte[] product = OctetOps.betaProduct(b, D[d[j]]);
-                    MatrixUtilities.addSymbolsInPlace(D[d[row]], product);
+                    MatrixUtilities.addSymbolsInPlace(product, D[d[row]]);
                     // DEBUG
                     // PRINTER.println(
                     // printVarDeclar(byte[].class, "p",
@@ -1160,7 +1157,7 @@ final class LinearSystem {
 
                     // decoding process - D[d[j]] + (A[j][l] * D[d[l]])
                     byte[] p = OctetOps.betaProduct(beta, D[d[eL]]);
-                    MatrixUtilities.addSymbolsInPlace(D[d[j]], p);
+                    MatrixUtilities.addSymbolsInPlace(p, D[d[j]]);
                     // DEBUG
                     // PRINTER.println(
                     // printVarDeclar(byte[].class, "p",

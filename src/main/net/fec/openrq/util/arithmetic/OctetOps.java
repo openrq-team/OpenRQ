@@ -59,12 +59,8 @@ public final class OctetOps {
 
         if (v == 0) throw new ArithmeticException("cannot divide by zero");
         if (u == 0) return 0;
-        else {
 
-            byte quotient = (byte)getExp(getLog(UNSIGN(u - 1)) - getLog(UNSIGN(v - 1)) + 255);
-
-            return quotient;
-        }
+        return (byte)getExp(getLog(UNSIGN(u - 1)) - getLog(UNSIGN(v - 1)) + 255);
     }
 
     public static byte minByte() {
@@ -144,7 +140,9 @@ public final class OctetOps {
     public static void betaProduct(byte beta, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
 
         if (beta == 1) { // if multiplied by one, simply copy the source vector data and return
-            System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
+            if (vector != result || vecPos != resPos) { // avoid unnecessary copy if in-place product
+                System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
+            }
         }
         else {
             final int resEnd = resPos + length;
@@ -194,7 +192,9 @@ public final class OctetOps {
     public static void betaDivision(byte beta, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
 
         if (beta == 1) { // if divided by one, simply copy the source vector data and return
-            System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
+            if (vector != result || vecPos != resPos) { // avoid unnecessary copy if in-place division
+                System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
+            }
         }
         else {
             final int resEnd = resPos + length;

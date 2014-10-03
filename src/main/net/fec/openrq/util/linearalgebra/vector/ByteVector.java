@@ -350,6 +350,18 @@ public interface ByteVector extends Iterable<Byte> {
     void divideInPlace(byte value);
 
     /**
+     * Divides a range of this vector (X) by given {@code value} (v) in-place.
+     * 
+     * @param value
+     *            the right hand value for division
+     * @param fromIndex
+     *            The starting index (inclusive)
+     * @param toIndex
+     *            The ending index (exclusive)
+     */
+    void divideInPlace(byte value, int fromIndex, int toIndex);
+
+    /**
      * Multiplies up all elements of this vector.
      * 
      * @return product of all elements of this vector
