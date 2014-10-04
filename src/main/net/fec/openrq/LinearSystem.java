@@ -939,8 +939,9 @@ final class LinearSystem {
                     // decoding process - D[d[row]] + (betaOverAlpha * D[d[i]])
                     MatrixUtilities.addSymbolsWithMultiplierInPlace(betaOverAlpha, D[d[i]], D[d[row]]);
                     // DEBUG
-                    // PRINTER.println("MatrixUtilities.addSymbolsWithMultiplierInPlace(" + betaOverAlpha + ",D[" + d[i]
-                    // + "],D[" + d[row] + "]);");
+                    // PRINTER.println(
+                    // "MatrixUtilities.addSymbolsWithMultiplierInPlace(" +
+                    // betaOverAlpha + ",D[" + d[i] + "],D[" + d[row] + "]);");
                 }
             }
 
@@ -1082,29 +1083,26 @@ final class LinearSystem {
          */
 
         // "For each of the first i rows of U_upper"
-        for (int row = 0; row < i; row++)
-        {
-            for (int j = i; j < L; j++)
-            {
-                // "if the row has a nonzero entry at position j"
-                // "if the value of that nonzero entry is b"
-                byte b = A.get(row, j);
-                if (b != 0)
-                {
-                    // "add to this row b times row j" -- this would "zerofy" that position, thus we can save the
-                    // complexity
-                    A.set(row, j, (byte)0);
+        for (int row = 0; row < i; row++) {
+            ByteVectorIterator it = A.nonZeroRowIterator(row, i, L);
+            while (it.hasNext()) {
+                it.next();
 
-                    // decoding process - (beta * D[d[j]]) + D[d[row]]
-                    byte[] product = OctetOps.betaProduct(b, D[d[j]]);
-                    MatrixUtilities.addSymbolsInPlace(product, D[d[row]]);
-                    // DEBUG
-                    // PRINTER.println(
-                    // printVarDeclar(byte[].class, "p",
-                    // "betaProduct((byte)" + b + ",D[" + d[j] + "])"));
-                    // PRINTER.println(
-                    // "xorSymbolInPlace(D[" + d[row] + "],p);");
-                }
+                // "if the row has a nonzero entry at position j"
+                final int j = it.index();
+                // "if the value of that nonzero entry is b"
+                final byte b = it.get();
+
+                // "add to this row b times row j of I_u" -- this would "zerofy"
+                // that position, thus we can save the complexity
+                it.set((byte)0);
+
+                // decoding process - (beta * D[d[j]]) + D[d[row]]
+                MatrixUtilities.addSymbolsWithMultiplierInPlace(b, D[d[j]], D[d[row]]);
+                // DEBUG
+                // PRINTER.println(
+                // "MatrixUtilities.addSymbolsWithMultiplierInPlace(" +
+                // b + ",D[" + d[j] + "],D[" + d[row] + "]);");
             }
         }
 
