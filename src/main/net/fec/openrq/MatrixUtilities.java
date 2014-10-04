@@ -261,7 +261,7 @@ final class MatrixUtilities {
 
             byte beta = A.get(r, lead);
             if (beta != 0) {
-                A.divideRowInPlace(r, beta, fromCol, toCol);
+                A.divideRowInPlace(r, beta);
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
                 // byte[] / beta
                 final int dIndex = d[r];
@@ -277,12 +277,12 @@ final class MatrixUtilities {
 
                     // U_lower[i] - (U_lower[i][lead] * U_lower[r])
                     // NOTE: here, subtraction is the same as addition
-                    A.addRowsInPlace(beta, r, i, fromCol, toCol);
-                    // decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
+                    A.addRowsInPlace(beta, r, i);
+                    // decoding process - D[d[i]] - (U_lower[i][lead] * D[d[r]])
                     addSymbolsWithMultiplierInPlace(beta, D[d[r]], D[d[i]]);
                     // DEBUG
-                    // PRINTER.println("addSymbolsWithMultiplierInPlace(" + beta + ",D[" + d[r] + "],D[" + d[i] +
-                    // "]);");
+                    // PRINTER.println(
+                    // "addSymbolsWithMultiplierInPlace((beta)" + beta + ",D[" + d[r] + "],D[" + d[i] + "]);");
                 }
             }
 

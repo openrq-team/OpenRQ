@@ -32,11 +32,7 @@ import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
-import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
-import net.fec.openrq.util.linearalgebra.vector.ByteVector;
-import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.printing.TimePrinter;
 import net.fec.openrq.util.rq.Rand;
@@ -1095,7 +1091,8 @@ final class LinearSystem {
 
                 // "add to this row b times row j of I_u" -- this would "zerofy"
                 // that position, thus we can save the complexity
-                it.set((byte)0);
+                // (no need to actually "zerofy" it, since this part of the matrix will not be used again)
+                // it.set((byte)0);
 
                 // decoding process - (beta * D[d[j]]) + D[d[row]]
                 MatrixUtilities.addSymbolsWithMultiplierInPlace(b, D[d[j]], D[d[row]]);
@@ -1116,56 +1113,39 @@ final class LinearSystem {
         TimePrinter.beginTimer(); // DEBUG
 
         // "For j from 1 to i, perform the following operations:"
-        for (int j = 0; j < i; j++)
-        {
-            {
-                // "If A[j,j] is not one"
-                byte beta = A.get(j, j);
-                if (beta != 1)
-                {
-                    // "then divide row j of A by A[j,j]."
-                    A.updateRow(j, ByteMatrices.asDivFunction(beta));
+        for (int j = 0; j < i; j++) {
+            // "If A[j,j] is not one"
+            byte beta = A.get(j, j);
+            if (beta != 1) {
+                // "then divide row j of A by A[j,j]."
+                A.divideRowInPlace(j, beta);
 
-                    // decoding process - D[d[j]] / beta
-                    OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
-                    // DEBUG
-                    // PRINTER.println(
-                    // "betaDivision((byte)" + beta + ",D[" + d[j] + "],D[" + d[j] + "]);");
-                }
+                // decoding process - D[d[j]] / beta
+                OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
+                // DEBUG
+                // PRINTER.println(
+                // "betaDivision((byte)" + beta + ",D[" + d[j] + "],D[" + d[j] + "]);");
             }
 
             // "For eL from 1 to j-1"
-            for (int eL = 0; eL < j; eL++) {
+            ByteVectorIterator it = A.nonZeroRowIterator(j, 0, j);
+            while (it.hasNext()) {
+                it.next();
 
-                // "if A[j,l] is nonzero"
-                byte beta = A.get(j, eL);
-                if (beta != 0)
-                { // "then add A[j,l] multiplied with row l of A to row j of A."
+                // "then add A[j,eL] multiplied with row eL of A to row j of A."
+                final int eL = it.index();
+                beta = it.get();
 
-                    // multiply A[j][l] by row 'l' of A
-                    final ByteVector product = A.getRow(eL);
-                    product.updateNonZero(ByteVectors.asMulFunction(beta));
+                // We do not actually have to perform this operation on the matrix A
+                // because it will not be used again.
+                // A.addRowsInPlace(beta, eL, j);
 
-                    // add the product to row 'j' of A
-                    A.updateRow(j, new MatrixFunction() {
-
-                        @Override
-                        public byte evaluate(int notUsed, int j, byte value) {
-
-                            return OctetOps.aPlusB(product.get(j), value);
-                        }
-                    });
-
-                    // decoding process - D[d[j]] + (A[j][l] * D[d[l]])
-                    byte[] p = OctetOps.betaProduct(beta, D[d[eL]]);
-                    MatrixUtilities.addSymbolsInPlace(p, D[d[j]]);
-                    // DEBUG
-                    // PRINTER.println(
-                    // printVarDeclar(byte[].class, "p",
-                    // "betaProduct((byte)" + beta + ",D[" + d[l] + "])"));
-                    // PRINTER.println(
-                    // "xorSymbolInPlace(D[" + d[j] + "],p);");
-                }
+                // decoding process - (beta * D[d[eL]]) + D[d[j]]
+                MatrixUtilities.addSymbolsWithMultiplierInPlace(beta, D[d[eL]], D[d[j]]);
+                // DEBUG
+                // PRINTER.println(
+                // "MatrixUtilities.addSymbolsWithMultiplierInPlace((beta)" +
+                // beta + ",D[" + d[eL] + "],D[" + d[j] + "]);");
             }
         }
 
