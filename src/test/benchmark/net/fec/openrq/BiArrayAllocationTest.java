@@ -34,8 +34,8 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
-@Fork(2)
 @BenchmarkMode(Mode.AverageTime)
+@Fork(0)
 @State(Scope.Benchmark)
 public class BiArrayAllocationTest {
 

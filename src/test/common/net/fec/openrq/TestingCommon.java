@@ -186,6 +186,38 @@ public final class TestingCommon {
         return col;
     }
 
+    public static void checkParamsForSingleSourceBlockData(long datalen, int srcsymbs) {
+
+        if (ParameterChecker.isDataLengthOutOfBounds(datalen)) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "by default, the data length (%d) must be within [%d, %d] bytes",
+                    datalen,
+                    ParameterChecker.minDataLength(),
+                    ParameterChecker.maxDataLength()));
+        }
+
+        if (ParameterChecker.isNumSourceSymbolsPerBlockOutOfBounds(srcsymbs)) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "by default, the number of source symbols (%d) must be within [%d, %d]",
+                    srcsymbs,
+                    ParameterChecker.minNumSourceSymbolsPerBlock(),
+                    ParameterChecker.maxNumSourceSymbolsPerBlock()));
+        }
+
+        final long minF = (long)srcsymbs * ParameterChecker.minSymbolSize();
+        final long maxF = (long)srcsymbs * ParameterChecker.maxSymbolSize();
+        if (datalen < minF || maxF < datalen) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "%d source symbol(s) can only support a data length within [%d, %d] bytes",
+                    srcsymbs,
+                    minF,
+                    maxF));
+        }
+    }
+
 
     /**
      * Class that implements Sieve of Eratosthenes to check and find prime numbers.

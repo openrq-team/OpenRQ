@@ -22,7 +22,6 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.parameters.FECParameters;
-import net.fec.openrq.parameters.ParameterChecker;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -40,30 +39,19 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
-@Fork(2)
 @BenchmarkMode(Mode.AverageTime)
+@Fork(0)
 @State(Scope.Benchmark)
 public class SourceBlockEncodingTest {
 
     // default parameter values
-    private static final int DEF_DATA_LEN = 1000;
-    private static final int DEF_NUM_SOURCE_SYMBOLS = 100;
+    private static final int DEF_DATA_LEN = 15000;
+    private static final int DEF_NUM_SOURCE_SYMBOLS = 10;
 
 
     private static ArraySourceBlockEncoder newSBEncoder(int F, int K) {
 
-        if (F < 1) throw new IllegalArgumentException("data length must be positive");
-        // F is an integer so it is already upper bounded
-
-        if (K < 1) throw new IllegalArgumentException("num source symbols must be positive");
-        final int maxK = ParameterChecker.maxNumSourceSymbolsPerBlock();
-        if (K > maxK) throw new IllegalArgumentException("num source symbols must be at most " + maxK);
-
-        // we can only use Kt because Z = 1
-        final int minKt = ceilDiv(F, ParameterChecker.maxSymbolSize());
-        if (K < minKt) throw new IllegalArgumentException("num source symbols must be at least " + minKt);
-        final int maxKt = ceilDiv(F, ParameterChecker.minSymbolSize());
-        if (K > maxKt) throw new IllegalAccessError("num source symbols must be at most " + maxKt);
+        TestingCommon.checkParamsForSingleSourceBlockData(F, K);
 
         // force single source block
         final FECParameters fecParams = FECParameters.newParameters(F, ceilDiv(F, K), 1);

@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.CharBuffer;
+import java.util.Objects;
 
 
 /**
@@ -19,6 +20,8 @@ import java.nio.CharBuffer;
 public class NoisyPrintableAppendable implements Appendable {
 
     public static NoisyPrintableAppendable of(Appendable appendable) {
+
+        Objects.requireNonNull(appendable);
 
         if (appendable instanceof PrintStream) {
             return new NoisyPrintableAppendable(new PrintStreamWrapper<>((PrintStream)appendable));

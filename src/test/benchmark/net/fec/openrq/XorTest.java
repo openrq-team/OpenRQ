@@ -36,8 +36,8 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
-@Fork(1)
 @BenchmarkMode(Mode.AverageTime)
+@Fork(0)
 @State(Scope.Benchmark)
 public class XorTest {
 

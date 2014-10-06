@@ -21,6 +21,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.CharBuffer;
+import java.util.Objects;
 
 
 /**
@@ -35,6 +36,8 @@ import java.nio.CharBuffer;
 public final class PrintableAppendable extends NoisyPrintableAppendable {
 
     public static PrintableAppendable of(Appendable appendable, boolean printStackTrace) {
+
+        Objects.requireNonNull(appendable);
 
         if (appendable instanceof PrintStream) {
             return new PrintableAppendable(new PrintStreamWrapper<>((PrintStream)appendable), printStackTrace);
@@ -75,7 +78,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable print(char c) {
+    public PrintableAppendable print(char c) {
 
         try {
             super.print(c);
@@ -88,7 +91,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable print(char[] c) {
+    public PrintableAppendable print(char[] c) {
 
         try {
             super.print(c);
@@ -101,7 +104,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable print(char[] c, int off, int len) {
+    public PrintableAppendable print(char[] c, int off, int len) {
 
         try {
             super.print(c, off, len);
@@ -114,7 +117,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable print(CharSequence csq) {
+    public PrintableAppendable print(CharSequence csq) {
 
         try {
             super.print(csq);
@@ -127,7 +130,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable print(CharSequence csq, int start, int end) {
+    public PrintableAppendable print(CharSequence csq, int start, int end) {
 
         try {
             super.print(csq, start, end);
@@ -140,7 +143,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable printf(String format, Object... args) {
+    public PrintableAppendable printf(String format, Object... args) {
 
         try {
             super.printf(format, args);
@@ -153,7 +156,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable println() {
+    public PrintableAppendable println() {
 
         try {
             super.println();
@@ -166,7 +169,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable println(char c) {
+    public PrintableAppendable println(char c) {
 
         try {
             super.println(c);
@@ -179,7 +182,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable println(char[] c) {
+    public PrintableAppendable println(char[] c) {
 
         try {
             super.println(c);
@@ -192,7 +195,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable println(char[] c, int off, int len) {
+    public PrintableAppendable println(char[] c, int off, int len) {
 
         try {
             super.println(c, off, len);
@@ -205,7 +208,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable println(CharSequence csq) {
+    public PrintableAppendable println(CharSequence csq) {
 
         try {
             super.println(csq);
@@ -218,7 +221,7 @@ public final class PrintableAppendable extends NoisyPrintableAppendable {
     }
 
     @Override
-    public NoisyPrintableAppendable println(CharSequence csq, int start, int end) {
+    public PrintableAppendable println(CharSequence csq, int start, int end) {
 
         try {
             super.println(csq, start, end);

@@ -83,10 +83,12 @@ questions.
         <mkdir dir="${bench.build_dir}"/>
         
         <javac srcdir="${bench.src_dirs}" destdir="${bench.build_dir}"
-               classpath=".:${jmh-core.jar}:${jmh-generator-annprocess.jar}"
+               classpath=".:${jmh-core.jar}:${jmh-generator-annprocess.jar}:${jcommander.jar_file}"
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
-               includeAntRuntime="false"/>
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
                
         <subant target="-benchmark-post-compile" buildpath="." failonerror="true"/>
                
@@ -107,6 +109,7 @@ questions.
             <zipfileset src="${jmh-core.jar}" excludes="**/META-INF/services/**" />
             <zipfileset src="${joptsimple.jar}" />
             <zipfileset src="${commonsmath.jar}" />
+            <zipfileset src="${jcommander.jar_file}" />
         </jar>
 
     </target>

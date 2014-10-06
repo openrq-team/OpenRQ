@@ -61,7 +61,9 @@ limitations under the License.
                classpath=".:${junit-core.jar}:${hamcrest-core.jar}"
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
-               includeAntRuntime="false"/>
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
 
         <subant target="-functional-post-compile" buildpath="." failonerror="true"/>
     </target>

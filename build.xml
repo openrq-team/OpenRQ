@@ -24,6 +24,7 @@ limitations under the License.
 
     <property name="javac-debug" value="off"/>
     <property name="javac-debuglevel" value="source"/>
+    <property name="javac-args" value="-Xlint:none"/>
     
     <property name="top.src_dir" location="src"/>
     <property name="top.build_dir" location="build"/>
@@ -44,6 +45,8 @@ limitations under the License.
     <property name="test-benchmark.build_dir" location="${top.build_dir}/test/benchmark"/>
     <property name="test-benchmark.jar_file" location="openrq-${version}-benchmark-test.jar"/>
     <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
+
+    <property name="jcommander.jar_file" location="${top.lib_dir}/jcommander-1.35.jar" />
     
     <property name="opt.src_dir" location="${top.src_dir}/opt"/>
 	<property name="opt.jar_file" location="openrq-${version}-opt.jar"/>
@@ -86,7 +89,9 @@ limitations under the License.
                classpath="."
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
-               includeAntRuntime="false"/>
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
         <copy todir="${main.build_dir}">
             <fileset dir="${main.src_dir}" excludes="**/*.java"/>
         </copy>
@@ -124,7 +129,9 @@ limitations under the License.
                classpath="."
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
-               includeAntRuntime="false"/>
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
         <copy todir="${main.build_dir}">
             <fileset dir="${main.src_dir}" excludes="*.java"/>
             <fileset dir="${opt.src_dir}" excludes="*.java"/>
