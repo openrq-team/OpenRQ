@@ -16,7 +16,6 @@
 package net.fec.openrq;
 
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +34,7 @@ import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.printing.TimePrinter;
+import net.fec.openrq.util.printing.appendable.PrintableAppendable;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -45,11 +45,13 @@ final class LinearSystem {
 
     private static final Factory DENSE_FACTORY = LinearAlgebra.BASIC2D_FACTORY;
     private static final Factory SPARSE_FACTORY = LinearAlgebra.CRS_FACTORY;
-    private static final long A_SPARSE_THRESHOLD = 1L;
-    private static final long MT_SPARSE_THRESHOLD = 1L;
 
-    // private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
-    private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
+    // there is no benefit for a dense matrix in all values of K
+    private static final long A_SPARSE_THRESHOLD = 0L;
+    private static final long MT_SPARSE_THRESHOLD = 0L;
+
+    // private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
+    private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
 
 
     private static Factory getMatrixAfactory(int L, int overheadRows) {
@@ -1025,6 +1027,13 @@ final class LinearSystem {
 
         TimePrinter.beginTimer(); // DEBUG
 
+        /*
+         * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
+         */
+
+        // A can be safely re-assigned because the product matrix has the same dimensions of A
+        A = X.multiply(A, 0, i, 0, i, 0, i, 0, L);
+
         // decoding process
         byte[][] Di = new byte[i][]; // contains the first i symbols of D
         // DEBUG
@@ -1052,17 +1061,6 @@ final class LinearSystem {
             // "]=((BasicByteVector)X.multiplyRow(" + row + ",F,0," + i +
             // ",LinearAlgebra.BASIC1D_FACTORY)).getInternalArray();");
         }
-
-        /*
-         * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
-         */
-
-        // A can be safely re-assigned because the product matrix has the same dimensions of A
-        A = X.multiply(A, 0, i, 0, i, 0, i, 0, L);
-
-        // copy the product X to A
-        // for (int row = 0; row < i; row++)
-        // A[row] = XA[row];
 
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "3rd: ", TimeUnit.MILLISECONDS); // DEBUG
