@@ -202,7 +202,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         // other than a different SBN, this method assumes a correct encoding packet
         if (packet.sourceBlockNumber() != sourceBlockNumber()) {
-            throw new IllegalArgumentException("source block number does not match the expected");
+            throw new IllegalArgumentException("the provided packet is not compatible with this source block");
         }
 
         symbolsState.lock();

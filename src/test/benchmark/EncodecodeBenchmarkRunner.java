@@ -19,10 +19,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.SourceBlockDecodingTest;
 import net.fec.openrq.SourceBlockEncodingTest;
 import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.printing.SafeStandardStreams;
 
 import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.results.format.ResultFormat;
@@ -30,8 +32,11 @@ import org.openjdk.jmh.results.format.ResultFormatFactory;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.format.OutputFormat;
+import org.openjdk.jmh.runner.format.OutputFormatFactory;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.VerboseMode;
 
 import com.beust.jcommander.IValueValidator;
 import com.beust.jcommander.JCommander;
@@ -44,7 +49,7 @@ import com.beust.jcommander.ParameterException;
  */
 public final class EncodecodeBenchmarkRunner {
 
-    private static final PrintStream STDOUT = System.out;
+    private static final PrintStream STDOUT = SafeStandardStreams.safeSTDOUT();
     private static final int DEFAULT_SYMBOL_SIZE = 1500; // in bytes
     private static final int DEFAULT_SYMBOL_OVERHEAD = 0;
     private static final int DEFAULT_FORKS = 1;
@@ -61,27 +66,30 @@ public final class EncodecodeBenchmarkRunner {
             final int T = options.symbolSize();
             final List<Integer> sos = options.symbolOverheadList();
             final int forks = options.forks();
+            final VerboseMode verbMode = getVerboseMode(options);
 
             final List<RunResult> results = new ArrayList<>();
             final PrintWriter pw = new PrintWriter(STDOUT, true); // true means autoflush is on
             final ResultFormat resultFormat = ResultFormatFactory.getInstance(ResultFormatType.TEXT, pw);
 
+            final long startNanos = System.nanoTime();
             STDOUT.println("Starting benchmark runners...");
             for (int K : Ks) {
                 final int F = deriveDataLength(K, T);
 
                 STDOUT.println("Running encoder benchmark for K = " + K);
-                Runner encRunner = newEncodeRunner(F, K, forks);
+                Runner encRunner = newEncodeRunner(F, K, forks, verbMode);
                 results.addAll(encRunner.run());
 
                 for (int symbover : sos) {
                     STDOUT.println("Running decoder benchmark for K = " + K + " and symbol overhead = " + symbover);
-                    Runner decRunner = newDecoderRunner(F, K, symbover, forks);
+                    Runner decRunner = newDecoderRunner(F, K, symbover, forks, verbMode);
                     results.addAll(decRunner.run());
                 }
             }
 
-            STDOUT.println("Done.");
+            final long ellapsed = System.nanoTime() - startNanos;
+            STDOUT.println("Done. Benchamark time: " + TimeUnit.NANOSECONDS.toSeconds(ellapsed) + "s");
             STDOUT.println();
             STDOUT.println("Benchmark results:");
             resultFormat.writeOut(results);
@@ -102,20 +110,32 @@ public final class EncodecodeBenchmarkRunner {
         return srcsymbs * symbsize;
     }
 
-    private static Runner newEncodeRunner(int datalen, int srcsymbs, int forks) {
+    private static VerboseMode getVerboseMode(InputOptions options) {
+
+        if (options.extraVerbose) {
+            return VerboseMode.EXTRA;
+        }
+        else if (options.verbose) {
+            return VerboseMode.NORMAL;
+        }
+        else {
+            return VerboseMode.SILENT;
+        }
+    }
+
+    private static Runner newEncodeRunner(int datalen, int srcsymbs, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
             .include(".*" + SourceBlockEncodingTest.class.getSimpleName() + ".*")
             .param("datalen", datalen + "")
             .param("srcsymbs", srcsymbs + "")
             .forks(forks)
-            .output("/dev/null")
             .build();
 
-        return new Runner(opt);
+        return new Runner(opt, getOutputFormat(mode));
     }
 
-    private static Runner newDecoderRunner(int datalen, int srcsymbs, int symbover, int forks) {
+    private static Runner newDecoderRunner(int datalen, int srcsymbs, int symbover, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
             .include(".*" + SourceBlockDecodingTest.class.getSimpleName() + ".*")
@@ -123,10 +143,14 @@ public final class EncodecodeBenchmarkRunner {
             .param("srcsymbs", srcsymbs + "")
             .param("symbover", symbover + "")
             .forks(forks)
-            .output("/dev/null")
             .build();
 
-        return new Runner(opt);
+        return new Runner(opt, getOutputFormat(mode));
+    }
+
+    private static OutputFormat getOutputFormat(VerboseMode mode) {
+
+        return OutputFormatFactory.createFormatInstance(STDOUT, mode);
     }
 
     private static InputOptions parseOptions(JCommander jCommander, String[] args) throws ParameterException {
@@ -161,6 +185,7 @@ public final class EncodecodeBenchmarkRunner {
 
         @Parameter(names = {"-o", "-O", "--symbover"},
             description = "Space separated list of symbol overhead values (used only when decoding data)",
+            variableArity = true,
             validateValueWith = SymbolOverheadsValidator.class)
         private final List<String> symbolOverheadList = defaultSymbolOverheadList();
 
@@ -169,6 +194,14 @@ public final class EncodecodeBenchmarkRunner {
             variableArity = true,
             validateValueWith = NonNegativeValidator.class)
         private int forks = DEFAULT_FORKS;
+
+        @Parameter(names = {"-v", "-V"},
+            description = "Details about the current benchmark will be printed to the standard output")
+        private boolean verbose;
+
+        @Parameter(names = {"-vv", "-VV"},
+            description = "Extra details about the current benchmark will be printed to the standard output")
+        private boolean extraVerbose;
 
 
         private static List<String> defaultSymbolOverheadList() {
