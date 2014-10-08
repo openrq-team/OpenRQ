@@ -65,6 +65,8 @@ public final class EncodecodeBenchmarkRunner {
             final List<Integer> Ks = options.numSourceSymbolsList();
             final int T = options.symbolSize();
             final List<Integer> sos = options.symbolOverheadList();
+            final boolean runEncoding = options.runEncodingBenchmarks();
+            final boolean runDecoding = options.runDecodingBenchmarks();
             final int forks = options.forks();
             final VerboseMode verbMode = getVerboseMode(options);
 
@@ -74,17 +76,26 @@ public final class EncodecodeBenchmarkRunner {
 
             final long startNanos = System.nanoTime();
             STDOUT.println("Starting benchmark runners...");
-            for (int K : Ks) {
-                final int F = deriveDataLength(K, T);
 
-                STDOUT.println("Running encoder benchmark for K = " + K);
-                Runner encRunner = newEncodeRunner(F, K, forks, verbMode);
-                results.addAll(encRunner.run());
+            if (runEncoding) {
+                for (int K : Ks) {
+                    final int F = deriveDataLength(K, T);
 
-                for (int symbover : sos) {
-                    STDOUT.println("Running decoder benchmark for K = " + K + " and symbol overhead = " + symbover);
-                    Runner decRunner = newDecoderRunner(F, K, symbover, forks, verbMode);
-                    results.addAll(decRunner.run());
+                    STDOUT.println("Running encoding benchmark for K = " + K);
+                    Runner encRunner = newEncodingRunner(F, K, forks, verbMode);
+                    results.addAll(encRunner.run());
+                }
+            }
+
+            if (runDecoding) {
+                for (int K : Ks) {
+                    final int F = deriveDataLength(K, T);
+
+                    for (int symbover : sos) {
+                        STDOUT.println("Running decoding benchmark for K = " + K + " and symbol overhead = " + symbover);
+                        Runner decRunner = newDecodingRunner(F, K, symbover, forks, verbMode);
+                        results.addAll(decRunner.run());
+                    }
                 }
             }
 
@@ -123,7 +134,7 @@ public final class EncodecodeBenchmarkRunner {
         }
     }
 
-    private static Runner newEncodeRunner(int datalen, int srcsymbs, int forks, VerboseMode mode) {
+    private static Runner newEncodingRunner(int datalen, int srcsymbs, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
             .include(".*" + SourceBlockEncodingTest.class.getSimpleName() + ".*")
@@ -135,7 +146,7 @@ public final class EncodecodeBenchmarkRunner {
         return new Runner(opt, getOutputFormat(mode));
     }
 
-    private static Runner newDecoderRunner(int datalen, int srcsymbs, int symbover, int forks, VerboseMode mode) {
+    private static Runner newDecodingRunner(int datalen, int srcsymbs, int symbover, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
             .include(".*" + SourceBlockDecodingTest.class.getSimpleName() + ".*")
@@ -184,10 +195,18 @@ public final class EncodecodeBenchmarkRunner {
         private int symbolSize = DEFAULT_SYMBOL_SIZE;
 
         @Parameter(names = {"-o", "-O", "--symbover"},
-            description = "Space separated list of symbol overhead values (used only when decoding data)",
+            description = "Space separated list of symbol overhead values (used only in decoding benchmarks)",
             variableArity = true,
             validateValueWith = SymbolOverheadsValidator.class)
         private final List<String> symbolOverheadList = defaultSymbolOverheadList();
+
+        @Parameter(names = {"-e", "-E", "--encodingonly"},
+            description = "Only run encoding benchmarks (unless option \"-d\" is used as well)")
+        private boolean runEncodingOnly = false;
+
+        @Parameter(names = {"-d", "-D", "--decodingonly"},
+            description = "Only run decoding benchmarks  (unless option \"-e\" is used as well)")
+        private boolean runDecodingOnly = false;
 
         @Parameter(names = {"-f", "--forks"},
             description = "How many times to fork a single benchmark",
@@ -197,11 +216,11 @@ public final class EncodecodeBenchmarkRunner {
 
         @Parameter(names = {"-v", "-V"},
             description = "Details about the current benchmark will be printed to the standard output")
-        private boolean verbose;
+        private boolean verbose = false;
 
         @Parameter(names = {"-vv", "-VV"},
             description = "Extra details about the current benchmark will be printed to the standard output")
-        private boolean extraVerbose;
+        private boolean extraVerbose = false;
 
 
         private static List<String> defaultSymbolOverheadList() {
@@ -234,6 +253,16 @@ public final class EncodecodeBenchmarkRunner {
             }
             Collections.sort(list);
             return list;
+        }
+
+        boolean runEncodingBenchmarks() {
+
+            return runEncodingOnly || !runDecodingOnly;
+        }
+
+        boolean runDecodingBenchmarks() {
+
+            return runDecodingOnly || !runEncodingOnly;
         }
 
         int forks() {
