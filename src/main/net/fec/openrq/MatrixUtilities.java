@@ -171,20 +171,6 @@ final class MatrixUtilities {
         }
     }
 
-    private static int[] getIndicesFromRange(int from, int to) {
-
-        if (from < 0 || to < from) {
-            throw new IndexOutOfBoundsException("illegal from and to indices");
-        }
-
-        final int[] indices = new int[to - from];
-        for (int n = from, i = 0; n < to; n++, i++) {
-            indices[i] = n;
-        }
-
-        return indices;
-    }
-
     /**
      * Multiplies a row (<code>line</code>) by a vector.
      * The number of columns in <code>line</code> must be equal to the number of rows
@@ -266,9 +252,6 @@ final class MatrixUtilities {
                 // byte[] / beta
                 final int dIndex = d[r];
                 OctetOps.betaDivision(beta, D[dIndex], D[dIndex]); // in place division
-                // DEBUG
-                // PRINTER.println(
-                // "betaDivision((byte)" + beta + ",D[" + dIndex + "],D[" + dIndex + "]);");
             }
 
             for (i = fromRow; i < toRow; i++) {
@@ -280,9 +263,6 @@ final class MatrixUtilities {
                     A.addRowsInPlace(beta, r, i);
                     // decoding process - D[d[i]] - (U_lower[i][lead] * D[d[r]])
                     addSymbolsWithMultiplierInPlace(beta, D[d[r]], D[d[i]]);
-                    // DEBUG
-                    // PRINTER.println(
-                    // "addSymbolsWithMultiplierInPlace((beta)" + beta + ",D[" + d[r] + "],D[" + d[i] + "]);");
                 }
             }
 

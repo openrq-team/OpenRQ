@@ -461,7 +461,7 @@ final class LinearSystem {
     }
 
     /**
-     * Solves the decoding system of linear equations using the permanent inactivation technique
+     * Solves the decoding system of linear equations using the permanent inactivation technique.
      * 
      * @param A
      *            The constraint matrix
@@ -471,53 +471,55 @@ final class LinearSystem {
      *            The total number of source symbols for decoding
      * @return the intermediate symbols
      * @throws SingularMatrixException
+     *             If the decoding fails
      */
-    static byte[][] PInactivationDecoding(ByteMatrix A, byte[][] D, int Kprime)
-        throws SingularMatrixException {
+    static byte[][] PInactivationDecoding(ByteMatrix A, byte[][] D, int Kprime) throws SingularMatrixException {
 
         // decoding parameters
-        final int Ki = SystematicIndices.getKIndex(Kprime);
-        final int S = SystematicIndices.S(Ki);
-        final int H = SystematicIndices.H(Ki);
-        final int W = SystematicIndices.W(Ki);
-        final int L = Kprime + S + H;
-        final int P = L - W;
-        final int M = A.rows();
+        int Ki = SystematicIndices.getKIndex(Kprime);
+        int S = SystematicIndices.S(Ki);
+        int H = SystematicIndices.H(Ki);
+        int W = SystematicIndices.W(Ki);
+        int L = Kprime + S + H;
+        int P = L - W;
+        int M = A.rows();
 
-        // DEBUG
-        // PRINTER.println(printVarDeclar(int.class, "Kprime", String.valueOf(Kprime)));
+        // ISDCodeWriter.instance().writeKprimeCode(Kprime); // DEBUG
+
+        return pidPhase1(A, D, Kprime, S, H, L, P, M);
+    }
+
+    private static byte[][] pidPhase1(
+        final ByteMatrix A,
+        final byte[][] D,
+        final int Kprime,
+        final int S,
+        final int H,
+        final int L,
+        final int P,
+        final int M)
+        throws SingularMatrixException
+    {
 
         /*
          * initialize c and d vectors
          */
-        int[] c = new int[L];
-        int[] d = new int[M];
+        final int[] c = new int[L];
+        final int[] d = new int[M];
 
-        for (int i = 0; i < L; i++)
-        {
+        for (int i = 0; i < L; i++) {
             c[i] = i;
             d[i] = i;
         }
 
-        for (int i = L; i < M; i++)
-        {
+        for (int i = L; i < M; i++) {
             d[i] = i;
         }
 
-        // TODO see if X can be deleted (this requires saving some modifications on A (during 1st phase))
-        // allocate X and copy A into X
-        ByteMatrix X = A.copy();
+        final ByteMatrix X = A.copy();
 
         // initialize i and u parameters, for the submatrices sizes
         int i = 0, u = P;
-
-        /*
-         * DECODING
-         */
-
-        /*
-         * First phase
-         */
 
         TIMER_PRINTABLE.println(); // DEBUG
         TimePrinter.beginTimer(); // DEBUG
@@ -528,11 +530,6 @@ final class LinearSystem {
         // the number of rows that are not HDPC
         // (these should be chosen first)
         int nonHDPCRows = S + Kprime;
-
-        /*
-         * TODO Optimization: Instead of traversing this every time, we could find just the lines that lost a non-zero,
-         * and then decrement the original 'r' (and degree as well). How to deal with the dimensions of V?
-         */
 
         // maps the index of a row to an object Row (which stores that row's characteristics)
         final Map<Integer, Row> rows = new HashMap<>(M + 1, 1.0f);
@@ -936,10 +933,8 @@ final class LinearSystem {
 
                     // decoding process - D[d[row]] + (betaOverAlpha * D[d[i]])
                     MatrixUtilities.addSymbolsWithMultiplierInPlace(betaOverAlpha, D[d[i]], D[d[row]]);
-                    // DEBUG
-                    // PRINTER.println(
-                    // "MatrixUtilities.addSymbolsWithMultiplierInPlace(" +
-                    // betaOverAlpha + ",D[" + d[i] + "],D[" + d[row] + "]);");
+
+                    // ISDCodeWriter.instance().writePhase1Code(betaOverAlpha, d[i], d[row]); // DEBUG
                 }
             }
 
@@ -983,11 +978,21 @@ final class LinearSystem {
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        // END OF FIRST PHASE
+        return pidPhase2(A, X, D, d, c, L, M, i, u);
+    }
 
-        /*
-         * Second phase
-         */
+    private static byte[][] pidPhase2(
+        final ByteMatrix A,
+        final ByteMatrix X,
+        final byte[][] D,
+        final int[] d,
+        final int[] c,
+        final int L,
+        final int M,
+        final int i,
+        final int u)
+        throws SingularMatrixException
+    {
 
         TimePrinter.beginTimer(); // DEBUG
 
@@ -1002,6 +1007,9 @@ final class LinearSystem {
          * less than u (decoding failure) or to convert it into a matrix where the first u rows is the identity
          * matrix (success of the second phase)."
          */
+
+        // ISDCodeWriter.instance().writePhase2PreCode(A, i, M, i, L); // DEBUG
+        // ISDCodeWriter.instance().writePhase2Code(d, i, M, i, L); // DEBUG
 
         // reduce U_lower to row echelon form
         MatrixUtilities.reduceToRowEchelonForm(A, i, M, L - u, L, d, D);
@@ -1019,11 +1027,18 @@ final class LinearSystem {
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "2nd: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        // END OF SECOND PHASE
+        return pidPhase3(A, X, D, d, c, L, i);
+    }
 
-        /*
-         * Third phase
-         */
+    private static byte[][] pidPhase3(
+        ByteMatrix A,
+        final ByteMatrix X,
+        final byte[][] D,
+        final int[] d,
+        final int[] c,
+        final int L,
+        final int i)
+    {
 
         TimePrinter.beginTimer(); // DEBUG
 
@@ -1031,43 +1046,39 @@ final class LinearSystem {
          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
          */
 
+        // ISDCodeWriter.instance().writePhase3PreCode(X, i); // DEBUG
+        // ISDCodeWriter.instance().writePhase3Code(i, d); // DEBUG
+
         // A can be safely re-assigned because the product matrix has the same dimensions of A
         A = X.multiply(A, 0, i, 0, i, 0, i, 0, L);
 
         // decoding process
         byte[][] Di = new byte[i][]; // contains the first i symbols of D
-        // DEBUG
-        // PRINTER.println(
-        // printVarDeclar(byte[][].class, "E", "new byte[" + i + "][]"));
         for (int index = 0; index < i; index++) {
             Di[index] = D[d[index]];
-            // DEBUG
-            // PRINTER.println(
-            // "E[" + index + "]=" + "D[" + d[index] + "];");
         }
-
         ByteMatrix DiMatrix = LinearAlgebra.BASIC2D_FACTORY.createMatrix(Di);
-        // DEBUG
-        // PRINTER.println(
-        // printVarDeclar(ByteMatrix.class, "F", "LinearAlgebra.BASIC2D_FACTORY.createMatrix(E)"));
 
         for (int row = 0; row < i; row++) {
             // multiply X[row] by D
             BasicByteVector prod = (BasicByteVector)X.multiplyRow(row, DiMatrix, 0, i, LinearAlgebra.BASIC1D_FACTORY);
             D[d[row]] = prod.getInternalArray();
-            // DEBUG
-            // PRINTER.println(
-            // "D[" + d[row] +
-            // "]=((BasicByteVector)X.multiplyRow(" + row + ",F,0," + i +
-            // ",LinearAlgebra.BASIC1D_FACTORY)).getInternalArray();");
         }
 
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "3rd: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        /*
-         * Fourth phase
-         */
+        return pidPhase4(A, D, d, c, L, i);
+    }
+
+    private static byte[][] pidPhase4(
+        final ByteMatrix A,
+        final byte[][] D,
+        final int[] d,
+        final int[] c,
+        final int L,
+        final int i)
+    {
 
         TimePrinter.beginTimer(); // DEBUG
 
@@ -1092,21 +1103,27 @@ final class LinearSystem {
                 // (no need to actually "zerofy" it, since this part of the matrix will not be used again)
                 // it.set((byte)0);
 
+                // ISDCodeWriter.instance().writePhase4Code(b, d[j], d[row]); // DEBUG
+
                 // decoding process - (beta * D[d[j]]) + D[d[row]]
                 MatrixUtilities.addSymbolsWithMultiplierInPlace(b, D[d[j]], D[d[row]]);
-                // DEBUG
-                // PRINTER.println(
-                // "MatrixUtilities.addSymbolsWithMultiplierInPlace(" +
-                // b + ",D[" + d[j] + "],D[" + d[row] + "]);");
             }
         }
 
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "4th: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        /*
-         * Fifth phase
-         */
+        return pidPhase5(A, D, d, c, L, i);
+    }
+
+    private static byte[][] pidPhase5(
+        final ByteMatrix A,
+        final byte[][] D,
+        final int[] d,
+        final int[] c,
+        final int L,
+        final int i)
+    {
 
         TimePrinter.beginTimer(); // DEBUG
 
@@ -1118,11 +1135,10 @@ final class LinearSystem {
                 // "then divide row j of A by A[j,j]."
                 A.divideRowInPlace(j, beta);
 
+                // ISDCodeWriter.instance().writePhase5Code_1(beta, d[j], d[j]); // DEBUG
+
                 // decoding process - D[d[j]] / beta
                 OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
-                // DEBUG
-                // PRINTER.println(
-                // "betaDivision((byte)" + beta + ",D[" + d[j] + "],D[" + d[j] + "]);");
             }
 
             // "For eL from 1 to j-1"
@@ -1138,19 +1154,18 @@ final class LinearSystem {
                 // because it will not be used again.
                 // A.addRowsInPlace(beta, eL, j);
 
+                // ISDCodeWriter.instance().writePhase5Code_2(beta, d[eL], d[j]); // DEBUG
+
                 // decoding process - (beta * D[d[eL]]) + D[d[j]]
                 MatrixUtilities.addSymbolsWithMultiplierInPlace(beta, D[d[eL]], D[d[j]]);
-                // DEBUG
-                // PRINTER.println(
-                // "MatrixUtilities.addSymbolsWithMultiplierInPlace((beta)" +
-                // beta + ",D[" + d[eL] + "],D[" + d[j] + "]);");
             }
         }
 
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        // use the already allocated matrix for the matrix C
+        // ISDCodeWriter.instance().writeFinal(L, c, d); // DEBUG
+
         final byte[][] C = new byte[L][];
 
         // reorder C
@@ -1158,24 +1173,9 @@ final class LinearSystem {
             final int ci = c[index];
             final int di = d[index];
             C[ci] = D[di];
-            // DEBUG
-            // PRINTER.println(
-            // "E[" + ci + "]=D[" + di + "];");
         }
 
-        // DEBUG
-        // PRINTER.println("return E;");
         return C;
-
-        // allocate memory for the decoded symbols
-        // byte[] C = new byte[L*symbol_size];
-
-        // copy the decoded source symbols from D to C
-        // for(int symbol = 0; symbol < L; symbol++)
-        // System.arraycopy(D[d[symbol]], 0, C, c[symbol]*symbol_size, symbol_size);
-
-        // return the decoded source symbols
-        // return C;
     }
 
     private LinearSystem() {
