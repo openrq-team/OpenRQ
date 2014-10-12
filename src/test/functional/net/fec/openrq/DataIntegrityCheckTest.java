@@ -61,7 +61,7 @@ public final class DataIntegrityCheckTest {
     public static Iterable<Object[]> getFECParams() {
 
         final int[] Fs = TestingCommon.primeExponentialDistribution(2, 15);
-        final int[] Ks = TestingCommon.primeExponentialDistribution(10, 2);
+        final int[] Ks = TestingCommon.primeExponentialDistribution(10, 3);
         final int[] Zs = TestingCommon.primeExponentialDistribution(2, 3);
         final int N = 1;
 

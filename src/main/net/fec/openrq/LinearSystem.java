@@ -484,6 +484,7 @@ final class LinearSystem {
         int P = L - W;
         int M = A.rows();
 
+        // ISDCodeWriter.instance().prepare(); // DEBUG
         // ISDCodeWriter.instance().writeKprimeCode(Kprime); // DEBUG
 
         return pidPhase1(A, D, Kprime, S, H, L, P, M);
@@ -1008,8 +1009,8 @@ final class LinearSystem {
          * matrix (success of the second phase)."
          */
 
-        // ISDCodeWriter.instance().writePhase2PreCode(A, i, M, i, L); // DEBUG
-        // ISDCodeWriter.instance().writePhase2Code(d, i, M, i, L); // DEBUG
+        // ISDCodeWriter.instance().writePhase2PreCode(A, i, M, L - u, L, d); // DEBUG
+        // ISDCodeWriter.instance().writePhase2Code(i, M, L - u, L); // DEBUG
 
         // reduce U_lower to row echelon form
         MatrixUtilities.reduceToRowEchelonForm(A, i, M, L - u, L, d, D);
@@ -1164,7 +1165,8 @@ final class LinearSystem {
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        // ISDCodeWriter.instance().writeFinal(L, c, d); // DEBUG
+        // ISDCodeWriter.instance().writeFinalCode(L, c, d); // DEBUG
+        // ISDCodeWriter.instance().generateCode(); // DEBUG
 
         final byte[][] C = new byte[L][];
 
