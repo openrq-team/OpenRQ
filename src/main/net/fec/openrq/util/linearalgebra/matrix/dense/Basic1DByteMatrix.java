@@ -42,13 +42,15 @@ import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization.Type;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 
 
 public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseByteMatrix {
 
-    private byte self[];
+    private final byte self[];
 
 
     public Basic1DByteMatrix() {
@@ -204,5 +206,11 @@ public class Basic1DByteMatrix extends AbstractBasicByteMatrix implements DenseB
         }
 
         return result;
+    }
+
+    @Override
+    protected Type getSerializationType() {
+
+        return Serialization.Type.DENSE_1D_MATRIX;
     }
 }

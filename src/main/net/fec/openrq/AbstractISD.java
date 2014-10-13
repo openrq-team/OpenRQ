@@ -21,6 +21,7 @@ import java.util.Arrays;
 import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirected2DByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
 
@@ -45,14 +46,24 @@ abstract class AbstractISD implements IntermediateSymbolsDecoder {
         return Arrays.copyOf(array, array.length);
     }
 
+    protected static final byte[][] c(byte[][] matrix) {
+
+        return Arrays.copyOf(matrix, matrix.length);
+    }
+
     protected static final ByteMatrix sparse(int rows, int cols) {
 
         return LinearAlgebra.SPARSE_FACTORY.createMatrix(rows, cols);
     }
 
-    protected static final ByteMatrix dense(byte[][] matrix) {
+    protected static final ByteMatrix rowInd(int rows, int columns, byte[][] matrix, int[] rowIndirection) {
 
-        return LinearAlgebra.BASIC2D_FACTORY.createMatrix(matrix);
+        return new RowIndirected2DByteMatrix(rows, columns, matrix, rowIndirection);
+    }
+
+    protected static final int cols(byte[][] matrix) {
+
+        return (matrix.length == 0) ? 0 : matrix[0].length;
     }
 
     protected static final byte[] m(ByteMatrix leftMat, int row, ByteMatrix rightMat, int fromCol, int toCol) {

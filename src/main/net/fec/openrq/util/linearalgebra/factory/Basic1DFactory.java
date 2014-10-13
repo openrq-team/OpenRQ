@@ -36,12 +36,15 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.dense.Basic1DByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 
 
 public class Basic1DFactory extends BasicFactory {
@@ -179,5 +182,19 @@ public class Basic1DFactory extends BasicFactory {
         }
 
         return new Basic1DByteMatrix(size, size, array);
+    }
+
+    @Override
+    public ByteMatrix deserializeMatrix(ByteBuffer buffer) throws DeserializationException {
+
+        final int rows = Serialization.readMatrixRows(buffer);
+        final int columns = Serialization.readMatrixColumns(buffer);
+        final byte array[] = new byte[rows * columns];
+
+        for (int i = 0; i < rows * columns; i++) {
+            array[i] = Serialization.readMatrixValue(buffer);
+        }
+
+        return new Basic1DByteMatrix(rows, columns, array);
     }
 }

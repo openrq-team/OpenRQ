@@ -36,12 +36,15 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.sparse.CRSByteMatrix;
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 
 
 public class CRSFactory extends CompressedFactory {
@@ -195,5 +198,28 @@ public class CRSFactory extends CompressedFactory {
         }
 
         return matrix;
+    }
+
+    @Override
+    public ByteMatrix deserializeMatrix(ByteBuffer buffer) throws DeserializationException {
+
+        final int rows = Serialization.readMatrixRows(buffer);
+        final int cols = Serialization.readMatrixColumns(buffer);
+
+        final int[] rowCards = new int[rows];
+        final int[][] colInds = new int[rows][];
+        final byte[][] colVals = new byte[rows][];
+
+        for (int i = 0; i < rows; i++) {
+            rowCards[i] = Serialization.readMatrixRowCardinality(buffer);
+            colInds[i] = new int[rowCards[i]];
+            colVals[i] = new byte[rowCards[i]];
+            for (int j = 0; j < rowCards[i]; j++) {
+                colInds[i][j] = Serialization.readMatrixColumnIndex(buffer);
+                colVals[i][j] = Serialization.readMatrixValue(buffer);
+            }
+        }
+
+        return new CRSByteMatrix(rows, cols, colVals, colInds, rowCards);
     }
 }

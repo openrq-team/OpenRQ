@@ -38,9 +38,13 @@ package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+
+import java.nio.ByteBuffer;
+
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 
 
 public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix implements DenseByteMatrix {
@@ -86,5 +90,40 @@ public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix impleme
         }
 
         return result;
+    }
+
+    @Override
+    public ByteBuffer serializeToBuffer() {
+
+        final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
+        Serialization.writeType(getSerializationType(), buffer);
+        Serialization.writeMatrixRows(rows(), buffer);
+        Serialization.writeMatrixColumns(columns(), buffer);
+      
+        for (int i = 0; i < rows(); i++) {
+            for (int j = 0; j < columns(); j++) {
+                Serialization.writeMatrixValue(safeGet(i, j), buffer);
+            }
+        }
+        
+        buffer.rewind();
+        return buffer;
+    }
+
+    protected abstract Serialization.Type getSerializationType();
+
+    private int getSerializedDataSize() {
+
+        final long dataSize = Serialization.SERIALIZATION_TYPE_NUMBYTES +
+                              Serialization.MATRIX_ROWS_NUMBYTES +
+                              Serialization.MATRIX_COLUMNS_NUMBYTES +
+                              (long)rows() * columns();
+
+        if (dataSize > Integer.MAX_VALUE) {
+            throw new UnsupportedOperationException("matrix is too large to be serialized");
+        }
+        else {
+            return (int)dataSize;
+        }
     }
 }

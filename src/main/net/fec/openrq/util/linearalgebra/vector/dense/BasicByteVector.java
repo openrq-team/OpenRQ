@@ -36,8 +36,11 @@
 package net.fec.openrq.util.linearalgebra.vector.dense;
 
 
+import java.nio.ByteBuffer;
+
 import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.checking.Indexables;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
@@ -129,5 +132,33 @@ public class BasicByteVector extends DenseByteVector {
     public byte[] getInternalArray() {
 
         return self;
+    }
+
+    @Override
+    public ByteBuffer serializeToBuffer() {
+
+        final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
+        Serialization.writeType(Serialization.Type.DENSE_VECTOR, buffer);
+        Serialization.writeVectorLength(length(), buffer);
+        
+        for (int i = 0; i < length(); i++) {
+            Serialization.writeVectorValue(safeGet(i), buffer);
+        }
+        
+        buffer.rewind();
+        return buffer;
+    }
+
+    private int getSerializedDataSize() {
+
+        final long dataSize = Serialization.SERIALIZATION_TYPE_NUMBYTES +
+                              Serialization.VECTOR_LENGTH_NUMBYTES +
+                              length();
+
+        if (dataSize > Integer.MAX_VALUE) {
+            throw new UnsupportedOperationException("vector is too large to be serialized");
+        }
+
+        return (int)dataSize;
     }
 }

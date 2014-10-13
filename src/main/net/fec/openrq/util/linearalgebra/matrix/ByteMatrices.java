@@ -49,6 +49,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
 import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
@@ -63,6 +64,8 @@ import net.fec.openrq.util.linearalgebra.matrix.source.IdentityMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.LoopbackMatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.matrix.source.RandomMatrixSource;
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 import net.fec.openrq.util.printing.appendable.PrintableAppendable;
@@ -796,6 +799,27 @@ public final class ByteMatrices {
             for (int j = 0; j < C; j++)
                 output.printf("| %02X ", matrix.get(i, j));
             output.println('|');
+        }
+    }
+
+    public static ByteMatrix deserializeMatrix(ByteBuffer buffer) throws DeserializationException {
+
+        final Serialization.Type type = Serialization.readType(buffer);
+        switch (type) {
+            case DENSE_1D_MATRIX:
+                return LinearAlgebra.BASIC1D_FACTORY.deserializeMatrix(buffer);
+
+            case DENSE_2D_MATRIX:
+                return LinearAlgebra.BASIC2D_FACTORY.deserializeMatrix(buffer);
+
+            case SPARSE_ROW_MATRIX:
+                return LinearAlgebra.CRS_FACTORY.deserializeMatrix(buffer);
+
+            case SPARSE_COLUMN_MATRIX:
+                return LinearAlgebra.CCS_FACTORY.deserializeMatrix(buffer);
+
+            default:
+                throw new DeserializationException("serialized data does not contain a byte matrix");
         }
     }
 }

@@ -48,6 +48,7 @@ import java.util.Arrays;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
@@ -2294,5 +2295,18 @@ public abstract class AbstractByteVectorTest {
 
         assertEquals(1, a.nonZeros());
         assertEquals(a, b);
+    }
+
+    @Test
+    public void testSerialization() throws DeserializationException {
+
+        ByteVector initial = factory().createVector(new byte[] {0, 2, 3});
+
+        ByteVector a = initial.copy();
+
+        ByteVector c = ByteVectors.deserializeVector(a.serializeToBuffer());
+
+        assertEquals(initial, a); // make sure serialization does not modify the vector
+        assertEquals(a, c);
     }
 }

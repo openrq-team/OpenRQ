@@ -38,7 +38,12 @@ package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
+
+import java.nio.ByteBuffer;
+
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
+import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.AbstractByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
@@ -160,5 +165,38 @@ public abstract class SparseByteVector extends AbstractByteVector {
         if (cardinality > length) {
             fail("Wrong vector cardinality: must not exceed vector length");
         }
+    }
+
+    @Override
+    public ByteBuffer serializeToBuffer() {
+
+        final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
+        Serialization.writeType(Serialization.Type.SPARSE_VECTOR, buffer);
+        Serialization.writeVectorLength(length(), buffer);
+        Serialization.writeVectorCardinality(cardinality(), buffer);
+        ByteVectorIterator it = nonZeroIterator();
+        while (it.hasNext()) {
+            it.next();
+            Serialization.writeVectorIndex(it.index(), buffer);
+            Serialization.writeVectorValue(it.get(), buffer);
+        }
+
+        buffer.rewind();
+        return buffer;
+    }
+
+    private int getSerializedDataSize() {
+
+        final long dataSize = Serialization.SERIALIZATION_TYPE_NUMBYTES +
+                              Serialization.VECTOR_LENGTH_NUMBYTES +
+                              Serialization.VECTOR_CARDINALITY_NUMBYTES +
+                              Serialization.VECTOR_INDEX_NUMBYTES * (long)length() +
+                              length();
+
+        if (dataSize > Integer.MAX_VALUE) {
+            throw new UnsupportedOperationException("vector is too large to be serialized");
+        }
+
+        return (int)dataSize;
     }
 }

@@ -46,9 +46,12 @@ import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
 import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
 import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorAccumulator;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorPredicate;
@@ -412,5 +415,20 @@ public final class ByteVectors {
         for (int j = 0; j < N; j++)
             output.printf("| %02X ", vector.get(j));
         output.println('|');
+    }
+
+    public static ByteVector deserializeVector(ByteBuffer buffer) throws DeserializationException {
+
+        Serialization.Type type = Serialization.readType(buffer);
+        switch (type) {
+            case DENSE_VECTOR:
+                return LinearAlgebra.DENSE_FACTORY.deserializeVector(buffer);
+
+            case SPARSE_VECTOR:
+                return LinearAlgebra.SPARSE_FACTORY.deserializeVector(buffer);
+
+            default:
+                throw new DeserializationException("serialized data does not contain a byte vector");
+        }
     }
 }

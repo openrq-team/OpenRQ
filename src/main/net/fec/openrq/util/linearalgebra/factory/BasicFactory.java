@@ -36,9 +36,12 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
@@ -91,6 +94,18 @@ public abstract class BasicFactory extends Factory {
         byte array[] = new byte[length];
         for (int i = 0; i < length; i++) {
             array[i] = (byte)random.nextInt();
+        }
+
+        return new BasicByteVector(array);
+    }
+
+    @Override
+    public ByteVector deserializeVector(ByteBuffer buffer) throws DeserializationException {
+
+        final int length = Serialization.readVectorLength(buffer);
+        final byte[] array = new byte[length];
+        for (int i = 0; i < length; i++) {
+            array[i] = Serialization.readVectorValue(buffer);
         }
 
         return new BasicByteVector(array);

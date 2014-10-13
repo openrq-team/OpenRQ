@@ -54,6 +54,7 @@ import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 import org.junit.Test;
@@ -6246,5 +6247,22 @@ public abstract class AbstractByteMatrixTest {
 
         a.addRowsInPlace(multiplier, 1, 0, 7, 7);
         assertEquals(b, a);
+    }
+
+    @Test
+    public void testSerialization() throws DeserializationException {
+
+        ByteMatrix initial = factory().createMatrix(new byte[][] {
+                                                                  {1, 0, 3},
+                                                                  {0, 2, 3},
+                                                                  {1, 2, 0}
+        });
+
+        ByteMatrix a = initial.copy();
+
+        ByteMatrix c = ByteMatrices.deserializeMatrix(a.serializeToBuffer());
+
+        assertEquals(initial, a); // make sure serialization does not modify the matrix
+        assertEquals(a, c);
     }
 }

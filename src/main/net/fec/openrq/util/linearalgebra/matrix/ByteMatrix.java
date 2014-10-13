@@ -41,6 +41,8 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
+import java.nio.ByteBuffer;
+
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.functor.AdvancedMatrixPredicate;
@@ -1617,4 +1619,6 @@ public interface ByteMatrix {
      *            The ending column index (exclusive)
      */
     void addRowsInPlace(byte sourceMultiplier, int sourceRow, int destRow, int fromColumn, int toColumn);
+
+    ByteBuffer serializeToBuffer();
 }

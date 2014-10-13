@@ -36,10 +36,12 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
+import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
 
@@ -291,4 +293,8 @@ public abstract class Factory {
      * @return a random vector
      */
     public abstract ByteVector createRandomVector(int length, Random random);
+
+    public abstract ByteVector deserializeVector(ByteBuffer buffer) throws DeserializationException;
+
+    public abstract ByteMatrix deserializeMatrix(ByteBuffer buffer) throws DeserializationException;
 }

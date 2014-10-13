@@ -45,6 +45,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 
+import java.nio.ByteBuffer;
 import java.util.Objects;
 
 import net.fec.openrq.util.checking.Indexables;
@@ -56,6 +57,7 @@ import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixFunction;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixProcedure;
 import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 
 
@@ -635,5 +637,43 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         Indexables.checkIndexBounds(i, rows());
         Indexables.checkFromToBounds(fromColumn, toColumn, columns());
         return sparseRows.vectorRW(i).nonZeroIterator(fromColumn, toColumn);
+    }
+
+    @Override
+    public ByteBuffer serializeToBuffer() {
+
+        final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
+        Serialization.writeType(Serialization.Type.SPARSE_ROW_MATRIX, buffer);
+        Serialization.writeMatrixRows(rows(), buffer);
+        Serialization.writeMatrixColumns(columns(), buffer);
+
+        for (int i = 0; i < rows(); i++) {
+            Serialization.writeMatrixRowCardinality(nonZerosInRow(i), buffer);
+            ByteVectorIterator it = nonZeroRowIterator(i);
+            while (it.hasNext()) {
+                it.next();
+                Serialization.writeMatrixColumnIndex(it.index(), buffer);
+                Serialization.writeMatrixValue(it.get(), buffer);
+            }
+        }
+        
+        buffer.rewind();
+        return buffer;
+    }
+
+    private int getSerializedDataSize() {
+
+        final long dataSize = Serialization.SERIALIZATION_TYPE_NUMBYTES +
+                              Serialization.MATRIX_ROWS_NUMBYTES +
+                              Serialization.MATRIX_COLUMNS_NUMBYTES +
+                              Serialization.MATRIX_ROW_CARDINALITY_NUMBYTES * (long)rows() +
+                              Serialization.MATRIX_COLUMN_INDEX_NUMBYTES * (long)cardinality() +
+                              cardinality();
+
+        if (dataSize > Integer.MAX_VALUE) {
+            throw new UnsupportedOperationException("matrix is too large to be serialized");
+        }
+
+        return (int)dataSize;
     }
 }

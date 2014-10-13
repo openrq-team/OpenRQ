@@ -42,6 +42,7 @@ import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
 import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import net.fec.openrq.util.arithmetic.ExtraMath;
@@ -49,6 +50,7 @@ import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
 import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;

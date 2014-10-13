@@ -39,6 +39,8 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
+import java.nio.ByteBuffer;
+
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -878,4 +880,6 @@ public interface ByteVector extends Iterable<Byte> {
      * @return a non-zero iterable instance
      */
     Iterable<Byte> skipZeros();
+
+    ByteBuffer serializeToBuffer();
 }
