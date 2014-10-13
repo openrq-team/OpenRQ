@@ -32,6 +32,7 @@ import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirected2DByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.printing.TimePrinter;
 import net.fec.openrq.util.printing.appendable.PrintableAppendable;
@@ -1003,14 +1004,13 @@ final class LinearSystem {
          * rows and i columns."
          */
 
+        // ISDCodeWriter.instance().writePhase2Code(A, i, M, L - u, L, d); // MUST be called before decoding code! DEBUG
+
         /*
          * "Gaussian elimination is performed in the second phase on U_lower either to determine that its rank is
          * less than u (decoding failure) or to convert it into a matrix where the first u rows is the identity
          * matrix (success of the second phase)."
          */
-
-        // ISDCodeWriter.instance().writePhase2PreCode(A, i, M, L - u, L, d); // DEBUG
-        // ISDCodeWriter.instance().writePhase2Code(i, M, L - u, L); // DEBUG
 
         // reduce U_lower to row echelon form
         MatrixUtilities.reduceToRowEchelonForm(A, i, M, L - u, L, d, D);
@@ -1047,24 +1047,27 @@ final class LinearSystem {
          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
          */
 
-        // ISDCodeWriter.instance().writePhase3PreCode(X, i); // DEBUG
-        // ISDCodeWriter.instance().writePhase3Code(i, d); // DEBUG
+        final int Arows = i;
+        final int Acols = L;
+        final int Xrows = Arows;
+        final int Xcols = Arows;
 
         // A can be safely re-assigned because the product matrix has the same dimensions of A
-        A = X.multiply(A, 0, i, 0, i, 0, i, 0, L);
+        A = X.multiply(A, 0, Xrows, 0, Xcols, 0, Arows, 0, Acols);
 
         // decoding process
-        byte[][] Di = new byte[i][]; // contains the first i symbols of D
-        for (int index = 0; index < i; index++) {
-            Di[index] = D[d[index]];
-        }
-        ByteMatrix DiMatrix = LinearAlgebra.BASIC2D_FACTORY.createMatrix(Di);
+        final int Drows = Xrows;
+        final int Dcols = (D.length == 0) ? 0 : D[0].length;
+        final byte[][] DShallowCopy = Arrays.copyOf(D, D.length);
+        final ByteMatrix DM = new RowIndirected2DByteMatrix(Drows, Dcols, DShallowCopy, d);
 
-        for (int row = 0; row < i; row++) {
+        for (int row = 0; row < Xrows; row++) {
             // multiply X[row] by D
-            BasicByteVector prod = (BasicByteVector)X.multiplyRow(row, DiMatrix, 0, i, LinearAlgebra.BASIC1D_FACTORY);
+            BasicByteVector prod = (BasicByteVector)X.multiplyRow(row, DM, 0, Xcols, LinearAlgebra.BASIC1D_FACTORY);
             D[d[row]] = prod.getInternalArray();
         }
+
+        // ISDCodeWriter.instance().writePhase3Code(X, Xrows, Xcols, d); // DEBUG
 
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "3rd: ", TimeUnit.MILLISECONDS); // DEBUG
@@ -1165,9 +1168,6 @@ final class LinearSystem {
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        // ISDCodeWriter.instance().writeFinalCode(L, c, d); // DEBUG
-        // ISDCodeWriter.instance().generateCode(); // DEBUG
-
         final byte[][] C = new byte[L][];
 
         // reorder C
@@ -1176,6 +1176,9 @@ final class LinearSystem {
             final int di = d[index];
             C[ci] = D[di];
         }
+
+        // ISDCodeWriter.instance().writeReorderCode(L, c, d); // DEBUG
+        // ISDCodeWriter.instance().generateCode(); // DEBUG
 
         return C;
     }
