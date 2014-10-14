@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.fec.openrq.util.io.UncheckedIOException;
 import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -73,6 +74,10 @@ final class ISDManager {
 
                     lineNumber++;
                 }
+            }
+            catch (UncheckedIOException e) {
+                System.err.println("Error while reading \"Intermediate Symbols Decoders\" file:");
+                e.getCause().printStackTrace(System.err);
             }
             catch (IOException e) {
                 System.err.println("Error while reading \"Intermediate Symbols Decoders\" file:");

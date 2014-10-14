@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 
 import net.fec.openrq.util.numericaltype.SizeOf;
 import net.fec.openrq.util.numericaltype.UnsignedTypes;
+import net.fec.openrq.util.text.Words;
 
 
 /**
@@ -228,17 +229,7 @@ public final class Serialization {
 
         if (buffer.remaining() < numBytes) {
             throw new IllegalArgumentException(
-                "buffer must have at least " + maybePlural(numBytes, "byte") + " available for " + target);
-        }
-    }
-
-    private static String maybePlural(int amount, String baseWord) {
-
-        if (amount == 1 || amount == -1) {
-            return amount + " " + baseWord;
-        }
-        else {
-            return baseWord + " " + amount + "s";
+                "buffer must have at least " + Words.bytes(numBytes) + " available for " + target);
         }
     }
 
