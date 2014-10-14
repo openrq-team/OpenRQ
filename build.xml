@@ -27,22 +27,22 @@ limitations under the License.
     <property name="javac-args" value="-Xlint:none"/>
     
     <property name="top.src_dir" location="src"/>
-    <property name="top.build_dir" location="build"/>
     <property name="top.lib_dir" location="lib"/>
+
+    <property name="classes.build_dir" location="build"/>
     
     <property name="main.src_dir" location="${top.src_dir}/main"/>
-    <property name="main.build_dir" location="${top.build_dir}/main"/>
     <property name="main.jar_file" location="openrq-${version}.jar"/>
+
+    <property name="resources.src_dir" location="${top.src_dir}/resources"/>
 
     <property name="test-common.src_dir" location="${top.src_dir}/test/common"/>
 
     <property name="test-functional.src_dir" location="${top.src_dir}/test/functional"/>
-    <property name="test-functional.build_dir" location="${top.build_dir}/test/functional"/>
     <property name="test-functional.jar_file" location="openrq-${version}-functional-test.jar"/>
     <property name="test-functional.script_file" location="${top.lib_dir}/test/functional/build.xml"/>
     
     <property name="test-benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
-    <property name="test-benchmark.build_dir" location="${top.build_dir}/test/benchmark"/>
     <property name="test-benchmark.jar_file" location="openrq-${version}-benchmark-test.jar"/>
     <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
 
@@ -64,7 +64,7 @@ limitations under the License.
 <!-- ================ Cleaning targets ================ -->
     <target name="clean" description="Remove binary files.">
 
-        <delete dir="${top.build_dir}"/>
+        <delete dir="${classes.build_dir}"/>
 
     </target>
 
@@ -84,17 +84,17 @@ limitations under the License.
     <target name="build"
             description="Compile the main Java classes.">
 
-        <delete dir="${main.build_dir}"/>
-        <mkdir dir="${main.build_dir}"/>
-        <javac srcdir="${main.src_dir}" destdir="${main.build_dir}"
+        <delete dir="${classes.build_dir}"/>
+        <mkdir dir="${classes.build_dir}"/>
+        <javac srcdir="${main.src_dir}" destdir="${classes.build_dir}"
                classpath="."
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
                includeAntRuntime="false">
             <compilerarg value="${javac-args}" />
         </javac>
-        <copy todir="${main.build_dir}">
-            <fileset dir="${main.src_dir}" excludes="**/*.java"/>
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}" />
         </copy>
 
     </target>
@@ -103,7 +103,7 @@ limitations under the License.
             description="Compile the main Java classes and pack them into a Jar file.">
 
         <delete file="${main.jar_file}"/>
-        <jar destfile="${main.jar_file}" basedir="${main.build_dir}"/>
+        <jar destfile="${main.jar_file}" basedir="${classes.build_dir}"/>
 
     </target>
 
@@ -113,7 +113,7 @@ limitations under the License.
 
         <delete file="${main.jar_file}"/>
         <jar destfile="${main.jar_file}" duplicate="preserve">
-            <fileset dir="${main.build_dir}"/>
+            <fileset dir="${classes.build_dir}"/>
             <fileset dir="${main.src_dir}"/>
         </jar>
 
@@ -124,18 +124,17 @@ limitations under the License.
     <target name="buildopt"
             description="Compile the main and optional Java classes.">
             
-        <delete dir="${main.build_dir}"/>
-        <mkdir dir="${main.build_dir}"/>
-        <javac srcdir="${main.src_dir}:${opt.src_dir}" destdir="${main.build_dir}"
+        <delete dir="${classes.build_dir}"/>
+        <mkdir dir="${classes.build_dir}"/>
+        <javac srcdir="${main.src_dir}:${opt.src_dir}" destdir="${classes.build_dir}"
                classpath=".:${codemodel.jar_file}"
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
                includeAntRuntime="false">
             <compilerarg value="${javac-args}" />
         </javac>
-        <copy todir="${main.build_dir}">
-            <fileset dir="${main.src_dir}" excludes="*.java"/>
-            <fileset dir="${opt.src_dir}" excludes="*.java"/>
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}" />
         </copy>
     </target>
 
@@ -143,7 +142,7 @@ limitations under the License.
             description="Compile the main and optional Java classes and pack them into a Jar file.">
 
         <delete file="${opt.jar_file}"/>
-        <jar destfile="${opt.jar_file}" basedir="${main.build_dir}">
+        <jar destfile="${opt.jar_file}" basedir="${classes.build_dir}">
             <zipfileset src="${codemodel.jar_file}"/>
         </jar>
 
@@ -154,7 +153,7 @@ limitations under the License.
 
         <delete file="${opt.jar_file}"/>
         <jar destfile="${opt.jar_file}" duplicate="preserve">
-            <fileset dir="${main.build_dir}"/>
+            <fileset dir="${classes.build_dir}"/>
             <fileset dir="${main.src_dir}"/>
             <fileset dir="${opt.src_dir}"/>
             <zipfileset src="${codemodel.jar_file}"/>
@@ -195,7 +194,7 @@ limitations under the License.
     <target name="-init-functional-properties">
         
         <property name="func.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-functional.src_dir}"/>
-        <property name="func.build_dir" value="${test-functional.build_dir}"/>
+        <property name="func.build_dir" value="${classes.build_dir}"/>
         <property name="func.jar_file" value="${test-functional.jar_file}"/>
         
     </target>
@@ -203,8 +202,8 @@ limitations under the License.
     <!-- overriden private target -->
     <target name="-functional-post-compile">
 
-        <copy todir="${test-functional.build_dir}">
-            <fileset dir="${main.src_dir}" excludes="**/*.java"/>
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}"/>
         </copy>
 
     </target>
@@ -225,7 +224,7 @@ limitations under the License.
     <target name="-init-benchmark-properties">
         
         <property name="bench.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-benchmark.src_dir}"/>
-        <property name="bench.build_dir" value="${test-benchmark.build_dir}"/>
+        <property name="bench.build_dir" value="${classes.build_dir}"/>
         <property name="bench.jar_file" value="${test-benchmark.jar_file}"/>
         
     </target>
@@ -233,8 +232,8 @@ limitations under the License.
     <!-- overriden private target -->
     <target name="-benchmark-post-compile">
 
-        <copy todir="${test-benchmark.build_dir}">
-            <fileset dir="${main.src_dir}" excludes="**/*.java"/>
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}" />
         </copy>
 
     </target>
