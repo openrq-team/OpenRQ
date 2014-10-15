@@ -36,7 +36,9 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Random;
 
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
@@ -296,5 +298,9 @@ public abstract class Factory {
 
     public abstract ByteVector deserializeVector(ByteBuffer buffer) throws DeserializationException;
 
+    public abstract ByteVector deserializeVector(ReadableByteChannel ch) throws IOException, DeserializationException;
+
     public abstract ByteMatrix deserializeMatrix(ByteBuffer buffer) throws DeserializationException;
+
+    public abstract ByteMatrix deserializeMatrix(ReadableByteChannel ch) throws IOException, DeserializationException;
 }

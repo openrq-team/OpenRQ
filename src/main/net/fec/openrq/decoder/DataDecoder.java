@@ -329,7 +329,7 @@ public interface DataDecoder {
      *            A {@code DataInput} object from which an encoding packet is read
      * @return a container object containing an encoding packet or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code DataInput} object
+     *             If an I/O error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
      *                If {@code in} is {@code null}
      */
@@ -356,7 +356,7 @@ public interface DataDecoder {
      *            A {@code ReadableByteChannel} object from which an encoding packet is read
      * @return a container object containing an encoding packet or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     *             If an I/O error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */

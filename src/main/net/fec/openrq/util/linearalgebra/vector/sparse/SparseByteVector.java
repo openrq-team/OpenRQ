@@ -36,10 +36,12 @@
 package net.fec.openrq.util.linearalgebra.vector.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
+import static net.fec.openrq.util.math.OctetOps.aIsGreaterThanB;
+import static net.fec.openrq.util.math.OctetOps.aIsLessThanB;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -171,18 +173,32 @@ public abstract class SparseByteVector extends AbstractByteVector {
     public ByteBuffer serializeToBuffer() {
 
         final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
-        Serialization.writeType(Serialization.Type.SPARSE_VECTOR, buffer);
-        Serialization.writeVectorLength(length(), buffer);
-        Serialization.writeVectorCardinality(cardinality(), buffer);
+        Serialization.writeType(buffer, Serialization.Type.SPARSE_VECTOR);
+        Serialization.writeVectorLength(buffer, length());
+        Serialization.writeVectorCardinality(buffer, cardinality());
         ByteVectorIterator it = nonZeroIterator();
         while (it.hasNext()) {
             it.next();
-            Serialization.writeVectorIndex(it.index(), buffer);
-            Serialization.writeVectorValue(it.get(), buffer);
+            Serialization.writeVectorIndex(buffer, it.index());
+            Serialization.writeVectorValue(buffer, it.get());
         }
 
         buffer.rewind();
         return buffer;
+    }
+
+    @Override
+    public void serializeToChannel(WritableByteChannel ch) throws IOException {
+
+        Serialization.writeType(ch, Serialization.Type.SPARSE_VECTOR);
+        Serialization.writeVectorLength(ch, length());
+        Serialization.writeVectorCardinality(ch, cardinality());
+        ByteVectorIterator it = nonZeroIterator();
+        while (it.hasNext()) {
+            it.next();
+            Serialization.writeVectorIndex(ch, it.index());
+            Serialization.writeVectorValue(ch, it.get());
+        }
     }
 
     private int getSerializedDataSize() {

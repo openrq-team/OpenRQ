@@ -40,18 +40,21 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
-import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
-import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
-import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
-import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
+import static net.fec.openrq.util.math.OctetOps.aDividedByB;
+import static net.fec.openrq.util.math.OctetOps.aMinusB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
+import static net.fec.openrq.util.math.OctetOps.maxByte;
+import static net.fec.openrq.util.math.OctetOps.maxOfAandB;
+import static net.fec.openrq.util.math.OctetOps.minByte;
+import static net.fec.openrq.util.math.OctetOps.minOfAandB;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Random;
 
+import net.fec.openrq.util.io.printing.appendable.PrintableAppendable;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.functor.AdvancedMatrixPredicate;
 import net.fec.openrq.util.linearalgebra.matrix.functor.MatrixAccumulator;
@@ -68,7 +71,6 @@ import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
 import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.vector.functor.VectorFunction;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
-import net.fec.openrq.util.printing.appendable.PrintableAppendable;
 
 
 public final class ByteMatrices {
@@ -817,6 +819,27 @@ public final class ByteMatrices {
 
             case SPARSE_COLUMN_MATRIX:
                 return LinearAlgebra.CCS_FACTORY.deserializeMatrix(buffer);
+
+            default:
+                throw new DeserializationException("serialized data does not contain a byte matrix");
+        }
+    }
+
+    public static ByteMatrix deserializeMatrix(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        final Serialization.Type type = Serialization.readType(ch);
+        switch (type) {
+            case DENSE_1D_MATRIX:
+                return LinearAlgebra.BASIC1D_FACTORY.deserializeMatrix(ch);
+
+            case DENSE_2D_MATRIX:
+                return LinearAlgebra.BASIC2D_FACTORY.deserializeMatrix(ch);
+
+            case SPARSE_ROW_MATRIX:
+                return LinearAlgebra.CRS_FACTORY.deserializeMatrix(ch);
+
+            case SPARSE_COLUMN_MATRIX:
+                return LinearAlgebra.CCS_FACTORY.deserializeMatrix(ch);
 
             default:
                 throw new DeserializationException("serialized data does not contain a byte matrix");

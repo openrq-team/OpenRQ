@@ -17,18 +17,16 @@ package net.fec.openrq;
 
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
 
-import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.io.Resources;
 import net.fec.openrq.util.io.UncheckedIOException;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirected2DByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
-import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.math.OctetOps;
 import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
 
 
@@ -92,21 +90,12 @@ abstract class AbstractISD implements IntermediateSymbolsDecoder {
 
     protected AbstractISD(int Kprime) {
 
-        final ByteBuffer intBuffer = ByteBuffer.allocate(SizeOf.INT);
-
         // try-with-resources (channel is automatically closed at the end)
         try (ReadableByteChannel ch = Resources.openResourceChannel(getClass(), resourceName(Kprime))) {
-            intBuffer.rewind();
-            this.A = ISDUtils.readMatrix(ch, intBuffer);
-
-            intBuffer.rewind();
-            this.X = ISDUtils.readMatrix(ch, intBuffer);
-
-            intBuffer.rewind();
-            this.dForPhase2 = ISDUtils.readIntArray(ch, intBuffer);
-
-            intBuffer.rewind();
-            this.dForPhase3 = ISDUtils.readIntArray(ch, intBuffer);
+            this.A = ISDUtils.readMatrix(ch);
+            this.X = ISDUtils.readMatrix(ch);
+            this.dForPhase2 = ISDUtils.readIntArray(ch);
+            this.dForPhase3 = ISDUtils.readIntArray(ch);
         }
         catch (IOException e) {
             throw new UncheckedIOException(e);

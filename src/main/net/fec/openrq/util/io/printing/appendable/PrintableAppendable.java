@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.util.printing.appendable;
+package net.fec.openrq.util.io.printing.appendable;
 
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ import java.util.Objects;
 /**
  * A class that wraps an {@code Appendable} object and provides methods for printing characters.
  * <p>
- * The methods from this class do <b>not</b> throw an {@code IOException} if they detect an IO error from the underlying
+ * The methods from this class do <b>not</b> throw an {@code IOException} if they detect an I/O error from the underlying
  * {@code Appendable} object. Instead, they ignore the error, but may be configured to print an exception stack trace to
  * the standard error stream.
  * 

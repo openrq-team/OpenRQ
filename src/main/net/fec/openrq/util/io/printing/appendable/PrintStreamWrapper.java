@@ -1,19 +1,24 @@
-package net.fec.openrq.util.printing.appendable;
+package net.fec.openrq.util.io.printing.appendable;
 
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintStream;
 
 
 /**
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
  * @param <P>
  */
-final class PrintWriterWrapper<P extends PrintWriter> extends WriterWrapper<P> {
+final class PrintStreamWrapper<P extends PrintStream> extends AppendableWrapper<P> {
 
-    public PrintWriterWrapper(P pw) {
+    public PrintStreamWrapper(P ps) {
 
-        super(pw);
+        super(ps);
+    }
+
+    @Override
+    public void print(char[] c) {
+
+        appendable.print(c);
     }
 
     @Override
@@ -32,17 +37,6 @@ final class PrintWriterWrapper<P extends PrintWriter> extends WriterWrapper<P> {
     public void println(char[] c) {
 
         appendable.println(c);
-    }
-
-    @Override
-    public void println(CharSequence csq) throws IOException {
-
-        if (csq instanceof String) {
-            appendable.println((String)csq);
-        }
-        else {
-            super.println(csq);
-        }
     }
 
     @Override

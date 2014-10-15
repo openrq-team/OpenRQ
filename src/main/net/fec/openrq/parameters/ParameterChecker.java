@@ -38,7 +38,7 @@ import static net.fec.openrq.parameters.InternalFunctions.getPossibleTotalSymbol
 import static net.fec.openrq.parameters.InternalFunctions.getTotalSymbols;
 import static net.fec.openrq.parameters.InternalFunctions.minWS;
 import static net.fec.openrq.parameters.InternalFunctions.topInterleaverLength;
-import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
+import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
 
 
 /**

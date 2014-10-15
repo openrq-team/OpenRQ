@@ -40,12 +40,14 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.math.OctetOps.aIsGreaterThanB;
+import static net.fec.openrq.util.math.OctetOps.aIsLessThanB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 import java.util.Objects;
 
 import net.fec.openrq.util.checking.Indexables;
@@ -643,22 +645,40 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     public ByteBuffer serializeToBuffer() {
 
         final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
-        Serialization.writeType(Serialization.Type.SPARSE_ROW_MATRIX, buffer);
-        Serialization.writeMatrixRows(rows(), buffer);
-        Serialization.writeMatrixColumns(columns(), buffer);
+        Serialization.writeType(buffer, Serialization.Type.SPARSE_ROW_MATRIX);
+        Serialization.writeMatrixRows(buffer, rows());
+        Serialization.writeMatrixColumns(buffer, columns());
 
         for (int i = 0; i < rows(); i++) {
-            Serialization.writeMatrixRowCardinality(nonZerosInRow(i), buffer);
+            Serialization.writeMatrixRowCardinality(buffer, nonZerosInRow(i));
             ByteVectorIterator it = nonZeroRowIterator(i);
             while (it.hasNext()) {
                 it.next();
-                Serialization.writeMatrixColumnIndex(it.index(), buffer);
-                Serialization.writeMatrixValue(it.get(), buffer);
+                Serialization.writeMatrixColumnIndex(buffer, it.index());
+                Serialization.writeMatrixValue(buffer, it.get());
             }
         }
-        
+
         buffer.rewind();
         return buffer;
+    }
+
+    @Override
+    public void serializeToChannel(WritableByteChannel ch) throws IOException {
+
+        Serialization.writeType(ch, Serialization.Type.SPARSE_ROW_MATRIX);
+        Serialization.writeMatrixRows(ch, rows());
+        Serialization.writeMatrixColumns(ch, columns());
+
+        for (int i = 0; i < rows(); i++) {
+            Serialization.writeMatrixRowCardinality(ch, nonZerosInRow(i));
+            ByteVectorIterator it = nonZeroRowIterator(i);
+            while (it.hasNext()) {
+                it.next();
+                Serialization.writeMatrixColumnIndex(ch, it.index());
+                Serialization.writeMatrixValue(ch, it.get());
+            }
+        }
     }
 
     private int getSerializedDataSize() {

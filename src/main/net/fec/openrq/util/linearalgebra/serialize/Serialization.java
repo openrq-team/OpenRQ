@@ -16,11 +16,15 @@
 package net.fec.openrq.util.linearalgebra.serialize;
 
 
+import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
-import net.fec.openrq.util.numericaltype.SizeOf;
-import net.fec.openrq.util.numericaltype.UnsignedTypes;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.datatype.UnsignedTypes;
+import net.fec.openrq.util.io.ExtraChannels;
 import net.fec.openrq.util.text.Words;
 
 
@@ -68,9 +72,14 @@ public final class Serialization {
     public static final int MATRIX_COLUMN_CARDINALITY_NUMBYTES = SizeOf.INT;
 
 
-    public static void writeType(Type type, ByteBuffer buffer) {
+    public static void writeType(ByteBuffer buffer, Type type) {
 
         writeByte(buffer, Type.typeToByte(type), "serialization type");
+    }
+
+    public static void writeType(WritableByteChannel buffer, Type type) throws IOException {
+
+        writeByte(buffer, Type.typeToByte(type));
     }
 
     public static Type readType(ByteBuffer buffer) throws DeserializationException {
@@ -80,39 +89,81 @@ public final class Serialization {
         return Type.byteToType(type);
     }
 
-    public static void writeVectorLength(int length, ByteBuffer buffer) {
+    public static Type readType(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        final byte type = readByte(ch);
+        if (Type.isInvalidByte(type)) throw new DeserializationException("invalid serialization type");
+        return Type.byteToType(type);
+    }
+
+    public static void writeVectorLength(ByteBuffer buffer, int length) {
 
         writeNonNegativeInt(buffer, length, "vector length");
     }
 
-    public static int readVectorLength(ByteBuffer buffer) throws DeserializationException {
+    public static void writeVectorLength(WritableByteChannel ch, int length) throws IOException {
 
-        return readNonNegative(buffer, "vector length");
+        writeNonNegativeInt(ch, length, "vector length");
     }
 
-    public static void writeVectorCardinality(int length, ByteBuffer buffer) {
+    public static int readVectorLength(ByteBuffer buffer) throws DeserializationException {
 
-        writeNonNegativeInt(buffer, length, "vector cardinality");
+        return readNonNegativeInt(buffer, "vector length");
+    }
+
+    public static int readVectorLength(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "vector length");
+    }
+
+    public static void writeVectorCardinality(ByteBuffer buffer, int cardinality) {
+
+        writeNonNegativeInt(buffer, cardinality, "vector cardinality");
+    }
+
+    public static void writeVectorCardinality(WritableByteChannel ch, int cardinality) throws IOException {
+
+        writeNonNegativeInt(ch, cardinality, "vector cardinality");
     }
 
     public static int readVectorCardinality(ByteBuffer buffer) throws DeserializationException {
 
-        return readNonNegative(buffer, "vector cardinality");
+        return readNonNegativeInt(buffer, "vector cardinality");
     }
 
-    public static void writeVectorIndex(int index, ByteBuffer buffer) {
+    public static int readVectorCardinality(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "vector cardinality");
+    }
+
+    public static void writeVectorIndex(ByteBuffer buffer, int index) {
 
         writeNonNegativeInt(buffer, index, "vector index");
     }
 
-    public static int readVectorIndex(ByteBuffer buffer) throws DeserializationException {
+    public static void writeVectorIndex(WritableByteChannel ch, int index) throws IOException {
 
-        return readNonNegative(buffer, "vector index");
+        writeNonNegativeInt(ch, index, "vector index");
     }
 
-    public static void writeVectorValue(byte value, ByteBuffer buffer) {
+    public static int readVectorIndex(ByteBuffer buffer) throws DeserializationException {
+
+        return readNonNegativeInt(buffer, "vector index");
+    }
+
+    public static int readVectorIndex(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "vector index");
+    }
+
+    public static void writeVectorValue(ByteBuffer buffer, byte value) {
 
         writeByte(buffer, value, "vector value");
+    }
+
+    public static void writeVectorValue(WritableByteChannel ch, byte value) throws IOException {
+
+        writeByte(ch, value);
     }
 
     public static byte readVectorValue(ByteBuffer buffer) throws DeserializationException {
@@ -120,69 +171,139 @@ public final class Serialization {
         return readByte(buffer, "vector value");
     }
 
-    public static void writeMatrixRows(int rows, ByteBuffer buffer) {
+    public static byte readVectorValue(ReadableByteChannel ch) throws IOException {
+
+        return readByte(ch);
+    }
+
+    public static void writeMatrixRows(ByteBuffer buffer, int rows) {
 
         writeNonNegativeInt(buffer, rows, "matrix rows");
     }
 
-    public static int readMatrixRows(ByteBuffer buffer) throws DeserializationException {
+    public static void writeMatrixRows(WritableByteChannel ch, int rows) throws IOException {
 
-        return readNonNegative(buffer, "matrix rows");
+        writeNonNegativeInt(ch, rows, "matrix rows");
     }
 
-    public static void writeMatrixColumns(int columns, ByteBuffer buffer) {
+    public static int readMatrixRows(ByteBuffer buffer) throws DeserializationException {
+
+        return readNonNegativeInt(buffer, "matrix rows");
+    }
+
+    public static int readMatrixRows(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "matrix rows");
+    }
+
+    public static void writeMatrixColumns(ByteBuffer buffer, int columns) {
 
         writeNonNegativeInt(buffer, columns, "matrix columns");
     }
 
-    public static int readMatrixColumns(ByteBuffer buffer) throws DeserializationException {
+    public static void writeMatrixColumns(WritableByteChannel ch, int columns) throws IOException {
 
-        return readNonNegative(buffer, "matrix columns");
+        writeNonNegativeInt(ch, columns, "matrix columns");
     }
 
-    public static void writeMatrixRowCardinality(int rows, ByteBuffer buffer) {
+    public static int readMatrixColumns(ByteBuffer buffer) throws DeserializationException {
 
-        writeNonNegativeInt(buffer, rows, "matrix row cardinality");
+        return readNonNegativeInt(buffer, "matrix columns");
+    }
+
+    public static int readMatrixColumns(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "matrix columns");
+    }
+
+    public static void writeMatrixRowCardinality(ByteBuffer buffer, int rowCard) {
+
+        writeNonNegativeInt(buffer, rowCard, "matrix row cardinality");
+    }
+
+    public static void writeMatrixRowCardinality(WritableByteChannel ch, int rowCard) throws IOException {
+
+        writeNonNegativeInt(ch, rowCard, "matrix row cardinality");
     }
 
     public static int readMatrixRowCardinality(ByteBuffer buffer) throws DeserializationException {
 
-        return readNonNegative(buffer, "matrix row cardinality");
+        return readNonNegativeInt(buffer, "matrix row cardinality");
     }
 
-    public static void writeMatrixColumnCardinality(int columns, ByteBuffer buffer) {
+    public static int readMatrixRowCardinality(ReadableByteChannel ch) throws IOException, DeserializationException {
 
-        writeNonNegativeInt(buffer, columns, "matrix column cardinality");
+        return readNonNegativeInt(ch, "matrix row cardinality");
+    }
+
+    public static void writeMatrixColumnCardinality(ByteBuffer buffer, int columnCard) {
+
+        writeNonNegativeInt(buffer, columnCard, "matrix column cardinality");
+    }
+
+    public static void writeMatrixColumnCardinality(WritableByteChannel ch, int columnCard) throws IOException {
+
+        writeNonNegativeInt(ch, columnCard, "matrix column cardinality");
     }
 
     public static int readMatrixColumnCardinality(ByteBuffer buffer) throws DeserializationException {
 
-        return readNonNegative(buffer, "matrix column cardinality");
+        return readNonNegativeInt(buffer, "matrix column cardinality");
     }
 
-    public static void writeMatrixRowIndex(int index, ByteBuffer buffer) {
+    public static int readMatrixColumnCardinality(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "matrix column cardinality");
+    }
+
+    public static void writeMatrixRowIndex(ByteBuffer buffer, int index) {
 
         writeNonNegativeInt(buffer, index, "matrix row index");
     }
 
-    public static int readMatrixRowIndex(ByteBuffer buffer) throws DeserializationException {
+    public static void writeMatrixRowIndex(WritableByteChannel ch, int index) throws IOException {
 
-        return readNonNegative(buffer, "matrix row index");
+        writeNonNegativeInt(ch, index, "matrix row index");
     }
 
-    public static void writeMatrixColumnIndex(int index, ByteBuffer buffer) {
+    public static int readMatrixRowIndex(ByteBuffer buffer) throws DeserializationException {
+
+        return readNonNegativeInt(buffer, "matrix row index");
+    }
+
+    public static int readMatrixRowIndex(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "matrix row index");
+    }
+
+    public static void writeMatrixColumnIndex(ByteBuffer buffer, int index) {
 
         writeNonNegativeInt(buffer, index, "matrix column index");
     }
 
-    public static int readMatrixColumnIndex(ByteBuffer buffer) throws DeserializationException {
+    public static void writeMatrixColumnIndex(WritableByteChannel ch, int index) throws IOException {
 
-        return readNonNegative(buffer, "matrix column index");
+        writeNonNegativeInt(ch, index, "matrix column index");
     }
 
-    public static void writeMatrixValue(byte value, ByteBuffer buffer) {
+    public static int readMatrixColumnIndex(ByteBuffer buffer) throws DeserializationException {
+
+        return readNonNegativeInt(buffer, "matrix column index");
+    }
+
+    public static int readMatrixColumnIndex(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        return readNonNegativeInt(ch, "matrix column index");
+    }
+
+    public static void writeMatrixValue(ByteBuffer buffer, byte value) {
 
         writeByte(buffer, value, "matrix value");
+    }
+
+    public static void writeMatrixValue(WritableByteChannel ch, byte value) throws IOException {
+
+        writeByte(ch, value);
     }
 
     public static byte readMatrixValue(ByteBuffer buffer) throws DeserializationException {
@@ -190,10 +311,20 @@ public final class Serialization {
         return readByte(buffer, "matrix value");
     }
 
+    public static byte readMatrixValue(ReadableByteChannel ch) throws IOException {
+
+        return readByte(ch);
+    }
+
     private static void writeByte(ByteBuffer buffer, byte value, String target) {
 
         assertAvailableInBuffer(buffer, SizeOf.BYTE, target);
         buffer.put(value);
+    }
+
+    private static void writeByte(WritableByteChannel ch, byte value) throws IOException {
+
+        ExtraChannels.writeByte(ch, value);
     }
 
     private static byte readByte(ByteBuffer buffer, String target) throws DeserializationException {
@@ -206,6 +337,11 @@ public final class Serialization {
         }
     }
 
+    private static byte readByte(ReadableByteChannel ch) throws IOException {
+
+        return ExtraChannels.readByte(ch);
+    }
+
     private static void writeNonNegativeInt(ByteBuffer buffer, int value, String target) {
 
         if (value < 0) throw new IllegalArgumentException(target + " is negative");
@@ -213,7 +349,13 @@ public final class Serialization {
         buffer.putInt(value);
     }
 
-    private static int readNonNegative(ByteBuffer buffer, String target) throws DeserializationException {
+    private static void writeNonNegativeInt(WritableByteChannel ch, int value, String target) throws IOException {
+
+        if (value < 0) throw new IllegalArgumentException(target);
+        ExtraChannels.writeInt(ch, value);
+    }
+
+    private static int readNonNegativeInt(ByteBuffer buffer, String target) throws DeserializationException {
 
         try {
             final int value = buffer.getInt();
@@ -223,6 +365,16 @@ public final class Serialization {
         catch (BufferUnderflowException e) {
             throw new DeserializationException("incomplete " + target);
         }
+    }
+
+    private static int readNonNegativeInt(ReadableByteChannel ch, String target)
+        throws IOException,
+        DeserializationException
+    {
+
+        final int value = ExtraChannels.readInt(ch);
+        if (value < 0) throw new DeserializationException(target + " is negative");
+        return value;
     }
 
     private static void assertAvailableInBuffer(ByteBuffer buffer, int numBytes, String target) {

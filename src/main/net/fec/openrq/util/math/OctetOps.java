@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.fec.openrq.util.arithmetic;
+package net.fec.openrq.util.math;
 
 
 import java.util.Arrays;
 
-import net.fec.openrq.util.numericaltype.UnsignedTypes;
+import net.fec.openrq.util.datatype.UnsignedTypes;
 
 
 /**

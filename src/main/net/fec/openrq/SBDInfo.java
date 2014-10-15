@@ -36,8 +36,10 @@ import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.checking.Indexables;
-import net.fec.openrq.util.numericaltype.SizeOf;
-import net.fec.openrq.util.numericaltype.UnsignedTypes;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.datatype.UnsignedTypes;
+import net.fec.openrq.util.io.ExtraChannels;
+import net.fec.openrq.util.io.ExtraChannels.BufferOperation;
 
 
 /**
@@ -242,7 +244,7 @@ public final class SBDInfo {
      *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code DataInput} object
+     *             If an I/O error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
      *                If any argument is {@code null}
      */
@@ -291,7 +293,7 @@ public final class SBDInfo {
      *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     *             If an I/O error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
      *                If any argument is {@code null}
      */
@@ -299,23 +301,30 @@ public final class SBDInfo {
 
         try {
             final ByteBuffer sbnAndStateBuf = ByteBuffer.allocate(SizeOf.BYTE + SizeOf.BYTE);
-            readFromChannel(ch, sbnAndStateBuf);
+            ExtraChannels.readBytes(ch, sbnAndStateBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final int sbn = readSBN(sbnAndStateBuf, fecParams);
             final int K = DataUtils.getK(fecParams, sbn);
             final SourceBlockState state = readState(sbnAndStateBuf);
 
             final ByteBuffer numMissBuf = ByteBuffer.allocate(SizeOf.SHORT);
-            readFromChannel(ch, numMissBuf);
+            ExtraChannels.readBytes(ch, numMissBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final int numMiss = readNumMissingSourceSymbols(numMissBuf, K, state);
+
             final ByteBuffer missingBuf = ByteBuffer.allocate(numMiss * SizeOf.SHORT);
-            readFromChannel(ch, missingBuf);
+            ExtraChannels.readBytes(ch, missingBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final Set<Integer> missing = readMissingSourceSymbols(missingBuf, numMiss, K);
 
             final ByteBuffer numAvailBuf = ByteBuffer.allocate(SizeOf.UNSIGNED_3_BYTES);
-            readFromChannel(ch, numAvailBuf);
+            ExtraChannels.readBytes(ch, numAvailBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final int numAvail = readNumAvailableRepairSymbols(numAvailBuf, K, state);
+
             final ByteBuffer availableBuf = ByteBuffer.allocate(numAvail * SizeOf.UNSIGNED_3_BYTES);
-            readFromChannel(ch, availableBuf);
+            ExtraChannels.readBytes(ch, availableBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final Set<Integer> available = readAvailableRepairSymbols(availableBuf, numAvail, K);
 
             return newRemoteInfo(sbn, state, missing, available);
@@ -323,15 +332,6 @@ public final class SBDInfo {
         catch (InternalParsingException e) {
             return Parsed.invalid(e.getMessage());
         }
-    }
-
-    private static void readFromChannel(ReadableByteChannel ch, ByteBuffer buf) throws IOException {
-
-        final int initPos = buf.position();
-        while (buf.hasRemaining()) {
-            ch.read(buf);
-        }
-        buf.position(initPos);
     }
 
     private static Parsed<SBDInfo> newRemoteInfo(
@@ -655,7 +655,7 @@ public final class SBDInfo {
      * @param out
      *            A {@code DataOutput} object into which the information is written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code DataOutput} object
+     *             If an I/O error occurs while writing to the {@code DataOutput} object
      * @exception NullPointerException
      *                If {@code out} is {@code null}
      */
@@ -690,16 +690,13 @@ public final class SBDInfo {
      * @param ch
      *            A {@code WritableByteChannel} object into which the information is written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code WritableByteChannel} object
+     *             If an I/O error occurs while writing to the {@code WritableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */
     public void writeTo(WritableByteChannel ch) throws IOException {
 
-        final ByteBuffer buffer = asBuffer();
-        while (buffer.hasRemaining()) {
-            ch.write(buffer);
-        }
+        ExtraChannels.writeBytes(ch, asBuffer());
     }
 
     private int getEncodedByteSize() {

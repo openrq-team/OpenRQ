@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.util.printing;
+package net.fec.openrq.util.io.printing;
 
 
 import java.io.IOException;
@@ -21,8 +21,8 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 
-import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
-import net.fec.openrq.util.printing.appendable.PrintableAppendable;
+import net.fec.openrq.util.io.printing.appendable.NoisyPrintableAppendable;
+import net.fec.openrq.util.io.printing.appendable.PrintableAppendable;
 
 
 /**

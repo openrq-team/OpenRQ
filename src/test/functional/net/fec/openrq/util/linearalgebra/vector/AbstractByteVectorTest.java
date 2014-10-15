@@ -38,7 +38,7 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

@@ -1,4 +1,4 @@
-package net.fec.openrq.util.numericaltype;
+package net.fec.openrq.util.datatype;
 
 
 import java.nio.ByteBuffer;

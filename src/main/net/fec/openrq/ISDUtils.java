@@ -17,16 +17,14 @@ package net.fec.openrq;
 
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
+import net.fec.openrq.util.array.ArrayIO;
 import net.fec.openrq.util.io.ExtraChannels;
-import net.fec.openrq.util.io.ExtraChannels.BufferOperation;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
-import net.fec.openrq.util.numericaltype.SizeOf;
 
 
 /**
@@ -34,18 +32,21 @@ import net.fec.openrq.util.numericaltype.SizeOf;
  */
 final class ISDUtils {
 
-    static ByteMatrix readMatrix(ReadableByteChannel ch) throws IOException {
+    static void writeMatrix(WritableByteChannel ch, ByteMatrix mat) throws IOException {
 
-        return readMatrix(ch, ByteBuffer.allocate(SizeOf.INT));
+        mat.serializeToChannel(ch);
     }
 
-    static ByteMatrix readMatrix(ReadableByteChannel ch, ByteBuffer intBuffer) throws IOException {
+    static void writeIntArray(WritableByteChannel ch, int[] array) throws IOException {
 
-        final int dataLen = readDataLength(ch, intBuffer);
-        final ByteBuffer data = readData(ch, dataLen);
+        ExtraChannels.writeInt(ch, array.length);
+        ArrayIO.writeInts(ch, array);
+    }
+
+    static ByteMatrix readMatrix(ReadableByteChannel ch) throws IOException {
 
         try {
-            return ByteMatrices.deserializeMatrix(data);
+            return ByteMatrices.deserializeMatrix(ch);
         }
         catch (DeserializationException e) {
             throw new IOException("deserialization error: " + e.getMessage());
@@ -54,31 +55,19 @@ final class ISDUtils {
 
     static int[] readIntArray(ReadableByteChannel ch) throws IOException {
 
-        return readIntArray(ch, ByteBuffer.allocate(SizeOf.INT));
-    }
-
-    static int[] readIntArray(ReadableByteChannel ch, ByteBuffer intBuffer) throws IOException {
-
-        final int dataLen = readDataLength(ch, intBuffer);
-        final IntBuffer data = readData(ch, dataLen).asIntBuffer();
-        final int[] array = new int[data.capacity()];
-        data.get(array);
+        int[] array = new int[readIntArraySize(ch)];
+        ArrayIO.readInts(ch, array);
         return array;
     }
 
-    private static int readDataLength(ReadableByteChannel ch, ByteBuffer intBuffer) throws IOException {
+    private static int readIntArraySize(ReadableByteChannel ch) throws IOException {
 
-        ExtraChannels.readBytes(ch, intBuffer, SizeOf.INT, BufferOperation.RESTORE_POSITION);
-        final int integer = intBuffer.getInt();
-        if (integer < 0) throw new IOException("unexpected negative data length: " + integer);
-        return integer;
-    }
+        final int dataLen = ExtraChannels.readInt(ch);
+        if (dataLen < 0) {
+            throw new IOException("unexpected negative data length: " + dataLen);
+        }
 
-    private static ByteBuffer readData(ReadableByteChannel ch, int dataLen) throws IOException {
-
-        final ByteBuffer buf = ByteBuffer.allocate(dataLen);
-        ExtraChannels.readBytes(ch, buf, dataLen, BufferOperation.FLIP_ABSOLUTELY);
-        return buf;
+        return dataLen;
     }
 
     private ISDUtils() {

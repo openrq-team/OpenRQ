@@ -39,7 +39,9 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -881,5 +883,22 @@ public interface ByteVector extends Iterable<Byte> {
      */
     Iterable<Byte> skipZeros();
 
+    /**
+     * Serializes this vector into a sequence of bytes and returns that sequence in a byte buffer.
+     * <p>
+     * The serialized data begins at the position of the returned buffer, and ends at its limit.
+     * 
+     * @return a byte buffer containing the serialized form of this vector
+     */
     ByteBuffer serializeToBuffer();
+
+    /**
+     * Serializes this vector into a sequence of bytes and writes that sequence to a channel.
+     * 
+     * @param ch
+     *            The channel used to write the serialized form of this vector
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    void serializeToChannel(WritableByteChannel ch) throws IOException;
 }

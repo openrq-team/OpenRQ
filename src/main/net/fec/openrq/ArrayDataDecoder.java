@@ -247,7 +247,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code DataInput} object
+     *             If an I/O error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
      *                If {@code in} is {@code null}
      */
@@ -261,7 +261,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     *             If an I/O error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */

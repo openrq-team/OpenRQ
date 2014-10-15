@@ -36,10 +36,12 @@
 package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
@@ -96,18 +98,32 @@ public abstract class AbstractBasicByteMatrix extends AbstractByteMatrix impleme
     public ByteBuffer serializeToBuffer() {
 
         final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
-        Serialization.writeType(getSerializationType(), buffer);
-        Serialization.writeMatrixRows(rows(), buffer);
-        Serialization.writeMatrixColumns(columns(), buffer);
-      
+        Serialization.writeType(buffer, getSerializationType());
+        Serialization.writeMatrixRows(buffer, rows());
+        Serialization.writeMatrixColumns(buffer, columns());
+
         for (int i = 0; i < rows(); i++) {
             for (int j = 0; j < columns(); j++) {
-                Serialization.writeMatrixValue(safeGet(i, j), buffer);
+                Serialization.writeMatrixValue(buffer, safeGet(i, j));
             }
         }
-        
+
         buffer.rewind();
         return buffer;
+    }
+
+    @Override
+    public void serializeToChannel(WritableByteChannel ch) throws IOException {
+
+        Serialization.writeType(ch, getSerializationType());
+        Serialization.writeMatrixRows(ch, rows());
+        Serialization.writeMatrixColumns(ch, columns());
+
+        for (int i = 0; i < rows(); i++) {
+            for (int j = 0; j < columns(); j++) {
+                Serialization.writeMatrixValue(ch, safeGet(i, j));
+            }
+        }
     }
 
     protected abstract Serialization.Type getSerializationType();

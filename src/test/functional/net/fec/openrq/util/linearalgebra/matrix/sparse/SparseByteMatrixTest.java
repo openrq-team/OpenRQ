@@ -36,7 +36,7 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrixTest;

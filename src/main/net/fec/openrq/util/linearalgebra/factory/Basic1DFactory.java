@@ -36,7 +36,9 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -193,6 +195,20 @@ public class Basic1DFactory extends BasicFactory {
 
         for (int i = 0; i < rows * columns; i++) {
             array[i] = Serialization.readMatrixValue(buffer);
+        }
+
+        return new Basic1DByteMatrix(rows, columns, array);
+    }
+    
+    @Override
+    public ByteMatrix deserializeMatrix(ReadableByteChannel ch) throws IOException, DeserializationException {
+    
+        final int rows = Serialization.readMatrixRows(ch);
+        final int columns = Serialization.readMatrixColumns(ch);
+        final byte array[] = new byte[rows * columns];
+
+        for (int i = 0; i < rows * columns; i++) {
+            array[i] = Serialization.readMatrixValue(ch);
         }
 
         return new Basic1DByteMatrix(rows, columns, array);

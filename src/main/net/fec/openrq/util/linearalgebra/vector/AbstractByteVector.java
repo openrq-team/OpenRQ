@@ -40,11 +40,11 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
 import static net.fec.openrq.util.linearalgebra.vector.ByteVectors.printVector;
+import static net.fec.openrq.util.math.OctetOps.aDividedByB;
+import static net.fec.openrq.util.math.OctetOps.aMinusB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
 
 import java.util.Iterator;
 import java.util.Random;

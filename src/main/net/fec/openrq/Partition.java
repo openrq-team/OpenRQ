@@ -17,7 +17,7 @@
 package net.fec.openrq;
 
 
-import net.fec.openrq.util.arithmetic.ExtraMath;
+import net.fec.openrq.util.math.ExtraMath;
 
 
 /**

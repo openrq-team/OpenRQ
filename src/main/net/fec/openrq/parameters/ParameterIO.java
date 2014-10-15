@@ -19,8 +19,8 @@ package net.fec.openrq.parameters;
 
 import static net.fec.openrq.parameters.InternalConstants.ESI_num_bytes;
 import static net.fec.openrq.parameters.InternalConstants.common_OTI_reserved_inverse_mask;
-import net.fec.openrq.util.numericaltype.SizeOf;
-import net.fec.openrq.util.numericaltype.UnsignedTypes;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.datatype.UnsignedTypes;
 
 
 /**

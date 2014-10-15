@@ -36,7 +36,9 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -217,6 +219,29 @@ public class CRSFactory extends CompressedFactory {
             for (int j = 0; j < rowCards[i]; j++) {
                 colInds[i][j] = Serialization.readMatrixColumnIndex(buffer);
                 colVals[i][j] = Serialization.readMatrixValue(buffer);
+            }
+        }
+
+        return new CRSByteMatrix(rows, cols, colVals, colInds, rowCards);
+    }
+
+    @Override
+    public ByteMatrix deserializeMatrix(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        final int rows = Serialization.readMatrixRows(ch);
+        final int cols = Serialization.readMatrixColumns(ch);
+
+        final int[] rowCards = new int[rows];
+        final int[][] colInds = new int[rows][];
+        final byte[][] colVals = new byte[rows][];
+
+        for (int i = 0; i < rows; i++) {
+            rowCards[i] = Serialization.readMatrixRowCardinality(ch);
+            colInds[i] = new int[rowCards[i]];
+            colVals[i] = new byte[rowCards[i]];
+            for (int j = 0; j < rowCards[i]; j++) {
+                colInds[i][j] = Serialization.readMatrixColumnIndex(ch);
+                colVals[i][j] = Serialization.readMatrixValue(ch);
             }
         }
 

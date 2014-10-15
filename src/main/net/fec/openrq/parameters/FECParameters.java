@@ -20,7 +20,7 @@ package net.fec.openrq.parameters;
 import static net.fec.openrq.parameters.InternalFunctions.KL;
 import static net.fec.openrq.parameters.InternalFunctions.getTotalSymbols;
 import static net.fec.openrq.parameters.InternalFunctions.topInterleaverLength;
-import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
+import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -32,7 +32,9 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
 import net.fec.openrq.Parsed;
-import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.io.ExtraChannels;
+import net.fec.openrq.util.io.ExtraChannels.BufferOperation;
 
 
 /**
@@ -348,7 +350,7 @@ public final class FECParameters {
      *            A {@code DataInput} object from which FEC parameters are read
      * @return a container object containing FEC parameters or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code DataInput} object
+     *             If an I/O error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
      *                If {@code in} is {@code null}
      */
@@ -380,17 +382,14 @@ public final class FECParameters {
      *            A {@code ReadableByteChannel} object from which FEC parameters are read
      * @return a container object containing FEC parameters or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     *             If an I/O error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */
     public static Parsed<FECParameters> readFrom(ReadableByteChannel ch) throws IOException {
 
         final ByteBuffer buffer = ByteBuffer.allocate(SizeOf.LONG + SizeOf.INT);
-        while (buffer.hasRemaining()) {
-            ch.read(buffer);
-        }
-        buffer.flip();
+        ExtraChannels.readBytes(ch, buffer, BufferOperation.FLIP_ABSOLUTELY);
         return parse(buffer);
     }
 
@@ -552,7 +551,7 @@ public final class FECParameters {
      * @param out
      *            A {@code DataOutput} object into which the FEC parameters are written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code DataOutput} object
+     *             If an I/O error occurs while writing to the {@code DataOutput} object
      * @exception NullPointerException
      *                If {@code out} is {@code null}
      */
@@ -576,16 +575,13 @@ public final class FECParameters {
      * @param ch
      *            A {@code WritableByteChannel} object into which the FEC parameters are written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code WritableByteChannel} object
+     *             If an I/O error occurs while writing to the {@code WritableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */
     public void writeTo(WritableByteChannel ch) throws IOException {
 
-        final ByteBuffer buffer = asBuffer();
-        while (buffer.hasRemaining()) {
-            ch.write(buffer);
-        }
+        ExtraChannels.writeBytes(ch, asBuffer());
     }
 
     /**

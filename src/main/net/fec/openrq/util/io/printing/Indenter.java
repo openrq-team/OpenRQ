@@ -1,4 +1,4 @@
-package net.fec.openrq.util.printing;
+package net.fec.openrq.util.io.printing;
 
 
 import java.io.IOException;
@@ -7,7 +7,7 @@ import java.util.Formatter;
 import java.util.Objects;
 
 import net.fec.openrq.util.checking.Invariants;
-import net.fec.openrq.util.printing.appendable.NoisyPrintableAppendable;
+import net.fec.openrq.util.io.printing.appendable.NoisyPrintableAppendable;
 
 
 /**

@@ -16,7 +16,7 @@
 package net.fec.openrq;
 
 
-import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
+import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
 
 import java.util.Random;
 import java.util.Set;

@@ -36,7 +36,7 @@
 package net.fec.openrq.util.linearalgebra.vector.operation.ooplace;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;

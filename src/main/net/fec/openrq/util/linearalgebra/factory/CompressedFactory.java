@@ -36,7 +36,9 @@
 package net.fec.openrq.util.linearalgebra.factory;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -124,6 +126,21 @@ public abstract class CompressedFactory extends Factory {
         for (int i = 0; i < cardinality; i++) {
             indices[i] = Serialization.readVectorIndex(buffer);
             values[i] = Serialization.readVectorValue(buffer);
+        }
+
+        return new CompressedByteVector(length, cardinality, values, indices);
+    }
+
+    @Override
+    public ByteVector deserializeVector(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        final int length = Serialization.readVectorLength(ch);
+        final int cardinality = Serialization.readVectorCardinality(ch);
+        final int[] indices = new int[cardinality];
+        final byte[] values = new byte[cardinality];
+        for (int i = 0; i < cardinality; i++) {
+            indices[i] = Serialization.readVectorIndex(ch);
+            values[i] = Serialization.readVectorValue(ch);
         }
 
         return new CompressedByteVector(length, cardinality, values, indices);

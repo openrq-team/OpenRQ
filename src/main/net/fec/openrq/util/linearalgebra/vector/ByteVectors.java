@@ -37,18 +37,21 @@
 package net.fec.openrq.util.linearalgebra.vector;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aDividedByB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
-import static net.fec.openrq.util.arithmetic.OctetOps.maxByte;
-import static net.fec.openrq.util.arithmetic.OctetOps.maxOfAandB;
-import static net.fec.openrq.util.arithmetic.OctetOps.minByte;
-import static net.fec.openrq.util.arithmetic.OctetOps.minOfAandB;
+import static net.fec.openrq.util.math.OctetOps.aDividedByB;
+import static net.fec.openrq.util.math.OctetOps.aMinusB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
+import static net.fec.openrq.util.math.OctetOps.maxByte;
+import static net.fec.openrq.util.math.OctetOps.maxOfAandB;
+import static net.fec.openrq.util.math.OctetOps.minByte;
+import static net.fec.openrq.util.math.OctetOps.minOfAandB;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Random;
 
+import net.fec.openrq.util.io.printing.appendable.PrintableAppendable;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
 import net.fec.openrq.util.linearalgebra.serialize.Serialization;
@@ -60,7 +63,6 @@ import net.fec.openrq.util.linearalgebra.vector.source.ArrayVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.LoopbackVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.RandomVectorSource;
 import net.fec.openrq.util.linearalgebra.vector.source.VectorSource;
-import net.fec.openrq.util.printing.appendable.PrintableAppendable;
 
 
 public final class ByteVectors {
@@ -426,6 +428,21 @@ public final class ByteVectors {
 
             case SPARSE_VECTOR:
                 return LinearAlgebra.SPARSE_FACTORY.deserializeVector(buffer);
+
+            default:
+                throw new DeserializationException("serialized data does not contain a byte vector");
+        }
+    }
+
+    public static ByteVector deserializeVector(ReadableByteChannel ch) throws IOException, DeserializationException {
+
+        Serialization.Type type = Serialization.readType(ch);
+        switch (type) {
+            case DENSE_VECTOR:
+                return LinearAlgebra.DENSE_FACTORY.deserializeVector(ch);
+
+            case SPARSE_VECTOR:
+                return LinearAlgebra.SPARSE_FACTORY.deserializeVector(ch);
 
             default:
                 throw new DeserializationException("serialized data does not contain a byte vector");

@@ -21,10 +21,10 @@
 package net.fec.openrq.util.linearalgebra.io;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aMinusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
-import net.fec.openrq.util.arithmetic.OctetOps;
+import static net.fec.openrq.util.math.OctetOps.aMinusB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
+import net.fec.openrq.util.math.OctetOps;
 
 
 abstract class JoinFunction {

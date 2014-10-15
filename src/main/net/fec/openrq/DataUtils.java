@@ -25,11 +25,13 @@ import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.parameters.ParameterIO;
-import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.collection.ImmutableList;
-import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.io.ExtraChannels;
+import net.fec.openrq.util.io.ExtraChannels.BufferOperation;
+import net.fec.openrq.util.math.ExtraMath;
 
 
 /**
@@ -270,20 +272,14 @@ final class DataUtils {
     static Parsed<EncodingPacket> readPacketFrom(DataDecoder dec, ReadableByteChannel ch) throws IOException {
 
         final ByteBuffer intsBuf = ByteBuffer.allocate(SizeOf.INT + SizeOf.INT);
-        while (intsBuf.hasRemaining()) {
-            ch.read(intsBuf);
-        }
-        intsBuf.flip();
+        ExtraChannels.readBytes(ch, intsBuf, BufferOperation.FLIP_ABSOLUTELY);
 
         final int fecPayloadID = intsBuf.getInt();
         final int symbLen = intsBuf.getInt();
         if (symbLen <= 0) return Parsed.invalid("size of symbols data is non-positive");
 
         final ByteBuffer symbols = ByteBuffer.allocate(symbLen);
-        while (symbols.hasRemaining()) {
-            ch.read(symbols);
-        }
-        symbols.flip();
+        ExtraChannels.readBytes(ch, symbols, BufferOperation.FLIP_ABSOLUTELY);
 
         final int sbn = ParameterIO.extractSourceBlockNumber(fecPayloadID);
         final int esi = ParameterIO.extractEncodingSymbolID(fecPayloadID);

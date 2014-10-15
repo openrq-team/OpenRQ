@@ -19,9 +19,9 @@ package net.fec.openrq;
 
 import java.util.Arrays;
 
-import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.math.OctetOps;
 
 
 /**

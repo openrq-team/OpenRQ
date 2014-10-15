@@ -29,7 +29,7 @@ import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.arithmetic.ExtraMath;
+import net.fec.openrq.util.math.ExtraMath;
 
 import org.junit.Assume;
 import org.junit.BeforeClass;

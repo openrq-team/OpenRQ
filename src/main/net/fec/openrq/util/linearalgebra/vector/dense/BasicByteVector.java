@@ -36,7 +36,9 @@
 package net.fec.openrq.util.linearalgebra.vector.dense;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 
 import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.checking.Indexables;
@@ -138,15 +140,26 @@ public class BasicByteVector extends DenseByteVector {
     public ByteBuffer serializeToBuffer() {
 
         final ByteBuffer buffer = ByteBuffer.allocate(getSerializedDataSize());
-        Serialization.writeType(Serialization.Type.DENSE_VECTOR, buffer);
-        Serialization.writeVectorLength(length(), buffer);
-        
+        Serialization.writeType(buffer, Serialization.Type.DENSE_VECTOR);
+        Serialization.writeVectorLength(buffer, length());
+
         for (int i = 0; i < length(); i++) {
-            Serialization.writeVectorValue(safeGet(i), buffer);
+            Serialization.writeVectorValue(buffer, safeGet(i));
         }
-        
+
         buffer.rewind();
         return buffer;
+    }
+
+    @Override
+    public void serializeToChannel(WritableByteChannel ch) throws IOException {
+
+        Serialization.writeType(ch, Serialization.Type.DENSE_VECTOR);
+        Serialization.writeVectorLength(ch, length());
+
+        for (int i = 0; i < length(); i++) {
+            Serialization.writeVectorValue(ch, safeGet(i));
+        }
     }
 
     private int getSerializedDataSize() {

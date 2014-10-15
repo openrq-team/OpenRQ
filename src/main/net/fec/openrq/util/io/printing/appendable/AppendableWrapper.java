@@ -1,4 +1,4 @@
-package net.fec.openrq.util.printing.appendable;
+package net.fec.openrq.util.io.printing.appendable;
 
 
 import java.io.IOException;

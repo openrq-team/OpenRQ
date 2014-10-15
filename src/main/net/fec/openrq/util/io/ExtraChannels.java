@@ -16,10 +16,13 @@
 package net.fec.openrq.util.io;
 
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
+import net.fec.openrq.util.datatype.SizeOf;
 import net.fec.openrq.util.text.Words;
 
 
@@ -74,50 +77,337 @@ public final class ExtraChannels {
 
 
     /**
-     * Reads a number of bytes from the provided channel into the provided buffer.
+     * Writes to a channel all the available bytes from a buffer. The buffer will be consumed from its position to its
+     * limit.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #writeBytes(WritableByteChannel, ByteBuffer, int, BufferOperation) writeBytes(ch, buf, buf.remaining(),
+     * BufferOperation.DO_NOTHING)}
+     * 
+     * @param ch
+     *            The channel used to write bytes
+     * @param buf
+     *            The buffer containing the bytes to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     * @exception IllegalArgumentException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
+     */
+    public static void writeBytes(WritableByteChannel ch, ByteBuffer buf) throws IOException {
+
+        writeBytes(ch, buf, buf.remaining(), BufferOperation.DO_NOTHING);
+    }
+
+    /**
+     * Writes to a channel all the available bytes from a buffer. The buffer will be consumed from its position to its
+     * limit.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #writeBytes(WritableByteChannel, ByteBuffer, int, BufferOperation) writeBytes(ch, buf, buf.remaining(),
+     * op)}
+     * 
+     * @param ch
+     *            The channel used to write bytes
+     * @param buf
+     *            The buffer containing the bytes to be written
+     * @param op
+     *            The operation to apply to the provided buffer after writing
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     * @exception IllegalArgumentException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
+     */
+    public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, BufferOperation op) throws IOException {
+
+        writeBytes(ch, buf, buf.remaining(), op);
+    }
+
+    /**
+     * Writes to a channel a specific number of bytes from a buffer.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #writeBytes(WritableByteChannel, ByteBuffer, int, BufferOperation) writeBytes(ch, buf, numBytes,
+     * BufferOperation.DO_NOTHING)}
+     * 
+     * @param ch
+     *            The channel used to write bytes
+     * @param buf
+     *            The buffer containing the bytes to be written
+     * @param numBytes
+     *            The number of bytes to write
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     * @exception IllegalArgumentException
+     *                If {@code numBytes} is negative
+     * @exception IllegalArgumentException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
+     */
+    public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, int numBytes) throws IOException {
+
+        writeBytes(ch, buf, numBytes, BufferOperation.DO_NOTHING);
+    }
+
+    /**
+     * Writes to a channel a specific number of bytes from a buffer.
+     * 
+     * @param ch
+     *            The channel used to write bytes
+     * @param buf
+     *            The buffer containing the bytes to be written
+     * @param numBytes
+     *            The number of bytes to write
+     * @param op
+     *            The operation to apply to the provided buffer after writing
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     * @exception IllegalArgumentException
+     *                If {@code numBytes} is negative
+     * @exception IllegalArgumentException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
+     */
+    public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, int numBytes, BufferOperation op)
+        throws IOException
+    {
+
+        if (numBytes < 0) throw new IllegalArgumentException("number of bytes is negative");
+
+        final int bufPos = buf.position();
+        final int bufLim = buf.limit();
+        final int remaining = bufLim - bufPos;
+        if (remaining < numBytes) {
+            throw new IllegalArgumentException(
+                "buffer does not have at least " + Words.bytes(numBytes) +
+                    " (only " + Words.bytes(remaining) + " are available)");
+        }
+
+        try {
+            buf.limit(bufPos + numBytes);
+            writeFully(ch, buf);
+        }
+        finally {
+            buf.limit(bufLim); // restore the original limit
+            applyOperation(buf, bufPos, op);
+        }
+    }
+
+    /**
+     * Writes a single byte to a channel.
+     * 
+     * @param ch
+     *            The channel used to write a byte
+     * @param b
+     *            The byte value to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    public static void writeByte(WritableByteChannel ch, byte b) throws IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.put(0, b).limit(SizeOf.BYTE); // position remains at 0
+        writeFully(ch, buf);
+    }
+
+    /**
+     * Writes a single character to a channel.
+     * 
+     * @param ch
+     *            The channel used to write a char
+     * @param c
+     *            The char value to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    public static void writeChar(WritableByteChannel ch, char c) throws IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.putChar(0, c).limit(SizeOf.CHAR); // position remains at 0
+        writeFully(ch, buf);
+    }
+
+    /**
+     * Writes a single short integer to a channel.
+     * 
+     * @param ch
+     *            The channel used to write a short
+     * @param s
+     *            The short value to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    public static void writeShort(WritableByteChannel ch, short s) throws IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.putShort(0, s).limit(SizeOf.SHORT); // position remains at 0
+        writeFully(ch, buf);
+    }
+
+    /**
+     * Writes a single integer to a channel.
+     * 
+     * @param ch
+     *            The channel used to write an int
+     * @param i
+     *            The int value to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    public static void writeInt(WritableByteChannel ch, int i) throws IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.putInt(0, i).limit(SizeOf.INT); // position remains at 0
+        writeFully(ch, buf);
+    }
+
+    /**
+     * Writes a single long integer to a channel.
+     * 
+     * @param ch
+     *            The channel used to write a long
+     * @param eL
+     *            The long value to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    public static void writeLong(WritableByteChannel ch, long eL) throws IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.putLong(0, eL).limit(SizeOf.LONG); // position remains at 0
+        writeFully(ch, buf);
+    }
+
+    /**
+     * Writes a single float to a channel.
+     * 
+     * @param ch
+     *            The channel used to write a float
+     * @param f
+     *            The float value to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    public static void writeFloat(WritableByteChannel ch, float f) throws IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.putFloat(0, f).limit(SizeOf.FLOAT); // position remains at 0
+        writeFully(ch, buf);
+    }
+
+    /**
+     * Writes a single double to a channel.
+     * 
+     * @param ch
+     *            The channel used to write a double
+     * @param d
+     *            The double value to be written
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    public static void writeDouble(WritableByteChannel ch, double d) throws IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.putDouble(0, d).limit(SizeOf.DOUBLE); // position remains at 0
+        writeFully(ch, buf);
+    }
+
+    /**
+     * Reads into a buffer bytes from a channel. The buffer will be filled from its position to its limit.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #readBytes(ReadableByteChannel, ByteBuffer, int, BufferOperation) readBytes(ch, buf, buf.remaining(),
+     * BufferOperation.DO_NOTHING)}
+     * 
+     * @param ch
+     *            The channel used to read bytes from
+     * @param buf
+     *            The buffer used to store the read bytes
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static void readBytes(ReadableByteChannel ch, ByteBuffer buf) throws EOFException, IOException {
+
+        readBytes(ch, buf, buf.remaining(), BufferOperation.DO_NOTHING);
+    }
+
+    /**
+     * Reads into a buffer bytes from a channel. The buffer will be filled from its position to its limit.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #readBytes(ReadableByteChannel, ByteBuffer, int, BufferOperation) readBytes(ch, buf, buf.remaining(), op)}
+     * 
+     * @param ch
+     *            The channel used to read bytes from
+     * @param buf
+     *            The buffer used to store the read bytes
+     * @param op
+     *            The operation to apply to the provided buffer after reading
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static void readBytes(ReadableByteChannel ch, ByteBuffer buf, BufferOperation op)
+        throws EOFException, IOException
+    {
+
+        readBytes(ch, buf, buf.remaining(), op);
+    }
+
+    /**
+     * Reads into a buffer a specific number of bytes from a channel.
      * <p>
      * Calling this method has the same effect as calling
      * {@link #readBytes(ReadableByteChannel, ByteBuffer, int, BufferOperation) readBytes(ch, buf, numBytes,
-     * BufferOperation.DO_NOTHING)}.
+     * BufferOperation.DO_NOTHING)}
      * 
      * @param ch
-     *            The channel to read bytes from
+     *            The channel used to read bytes from
      * @param buf
-     *            The buffer to store the read bytes
+     *            The buffer used to store the read bytes
      * @param numBytes
-     *            The numeclipse-open:%E2%98%82=OpenRQ/src%5C/main%3Cnet.fec.openrq.util.io%7BExtraChannels.java%E2%98%
-     *            83ExtraChannels~readBytes~QReadableByteChannel;~QByteBuffer;~Iber of bytes to read
+     *            The number of bytes to read
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
      * @throws IOException
-     *             If an IO error occurs while reading
+     *             If an I/O error occurs while reading
      * @exception IllegalArgumentException
-     *                If the provided buffer does not have {@code numBytes} bytes available for storage
+     *                If {@code numBytes} is negative
+     * @exception IllegalArgumentException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available for storage
      */
     public static void readBytes(ReadableByteChannel ch, ByteBuffer buf, int numBytes)
-        throws IOException
+        throws EOFException, IOException
     {
 
         readBytes(ch, buf, numBytes, BufferOperation.DO_NOTHING);
     }
 
     /**
-     * Reads a number of bytes from the provided channel into the provided buffer.
+     * Reads into a buffer a specific number of bytes from a channel.
      * 
      * @param ch
-     *            The channel to read bytes from
+     *            The channel used to read bytes from
      * @param buf
-     *            The buffer to store the read bytes
+     *            The buffer used to store the read bytes
      * @param numBytes
      *            The number of bytes to read
      * @param op
      *            The operation to apply to the provided buffer after reading
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
      * @throws IOException
-     *             If an IO error occurs while reading
+     *             If an I/O error occurs while reading
      * @exception IllegalArgumentException
-     *                If the provided buffer does not have {@code numBytes} bytes available for storage
+     *                If {@code numBytes} is negative
+     * @exception IllegalArgumentException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available for storage
      */
     public static void readBytes(ReadableByteChannel ch, ByteBuffer buf, int numBytes, BufferOperation op)
-        throws IOException
+        throws EOFException, IOException
     {
+
+        if (numBytes < 0) throw new IllegalArgumentException("number of bytes is negative");
 
         final int bufPos = buf.position();
         final int bufLim = buf.limit();
@@ -130,34 +420,207 @@ public final class ExtraChannels {
 
         try {
             buf.limit(bufPos + numBytes);
-            while (buf.hasRemaining()) {
-                ch.read(buf);
-            }
+            readFully(ch, buf);
         }
         finally {
-            // NOTE: the buffer limit is equal to the current buffer position
-            switch (op) {
-                case DO_NOTHING: // except restoring the original limit
-                    buf.limit(bufLim);
-                break;
+            buf.limit(bufLim); // restore the original limit
+            applyOperation(buf, bufPos, op);
+        }
+    }
 
-                case RESTORE_POSITION:
-                    buf.limit(bufLim);
-                    buf.position(bufPos);
-                break;
+    /**
+     * Reads a single byte from a channel.
+     * 
+     * @param ch
+     *            The channel used to read the byte value
+     * @return a byte value
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static byte readByte(ReadableByteChannel ch) throws EOFException, IOException {
 
-                case FLIP_RELATIVELY:
-                    buf.position(bufPos);
-                break;
+        ByteBuffer buf = tinyBuffer();
+        buf.limit(SizeOf.BYTE);
+        readFully(ch, buf);
+        return buf.get(0); // ignores current position
+    }
 
-                case FLIP_ABSOLUTELY:
-                    buf.position(0);
-                break;
+    /**
+     * Reads a single character from a channel.
+     * 
+     * @param ch
+     *            The channel used to read the char value
+     * @return a char value
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static char readChar(ReadableByteChannel ch) throws EOFException, IOException {
 
-                default:
-                    throw new AssertionError("unknown enum value");
+        ByteBuffer buf = tinyBuffer();
+        buf.limit(SizeOf.CHAR);
+        readFully(ch, buf);
+        return buf.getChar(0); // ignores current position
+    }
+
+    /**
+     * Reads a single short integer from a channel.
+     * 
+     * @param ch
+     *            The channel used to read the short value
+     * @return a short value
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static short readShort(ReadableByteChannel ch) throws EOFException, IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.limit(SizeOf.SHORT);
+        readFully(ch, buf);
+        return buf.getShort(0); // ignores current position
+    }
+
+    /**
+     * Reads a single integer from a channel.
+     * 
+     * @param ch
+     *            The channel used to read the int value
+     * @return an int value
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static int readInt(ReadableByteChannel ch) throws EOFException, IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.limit(SizeOf.INT);
+        readFully(ch, buf);
+        return buf.getInt(0); // ignores current position
+    }
+
+    /**
+     * Reads a single long integer from a channel.
+     * 
+     * @param ch
+     *            The channel used to read the long value
+     * @return a long value
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static long readLong(ReadableByteChannel ch) throws EOFException, IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.limit(SizeOf.LONG);
+        readFully(ch, buf);
+        return buf.getLong(0); // ignores current position
+    }
+
+    /**
+     * Reads a single float from a channel.
+     * 
+     * @param ch
+     *            The channel used to read the float value
+     * @return a float value
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static float readFloat(ReadableByteChannel ch) throws EOFException, IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.limit(SizeOf.FLOAT);
+        readFully(ch, buf);
+        return buf.getFloat(0); // ignores current position
+    }
+
+    /**
+     * Reads a single double from a channel.
+     * 
+     * @param ch
+     *            The channel used to read the double value
+     * @return a double value
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     */
+    public static double readDouble(ReadableByteChannel ch) throws EOFException, IOException {
+
+        ByteBuffer buf = tinyBuffer();
+        buf.limit(SizeOf.DOUBLE);
+        readFully(ch, buf);
+        return buf.getDouble(0); // ignores current position
+    }
+
+    private static void writeFully(WritableByteChannel ch, ByteBuffer buf) throws IOException {
+
+        while (buf.hasRemaining()) {
+            ch.write(buf);
+        }
+    }
+
+    private static void readFully(ReadableByteChannel ch, ByteBuffer buf) throws EOFException, IOException {
+
+        while (buf.hasRemaining()) {
+            if (ch.read(buf) == -1) {
+                throw new EOFException();
             }
         }
+    }
+
+    private static void applyOperation(ByteBuffer buf, int originalBufPos, BufferOperation op) {
+
+        switch (op) {
+            case DO_NOTHING:
+            // nothing, really
+            break;
+
+            case RESTORE_POSITION:
+                buf.position(originalBufPos);
+            break;
+
+            case FLIP_RELATIVELY:
+                buf.limit(buf.position());
+                buf.position(originalBufPos);
+            break;
+
+            case FLIP_ABSOLUTELY:
+                buf.flip();
+            break;
+
+            default:
+                throw new AssertionError("unknown enum value");
+        }
+    }
+
+
+    /**
+     * Using a thread local of a tiny buffer is more efficient than allocating the buffer each time.
+     */
+    private static final ThreadLocal<ByteBuffer> TINY_BUFFER_CACHE = new ThreadLocal<ByteBuffer>() {
+
+        @Override
+        protected ByteBuffer initialValue() {
+
+            return ByteBuffer.allocate(SizeOf.LONG);
+        }
+    };
+
+
+    private static ByteBuffer tinyBuffer() {
+
+        ByteBuffer buf = TINY_BUFFER_CACHE.get();
+        buf.clear();
+        return buf;
     }
 
     private ExtraChannels() {

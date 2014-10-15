@@ -36,8 +36,8 @@
 package net.fec.openrq.util.linearalgebra.matrix.sparse;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsGreaterThanB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aIsLessThanB;
+import static net.fec.openrq.util.math.OctetOps.aIsGreaterThanB;
+import static net.fec.openrq.util.math.OctetOps.aIsLessThanB;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.matrix.AbstractByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;

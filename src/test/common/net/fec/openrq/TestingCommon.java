@@ -16,7 +16,7 @@
 package net.fec.openrq;
 
 
-import static net.fec.openrq.util.arithmetic.ExtraMath.integerPow;
+import static net.fec.openrq.util.math.ExtraMath.integerPow;
 
 import java.util.BitSet;
 import java.util.Collection;

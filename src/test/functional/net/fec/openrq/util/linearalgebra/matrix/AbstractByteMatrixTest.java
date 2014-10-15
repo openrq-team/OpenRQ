@@ -41,7 +41,7 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -16,8 +16,8 @@
 package net.fec.openrq.util.linearalgebra.vector.operation.inplace;
 
 
-import static net.fec.openrq.util.arithmetic.OctetOps.aPlusB;
-import static net.fec.openrq.util.arithmetic.OctetOps.aTimesB;
+import static net.fec.openrq.util.math.OctetOps.aPlusB;
+import static net.fec.openrq.util.math.OctetOps.aTimesB;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.vector.dense.DenseByteVector;
 import net.fec.openrq.util.linearalgebra.vector.operation.VectorVectorOperation;

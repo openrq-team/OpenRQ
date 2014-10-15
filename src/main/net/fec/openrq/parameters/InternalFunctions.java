@@ -17,8 +17,8 @@ package net.fec.openrq.parameters;
 
 
 import static net.fec.openrq.parameters.InternalConstants.K_max;
-import static net.fec.openrq.util.arithmetic.ExtraMath.ceilDiv;
-import net.fec.openrq.util.arithmetic.ExtraMath;
+import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
+import net.fec.openrq.util.math.ExtraMath;
 import net.fec.openrq.util.rq.SystematicIndices;
 
 

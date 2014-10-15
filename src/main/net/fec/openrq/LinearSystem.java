@@ -26,16 +26,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.io.printing.TimePrinter;
+import net.fec.openrq.util.io.printing.appendable.PrintableAppendable;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirected2DByteMatrix;
 import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
-import net.fec.openrq.util.printing.TimePrinter;
-import net.fec.openrq.util.printing.appendable.PrintableAppendable;
+import net.fec.openrq.util.math.OctetOps;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
 

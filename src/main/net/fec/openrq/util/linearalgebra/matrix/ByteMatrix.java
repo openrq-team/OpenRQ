@@ -41,7 +41,9 @@
 package net.fec.openrq.util.linearalgebra.matrix;
 
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -1620,5 +1622,22 @@ public interface ByteMatrix {
      */
     void addRowsInPlace(byte sourceMultiplier, int sourceRow, int destRow, int fromColumn, int toColumn);
 
+    /**
+     * Serializes this matrix into a sequence of bytes and returns that sequence in a byte buffer.
+     * <p>
+     * The serialized data begins at the position of the returned buffer, and ends at its limit.
+     * 
+     * @return a byte buffer containing the serialized form of this matrix
+     */
     ByteBuffer serializeToBuffer();
+
+    /**
+     * Serializes this matrix into a sequence of bytes and writes that sequence to a channel.
+     * 
+     * @param ch
+     *            The channel used to write the serialized form of this matrix
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     */
+    void serializeToChannel(WritableByteChannel ch) throws IOException;
 }

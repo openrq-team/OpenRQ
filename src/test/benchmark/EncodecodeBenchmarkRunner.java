@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import net.fec.openrq.SourceBlockDecodingTest;
 import net.fec.openrq.SourceBlockEncodingTest;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.printing.SafeStandardStreams;
+import net.fec.openrq.util.io.SafeStandardStreams;
 
 import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.results.format.ResultFormat;

@@ -36,7 +36,6 @@
 package net.fec.openrq.util.linearalgebra.vector.operation.ooplace;
 
 
-import net.fec.openrq.util.arithmetic.OctetOps;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
@@ -44,6 +43,7 @@ import net.fec.openrq.util.linearalgebra.vector.ByteVectors;
 import net.fec.openrq.util.linearalgebra.vector.dense.DenseByteVector;
 import net.fec.openrq.util.linearalgebra.vector.operation.VectorVectorOperation;
 import net.fec.openrq.util.linearalgebra.vector.sparse.SparseByteVector;
+import net.fec.openrq.util.math.OctetOps;
 
 
 public class OoPlaceVectorFromVectorSubtraction extends VectorVectorOperation<ByteVector> {
