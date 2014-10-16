@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
