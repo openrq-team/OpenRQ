@@ -28,6 +28,8 @@ import java.nio.channels.WritableByteChannel;
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.datatype.SizeOf;
 import net.fec.openrq.util.io.ExtraChannels;
+import net.fec.openrq.util.io.ExtraChannels.BufferOperation;
+import net.fec.openrq.util.math.ExtraMath;
 
 
 /**
@@ -125,9 +127,9 @@ public final class ArrayIO {
     private static void writeFromArrayRegion(WritableByteChannel ch, int[] array, int off, int len) throws IOException {
 
         ByteBuffer buf = getCachedBufferForChannel(ch);
+        buf.limit(ExtraMath.multiplyExact(len, SizeOf.INT));
 
-        buf.asIntBuffer().put(array, off, len);
-        buf.flip();
+        buf.asIntBuffer().put(array, off, len); // the position of the byte buffer is not changed
 
         ExtraChannels.writeBytes(ch, buf);
     }
@@ -138,10 +140,9 @@ public final class ArrayIO {
     private static void readToArrayRegion(ReadableByteChannel ch, int[] array, int off, int len) throws IOException {
 
         ByteBuffer buf = getCachedBufferForChannel(ch);
-        buf.limit(len * SizeOf.INT);
+        buf.limit(ExtraMath.multiplyExact(len, SizeOf.INT));
 
-        ExtraChannels.readBytes(ch, buf);
-        buf.flip();
+        ExtraChannels.readBytes(ch, buf, BufferOperation.RESTORE_POSITION);
 
         buf.asIntBuffer().get(array, off, len);
     }
