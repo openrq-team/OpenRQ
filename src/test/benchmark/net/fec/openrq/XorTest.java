@@ -16,9 +16,11 @@
 package net.fec.openrq;
 
 
-import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.math.ExtraMath;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -44,34 +46,45 @@ public class XorTest {
     @Param({"1", "10", "100", "1000", "10000", "100000", "1000000", "10000000", "100000000"})
     public int size;
 
-    private byte[] array;
-    private LongBuffer buffer;
+    private byte[] bytes;
+    private long[] longs;
 
 
     @Setup
     public void setup() {
 
-        array = new byte[size];
-        buffer = ByteBuffer.wrap(array).asLongBuffer();
+        Random rand = TestingCommon.newSeededRandom();
+
+        bytes = new byte[size];
+        rand.nextBytes(bytes);
+
+        longs = new long[ExtraMath.ceilDiv(size, SizeOf.LONG)];
+        randomLongs(longs, rand);
+    }
+
+    private static void randomLongs(long[] array, Random rand) {
+
+        for (int i = 0; i < array.length; i++) {
+            array[i] = rand.nextLong();
+        }
     }
 
     @Benchmark
-    public byte testArray() {
+    public byte testBytes() {
 
         byte result = 0;
-        for (int i = 0, len = array.length; i < len; ++i) {
-            result ^= array[i];
+        for (int i = 0, len = bytes.length; i < len; ++i) {
+            result ^= bytes[i];
         }
         return result;
     }
 
     @Benchmark
-    public long testBuffer() {
+    public long testLongs() {
 
         long result = 0L;
-        buffer.rewind();
-        while (buffer.hasRemaining()) {
-            result ^= buffer.get();
+        for (int i = 0, len = longs.length; i < len; ++i) {
+            result ^= longs[i];
         }
         return result;
     }
