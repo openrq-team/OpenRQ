@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.NoSuchFileException;
 
 
 /**
@@ -40,7 +41,7 @@ public final class Resources {
     private static InputStream getResourceAsStream(Class<?> clazz, String resourceName) throws IOException {
 
         final InputStream is = clazz.getResourceAsStream(resourceName);
-        if (is == null) throw new IOException("resource not found: " + resourceName);
+        if (is == null) throw new NoSuchFileException(resourceName, null, "resource not found");
         return is;
     }
 

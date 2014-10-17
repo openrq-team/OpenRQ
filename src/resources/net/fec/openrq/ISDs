@@ -5,7 +5,6 @@
 # maximum K' is 56403, lines that have more than 5 characters are also ignored.
 # Finally, unknown values of K' are ignored as well.
 
-# An implementation of an optimized decoder must be a subclass of
-# net.fec.openrq.util.rq.IntermediateSymbolsDecoder
-# and must have a name with the following format: "ISD_{K'}.class"
-# with the K' value supported by the implementation.
+# An implementation of an optimized decoder is realized if there exists a file
+# with a name with the following format: "ISD_{K'}.dat" with {K'} substituted by
+# the K' value supported by the implementation.
