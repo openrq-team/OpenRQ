@@ -23,7 +23,7 @@ limitations under the License.
     <property name="version" value="3.2"/>
 
     <property name="javac-debug" value="off"/>
-    <property name="javac-debuglevel" value="source"/>
+    <property name="javac-debuglevel" value="lines"/>
     <property name="javac-args" value="-Xlint:none"/>
     
     <property name="top.src_dir" location="src"/>
@@ -47,7 +47,6 @@ limitations under the License.
     <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
 
     <property name="jcommander.jar_file" location="${top.lib_dir}/jcommander-1.35.jar" />
-    <property name="codemodel.jar_file" location="${top.lib_dir}/codemodel-2.6.jar" />
 	
     <property name="opt.src_dir" location="${top.src_dir}/opt"/>
 	<property name="opt.jar_file" location="openrq-${version}-opt.jar"/>
@@ -127,7 +126,7 @@ limitations under the License.
         <delete dir="${classes.build_dir}"/>
         <mkdir dir="${classes.build_dir}"/>
         <javac srcdir="${main.src_dir}:${opt.src_dir}" destdir="${classes.build_dir}"
-               classpath=".:${codemodel.jar_file}"
+               classpath="."
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
                includeAntRuntime="false">
@@ -142,9 +141,7 @@ limitations under the License.
             description="Compile the main and optional Java classes and pack them into a Jar file.">
 
         <delete file="${opt.jar_file}"/>
-        <jar destfile="${opt.jar_file}" basedir="${classes.build_dir}">
-            <zipfileset src="${codemodel.jar_file}"/>
-        </jar>
+        <jar destfile="${opt.jar_file}" basedir="${classes.build_dir}"/>
 
     </target>
 
@@ -156,7 +153,6 @@ limitations under the License.
             <fileset dir="${classes.build_dir}"/>
             <fileset dir="${main.src_dir}"/>
             <fileset dir="${opt.src_dir}"/>
-            <zipfileset src="${codemodel.jar_file}"/>
         </jar>
 
     </target>

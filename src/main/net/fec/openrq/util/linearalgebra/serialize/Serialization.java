@@ -42,12 +42,12 @@ public final class Serialization {
         SPARSE_ROW_MATRIX,
         SPARSE_COLUMN_MATRIX;
 
-        private static byte typeToByte(Type t) {
+        private static byte toByte(Type t) {
 
             return (byte)t.ordinal();
         }
 
-        private static Type byteToType(byte b) {
+        private static Type fromByte(byte b) {
 
             return values()[UnsignedTypes.getUnsignedByte(b)];
         }
@@ -74,26 +74,26 @@ public final class Serialization {
 
     public static void writeType(ByteBuffer buffer, Type type) {
 
-        writeByte(buffer, Type.typeToByte(type), "serialization type");
+        writeByte(buffer, Type.toByte(type), "serialization type");
     }
 
     public static void writeType(WritableByteChannel buffer, Type type) throws IOException {
 
-        writeByte(buffer, Type.typeToByte(type));
+        writeByte(buffer, Type.toByte(type));
     }
 
     public static Type readType(ByteBuffer buffer) throws DeserializationException {
 
         final byte type = readByte(buffer, "serialization type");
         if (Type.isInvalidByte(type)) throw new DeserializationException("invalid serialization type");
-        return Type.byteToType(type);
+        return Type.fromByte(type);
     }
 
     public static Type readType(ReadableByteChannel ch) throws IOException, DeserializationException {
 
         final byte type = readByte(ch);
         if (Type.isInvalidByte(type)) throw new DeserializationException("invalid serialization type");
-        return Type.byteToType(type);
+        return Type.fromByte(type);
     }
 
     public static void writeVectorLength(ByteBuffer buffer, int length) {

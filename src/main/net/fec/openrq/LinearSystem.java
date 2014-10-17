@@ -1004,7 +1004,7 @@ final class LinearSystem {
          * rows and i columns."
          */
 
-        // ISDCodeWriter.instance().writePhase2Code(A, i, M, L - u, L, d); // MUST be called before decoding code! DEBUG
+        // ISDCodeWriter.instance().writePhase2Code(A, i, M, L - u, L, d); // DEBUG MUST be called before decoding code!
 
         /*
          * "Gaussian elimination is performed in the second phase on U_lower either to determine that its rank is
@@ -1139,7 +1139,7 @@ final class LinearSystem {
                 // "then divide row j of A by A[j,j]."
                 A.divideRowInPlace(j, beta);
 
-                // ISDCodeWriter.instance().writePhase5Code_1(beta, d[j], d[j]); // DEBUG
+                // ISDCodeWriter.instance().writePhase5Code_1(beta, d[j]); // DEBUG
 
                 // decoding process - D[d[j]] / beta
                 OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
@@ -1172,9 +1172,7 @@ final class LinearSystem {
 
         // reorder C
         for (int index = 0; index < L; index++) {
-            final int ci = c[index];
-            final int di = d[index];
-            C[ci] = D[di];
+            C[c[index]] = D[d[index]];
         }
 
         // ISDCodeWriter.instance().writeReorderCode(L, c, d); // DEBUG
