@@ -65,17 +65,22 @@ import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
  * each:
  * <p>
  * <ul>
- * <li>{@link #minAllowedSymbolSize(long)} <li>{@link #maxAllowedDataLength(int)} </ul>
+ * <li>{@link #minAllowedSymbolSize(long)}
+ * <li>{@link #maxAllowedDataLength(int)}
+ * </ul>
  * <p>
  * Given a <b>source data length</b> and a <b>symbol size</b>, which are valid in respect to each other, it is possible
  * to obtain a <b>minimum and a maximum allowed number of source blocks</b>. Refer to methods for each:
  * <ul>
- * <li>{@link #minAllowedNumSourceBlocks(long, int)} <li>{@link #maxAllowedNumSourceBlocks(long, int)} </ul>
+ * <li>{@link #minAllowedNumSourceBlocks(long, int)}
+ * <li>{@link #maxAllowedNumSourceBlocks(long, int)}
+ * </ul>
  * <p>
  * Given a <b>symbol size</b>, it is possible to obtain a <b>maximum allowed interleaver length</b>. Refer to the
  * method:
  * <ul>
- * <li>{@link #maxAllowedInterleaverLength(int)} </ul>
+ * <li>{@link #maxAllowedInterleaverLength(int)}
+ * </ul>
  * <p>
  * <a name="deriver-parameters-bounds">
  * <h5>Deriver parameters bounds</h5></a>
@@ -98,17 +103,21 @@ import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
  * methods for each:
  * <p>
  * <ul>
- * <li>{@link #minAllowedPayloadLength(long)} <li>{@link #maxAllowedDataLength(int)} </ul>
+ * <li>{@link #minAllowedPayloadLength(long)}
+ * <li>{@link #maxAllowedDataLength(int)}
+ * </ul>
  * <p>
  * Given a <b>source data length</b> and a <b>payload length</b>, which are valid in respect to each other, it is
  * possible to obtain a <b>lower bound for the maximum decoding block size</b>. Refer to the method:
  * <ul>
- * <li>{@link #minAllowedDecodingBlockSize(long, int)} </ul>
+ * <li>{@link #minAllowedDecodingBlockSize(long, int)}
+ * </ul>
  * <p>
  * Given a <b>payload length</b>, within bounds, and a <b>maximum decoding block size</b>, within bounds and no less
  * than the payload length, it is possible to obtain a <b>maximum allowed source data length</b>. Refer to the method:
  * <ul>
- * <li>{@link #maxAllowedDataLength(int, long)} </ul>
+ * <li>{@link #maxAllowedDataLength(int, long)}
+ * </ul>
  */
 public final class ParameterChecker {
 
@@ -583,8 +592,11 @@ public final class ParameterChecker {
      * <b><em>Bounds checking</em></b> - The following must be true, otherwise an {@code IllegalArgumentException} is
      * thrown:
      * <ul>
-     * <li>{@link #isPayloadLengthOutOfBounds(int) isPayloadLengthOutOfBounds(payLen)} {@code == false} <li>
-     * {@code maxDBMem >=} {@link #minDecodingBlockSize()} <li>{@code maxDBMem >= payLen} </ul>
+     * <li>{@link #isPayloadLengthOutOfBounds(int) isPayloadLengthOutOfBounds(payLen)} {@code == false}
+     * <li>
+     * {@code maxDBMem >=} {@link #minDecodingBlockSize()}
+     * <li>{@code maxDBMem >= payLen}
+     * </ul>
      * 
      * @param payLen
      *            A payload length, in number of bytes (equivalent to the "symbol size" FEC parameter)
