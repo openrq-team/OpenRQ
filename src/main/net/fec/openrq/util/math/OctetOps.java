@@ -19,6 +19,7 @@ package net.fec.openrq.util.math;
 
 import java.util.Arrays;
 
+import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.datatype.UnsignedTypes;
 
 
@@ -200,6 +201,43 @@ public final class OctetOps {
             final int resEnd = resPos + length;
             for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
                 result[rr] = aDividedByB(vector[vv], beta);
+            }
+        }
+    }
+
+    public static void betaDivision(byte beta, BytesAsLongs vector, BytesAsLongs result) {
+
+        betaDivision(beta, vector, 0, result, 0, result.sizeInBytes());
+    }
+
+    public static void betaDivision(byte beta, BytesAsLongs vector, int vecPos, BytesAsLongs result, int length) {
+
+        betaDivision(beta, vector, vecPos, result, 0, length);
+    }
+
+    public static void betaDivision(byte beta, BytesAsLongs vector, BytesAsLongs result, int resPos, int length) {
+
+        betaDivision(beta, vector, 0, result, resPos, length);
+    }
+
+    public static void betaDivision(
+        byte beta,
+        BytesAsLongs vector,
+        int vecPos,
+        BytesAsLongs result,
+        int resPos,
+        int length)
+    {
+
+        if (beta == 1) { // if divided by one, simply copy the source vector data and return
+            if (vector != result || vecPos != resPos) { // avoid unnecessary copy if in-place division
+                BytesAsLongs.copy(vector, vecPos, result, resPos, length);
+            }
+        }
+        else {
+            final int resEnd = resPos + length;
+            for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
+                result.setByte(rr, aDividedByB(vector.getByte(vv), beta));
             }
         }
     }

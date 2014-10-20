@@ -32,7 +32,6 @@ import net.fec.openrq.util.math.ExtraMath;
 public final class BytesAsLongs {
 
     public static final int MAX_SIZE_IN_LONGS = Integer.MAX_VALUE / SizeOf.LONG;
-    private static final int LONG_INDEX_SHIFT = 3;
     private static final int LONG_INDEX_MASK = SizeOf.LONG - 1;
 
 
@@ -191,6 +190,29 @@ public final class BytesAsLongs {
         return longs;
     }
 
+    public static void copy(BytesAsLongs src, int srcPos, BytesAsLongs dest, int destPos, int sizeInBytes) {
+
+        Indexables.checkOffsetLengthBounds(srcPos, sizeInBytes, src.sizeInBytes());
+        Indexables.checkOffsetLengthBounds(destPos, sizeInBytes, dest.sizeInBytes());
+
+        final int srcLongPos = srcPos / SizeOf.LONG;
+        final int srcPosMod = srcPos % SizeOf.LONG;
+        
+        final int destLongPos = destPos / SizeOf.LONG;
+        final int destPosMod = destPos % SizeOf.LONG;
+        
+        final int sizeInLongs = sizeInBytes / SizeOf.LONG;
+        final int sizeInBytesMod = sizeInBytes % SizeOf.LONG;
+
+        if (srcPosMod == 0 && destPosMod == 0 && sizeInBytesMod == 0) {
+            // optimization
+            System.arraycopy(src.longs, srcLongPos, dest.longs, destLongPos, sizeInLongs);
+        }
+        else {
+            // FIXME BytesAsLongs
+        }
+    }
+
 
     private final long[] longs;
     private final int offset;
@@ -241,7 +263,7 @@ public final class BytesAsLongs {
 
         Indexables.checkIndexBounds(byteIndex, sizeInBytes);
 
-        final int longIndex = byteIndex >> LONG_INDEX_SHIFT;
+        final int longIndex = byteIndex / SizeOf.LONG;
         final long longValue = getLong(longIndex);
         final int byteShift = getByteShift(byteIndex & LONG_INDEX_MASK);
 
@@ -250,7 +272,7 @@ public final class BytesAsLongs {
 
     public void setByte(int byteIndex, byte value) {
 
-        final int longIndex = byteIndex >> LONG_INDEX_SHIFT;
+        final int longIndex = byteIndex / SizeOf.LONG;
         final long longValue = getLong(longIndex);
         final int byteShift = getByteShift(byteIndex & LONG_INDEX_MASK);
 
@@ -267,6 +289,21 @@ public final class BytesAsLongs {
     private int getByteShift(int byteIndex) {
 
         return (order == ByteOrder.LITTLE_ENDIAN) ? (byteIndex) : (SizeOf.LONG - 1 - byteIndex);
+    }
+
+    public byte[] toBytes() {
+
+        final ByteBuffer buf = ByteBuffer.allocate(sizeInBytes).order(order);
+
+        int remaining = sizeInBytes;
+        int longIndex = 0;
+        while (remaining > 0) {
+            final int numBytes = Math.min(remaining, SizeOf.LONG);
+            UnsignedTypes.writeLongUnsignedBytes(longs[longIndex++], buf, numBytes);
+            remaining -= numBytes;
+        }
+
+        return buf.array();
     }
 
     @Override

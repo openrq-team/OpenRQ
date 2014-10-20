@@ -20,6 +20,7 @@ package net.fec.openrq;
 import java.util.Arrays;
 
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.math.OctetOps;
 
@@ -346,6 +347,26 @@ final class MatrixUtilities {
         if (srcMultiplier != 0) {
             for (int i = 0; i < dest.length; i++) {
                 dest[i] = OctetOps.aPlusB(OctetOps.aTimesB(srcMultiplier, src[i]), dest[i]);
+            }
+        }
+    }
+
+    static void addSymbolsWithMultiplierInPlace(byte srcMultiplier, BytesAsLongs src, BytesAsLongs dest) {
+
+        /*
+         * if(src.length != dest.length){
+         * throw new IllegalArgumentException("Symbols must be of the same size.");
+         * }
+         */
+
+        if (srcMultiplier != 0) {
+            if (srcMultiplier == 1) { // optimized code
+                // FIXME BytesAsLongs
+            }
+            else { // regular code
+                for (int i = 0; i < dest.sizeInBytes(); i++) {
+                    dest.setByte(i, OctetOps.aPlusB(OctetOps.aTimesB(srcMultiplier, src.getByte(i)), dest.getByte(i)));
+                }
             }
         }
     }
