@@ -1155,8 +1155,8 @@ public abstract class AbstractByteVectorTest {
 
         a.eachNonZero(new SetterProcedure(b), 0, 0);
 
-        assertEquals(initial, a); // check if each wrongly modifies the caller vector
-        assertEquals(c, b);
+        assertEquals("initial == a?", initial, a); // check if each wrongly modifies the caller vector
+        assertEquals("c == b?", c, b);
     }
 
     @Test

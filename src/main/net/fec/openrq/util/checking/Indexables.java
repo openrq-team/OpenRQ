@@ -110,6 +110,19 @@ public final class Indexables {
         }
     }
 
+    /**
+     * @param length
+     *            The length of the indexable object
+     * @param lengthName
+     *            The name of the length
+     */
+    public static void checkLengthBounds(int length, String lengthName) {
+
+        if (length < 0) {
+            throw new IllegalArgumentException(String.format("negative %s: %d", lengthName, length));
+        }
+    }
+
     private Indexables() {
 
         // not instantiable

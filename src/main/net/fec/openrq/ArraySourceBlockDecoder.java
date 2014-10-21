@@ -32,6 +32,7 @@ import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
+import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.collection.BitSetIterators;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.rq.SystematicIndices;
@@ -329,7 +330,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private void decode() {
 
         // generate intermediate symbols -- watch out for decoding failure
-        final byte[][] intermediate_symbols = generateIntermediateSymbols();
+        final BytesAsLongs[] intermediate_symbols = generateIntermediateSymbols();
 
         if (intermediate_symbols == null) {
             symbolsState.setSourceBlockDecodingFailure();
@@ -344,8 +345,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
             // recover missing source symbols
             for (int esi : missingSourceSymbols()) {
-                byte[] sourceSymbol = LinearSystem.enc(
-                    Kprime, intermediate_symbols, new Tuple(Kprime, esi), fecParameters().symbolSize());
+                byte[] sourceSymbol = LinearSystem.enc(Kprime, intermediate_symbols, new Tuple(Kprime, esi));
 
                 // write to data buffer
                 putSourceData(esi, sourceSymbol, 0);
@@ -356,7 +356,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     /*
      * ===== Requires locked symbolsState! =====
      */
-    private final byte[][] generateIntermediateSymbols() {
+    private final BytesAsLongs[] generateIntermediateSymbols() {
 
         // constraint matrix parameters
         final int Kprime = SystematicIndices.ceil(K);
@@ -376,11 +376,17 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         ByteMatrix A = LinearSystem.generateConstraintMatrix(Kprime, overhead);
 
         // initialize D
-        byte[][] D = new byte[M][T];
+        BytesAsLongs[] D = new BytesAsLongs[M];
+        
+        for (int row = 0; row < S + H; row++) {
+            D[row] = BytesAsLongs.withSizeInBytes(T);
+        }
 
         // populate D with the received source symbols
-        for (int isi : symbolsState.receivedSourceSymbols()) {
-            data.getBytes(isi * T, D[S + H + isi]);
+        for (int esi : symbolsState.receivedSourceSymbols()) {
+            byte[] symbolData = new byte[T];
+            data.getBytes(esi * T, symbolData);
+            D[S + H + esi] = BytesAsLongs.copyOf(symbolData);
         }
 
         /*
@@ -407,7 +413,11 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             }
 
             // fill in missing source symbols in D with the repair symbols
-            D[row] = repair.data();
+            D[row] = BytesAsLongs.copyOf(repair.data());
+        }
+        
+        for (int row = S + H + K; row < L; row++) {
+            D[row] = BytesAsLongs.withSizeInBytes(T);
         }
 
         // insert the values for overhead (repair) symbols
@@ -425,7 +435,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             }
 
             // update D with the data for that symbol
-            D[row] = repair.data();
+            D[row] = BytesAsLongs.copyOf(repair.data());
         }
 
         /*

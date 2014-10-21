@@ -13,29 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.fec.openrq.util.rq;
-
-
-import net.fec.openrq.util.array.BytesAsLongs;
-
+package net.fec.openrq.util.linearalgebra.factory;
 
 /**
- * Decodes intermediate symbols from a set of source symbols of an extended source block.
+ * 
  */
-public interface IntermediateSymbolsDecoder {
+public class Long2DFactoryTest extends AbstractFactoryTest {
 
-    /**
-     * Returns the supported value of K' (see RFC 6330).
-     * 
-     * @return the supported value of K'
-     */
-    public int supportedKPrime();
+    @Override
+    public Factory factory() {
 
-    /**
-     * Decodes intermediate symbols from a set of source symbols of an extended source block.
-     * 
-     * @param D
-     * @return the intermediate symbols
-     */
-    public BytesAsLongs[] decode(BytesAsLongs[] D);
+        return new Long2DFactory();
+    }
 }

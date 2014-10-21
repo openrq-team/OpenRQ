@@ -17,6 +17,7 @@ package net.fec.openrq.util.linearalgebra.matrix.dense;
 
 
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
@@ -25,17 +26,21 @@ import net.fec.openrq.util.linearalgebra.matrix.source.MatrixSource;
 import net.fec.openrq.util.linearalgebra.serialize.Serialization;
 import net.fec.openrq.util.linearalgebra.serialize.Serialization.Type;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
-import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
+import net.fec.openrq.util.linearalgebra.vector.dense.LongByteVector;
 
 
-/**
- * 
- */
-public class RowIndirected2DByteMatrix extends AbstractBasicByteMatrix implements DenseByteMatrix {
+public class RowIndirectedLong2DByteMatrix extends AbstractBasicByteMatrix {
 
-    private final byte self[][];
-    private final int[] rowIndirection;
+    public static RowIndirectedLong2DByteMatrix copyOf(byte[][] array, int[] rowIndirection) {
 
+        final int rows = array.length;
+        final LongByteVector[] vecs = new LongByteVector[rows];
+        for (int i = 0; i < rows; i++) {
+            vecs[i] = LongByteVector.copyOf(array[i]);
+        }
+
+        return new RowIndirectedLong2DByteMatrix(vecs, rowIndirection);
+    }
 
     private static int[] getDefaultIndirection(int rows) {
 
@@ -46,66 +51,75 @@ public class RowIndirected2DByteMatrix extends AbstractBasicByteMatrix implement
         return indirection;
     }
 
-    public RowIndirected2DByteMatrix() {
+
+    private final LongByteVector[] self;
+    private final int[] rowIndirection;
+
+
+    public RowIndirectedLong2DByteMatrix() {
 
         this(0, 0);
     }
 
-    public RowIndirected2DByteMatrix(ByteMatrix matrix, int[] rowIndirection) {
+    public RowIndirectedLong2DByteMatrix(ByteMatrix matrix, int[] rowIndirection) {
 
         this(ByteMatrices.asMatrixSource(matrix), rowIndirection);
     }
 
-    public RowIndirected2DByteMatrix(MatrixSource source, int[] rowIndirection) {
+    public RowIndirectedLong2DByteMatrix(MatrixSource source, int[] rowIndirection) {
 
         this(source.rows(), source.columns(), rowIndirection);
 
         for (int i = 0; i < rows(); i++) {
             for (int j = 0; j < columns(); j++) {
-                self[i][j] = source.get(i, j);
+                self[i].set(j, source.get(i, j));
             }
         }
     }
 
-    public RowIndirected2DByteMatrix(int rows, int columns) {
+    public RowIndirectedLong2DByteMatrix(int rows, int columns) {
 
         this(rows, columns, getDefaultIndirection(rows));
     }
 
-    private RowIndirected2DByteMatrix(int rows, int columns, int[] rowIndirection) {
+    public RowIndirectedLong2DByteMatrix(int rows, int columns, int[] rowIndirection) {
 
-        this(new byte[rows][columns], rowIndirection);
-    }
+        super(LinearAlgebra.LONG2D_FACTORY, rows, columns);
 
-    public RowIndirected2DByteMatrix(int rows, int columns, byte array[]) {
-
-        this(rows, columns);
-
-        // TODO:
-        // We suppose that 'array.length = rows * columns' for now.
-        // Probably, we should check this explicitly.
-
+        this.self = new LongByteVector[rows];
+        this.rowIndirection = rowIndirection;
         for (int i = 0; i < rows; i++) {
-            System.arraycopy(array, i * columns, self[i], 0, columns);
+            this.self[i] = new LongByteVector(columns);
         }
     }
 
-    public RowIndirected2DByteMatrix(byte array[][], int[] rowIndirection) {
+    public RowIndirectedLong2DByteMatrix(BytesAsLongs[] bytes, int[] rowIndirection) {
 
-        super(LinearAlgebra.BASIC2D_FACTORY, array.length, array.length == 0 ? 0 : array[0].length);
-        this.self = array;
+        super(LinearAlgebra.LONG2D_FACTORY, bytes.length, bytes.length == 0 ? 0 : bytes[0].sizeInBytes());
+
+        final int rows = bytes.length;
+        this.self = new LongByteVector[rows];
         this.rowIndirection = rowIndirection;
+        for (int i = 0; i < rows; i++) {
+            this.self[i] = new LongByteVector(bytes[i]);
+        }
+    }
+    
+    public RowIndirectedLong2DByteMatrix(int rows, int columns, BytesAsLongs[] bytes, int[] rowIndirection) {
+
+        super(LinearAlgebra.LONG2D_FACTORY, rows, columns);
+
+        this.self = new LongByteVector[bytes.length];
+        this.rowIndirection = rowIndirection;
+        for (int i = 0; i < bytes.length; i++) {
+            this.self[i] = new LongByteVector(bytes[i]);
+        }
     }
 
-    public RowIndirected2DByteMatrix(int rows, int columns, byte array[][]) {
+    private RowIndirectedLong2DByteMatrix(LongByteVector[] self, int[] rowIndirection) {
 
-        this(rows, columns, array, getDefaultIndirection(rows));
-    }
-
-    public RowIndirected2DByteMatrix(int rows, int columns, byte array[][], int[] rowIndirection) {
-
-        super(LinearAlgebra.BASIC2D_FACTORY, rows, columns);
-        this.self = array;
+        super(LinearAlgebra.LONG2D_FACTORY, self.length, self.length == 0 ? 0 : self[0].length());
+        this.self = self;
         this.rowIndirection = rowIndirection;
     }
 
@@ -117,13 +131,13 @@ public class RowIndirected2DByteMatrix extends AbstractBasicByteMatrix implement
     @Override
     public byte safeGet(int i, int j) {
 
-        return self[row(i)][j];
+        return self[row(i)].get(j);
     }
 
     @Override
     public void safeSet(int i, int j, byte value) {
 
-        self[row(i)][j] = value;
+        self[row(i)].set(j, value);
     }
 
     @Override
@@ -145,7 +159,7 @@ public class RowIndirected2DByteMatrix extends AbstractBasicByteMatrix implement
 
         if (i != j) {
             for (int ii = 0; ii < rows(); ii++) {
-                ArrayUtils.swapBytes(self[ii], i, j);
+                self[ii].swap(i, j);
             }
         }
     }
@@ -155,29 +169,13 @@ public class RowIndirected2DByteMatrix extends AbstractBasicByteMatrix implement
 
         Indexables.checkIndexBounds(i, rows());
 
-        byte result[] = new byte[columns()];
-        System.arraycopy(self[row(i)], 0, result, 0, columns());
-
-        return new BasicByteVector(result);
-    }
-
-    @Override
-    public ByteVector getRow(int i, int fromColumn, int toColumn) {
-
-        Indexables.checkIndexBounds(i, rows());
-        Indexables.checkFromToBounds(fromColumn, toColumn, columns());
-
-        final int length = toColumn - fromColumn;
-        byte[] result = new byte[length];
-        System.arraycopy(self[row(i)], fromColumn, result, 0, length);
-
-        return new BasicByteVector(result);
+        return self[row(i)].copy();
     }
 
     @Override
     public ByteMatrix copy() {
 
-        return new Basic2DByteMatrix(toArray());
+        return new Long2DByteMatrix(getInternalBytes());
     }
 
     @Override
@@ -189,26 +187,36 @@ public class RowIndirected2DByteMatrix extends AbstractBasicByteMatrix implement
             return copy();
         }
 
-        byte $self[][] = new byte[rows][columns];
+        BytesAsLongs[] $bals = new BytesAsLongs[rows];
 
         for (int i = 0; i < Math.min(this.rows(), rows); i++) {
-            System.arraycopy(self[row(i)], 0, $self[i], 0,
-                Math.min(this.columns(), columns));
+            $bals[i] = self[row(i)].resize(columns).getInternalBytes();
         }
 
-        return new Basic2DByteMatrix($self);
+        return new Long2DByteMatrix($bals);
     }
 
     @Override
     public byte[][] toArray() {
 
-        byte result[][] = new byte[rows()][columns()];
+        byte result[][] = new byte[rows()][];
 
         for (int i = 0; i < rows(); i++) {
-            System.arraycopy(self[row(i)], 0, result[i], 0, columns());
+            result[i] = self[row(i)].toArray();
         }
 
         return result;
+    }
+
+    public BytesAsLongs[] getInternalBytes() {
+
+        BytesAsLongs[] bals = new BytesAsLongs[rows()];
+
+        for (int i = 0; i < rows(); i++) {
+            bals[i] = self[row(i)].getInternalBytes();
+        }
+
+        return bals;
     }
 
     @Override

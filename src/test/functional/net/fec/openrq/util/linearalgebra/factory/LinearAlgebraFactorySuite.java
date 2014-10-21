@@ -25,6 +25,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({
                Basic1DFactoryTest.class,
                Basic2DFactoryTest.class,
+               Long2DFactoryTest.class,
                CCSFactoryTest.class,
                CRSFactoryTest.class
 })

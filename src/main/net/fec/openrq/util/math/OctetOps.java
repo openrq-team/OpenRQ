@@ -41,6 +41,11 @@ public final class OctetOps {
 
         return (byte)(u ^ v);
     }
+    
+    public static long aLongPlusBLong(long a, long b) {
+        
+        return a ^ b;
+    }
 
     public static byte aMinusB(byte u, byte v) {
 

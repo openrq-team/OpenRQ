@@ -18,7 +18,7 @@ package net.fec.openrq.util.array;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Objects;
+import java.util.Arrays;
 
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.datatype.SizeOf;
@@ -32,53 +32,47 @@ import net.fec.openrq.util.math.ExtraMath;
 public final class BytesAsLongs {
 
     public static final int MAX_SIZE_IN_LONGS = Integer.MAX_VALUE / SizeOf.LONG;
-    private static final int LONG_INDEX_MASK = SizeOf.LONG - 1;
 
 
     private static void assertValidSizeInLongs(int sizeInLongs) {
 
-        Indexables.checkLengthBounds(sizeInLongs);
+        Indexables.checkLengthBounds(sizeInLongs, "size in longs");
         if (sizeInLongs > MAX_SIZE_IN_LONGS) {
             throw new IllegalArgumentException("maximum size in longs exceeded");
         }
     }
 
+    /*
+     * Requires valid sizeInLongs
+     */
+    private static void assertValidSizeInBytes(int sizeInBytes, int sizeInLongs) {
 
-    private static final ByteOrder DEFAULT_BYTE_ORDER = ByteOrder.BIG_ENDIAN;
+        Indexables.checkLengthBounds(sizeInBytes, "size in bytes");
+        if (sizeInBytes > sizeInLongs * SizeOf.LONG) {
+            throw new IllegalArgumentException("illegal size in bytes");
+        }
+    }
 
+    private static ByteBuffer order(ByteBuffer b) {
 
-    public static BytesAsLongs ofSizeInLongs(int sizeInLongs) {
+        // the least significant byte in a long is the one with smallest index
+        return b.order(ByteOrder.LITTLE_ENDIAN);
+    }
+
+    public static BytesAsLongs withSizeInLongs(int sizeInLongs) {
 
         assertValidSizeInLongs(sizeInLongs);
 
         final int sizeInBytes = SizeOf.LONG * sizeInLongs;
-        return new BytesAsLongs(new long[sizeInLongs], 0, sizeInLongs, sizeInBytes, DEFAULT_BYTE_ORDER);
+        return new BytesAsLongs(new long[sizeInLongs], 0, sizeInLongs, sizeInBytes);
     }
 
-    public static BytesAsLongs ofSizeInLongs(int sizeInLongs, ByteOrder order) {
+    public static BytesAsLongs withSizeInBytes(int sizeInBytes) {
 
-        assertValidSizeInLongs(sizeInLongs);
-        Objects.requireNonNull(order);
-
-        final int sizeInBytes = SizeOf.LONG * sizeInLongs;
-        return new BytesAsLongs(new long[sizeInLongs], 0, sizeInLongs, sizeInBytes, order);
-    }
-
-    public static BytesAsLongs ofSizeInBytes(int sizeInBytes) {
-
-        Indexables.checkLengthBounds(sizeInBytes);
+        Indexables.checkLengthBounds(sizeInBytes, "size in bytes");
 
         final int sizeInLongs = ExtraMath.ceilDiv(sizeInBytes, SizeOf.LONG);
-        return new BytesAsLongs(new long[sizeInLongs], 0, sizeInLongs, sizeInBytes, DEFAULT_BYTE_ORDER);
-    }
-
-    public static BytesAsLongs ofSizeInBytes(int sizeInBytes, ByteOrder order) {
-
-        Indexables.checkLengthBounds(sizeInBytes);
-        Objects.requireNonNull(order);
-
-        final int sizeInLongs = ExtraMath.ceilDiv(sizeInBytes, SizeOf.LONG);
-        return new BytesAsLongs(new long[sizeInLongs], 0, sizeInLongs, sizeInBytes, order);
+        return new BytesAsLongs(new long[sizeInLongs], 0, sizeInLongs, sizeInBytes);
     }
 
     public static BytesAsLongs of(long[] longs) {
@@ -87,7 +81,7 @@ public final class BytesAsLongs {
         assertValidSizeInLongs(sizeInLongs);
 
         final int sizeInBytes = ExtraMath.ceilDiv(sizeInLongs, SizeOf.LONG);
-        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes, DEFAULT_BYTE_ORDER);
+        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes);
     }
 
     public static BytesAsLongs of(long[] longs, int off, int len) {
@@ -97,36 +91,34 @@ public final class BytesAsLongs {
         assertValidSizeInLongs(sizeInLongs);
 
         final int sizeInBytes = ExtraMath.ceilDiv(sizeInLongs, SizeOf.LONG);
-        return new BytesAsLongs(longs, off, sizeInLongs, sizeInBytes, DEFAULT_BYTE_ORDER);
+        return new BytesAsLongs(longs, off, sizeInLongs, sizeInBytes);
     }
 
-    public static BytesAsLongs of(long[] longs, ByteOrder order) {
+    public static BytesAsLongs ofSized(long[] longs, int sizeInBytes) {
 
         final int sizeInLongs = longs.length;
         assertValidSizeInLongs(sizeInLongs);
-        Objects.requireNonNull(order);
+        assertValidSizeInBytes(sizeInBytes, sizeInLongs);
 
-        final int sizeInBytes = ExtraMath.ceilDiv(sizeInLongs, SizeOf.LONG);
-        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes, order);
+        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes);
     }
 
-    public static BytesAsLongs of(long[] longs, int off, int len, ByteOrder order) {
+    public static BytesAsLongs ofSized(long[] longs, int off, int len, int sizeInBytes) {
 
         Indexables.checkOffsetLengthBounds(off, len, longs.length);
         final int sizeInLongs = len;
         assertValidSizeInLongs(sizeInLongs);
-        Objects.requireNonNull(order);
+        assertValidSizeInBytes(sizeInBytes, sizeInLongs);
 
-        final int sizeInBytes = ExtraMath.ceilDiv(sizeInLongs, SizeOf.LONG);
-        return new BytesAsLongs(longs, off, sizeInLongs, sizeInBytes, order);
+        return new BytesAsLongs(longs, off, sizeInLongs, sizeInBytes);
     }
 
     public static BytesAsLongs copyOf(byte[] bytes) {
 
         final int sizeInBytes = bytes.length;
-        final long[] longs = bytesToLongs(bytes, 0, sizeInBytes, DEFAULT_BYTE_ORDER);
+        final long[] longs = bytesToLongs(bytes, 0, sizeInBytes);
         final int sizeInLongs = longs.length;
-        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes, DEFAULT_BYTE_ORDER);
+        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes);
     }
 
     public static BytesAsLongs copyOf(byte[] bytes, int off, int len) {
@@ -134,36 +126,15 @@ public final class BytesAsLongs {
         Indexables.checkOffsetLengthBounds(off, len, bytes.length);
 
         final int sizeInBytes = len;
-        final long[] longs = bytesToLongs(bytes, off, sizeInBytes, DEFAULT_BYTE_ORDER);
+        final long[] longs = bytesToLongs(bytes, off, sizeInBytes);
         final int sizeInLongs = longs.length;
-        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes, DEFAULT_BYTE_ORDER);
-    }
-
-    public static BytesAsLongs copyOf(byte[] bytes, ByteOrder order) {
-
-        Objects.requireNonNull(order);
-
-        final int sizeInBytes = bytes.length;
-        final long[] longs = bytesToLongs(bytes, 0, sizeInBytes, order);
-        final int sizeInLongs = longs.length;
-        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes, order);
-    }
-
-    public static BytesAsLongs copyOf(byte[] bytes, int off, int len, ByteOrder order) {
-
-        Indexables.checkOffsetLengthBounds(off, len, bytes.length);
-        Objects.requireNonNull(order);
-
-        final int sizeInBytes = len;
-        final long[] longs = bytesToLongs(bytes, off, sizeInBytes, order);
-        final int sizeInLongs = longs.length;
-        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes, order);
+        return new BytesAsLongs(longs, 0, sizeInLongs, sizeInBytes);
     }
 
     /*
      * Requires valid arguments.
      */
-    private static long[] bytesToLongs(byte[] bytes, int off, int sizeInBytes, ByteOrder order) {
+    private static long[] bytesToLongs(byte[] bytes, int off, int sizeInBytes) {
 
         final int sizeInLongs = ExtraMath.ceilDiv(sizeInBytes, SizeOf.LONG);
         final long[] longs = new long[sizeInLongs];
@@ -171,16 +142,16 @@ public final class BytesAsLongs {
         final int sizeInBytesModLong = sizeInBytes % SizeOf.LONG;
         if (sizeInBytesModLong == 0) { // sizeInBytes is a multiple of sizeInLongs
             // simply retrieve the longs directly from all bytes
-            ByteBuffer.wrap(bytes, off, sizeInBytes).order(order).asLongBuffer().get(longs);
+            order(ByteBuffer.wrap(bytes, off, sizeInBytes)).asLongBuffer().get(longs);
         }
         else {
             // first get (sizeInLongs - 1) longs directly from all bytes except the last sizeInBytesModLong bytes
-            ByteBuffer.wrap(bytes, off, sizeInBytes).order(order).asLongBuffer().get(longs, 0, sizeInLongs - 1);
+            order(ByteBuffer.wrap(bytes, off, sizeInBytes)).asLongBuffer().get(longs, 0, sizeInLongs - 1);
 
             // then get the remaining bytes inside a buffer
             final int bufOff = off + SizeOf.LONG * (sizeInLongs - 1);
             final int bufLen = sizeInBytesModLong;
-            final ByteBuffer lastBytesBuf = ByteBuffer.wrap(bytes, bufOff, bufLen).order(order);
+            final ByteBuffer lastBytesBuf = order(ByteBuffer.wrap(bytes, bufOff, bufLen));
 
             // finally get the final long by constructing it with the bytes inside the buffer
             final long lastLong = UnsignedTypes.readLongUnsignedBytes(lastBytesBuf, lastBytesBuf.remaining());
@@ -197,10 +168,10 @@ public final class BytesAsLongs {
 
         final int srcLongPos = srcPos / SizeOf.LONG;
         final int srcPosMod = srcPos % SizeOf.LONG;
-        
+
         final int destLongPos = destPos / SizeOf.LONG;
         final int destPosMod = destPos % SizeOf.LONG;
-        
+
         final int sizeInLongs = sizeInBytes / SizeOf.LONG;
         final int sizeInBytesMod = sizeInBytes % SizeOf.LONG;
 
@@ -209,7 +180,10 @@ public final class BytesAsLongs {
             System.arraycopy(src.longs, srcLongPos, dest.longs, destLongPos, sizeInLongs);
         }
         else {
-            // FIXME BytesAsLongs
+            final int srcEnd = srcPos + sizeInBytes;
+            for (int s = srcPos, d = destPos; s < srcEnd; s++, d++) {
+                dest.setByte(d, src.getByte(s));
+            }
         }
     }
 
@@ -220,21 +194,17 @@ public final class BytesAsLongs {
     private final int sizeInLongs;
     private final int sizeInBytes;
 
-    private final ByteOrder order;
-
 
     /*
      * Requires valid arguments.
      */
-    private BytesAsLongs(long[] longs, int offset, int sizeInLongs, int sizeInBytes, ByteOrder order) {
+    private BytesAsLongs(long[] longs, int offset, int sizeInLongs, int sizeInBytes) {
 
         this.longs = longs;
         this.offset = offset;
 
         this.sizeInLongs = sizeInLongs;
         this.sizeInBytes = sizeInBytes;
-
-        this.order = order;
     }
 
     public int sizeInLongs() {
@@ -264,36 +234,27 @@ public final class BytesAsLongs {
         Indexables.checkIndexBounds(byteIndex, sizeInBytes);
 
         final int longIndex = byteIndex / SizeOf.LONG;
-        final long longValue = getLong(longIndex);
-        final int byteShift = getByteShift(byteIndex & LONG_INDEX_MASK);
+        final int bitShift = (byteIndex % SizeOf.LONG) * Byte.SIZE;
 
-        return (byte)(longValue >>> (byteShift * Byte.SIZE));
+        return (byte)(getLong(longIndex) >>> bitShift);
     }
 
     public void setByte(int byteIndex, byte value) {
 
+        Indexables.checkIndexBounds(byteIndex, sizeInBytes);
+
         final int longIndex = byteIndex / SizeOf.LONG;
-        final long longValue = getLong(longIndex);
-        final int byteShift = getByteShift(byteIndex & LONG_INDEX_MASK);
+        final int bitShift = (byteIndex % SizeOf.LONG) * Byte.SIZE;
 
-        final long shiftedByteValue = ((long)value) << (byteShift * Byte.SIZE);
-        final long longValueMask = ~(0xFF << (byteShift * Byte.SIZE));
-        final long newLongValue = (longValue & longValueMask) | shiftedByteValue;
+        final long maskedLongValue = getLong(longIndex) & ~(0xFFL << bitShift);
+        final long shiftedByteValue = ((long)UnsignedTypes.getUnsignedByte(value)) << bitShift;
 
-        setLong(longIndex, newLongValue);
-    }
-
-    /*
-     * Requires byteIndex >= 0 && byteIndex < SizeOf.LONG
-     */
-    private int getByteShift(int byteIndex) {
-
-        return (order == ByteOrder.LITTLE_ENDIAN) ? (byteIndex) : (SizeOf.LONG - 1 - byteIndex);
+        setLong(longIndex, maskedLongValue | shiftedByteValue);
     }
 
     public byte[] toBytes() {
 
-        final ByteBuffer buf = ByteBuffer.allocate(sizeInBytes).order(order);
+        final ByteBuffer buf = order(ByteBuffer.allocate(sizeInBytes));
 
         int remaining = sizeInBytes;
         int longIndex = 0;
@@ -306,6 +267,11 @@ public final class BytesAsLongs {
         return buf.array();
     }
 
+    public BytesAsLongs copy() {
+
+        return BytesAsLongs.ofSized(Arrays.copyOf(longs, longs.length), sizeInBytes);
+    }
+
     @Override
     public boolean equals(Object other) {
 
@@ -315,10 +281,6 @@ public final class BytesAsLongs {
     public boolean equals(BytesAsLongs other) {
 
         if (this.sizeInBytes != other.sizeInBytes) {
-            return false;
-        }
-
-        if (this.order != other.order) {
             return false;
         }
 
@@ -341,7 +303,6 @@ public final class BytesAsLongs {
 
         int hash = 1;
         hash = 31 * hash + sizeInBytes;
-        hash = 31 * hash + order.hashCode();
         for (int i = offset, n = 0; n < sizeInLongs; i++, n++) {
             hash = 31 * hash + Long.valueOf(longs[i]).hashCode();
         }
