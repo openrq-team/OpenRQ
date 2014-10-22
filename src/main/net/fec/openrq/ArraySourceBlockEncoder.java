@@ -23,7 +23,6 @@ import java.util.Objects;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
 import net.fec.openrq.util.rq.SystematicIndices;
@@ -72,7 +71,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
     private final ArrayDataEncoder dataEncoder;
     private final EncodingSymbol[] sourceSymbols;
-    private BytesAsLongs[] intermediateSymbols = null;
+    private byte[][] intermediateSymbols = null;
 
     private final int sbn;
     private final int K;
@@ -100,13 +99,13 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
     }
 
     // use only this method for access to the intermediate symbols
-    private BytesAsLongs[] getIntermediateSymbols() {
+    private byte[][] getIntermediateSymbols() {
 
         // Note: if multiple threads call this method concurrently, then
         // no harm is done, only the fact that some threads may perform
         // useless work
 
-        BytesAsLongs[] is = intermediateSymbols;
+        byte[][] is = intermediateSymbols;
         if (is == null) {
             is = generateIntermediateSymbols();
             intermediateSymbols = is;
@@ -275,13 +274,14 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         final int isi = esi + (Kprime - K);
 
         // generate the repair symbol data
-        byte[] enc_data = LinearSystem.enc(Kprime, getIntermediateSymbols(), new Tuple(Kprime, isi));
+        final int T = fecParameters().symbolSize();
+        byte[] enc_data = LinearSystem.enc(Kprime, getIntermediateSymbols(), new Tuple(Kprime, isi), T);
 
         // TODO should we store the repair symbols generated?
         return EncodingSymbol.newRepairSymbol(esi, enc_data);
     }
 
-    private BytesAsLongs[] initVectorD() {
+    private byte[][] initVectorD() {
 
         // source block's parameters
         int Ki = SystematicIndices.getKIndex(Kprime);
@@ -289,27 +289,20 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
         int H = SystematicIndices.H(Ki);
         int L = Kprime + S + H;
         int T = fecParameters().symbolSize();
-        
+
         // allocate and initialize vector D
-        BytesAsLongs[] D = new BytesAsLongs[L];
-        
-        for (int row = 0; row < S + H; row++) {
-            D[row] = BytesAsLongs.withSizeInBytes(T);
-        }
+        byte[][] D = new byte[L][T];
         for (int row = S + H, index = 0; row < K + S + H; row++, index++) {
-            D[row] = BytesAsLongs.copyOf(sourceSymbols[index].data());
-        }
-        for (int row = K + S + H; row < L; row++) {
-            D[row] = BytesAsLongs.withSizeInBytes(T);
+            D[row] = sourceSymbols[index].data();
         }
 
         return D;
     }
 
-    private BytesAsLongs[] generateIntermediateSymbols() {
+    private byte[][] generateIntermediateSymbols() {
 
         // initialize the vector D with source data
-        final BytesAsLongs[] D = initVectorD();
+        final byte[][] D = initVectorD();
 
         // first try to obtain an optimized decoder that supports Kprime
         final IntermediateSymbolsDecoder isd = ISDManager.get(Kprime);
@@ -466,7 +459,7 @@ final class ArraySourceBlockEncoder implements SourceBlockEncoder {
 
     // ============================= TEST_CODE ============================= //
 
-    static BytesAsLongs[] forceInitVectorD(ArraySourceBlockEncoder enc) {
+    static byte[][] forceInitVectorD(ArraySourceBlockEncoder enc) {
 
         return enc.initVectorD();
     }

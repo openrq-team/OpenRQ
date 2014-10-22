@@ -19,15 +19,13 @@ package net.fec.openrq;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 
-import net.fec.openrq.util.array.BytesAsLongs;
-
 
 /**
  * 
  */
 interface ISDOperation {
 
-    BytesAsLongs[] apply(BytesAsLongs[] D);
+    byte[][] apply(byte[][] D);
 
     void serializeToChannel(WritableByteChannel ch) throws IOException;
 }

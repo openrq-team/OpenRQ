@@ -64,8 +64,7 @@ public interface SourceBlockEncoder {
          * then the following must be true, otherwise an {@code IllegalArgumentException} is thrown:
          * <ul>
          * <li>{@code esi} &ge; 0
-         * <li>{@code esi} &le; {@code max_esi}
-         * </ul>
+         * <li>{@code esi} &le; {@code max_esi} </ul>
          * 
          * @param esi
          *            The encoding symbol identifier of the symbol in the first encoding packet
@@ -105,8 +104,7 @@ public interface SourceBlockEncoder {
          * then the following must be true, otherwise an {@code IllegalArgumentException} is thrown:
          * <ul>
          * <li>{@code esi} &ge; 0
-         * <li>{@code esi} &le; {@code max_esi}
-         * </ul>
+         * <li>{@code esi} &le; {@code max_esi} </ul>
          * 
          * @param esi
          *            The encoding symbol identifier of the symbol in the last encoding packet
@@ -171,8 +169,7 @@ public interface SourceBlockEncoder {
      * {@code IllegalArgumentException} is thrown:
      * <ul>
      * <li>{@code esi} &ge; 0
-     * <li>{@code esi} &le; {@code max_esi}
-     * </ul>
+     * <li>{@code esi} &le; {@code max_esi} </ul>
      * 
      * @param esi
      *            The encoding symbol identifier of the encoding symbol in the returned packet
@@ -195,8 +192,7 @@ public interface SourceBlockEncoder {
      * thrown:
      * <ul>
      * <li>{@code esi} &ge; 0
-     * <li>{@code esi} &lt; {@code K}
-     * </ul>
+     * <li>{@code esi} &lt; {@code K} </ul>
      * 
      * @param esi
      *            The encoding symbol identifier of the source symbol in the returned packet
@@ -225,8 +221,7 @@ public interface SourceBlockEncoder {
      * thrown:
      * <ul>
      * <li>{@code esi} &ge; 0
-     * <li>{@code esi} &lt; {@code K}
-     * <li>{@code numSymbols} &gt; 0
+     * <li>{@code esi} &lt; {@code K} <li>{@code numSymbols} &gt; 0
      * <li>{@code numSymbols} &le; ({@code K - esi})
      * </ul>
      * 
@@ -253,9 +248,7 @@ public interface SourceBlockEncoder {
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
      * <ul>
-     * <li>{@code esi} &ge; {@code K}
-     * <li>{@code esi} &le; {@code max_esi}
-     * </ul>
+     * <li>{@code esi} &ge; {@code K} <li>{@code esi} &le; {@code max_esi} </ul>
      * 
      * @param esi
      *            The encoding symbol identifier of the repair symbol in the returned packet
@@ -284,9 +277,7 @@ public interface SourceBlockEncoder {
      * value for the encoding symbol identifier}, then the following must be true, otherwise an
      * {@code IllegalArgumentException} is thrown:
      * <ul>
-     * <li>{@code esi} &ge; {@code K}
-     * <li>{@code esi} &le; {@code max_esi}
-     * <li>{@code numSymbols} &gt; 0
+     * <li>{@code esi} &ge; {@code K} <li>{@code esi} &le; {@code max_esi} <li>{@code numSymbols} &gt; 0
      * <li>{@code numSymbols} &le; ({@code 1 + max_esi - esi})
      * </ul>
      * 
@@ -307,16 +298,14 @@ public interface SourceBlockEncoder {
      * <p>
      * For example, the following code shows how to retrieve an iterable over encoding packets that starts at encoding
      * symbol identifier (ESI) 51 and ends at ESI 100:
-     * 
      * <pre>
      * Iterable&lt;EncodingPacket&gt; iterable = newIterableBuilder().startAt(50)
-     *                                                         .endAt(100)
-     *                                                         .build();</pre>
+     * .endAt(100)
+     * .build();</pre>
      * The resulting iterable can be iterated using a "foreach" loop:
-     * 
      * <pre>
      * for (EncodingPacket packet : iterable) {
-     *   // process packet...
+     * // process packet...
      * }</pre>
      * 
      * @return a new builder object for an iterable over encoding packets
@@ -327,18 +316,16 @@ public interface SourceBlockEncoder {
      * Returns an iterable over all source packets, each packet containing one source symbol.
      * <p>
      * The resulting iterable can be iterated using a "foreach" loop:
-     * 
      * <pre>
      * for (EncodingPacket packet : iterable) {
-     *   // process packet...
+     * // process packet...
      * }</pre>
      * <p>
      * Calling this method is the same as calling:
-     * 
      * <pre>
      * encoder.newIterableBuilder().startAtInitialSourceSymbol()
-     *                             .endAtFinalSourceSymbol()
-     *                             .build();
+     * .endAtFinalSourceSymbol()
+     * .build();
      * </pre>
      * 
      * @return an iterable over all source packets
@@ -350,18 +337,16 @@ public interface SourceBlockEncoder {
      * Returns an iterable over a number of repair packets, each packet containing one repair symbol.
      * <p>
      * The resulting iterable can be iterated using a "foreach" loop:
-     * 
      * <pre>
      * for (EncodingPacket packet : iterable) {
-     *   // process packet...
+     * // process packet...
      * }</pre>
      * <p>
      * Calling this method is the same as calling:
-     * 
      * <pre>
      * encoder.newIterableBuilder().startAtInitialRepairSymbol()
-     *                             .endAt(encoder.numberOfSourceSymbols() + numRepairPackets - 1)
-     *                             .build();
+     * .endAt(encoder.numberOfSourceSymbols() + numRepairPackets - 1)
+     * .build();
      * </pre>
      * <b><em>Bounds checking</em></b> - If we have {@code K} as the number of source symbols into which is divided the
      * source block being encoded, and {@code max_esi} as the {@linkplain ParameterChecker#maxEncodingSymbolID() maximum

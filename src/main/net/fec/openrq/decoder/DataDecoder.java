@@ -91,8 +91,7 @@ public interface DataDecoder {
      * thrown:
      * <ul>
      * <li>{@code sbn} &ge; 0
-     * <li>{@code sbn} &lt; {@code Z}
-     * </ul>
+     * <li>{@code sbn} &lt; {@code Z} </ul>
      * 
      * @param sbn
      *            A source block number
@@ -122,8 +121,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param sbn
      *            The common source block number of all symbols in the packet
@@ -151,8 +149,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param sbn
      *            The common source block number of all symbols in the packet
@@ -187,8 +184,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param sbn
      *            The common source block number of all symbols in the packet
@@ -212,8 +208,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param serPac
      *            A serializable packet
@@ -237,8 +232,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing an encoding packet
@@ -262,8 +256,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing an encoding packet
@@ -294,8 +287,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param buffer
      *            A buffer containing an encoding packet
@@ -319,8 +311,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until a whole packet is read from the input, or a parsing
      * failure is detected, or an {@code IOException} is throw.
@@ -346,8 +337,7 @@ public interface DataDecoder {
      * <ul>
      * <li>If the parsing succeeded, the encoding packet can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until a whole packet is read from the channel, or a parsing
      * failure is detected, or an {@code IOException} is throw.

@@ -74,9 +74,8 @@ public class SerializableParameters implements Serializable {
      * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
      * <ul>
      * <li>{@code obj} is non-null
-     * <li>and {@code obj} is an instance of {@code SerializableParameters}
-     * <li>and {@code this}.{@link #commonOTI()} == {@code obj.commonOTI()}
-     * <li>and {@code this}.{@link #schemeSpecificOTI()} == {@code obj.schemeSpecificOTI()}
+     * <li>and {@code obj} is an instance of {@code SerializableParameters} <li>and {@code this}.{@link #commonOTI()} ==
+     * {@code obj.commonOTI()} <li>and {@code this}.{@link #schemeSpecificOTI()} == {@code obj.schemeSpecificOTI()}
      * </ul>
      */
     @Override

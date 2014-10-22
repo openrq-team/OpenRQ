@@ -16,6 +16,7 @@
 package net.fec.openrq;
 
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,15 +28,13 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.array.ArrayUtils;
-import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.io.printing.TimePrinter;
-import net.fec.openrq.util.io.printing.appendable.PrintableAppendable;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirectedLong2DByteMatrix;
-import net.fec.openrq.util.linearalgebra.vector.dense.LongByteVector;
+import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirected2DByteMatrix;
+import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.math.OctetOps;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
@@ -52,8 +51,8 @@ final class LinearSystem {
     private static final long A_SPARSE_THRESHOLD = 0L;
     private static final long MT_SPARSE_THRESHOLD = 0L;
 
-    // private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
-    private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
+    // private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
+    private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
 
 
     private static Factory getMatrixAfactory(int L, int overheadRows) {
@@ -410,7 +409,7 @@ final class LinearSystem {
      * @param tuple
      * @return an encoding symbol
      */
-    static byte[] enc(int Kprime, BytesAsLongs[] C, Tuple tuple)
+    static byte[] enc(int Kprime, byte[][] C, Tuple tuple, int T)
     {
 
         // necessary parameters
@@ -432,7 +431,7 @@ final class LinearSystem {
         int b1 = (int)tuple.getB1();
 
         // allocate memory and initialize the encoding symbol
-        final BytesAsLongs result = C[b].copy();
+        final byte[] result = Arrays.copyOf(C[b], T);
 
         /*
          * encoding -- refer to section 5.3.5.3 of RFC 6330
@@ -458,7 +457,7 @@ final class LinearSystem {
             MatrixUtilities.addSymbolsInPlace(C[W + b1], result);
         }
 
-        return result.toBytes();
+        return result;
     }
 
     /**
@@ -474,7 +473,7 @@ final class LinearSystem {
      * @throws SingularMatrixException
      *             If the decoding fails
      */
-    static BytesAsLongs[] PInactivationDecoding(ByteMatrix A, BytesAsLongs[] D, int Kprime)
+    static byte[][] PInactivationDecoding(ByteMatrix A, byte[][] D, int Kprime)
         throws SingularMatrixException
     {
 
@@ -493,9 +492,9 @@ final class LinearSystem {
         return pidPhase1(A, D, Kprime, S, H, L, P, M);
     }
 
-    private static BytesAsLongs[] pidPhase1(
+    private static byte[][] pidPhase1(
         final ByteMatrix A,
-        final BytesAsLongs[] D,
+        final byte[][] D,
         final int Kprime,
         final int S,
         final int H,
@@ -985,10 +984,10 @@ final class LinearSystem {
         return pidPhase2(A, X, D, d, c, L, M, i, u);
     }
 
-    private static BytesAsLongs[] pidPhase2(
+    private static byte[][] pidPhase2(
         final ByteMatrix A,
         final ByteMatrix X,
-        final BytesAsLongs[] D,
+        final byte[][] D,
         final int[] d,
         final int[] c,
         final int L,
@@ -1033,10 +1032,10 @@ final class LinearSystem {
         return pidPhase3(A, X, D, d, c, L, i);
     }
 
-    private static BytesAsLongs[] pidPhase3(
+    private static byte[][] pidPhase3(
         ByteMatrix A,
         final ByteMatrix X,
-        final BytesAsLongs[] D,
+        final byte[][] D,
         final int[] d,
         final int[] c,
         final int L,
@@ -1059,14 +1058,14 @@ final class LinearSystem {
 
         // decoding process
         final int Drows = Xrows;
-        final int Dcols = (D.length == 0) ? 0 : D[0].sizeInBytes();
-        final BytesAsLongs[] DShallowCopy = Arrays.copyOf(D, D.length);
-        final ByteMatrix DM = new RowIndirectedLong2DByteMatrix(Drows, Dcols, DShallowCopy, d);
+        final int Dcols = (D.length == 0) ? 0 : D[0].length;
+        final byte[][] DShallowCopy = Arrays.copyOf(D, D.length);
+        final ByteMatrix DM = new RowIndirected2DByteMatrix(Drows, Dcols, DShallowCopy, d);
 
         for (int row = 0; row < Xrows; row++) {
             // multiply X[row] by D
-            LongByteVector prod = (LongByteVector)X.multiplyRow(row, DM, 0, Xcols, LinearAlgebra.LONG2D_FACTORY);
-            D[d[row]] = prod.getInternalBytes();
+            BasicByteVector prod = (BasicByteVector)X.multiplyRow(row, DM, 0, Xcols, LinearAlgebra.BASIC2D_FACTORY);
+            D[d[row]] = prod.getInternalArray();
         }
 
         // ISDCodeWriter.instance().writePhase3Code(X, Xrows, Xcols, d); // DEBUG
@@ -1077,9 +1076,9 @@ final class LinearSystem {
         return pidPhase4(A, D, d, c, L, i);
     }
 
-    private static BytesAsLongs[] pidPhase4(
+    private static byte[][] pidPhase4(
         final ByteMatrix A,
-        final BytesAsLongs[] D,
+        final byte[][] D,
         final int[] d,
         final int[] c,
         final int L,
@@ -1122,9 +1121,9 @@ final class LinearSystem {
         return pidPhase5(A, D, d, c, L, i);
     }
 
-    private static BytesAsLongs[] pidPhase5(
+    private static byte[][] pidPhase5(
         final ByteMatrix A,
-        final BytesAsLongs[] D,
+        final byte[][] D,
         final int[] d,
         final int[] c,
         final int L,
@@ -1170,7 +1169,7 @@ final class LinearSystem {
         TimePrinter.markTimestamp(); // DEBUG
         TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
 
-        final BytesAsLongs[] C = new BytesAsLongs[L];
+        final byte[][] C = new byte[L][];
 
         // reorder C
         for (int index = 0; index < L; index++) {

@@ -75,8 +75,7 @@ public interface DataEncoder {
      * thrown:
      * <ul>
      * <li>{@code sbn} &ge; 0
-     * <li>{@code sbn} &lt; {@code Z}
-     * </ul>
+     * <li>{@code sbn} &lt; {@code Z} </ul>
      * 
      * @param sbn
      *            A source block number

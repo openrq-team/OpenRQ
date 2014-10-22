@@ -40,9 +40,10 @@ public interface MatrixSource {
     /**
      * Gets a specified element of this source.
      * 
-     * @param i the row index
-     * @param j the column index
-     *
+     * @param i
+     *            the row index
+     * @param j
+     *            the column index
      * @return an element of this source
      */
     byte get(int i, int j);

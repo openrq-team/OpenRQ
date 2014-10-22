@@ -27,8 +27,9 @@ import java.util.Objects;
 /**
  * A class that wraps an {@code Appendable} object and provides methods for printing characters.
  * <p>
- * The methods from this class do <b>not</b> throw an {@code IOException} if they detect an I/O error from the underlying
- * {@code Appendable} object. Instead, they ignore the error, but may be configured to print an exception stack trace to
+ * The methods from this class do <b>not</b> throw an {@code IOException} if they detect an I/O error from the
+ * underlying {@code Appendable} object. Instead, they ignore the error, but may be configured to print an exception
+ * stack trace to
  * the standard error stream.
  * 
  * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;

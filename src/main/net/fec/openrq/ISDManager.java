@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.io.Resources;
 import net.fec.openrq.util.io.UncheckedIOException;
 import net.fec.openrq.util.rq.IntermediateSymbolsDecoder;
@@ -161,9 +160,9 @@ final class ISDManager {
         }
 
         @Override
-        public final BytesAsLongs[] decode(BytesAsLongs[] D) {
+        public final byte[][] decode(byte[][] D) {
 
-            BytesAsLongs[] symbols = D;
+            byte[][] symbols = D;
             for (ISDOperation op : ops) {
                 symbols = op.apply(symbols);
             }

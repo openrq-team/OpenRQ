@@ -15,10 +15,6 @@
  */
 package net.fec.openrq.util.rq;
 
-
-import net.fec.openrq.util.array.BytesAsLongs;
-
-
 /**
  * Decodes intermediate symbols from a set of source symbols of an extended source block.
  */
@@ -37,5 +33,5 @@ public interface IntermediateSymbolsDecoder {
      * @param D
      * @return the intermediate symbols
      */
-    public BytesAsLongs[] decode(BytesAsLongs[] D);
+    public byte[][] decode(byte[][] D);
 }

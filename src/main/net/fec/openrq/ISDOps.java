@@ -24,16 +24,15 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import net.fec.openrq.util.array.ArrayIO;
-import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.datatype.UnsignedTypes;
 import net.fec.openrq.util.io.ExtraChannels;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrices;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
-import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirectedLong2DByteMatrix;
+import net.fec.openrq.util.linearalgebra.matrix.dense.RowIndirected2DByteMatrix;
 import net.fec.openrq.util.linearalgebra.serialize.DeserializationException;
 import net.fec.openrq.util.linearalgebra.vector.ByteVector;
-import net.fec.openrq.util.linearalgebra.vector.dense.LongByteVector;
+import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.math.OctetOps;
 
 
@@ -154,7 +153,7 @@ final class ISDOps {
         }
 
         @Override
-        public BytesAsLongs[] apply(BytesAsLongs[] D) {
+        public byte[][] apply(byte[][] D) {
 
             MatrixUtilities.addSymbolsWithMultiplierInPlace(srcMult, D[srcRow], D[dstRow]);
             return D;
@@ -210,7 +209,7 @@ final class ISDOps {
         }
 
         @Override
-        public BytesAsLongs[] apply(BytesAsLongs[] D) {
+        public byte[][] apply(byte[][] D) {
 
             OctetOps.betaDivision(beta, D[row], D[row]); // in place division
             return D;
@@ -286,7 +285,7 @@ final class ISDOps {
         }
 
         @Override
-        public BytesAsLongs[] apply(BytesAsLongs[] D) {
+        public byte[][] apply(byte[][] D) {
 
             MatrixUtilities.reduceToRowEchelonForm(AMatrix(), fromRow, toRow, fromCol, toCol, dArray(), D);
             return D;
@@ -354,29 +353,29 @@ final class ISDOps {
         }
 
         @Override
-        public BytesAsLongs[] apply(BytesAsLongs[] D) {
+        public byte[][] apply(byte[][] D) {
 
-            ByteMatrix DM = new RowIndirectedLong2DByteMatrix(Xrows, Dcols(D), DShallowCopy(D), d);
+            ByteMatrix DM = new RowIndirected2DByteMatrix(Xrows, Dcols(D), DShallowCopy(D), d);
             for (int row = 0; row < Xrows; row++) {
-                D[d[row]] = getInnerBytes(X.multiplyRow(row, DM, 0, Xcols, LinearAlgebra.BASIC1D_FACTORY));
+                D[d[row]] = getInnerArray(X.multiplyRow(row, DM, 0, Xcols, LinearAlgebra.BASIC1D_FACTORY));
             }
 
             return D;
         }
 
-        private int Dcols(BytesAsLongs[] D) {
+        private int Dcols(byte[][] D) {
 
-            return (D.length == 0) ? 0 : D[0].sizeInBytes();
+            return (D.length == 0) ? 0 : D[0].length;
         }
 
-        private BytesAsLongs[] DShallowCopy(BytesAsLongs[] D) {
+        private byte[][] DShallowCopy(byte[][] D) {
 
             return Arrays.copyOf(D, D.length);
         }
 
-        private BytesAsLongs getInnerBytes(ByteVector v) {
+        private byte[] getInnerArray(ByteVector v) {
 
-            return ((LongByteVector)v).getInternalBytes();
+            return ((BasicByteVector)v).getInternalArray();
         }
 
         @Override
@@ -434,9 +433,9 @@ final class ISDOps {
         }
 
         @Override
-        public BytesAsLongs[] apply(BytesAsLongs[] D) {
+        public byte[][] apply(byte[][] D) {
 
-            final BytesAsLongs[] C = new BytesAsLongs[L];
+            final byte[][] C = new byte[L][];
             for (int i = 0; i < L; i++) {
                 C[c[i]] = D[d[i]];
             }

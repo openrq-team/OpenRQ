@@ -199,10 +199,10 @@ public class Basic1DFactory extends BasicFactory {
 
         return new Basic1DByteMatrix(rows, columns, array);
     }
-    
+
     @Override
     public ByteMatrix deserializeMatrix(ReadableByteChannel ch) throws IOException, DeserializationException {
-    
+
         final int rows = Serialization.readMatrixRows(ch);
         final int columns = Serialization.readMatrixColumns(ch);
         final byte array[] = new byte[rows * columns];

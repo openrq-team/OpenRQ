@@ -20,7 +20,6 @@ package net.fec.openrq;
 import java.util.Arrays;
 
 import net.fec.openrq.util.array.ArrayUtils;
-import net.fec.openrq.util.array.BytesAsLongs;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.math.OctetOps;
 
@@ -220,7 +219,7 @@ final class MatrixUtilities {
         final int fromCol,
         final int toCol,
         int[] d,
-        BytesAsLongs[] D) {
+        byte[][] D) {
 
         int lead = fromCol;
         for (int r = fromRow; r < toRow; r++) {
@@ -336,19 +335,6 @@ final class MatrixUtilities {
         }
     }
 
-    static void addSymbolsInPlace(BytesAsLongs src, BytesAsLongs dest) {
-
-        /*
-         * if(src.length != dest.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        for (int eL = 0; eL < dest.sizeInLongs(); eL++) {
-            dest.setLong(eL, OctetOps.aLongPlusBLong(src.getLong(eL), dest.getLong(eL)));
-        }
-    }
-
     static void addSymbolsWithMultiplierInPlace(byte srcMultiplier, byte[] src, byte[] dest) {
 
         /*
@@ -360,30 +346,6 @@ final class MatrixUtilities {
         if (srcMultiplier != 0) {
             for (int i = 0; i < dest.length; i++) {
                 dest[i] = OctetOps.aPlusB(OctetOps.aTimesB(srcMultiplier, src[i]), dest[i]);
-            }
-        }
-    }
-
-    static void addSymbolsWithMultiplierInPlace(byte srcMultiplier, BytesAsLongs src, BytesAsLongs dest) {
-
-        /*
-         * if(src.sizeInBytes() != dest.sizeInBytes()){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        if (srcMultiplier != 0) {
-            if (srcMultiplier == 1) {
-                // long by long XOR (optimized code)
-                for (int eL = 0; eL < dest.sizeInLongs(); eL++) {
-                    dest.setLong(eL, OctetOps.aLongPlusBLong(src.getLong(eL), dest.getLong(eL)));
-                }
-            }
-            else {
-                // byte by byte XOR
-                for (int i = 0; i < dest.sizeInBytes(); i++) {
-                    dest.setByte(i, OctetOps.aPlusB(OctetOps.aTimesB(srcMultiplier, src.getByte(i)), dest.getByte(i)));
-                }
             }
         }
     }

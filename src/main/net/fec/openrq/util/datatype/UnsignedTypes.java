@@ -167,7 +167,7 @@ public final class UnsignedTypes {
 
         return bytes;
     }
-    
+
     public static int getUnsignedBytes(byte[] bytes, int numBytes) {
 
         return getUnsignedBytes(bytes, 0, numBytes);
@@ -177,7 +177,7 @@ public final class UnsignedTypes {
 
         return (int)getUnsignedVariableLong(bytes, off, numBytes, SizeOf.INT);
     }
-    
+
     public static long getLongUnsignedBytes(byte[] bytes, int numBytes) {
 
         return getLongUnsignedBytes(bytes, 0, numBytes);
