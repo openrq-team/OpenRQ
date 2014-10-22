@@ -16,7 +16,6 @@
 package net.fec.openrq;
 
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.array.ArrayUtils;
-import net.fec.openrq.util.io.printing.TimePrinter;
+import net.fec.openrq.util.io.printing.appendable.PrintableAppendable;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -38,6 +37,8 @@ import net.fec.openrq.util.linearalgebra.vector.dense.BasicByteVector;
 import net.fec.openrq.util.math.OctetOps;
 import net.fec.openrq.util.rq.Rand;
 import net.fec.openrq.util.rq.SystematicIndices;
+import net.fec.openrq.util.time.TimeUnits;
+import net.fec.openrq.util.time.TimerUtils;
 
 
 /**
@@ -51,9 +52,14 @@ final class LinearSystem {
     private static final long A_SPARSE_THRESHOLD = 0L;
     private static final long MT_SPARSE_THRESHOLD = 0L;
 
-    // private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
-    private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
+    // private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
+    private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
 
+
+    private static void printMillis(String prefix, long nanos) {
+
+        TIMER_PRINTABLE.printf("%s: %.03f ms%n", prefix, TimeUnits.fromNanosDouble(nanos, TimeUnit.MILLISECONDS));
+    }
 
     private static Factory getMatrixAfactory(int L, int overheadRows) {
 
@@ -282,8 +288,7 @@ final class LinearSystem {
         final int U = P - H;
         final int B = W - S;
 
-        TIMER_PRINTABLE.println(); // DEBUG
-        TimePrinter.beginTimer(); // DEBUG
+        TimerUtils.beginTimer(); // DEBUG
 
         // allocate memory for the constraint matrix
         ByteMatrix A = getMatrixAfactory(L, overheadRows).createMatrix(L + overheadRows, L);
@@ -329,8 +334,10 @@ final class LinearSystem {
         // initialize G_ENC
         initializeG_ENC(A, S, H, L, Kprime);
 
-        TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "constraint matrix gen: ", TimeUnit.MILLISECONDS); // DEBUG
+        // DEBUG
+        TimerUtils.markTimestamp();
+        TIMER_PRINTABLE.println();
+        printMillis("constraint matrix gen", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         // return the constraint matrix
         return A;
@@ -504,6 +511,16 @@ final class LinearSystem {
         throws SingularMatrixException
     {
 
+        long initNanos = 0L; // DEBUG
+        long findRNanos = 0L; // DEBUG
+        long chooseRowNanos = 0L; // DEBUG
+        long swapRowsNanos = 0L; // DEBUG
+        long swapColumnsNanos = 0L; // DEBUG
+        long addMultiplyNanos = 0L; // DEBUG
+        long countNonZerosNanos = 0L; // DEBUG
+
+        TimerUtils.beginTimer(); // DEBUG
+
         /*
          * initialize c and d vectors
          */
@@ -523,9 +540,6 @@ final class LinearSystem {
 
         // initialize i and u parameters, for the submatrices sizes
         int i = 0, u = P;
-
-        TIMER_PRINTABLE.println(); // DEBUG
-        TimePrinter.beginTimer(); // DEBUG
 
         // counts how many rows have been chosen already
         int chosenRowsCounter = 0;
@@ -569,8 +583,8 @@ final class LinearSystem {
             }
         }
 
-        // TimePrinter.markTimestamp(); // DEBUG
-        // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(a): ", TimeUnit.MILLISECONDS); // DEBUG
+        TimerUtils.markTimestamp(); // DEBUG
+        initNanos += TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS);
 
         // at most L steps
         while (i + u != L)
@@ -594,7 +608,7 @@ final class LinearSystem {
              * find r
              */
 
-            // TimePrinter.beginTimer(); // DEBUG
+            TimerUtils.beginTimer(); // DEBUG
 
             for (Row row : rows.values()) {
                 if (row.nonZeros != 0) allZeros = false;
@@ -614,9 +628,8 @@ final class LinearSystem {
                 }
             }
 
-            // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; find r)",
-            // TimeUnit.MILLISECONDS); // DEBUG
+            TimerUtils.markTimestamp(); // DEBUG
+            findRNanos += TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS);
 
             if (allZeros) {// DECODING FAILURE
                 throw new SingularMatrixException(
@@ -627,7 +640,7 @@ final class LinearSystem {
              * choose the row
              */
 
-            // TimePrinter.beginTimer(); // DEBUG
+            TimerUtils.beginTimer(); // DEBUG
 
             if (r == 2 && two1s) {
 
@@ -806,9 +819,8 @@ final class LinearSystem {
 
                 chosenRowsCounter++;
 
-                // TimePrinter.markTimestamp(); // DEBUG
-                // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; choose row)",
-                // TimeUnit.MILLISECONDS); // DEBUG
+                TimerUtils.markTimestamp(); // DEBUG
+                chooseRowNanos += TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS);
             }
             else {
 
@@ -829,7 +841,7 @@ final class LinearSystem {
 
             // if the chosen row is not 'i' already
             if (chosenRowPos != i) {
-                // TimePrinter.beginTimer(); // DEBUG
+                TimerUtils.beginTimer(); // DEBUG
 
                 // swap in A
                 A.swapRows(i, chosenRowPos);
@@ -846,9 +858,8 @@ final class LinearSystem {
                 other.position = chosenRowPos;
                 chosenRow.position = i;
 
-                // TimePrinter.markTimestamp(); // DEBUG
-                // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; swap rows)",
-                // TimeUnit.MILLISECONDS); // DEBUG
+                TimerUtils.markTimestamp(); // DEBUG
+                swapRowsNanos += TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS);
             }
 
             /*
@@ -857,7 +868,7 @@ final class LinearSystem {
              * appear in the last columns of V."
              */
 
-            // TimePrinter.beginTimer(); // DEBUG
+            TimerUtils.beginTimer(); // DEBUG
 
             // an array with the positions (column indices) of the non-zeros
             final int[] nonZeroPos = A.nonZeroPositionsInRow(i, i, L - u);
@@ -895,9 +906,8 @@ final class LinearSystem {
                 }
             }
 
-            // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; swap columns)",
-            // TimeUnit.MILLISECONDS); // DEBUG
+            TimerUtils.markTimestamp(); // DEBUG
+            swapColumnsNanos += TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS);
 
             /*
              * "... if a row below the chosen row has entry beta in the first column of V, and the chosen
@@ -905,7 +915,7 @@ final class LinearSystem {
              * row is added to this row to leave a zero value in the first column of V."
              */
 
-            // TimePrinter.beginTimer(); // DEBUG
+            TimerUtils.beginTimer(); // DEBUG
 
             // "the chosen row has entry alpha in the first column of V"
             final byte alpha = A.get(i, i);
@@ -941,9 +951,8 @@ final class LinearSystem {
                 }
             }
 
-            // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; row add/mult)",
-            // TimeUnit.MILLISECONDS); // DEBUG
+            TimerUtils.markTimestamp(); // DEBUG
+            addMultiplyNanos += TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS);
 
             /*
              * "Finally, i is incremented by 1 and u is incremented by r-1, which completes the step."
@@ -951,7 +960,7 @@ final class LinearSystem {
             i++;
             u += r - 1;
 
-            // TimePrinter.beginTimer(); // DEBUG
+            TimerUtils.beginTimer(); // DEBUG
 
             // update nonZeros
             for (Row row : rows.values()) {
@@ -973,13 +982,20 @@ final class LinearSystem {
                 }
             }
 
-            // TimePrinter.markTimestamp(); // DEBUG
-            // TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st(iter " + (i + u) + "; update non zeros)",
-            // TimeUnit.MILLISECONDS); // DEBUG
+            TimerUtils.markTimestamp(); // DEBUG
+            countNonZerosNanos += TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS);
         }
 
-        TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "1st: ", TimeUnit.MILLISECONDS); // DEBUG
+        // DEBUG
+        TIMER_PRINTABLE.println();
+        TIMER_PRINTABLE.println("1st:");
+        printMillis("  init", initNanos);
+        printMillis("  find r", findRNanos);
+        printMillis("  choose row", chooseRowNanos);
+        printMillis("  swap rows", swapRowsNanos);
+        printMillis("  swap columns", swapColumnsNanos);
+        printMillis("  add/mult row", addMultiplyNanos);
+        printMillis("  count nonzeros", countNonZerosNanos);
 
         return pidPhase2(A, X, D, d, c, L, M, i, u);
     }
@@ -997,7 +1013,7 @@ final class LinearSystem {
         throws SingularMatrixException
     {
 
-        TimePrinter.beginTimer(); // DEBUG
+        TimerUtils.beginTimer(); // DEBUG
 
         /*
          * "At this point, all the entries of X outside the first i rows and i columns are discarded, so that X
@@ -1026,8 +1042,9 @@ final class LinearSystem {
          * "After this phase, A has L rows and L columns."
          */
 
-        TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "2nd: ", TimeUnit.MILLISECONDS); // DEBUG
+        // DEBUG
+        TimerUtils.markTimestamp();
+        printMillis("2nd", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         return pidPhase3(A, X, D, d, c, L, i);
     }
@@ -1042,7 +1059,7 @@ final class LinearSystem {
         final int i)
     {
 
-        TimePrinter.beginTimer(); // DEBUG
+        TimerUtils.beginTimer(); // DEBUG
 
         /*
          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
@@ -1070,8 +1087,9 @@ final class LinearSystem {
 
         // ISDCodeWriter.instance().writePhase3Code(X, Xrows, Xcols, d); // DEBUG
 
-        TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "3rd: ", TimeUnit.MILLISECONDS); // DEBUG
+        // DEBUG
+        TimerUtils.markTimestamp();
+        printMillis("3rd", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         return pidPhase4(A, D, d, c, L, i);
     }
@@ -1085,7 +1103,7 @@ final class LinearSystem {
         final int i)
     {
 
-        TimePrinter.beginTimer(); // DEBUG
+        TimerUtils.beginTimer(); // DEBUG
 
         /*
          * "For each of the first i rows of U_upper, do the following: if the row has a nonzero entry at position j,
@@ -1115,8 +1133,9 @@ final class LinearSystem {
             }
         }
 
-        TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "4th: ", TimeUnit.MILLISECONDS); // DEBUG
+        // DEBUG
+        TimerUtils.markTimestamp();
+        printMillis("4th", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         return pidPhase5(A, D, d, c, L, i);
     }
@@ -1130,7 +1149,7 @@ final class LinearSystem {
         final int i)
     {
 
-        TimePrinter.beginTimer(); // DEBUG
+        TimerUtils.beginTimer(); // DEBUG
 
         // "For j from 1 to i, perform the following operations:"
         for (int j = 0; j < i; j++) {
@@ -1166,8 +1185,9 @@ final class LinearSystem {
             }
         }
 
-        TimePrinter.markTimestamp(); // DEBUG
-        TimePrinter.printlnEllapsedTime(TIMER_PRINTABLE, "5th: ", TimeUnit.MILLISECONDS); // DEBUG
+        // DEBUG
+        TimerUtils.markTimestamp();
+        printMillis("5th", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         final byte[][] C = new byte[L][];
 
