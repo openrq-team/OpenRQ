@@ -16,11 +16,11 @@
 package net.fec.openrq;
 
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.datatype.SizeOf;
-import net.fec.openrq.util.math.ExtraMath;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -43,48 +43,80 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Benchmark)
 public class XorTest {
 
-    @Param({"1", "10", "100", "1000", "10000", "100000", "1000000", "10000000", "100000000"})
+    @Param({"8", "80", "800", "8000", "80000", "800000", "8000000", "80000000"})
     public int size;
 
-    private byte[] bytes;
-    private long[] longs;
+    private ByteBuffer buf;
+    private ByteBuffer dirBuf;
 
 
     @Setup
     public void setup() {
 
-        Random rand = TestingCommon.newSeededRandom();
+        buf = ByteBuffer.allocate(size);
+        randomBytes(buf, TestingCommon.newSeededRandom());
 
-        bytes = new byte[size];
-        rand.nextBytes(bytes);
-
-        longs = new long[ExtraMath.ceilDiv(size, SizeOf.LONG)];
-        randomLongs(longs, rand);
+        dirBuf = ByteBuffer.allocateDirect(size);
+        randomBytes(dirBuf, TestingCommon.newSeededRandom());
     }
 
-    private static void randomLongs(long[] array, Random rand) {
+    private static void randomBytes(ByteBuffer b, Random rand) {
 
-        for (int i = 0; i < array.length; i++) {
-            array[i] = rand.nextLong();
-        }
+        final int pos = b.position();
+        final byte[] array = new byte[b.remaining()];
+        rand.nextBytes(array);
+        b.put(array);
+        b.position(pos);
     }
 
     @Benchmark
-    public byte testBytes() {
+    public byte testArrayBytes() {
+
+        buf.rewind();
+        final int len = buf.remaining();
 
         byte result = 0;
-        for (int i = 0, len = bytes.length; i < len; ++i) {
-            result ^= bytes[i];
+        for (int i = 0; i < len; ++i) {
+            result ^= buf.get();
         }
         return result;
     }
 
     @Benchmark
-    public long testLongs() {
+    public long testArrayLongs() {
 
-        long result = 0L;
-        for (int i = 0, len = longs.length; i < len; ++i) {
-            result ^= longs[i];
+        buf.rewind();
+        final int len = buf.remaining() / SizeOf.LONG;
+
+        long result = 0;
+        for (int i = 0; i < len; ++i) {
+            result ^= buf.getLong();
+        }
+        return result;
+    }
+
+    @Benchmark
+    public byte testDirectBytes() {
+
+        dirBuf.rewind();
+        final int len = dirBuf.remaining();
+
+        byte result = 0;
+        for (int i = 0; i < len; ++i) {
+            result ^= dirBuf.get();
+        }
+        return result;
+    }
+
+    @Benchmark
+    public long testDirectLongs() {
+
+        dirBuf.rewind();
+        final int len = dirBuf.remaining() / SizeOf.LONG;
+
+        long result = 0;
+        for (int i = 0; i < len; ++i) {
+            result ^= dirBuf.getLong();
         }
         return result;
     }
