@@ -9,7 +9,7 @@ import java.nio.ByteOrder;
  * This class provides useful methods for dealing with primitive unsigned values, including reading from and writing to
  * buffers.
  * 
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @author Ricardo Fonseca &lt;rfonseca&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class UnsignedTypes {
 

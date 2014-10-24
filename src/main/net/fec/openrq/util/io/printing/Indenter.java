@@ -14,7 +14,7 @@ import net.fec.openrq.util.io.printing.appendable.NoisyPrintableAppendable;
  * This class provides support for writing text lines to an {@code Appendable} object, according to specific indentation
  * rules.
  * 
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @author Ricardo Fonseca &lt;rfonseca&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class Indenter {
 

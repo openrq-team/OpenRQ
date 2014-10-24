@@ -7,7 +7,7 @@ import java.nio.CharBuffer;
 
 
 /**
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @author Ricardo Fonseca &lt;rfonseca&#064;lasige.di.fc.ul.pt&gt;
  * @param <W>
  */
 class WriterWrapper<W extends Writer> extends AppendableWrapper<W> {

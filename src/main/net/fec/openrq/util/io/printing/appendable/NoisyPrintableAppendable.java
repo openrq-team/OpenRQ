@@ -15,7 +15,7 @@ import java.util.Objects;
  * The methods from this class throw an {@code IOException} if they detect an I/O error from the underlying
  * {@code Appendable} object.
  * 
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @author Ricardo Fonseca &lt;rfonseca&#064;lasige.di.fc.ul.pt&gt;
  */
 public class NoisyPrintableAppendable implements Appendable {
 

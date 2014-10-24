@@ -1,7 +1,7 @@
 package net.fec.openrq.util.checking;
 
 /**
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @author Ricardo Fonseca &lt;rfonseca&#064;lasige.di.fc.ul.pt&gt;
  */
 public final class Invariants {
 

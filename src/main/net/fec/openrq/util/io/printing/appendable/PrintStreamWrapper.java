@@ -5,7 +5,7 @@ import java.io.PrintStream;
 
 
 /**
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @author Ricardo Fonseca &lt;rfonseca&#064;lasige.di.fc.ul.pt&gt;
  * @param <P>
  */
 final class PrintStreamWrapper<P extends PrintStream> extends AppendableWrapper<P> {
