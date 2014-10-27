@@ -29,8 +29,8 @@ import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.collection.ImmutableList;
 import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.io.BufferOperation;
 import net.fec.openrq.util.io.ExtraChannels;
-import net.fec.openrq.util.io.ExtraChannels.BufferOperation;
 import net.fec.openrq.util.math.ExtraMath;
 
 
