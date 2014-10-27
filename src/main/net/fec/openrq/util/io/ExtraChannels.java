@@ -537,7 +537,7 @@ public final class ExtraChannels {
         @Override
         protected ByteBuffer initialValue() {
 
-            return ByteBuffer.allocate(SizeOf.LONG);
+            return ByteBuffer.allocateDirect(SizeOf.LONG);
         }
     };
 

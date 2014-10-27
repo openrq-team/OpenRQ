@@ -17,6 +17,7 @@ package net.fec.openrq.util.io;
 
 
 import java.nio.Buffer;
+import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -128,9 +129,129 @@ public final class ByteBuffers {
         return copy;
     }
 
+    /**
+     * Puts zeros in the provided buffer, starting at the current buffer position.
+     * <p>
+     * Calling this method has the same effect as calling {@link #putZeros(ByteBuffer, int, BufferOperation)
+     * putZeros(dst, dst.remaining(), BufferOperation.DO_NOTHING)}.
+     * 
+     * @param dst
+     *            The buffer to put zeros into
+     */
+    public static void putZeros(ByteBuffer dst) {
+
+        putZeros(dst, dst.remaining(), BufferOperation.DO_NOTHING);
+    }
+
+    /**
+     * Puts zeros in the provided buffer, starting at the current buffer position.
+     * <p>
+     * Calling this method has the same effect as calling {@link #putZeros(ByteBuffer, int, BufferOperation)
+     * putZeros(dst, numZeros, BufferOperation.DO_NOTHING)}.
+     * 
+     * @param dst
+     *            The buffer to put zeros into
+     * @param numZeros
+     *            The number of zeros to put
+     * @exception IllegalArgumentException
+     *                If the number of zeros is negative
+     * @exception BufferOverflowException
+     *                If the number of zeros exceeds the number of {@linkplain Buffer#remaining() available} bytes in
+     *                the buffer
+     */
+    public static void putZeros(ByteBuffer dst, int numZeros) {
+
+        putZeros(dst, numZeros, BufferOperation.DO_NOTHING);
+    }
+
+    /**
+     * Puts zeros in the provided buffer, starting at the current buffer position.
+     * <p>
+     * Calling this method has the same effect as calling {@link #putZeros(ByteBuffer, int, BufferOperation)
+     * putZeros(dst, dst.remaining(), op)}.
+     * 
+     * @param dst
+     *            The buffer to put zeros into
+     * @param op
+     *            The operation to apply to the buffer after the put
+     */
+    public static void putZeros(ByteBuffer dst, BufferOperation op) {
+
+        putZeros(dst, dst.remaining(), op);
+    }
+
+    /**
+     * Puts zeros in the provided buffer, starting at the current buffer position.
+     * <p>
+     * At the end of the put, the position of the buffer will have advanced the specified number of zeros (before the
+     * provided buffer operation is applied to the buffer).
+     * 
+     * @param dst
+     *            The buffer to put zeros into
+     * @param numZeros
+     *            The number of zeros to put
+     * @param op
+     *            The operation to apply to the buffer after the put
+     * @exception IllegalArgumentException
+     *                If the number of zeros is negative
+     * @exception BufferOverflowException
+     *                If the number of zeros exceeds the number of {@linkplain Buffer#remaining() available} bytes in
+     *                the buffer
+     */
+    public static void putZeros(ByteBuffer dst, final int numZeros, BufferOperation op) {
+
+        final int pos = dst.position();
+        final int lim = dst.limit();
+        final int remaining = lim - pos;
+
+        if (numZeros < 0) throw new IllegalArgumentException("number of zeros is negative");
+        if (remaining < numZeros) throw new BufferOverflowException();
+        Objects.requireNonNull(op);
+
+        int remZeros = numZeros;
+        while (remZeros > 0) {
+            final int amount = Math.min(remZeros, ZERO_BUFFER_CAPACITY);
+            dst.put(zeroBuffer(amount, dst.isDirect()));
+            remZeros -= amount;
+        }
+
+        op.apply(dst, pos);
+    }
+
     private static ByteBuffer allocate(int capacity, boolean isDirect) {
 
         return isDirect ? ByteBuffer.allocateDirect(capacity) : ByteBuffer.allocate(capacity);
+    }
+
+
+    private static final int ZERO_BUFFER_CAPACITY = 4096;
+    private static final ThreadLocal<ByteBuffer> ZERO_BUFFER = new ThreadLocal<ByteBuffer>() {
+
+        @Override
+        protected ByteBuffer initialValue() {
+
+            return ByteBuffer.allocate(ZERO_BUFFER_CAPACITY);
+        }
+    };
+    private static final ThreadLocal<ByteBuffer> ZERO_DIR_BUFFER = new ThreadLocal<ByteBuffer>() {
+
+        @Override
+        protected ByteBuffer initialValue() {
+
+            return ByteBuffer.allocateDirect(ZERO_BUFFER_CAPACITY);
+        }
+    };
+
+
+    /*
+     * Requires size <= ZERO_BUFFER_CAPACITY
+     */
+    private static ByteBuffer zeroBuffer(int size, boolean direct) {
+
+        ByteBuffer zeroBuf = direct ? ZERO_DIR_BUFFER.get() : ZERO_BUFFER.get();
+        zeroBuf.clear();
+        zeroBuf.limit(size);
+        return zeroBuf;
     }
 
     private ByteBuffers() {
