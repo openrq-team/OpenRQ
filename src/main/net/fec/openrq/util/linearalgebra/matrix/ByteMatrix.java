@@ -87,6 +87,27 @@ public interface ByteMatrix {
     void set(int i, int j, byte value);
 
     /**
+     * Assigns all the elements of this matrix to zero.
+     */
+    void clear();
+
+    /**
+     * Assigns all the elements of a row of this matrix to zero.
+     * 
+     * @param i
+     *            row index
+     */
+    void clearRow(int i);
+
+    /**
+     * Assigns all the elements of a column of this matrix to zero.
+     * 
+     * @param j
+     *            column index
+     */
+    void clearColumn(int j);
+
+    /**
      * Assigns all elements of this matrix to given {@code value}.
      * 
      * @param value

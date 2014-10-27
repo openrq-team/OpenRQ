@@ -401,7 +401,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             Tuple tuple = new Tuple(Kprime, repair.getISI(K));
             Set<Integer> indexes = LinearSystem.encIndexes(Kprime, tuple);
 
-            A.assignRow(row, (byte)0); // must clear previous data first!
+            A.clearRow(row); // must clear previous data first!
             for (Integer col : indexes) {
                 A.set(row, col, (byte)1);
             }
@@ -419,7 +419,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             Tuple tuple = new Tuple(Kprime, repair.getISI(K));
             Set<Integer> indexes = LinearSystem.encIndexes(Kprime, tuple);
 
-            A.assignRow(row, (byte)0); // must clear previous data first!
+            A.clearRow(row); // must clear previous data first!
             for (Integer col : indexes) {
                 A.set(row, col, (byte)1);
             }

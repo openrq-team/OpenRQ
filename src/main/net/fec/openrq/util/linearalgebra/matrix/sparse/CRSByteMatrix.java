@@ -141,6 +141,20 @@ public class CRSByteMatrix extends AbstractCompressedByteMatrix implements Spars
         sparseRows.vectorRW(i).set(j, value);
     }
 
+    @Override
+    public void clear() {
+
+        for (int i = 0; i < rows(); i++) {
+            clearRow(i);
+        }
+    }
+
+    @Override
+    public void clearRow(int i) {
+
+        sparseRows.vectorR(i).clear(); // this is non mutable on an empty vector
+    }
+
     // =========================================================================
     // Optimized multiplications that take advantage of row sparsity in matrix.
 

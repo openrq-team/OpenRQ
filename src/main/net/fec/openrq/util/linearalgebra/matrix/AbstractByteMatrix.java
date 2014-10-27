@@ -110,6 +110,36 @@ public abstract class AbstractByteMatrix implements ByteMatrix {
     }
 
     @Override
+    public void clear() {
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                safeSet(i, j, (byte)0);
+            }
+        }
+    }
+
+    @Override
+    public void clearRow(int i) {
+
+        ByteVectorIterator it = rowIterator(i);
+        while (it.hasNext()) {
+            it.next();
+            it.set((byte)0);
+        }
+    }
+
+    @Override
+    public void clearColumn(int j) {
+
+        ByteVectorIterator it = columnIterator(j);
+        while (it.hasNext()) {
+            it.next();
+            it.set((byte)0);
+        }
+    }
+
+    @Override
     public void assign(byte value) {
 
         update(ByteMatrices.asConstFunction(value));

@@ -140,6 +140,20 @@ public class CCSByteMatrix extends AbstractCompressedByteMatrix implements Spars
     }
 
     @Override
+    public void clear() {
+
+        for (int j = 0; j < columns(); j++) {
+            clearColumn(j);
+        }
+    }
+
+    @Override
+    public void clearColumn(int j) {
+
+        sparseCols.vectorR(j).clear(); // this is non mutable on an empty vector
+    }
+
+    @Override
     public ByteMatrix transpose() {
 
         return transpose(factory());
