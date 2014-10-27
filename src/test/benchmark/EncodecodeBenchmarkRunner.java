@@ -100,7 +100,7 @@ public final class EncodecodeBenchmarkRunner {
             }
 
             final long ellapsed = System.nanoTime() - startNanos;
-            STDOUT.println("Done. Benchamark time: " + TimeUnit.NANOSECONDS.toSeconds(ellapsed) + "s");
+            STDOUT.println("Done. Benchmark time: " + TimeUnit.NANOSECONDS.toSeconds(ellapsed) + "s");
             STDOUT.println();
             STDOUT.println("Benchmark results:");
             resultFormat.writeOut(results);

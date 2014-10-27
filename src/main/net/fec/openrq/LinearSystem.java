@@ -414,10 +414,10 @@ final class LinearSystem {
      * @param Kprime
      * @param C
      * @param tuple
+     * @param T
      * @return an encoding symbol
      */
-    static byte[] enc(int Kprime, byte[][] C, Tuple tuple, int T)
-    {
+    static byte[] enc(int Kprime, byte[][] C, Tuple tuple, int T) {
 
         // necessary parameters
         final int Ki = SystematicIndices.getKIndex(Kprime);

@@ -18,63 +18,20 @@ package net.fec.openrq.util.io;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.Objects;
 
 import net.fec.openrq.util.datatype.SizeOf;
-import net.fec.openrq.util.text.Words;
 
 
 /**
  * Class containing utility methods not present in class {@link java.nio.channels.Channels}.
  */
 public final class ExtraChannels {
-
-    public enum BufferOperation {
-
-        /**
-         * Does nothing to the buffer after reading into/from it.
-         * <p>
-         * <ul>
-         * <li>The buffer position will be the index immediately after the last read byte, or 0 if nothing was read.
-         * <li>The buffer limit will be the same as before reading.
-         * </ul>
-         */
-        DO_NOTHING,
-
-        /**
-         * Restore the original buffer position after reading into/from it.
-         * <p>
-         * <ul>
-         * <li>The buffer position will be the same as before reading.
-         * <li>The buffer limit will be the same as before reading.
-         * </ul>
-         */
-        RESTORE_POSITION,
-
-        /**
-         * Flips the buffer relatively after reading into/from it.
-         * <p>
-         * <ul>
-         * <li>The buffer position will be the same as before reading.
-         * <li>The buffer limit will be the index immediately after the last read byte, or 0 if nothing was read.
-         * </ul>
-         */
-        FLIP_RELATIVELY,
-
-        /**
-         * Flips the buffer absolutely after reading into/from it (the same as calling the method
-         * {@link ByteBuffer#flip()} afterwards).
-         * <p>
-         * <ul>
-         * <li>The buffer position will be 0.
-         * <li>The buffer limit will be the index immediately after the last read byte, or 0 if nothing was read.
-         * </ul>
-         */
-        FLIP_ABSOLUTELY
-    }
-
 
     /**
      * Writes to a channel all the available bytes from a buffer. The buffer will be consumed from its position to its
@@ -90,8 +47,6 @@ public final class ExtraChannels {
      *            The buffer containing the bytes to be written
      * @throws IOException
      *             If an I/O error occurs while writing
-     * @exception IllegalArgumentException
-     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
      */
     public static void writeBytes(WritableByteChannel ch, ByteBuffer buf) throws IOException {
 
@@ -114,8 +69,6 @@ public final class ExtraChannels {
      *            The operation to apply to the provided buffer after writing
      * @throws IOException
      *             If an I/O error occurs while writing
-     * @exception IllegalArgumentException
-     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
      */
     public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, BufferOperation op) throws IOException {
 
@@ -139,7 +92,7 @@ public final class ExtraChannels {
      *             If an I/O error occurs while writing
      * @exception IllegalArgumentException
      *                If {@code numBytes} is negative
-     * @exception IllegalArgumentException
+     * @exception BufferUnderflowException
      *                If the provided buffer does not have at least {@code numBytes} bytes available to write
      */
     public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, int numBytes) throws IOException {
@@ -162,32 +115,31 @@ public final class ExtraChannels {
      *             If an I/O error occurs while writing
      * @exception IllegalArgumentException
      *                If {@code numBytes} is negative
-     * @exception IllegalArgumentException
+     * @exception BufferUnderflowException
      *                If the provided buffer does not have at least {@code numBytes} bytes available to write
      */
     public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, int numBytes, BufferOperation op)
         throws IOException
     {
 
-        if (numBytes < 0) throw new IllegalArgumentException("number of bytes is negative");
-
         final int bufPos = buf.position();
         final int bufLim = buf.limit();
         final int remaining = bufLim - bufPos;
-        if (remaining < numBytes) {
-            throw new IllegalArgumentException(
-                "buffer does not have at least " + Words.bytes(numBytes) +
-                    " (only " + Words.bytes(remaining) + " are available)");
-        }
+
+        if (numBytes < 0) throw new IllegalArgumentException("number of bytes is negative");
+        if (remaining < numBytes) throw new BufferUnderflowException();
+        Objects.requireNonNull(op);
 
         try {
             buf.limit(bufPos + numBytes);
             writeFully(ch, buf);
         }
         finally {
-            buf.limit(bufLim); // restore the original limit
-            applyOperation(buf, bufPos, op);
+            buf.limit(bufLim); // always restore the original limit
         }
+
+        // only apply the operation if no exception was previously thrown
+        op.apply(buf, bufPos);
     }
 
     /**
@@ -373,7 +325,7 @@ public final class ExtraChannels {
      *             If an I/O error occurs while reading
      * @exception IllegalArgumentException
      *                If {@code numBytes} is negative
-     * @exception IllegalArgumentException
+     * @exception BufferOverflowException
      *                If the provided buffer does not have at least {@code numBytes} bytes available for storage
      */
     public static void readBytes(ReadableByteChannel ch, ByteBuffer buf, int numBytes)
@@ -400,32 +352,31 @@ public final class ExtraChannels {
      *             If an I/O error occurs while reading
      * @exception IllegalArgumentException
      *                If {@code numBytes} is negative
-     * @exception IllegalArgumentException
+     * @exception BufferOverflowException
      *                If the provided buffer does not have at least {@code numBytes} bytes available for storage
      */
     public static void readBytes(ReadableByteChannel ch, ByteBuffer buf, int numBytes, BufferOperation op)
         throws EOFException, IOException
     {
 
-        if (numBytes < 0) throw new IllegalArgumentException("number of bytes is negative");
-
         final int bufPos = buf.position();
         final int bufLim = buf.limit();
         final int remaining = bufLim - bufPos;
-        if (remaining < numBytes) {
-            throw new IllegalArgumentException(
-                "buffer cannot hold " + Words.bytes(numBytes) +
-                    " (only " + Words.bytes(remaining) + " are available)");
-        }
+
+        if (numBytes < 0) throw new IllegalArgumentException("number of bytes is negative");
+        if (remaining < numBytes) throw new BufferOverflowException();
+        Objects.requireNonNull(op);
 
         try {
             buf.limit(bufPos + numBytes);
             readFully(ch, buf);
         }
         finally {
-            buf.limit(bufLim); // restore the original limit
-            applyOperation(buf, bufPos, op);
+            buf.limit(bufLim); // always restore the original limit
         }
+
+        // only apply the operation if no exception was previously thrown
+        op.apply(buf, bufPos);
     }
 
     /**
@@ -574,31 +525,6 @@ public final class ExtraChannels {
             if (ch.read(buf) == -1) {
                 throw new EOFException();
             }
-        }
-    }
-
-    private static void applyOperation(ByteBuffer buf, int originalBufPos, BufferOperation op) {
-
-        switch (op) {
-            case DO_NOTHING:
-            // nothing, really
-            break;
-
-            case RESTORE_POSITION:
-                buf.position(originalBufPos);
-            break;
-
-            case FLIP_RELATIVELY:
-                buf.limit(buf.position());
-                buf.position(originalBufPos);
-            break;
-
-            case FLIP_ABSOLUTELY:
-                buf.flip();
-            break;
-
-            default:
-                throw new AssertionError("unknown enum value");
         }
     }
 

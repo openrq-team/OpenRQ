@@ -33,17 +33,33 @@ public final class Words {
     }
 
     /**
-     * Returns {@code amount + " " + } {@link #pluralize pluralize(baseWord)}.
+     * Returns {@code amount + " " + } {@link #pluralize(int, String) pluralize(amount, baseWord)}.
      * 
      * @param amount
      *            How many instances of the base word
      * @param baseWord
      *            The word to be quantified
-     * @return {@code amount + " " + pluralize(baseWord)}
+     * @return {@code amount + " " + pluralize(amount, baseWord)}
      */
     public static String quantify(int amount, String baseWord) {
 
         return amount + " " + pluralize(amount, baseWord);
+    }
+
+    /**
+     * Returns {@code amount + " " + } {@link #pluralize(int, String, String) pluralize(amount, baseWord, plural)}.
+     * 
+     * @param amount
+     *            How many instances of the base word
+     * @param baseWord
+     *            The word to be quantified
+     * @param plural
+     *            The plural form of the base word
+     * @return {@code amount + " " + pluralize(amount, baseWord, plural)}
+     */
+    public static String quantify(int amount, String baseWord, String plural) {
+
+        return amount + " " + pluralize(amount, baseWord, plural);
     }
 
     /**
@@ -59,6 +75,25 @@ public final class Words {
     public static String pluralize(int amount, String baseWord) {
 
         return (amount == 1 || amount == -1) ? baseWord : baseWord + "s";
+    }
+
+    /**
+     * Returns a provided word in its plural or singular form, depending on the provided amount value (it is singular if
+     * the amount value equals to 1, or -1; it is plural otherwise).
+     * <p>
+     * The plural form is provided as a separate argument.
+     * 
+     * @param amount
+     *            How many instances of the base word
+     * @param baseWord
+     *            The word to be pluralized
+     * @param plural
+     *            The plural form of the base word
+     * @return {@code plural} if {@code amount} is 1 or -1, or {@code baseWord} otherwise
+     */
+    public static String pluralize(int amount, String baseWord, String plural) {
+
+        return (amount == 1 || amount == -1) ? baseWord : plural;
     }
 
     private Words() {
