@@ -21,6 +21,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.math.OctetOps;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -43,21 +44,35 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Benchmark)
 public class XorTest {
 
-    @Param({"8", "80", "800", "8000", "80000", "800000", "8000000", "80000000"})
+    @Param({SizeOf.LONG + "",
+            SizeOf.LONG + "0",
+            SizeOf.LONG + "00",
+            SizeOf.LONG + "000",
+            SizeOf.LONG + "0000",
+            SizeOf.LONG + "00000",
+            SizeOf.LONG + "000000",
+            SizeOf.LONG + "0000000"})
     public int size;
 
-    private ByteBuffer buf;
-    private ByteBuffer dirBuf;
+    private ByteBuffer srcBuf;
+    private ByteBuffer dstBuf;
+
+    private ByteBuffer srcDirBuf;
+    private ByteBuffer dstDirBuf;
 
 
     @Setup
     public void setup() {
 
-        buf = ByteBuffer.allocate(size);
-        randomBytes(buf, TestingCommon.newSeededRandom());
+        srcBuf = ByteBuffer.allocate(size);
+        dstBuf = ByteBuffer.allocate(size);
+        randomBytes(srcBuf, TestingCommon.newSeededRandom());
+        randomBytes(dstBuf, TestingCommon.newSeededRandom());
 
-        dirBuf = ByteBuffer.allocateDirect(size);
-        randomBytes(dirBuf, TestingCommon.newSeededRandom());
+        srcDirBuf = ByteBuffer.allocateDirect(size);
+        dstDirBuf = ByteBuffer.allocateDirect(size);
+        randomBytes(srcDirBuf, TestingCommon.newSeededRandom());
+        randomBytes(dstDirBuf, TestingCommon.newSeededRandom());
     }
 
     private static void randomBytes(ByteBuffer b, Random rand) {
@@ -70,54 +85,46 @@ public class XorTest {
     }
 
     @Benchmark
-    public byte testArrayBytes() {
+    public void testArrayBytes() {
 
-        buf.rewind();
-        final int len = buf.remaining();
-
-        byte result = 0;
+        srcBuf.rewind();
+        dstBuf.rewind();
+        final int len = size;
         for (int i = 0; i < len; ++i) {
-            result ^= buf.get();
+            dstBuf.put(OctetOps.aPlusB(srcBuf.get(), dstBuf.get(dstBuf.position())));
         }
-        return result;
     }
 
     @Benchmark
-    public long testArrayLongs() {
+    public void testArrayLongs() {
 
-        buf.rewind();
-        final int len = buf.remaining() / SizeOf.LONG;
-
-        long result = 0;
+        srcBuf.rewind();
+        dstBuf.rewind();
+        final int len = size / SizeOf.LONG;
         for (int i = 0; i < len; ++i) {
-            result ^= buf.getLong();
+            dstBuf.putLong(OctetOps.aLongPlusBLong(srcBuf.getLong(), dstBuf.getLong(dstBuf.position())));
         }
-        return result;
     }
 
     @Benchmark
-    public byte testDirectBytes() {
+    public void testDirectBytes() {
 
-        dirBuf.rewind();
-        final int len = dirBuf.remaining();
-
-        byte result = 0;
+        srcDirBuf.rewind();
+        dstDirBuf.rewind();
+        final int len = size;
         for (int i = 0; i < len; ++i) {
-            result ^= dirBuf.get();
+            dstDirBuf.put(OctetOps.aPlusB(srcDirBuf.get(), dstDirBuf.get(dstDirBuf.position())));
         }
-        return result;
     }
 
     @Benchmark
-    public long testDirectLongs() {
+    public void testDirectLongs() {
 
-        dirBuf.rewind();
-        final int len = dirBuf.remaining() / SizeOf.LONG;
-
-        long result = 0;
+        srcDirBuf.rewind();
+        dstDirBuf.rewind();
+        final int len = size / SizeOf.LONG;
         for (int i = 0; i < len; ++i) {
-            result ^= dirBuf.getLong();
+            dstDirBuf.putLong(OctetOps.aLongPlusBLong(srcDirBuf.getLong(), dstDirBuf.getLong(dstDirBuf.position())));
         }
-        return result;
     }
 }
