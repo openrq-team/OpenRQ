@@ -16,6 +16,7 @@
 package net.fec.openrq;
 
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.array.ArrayUtils;
-import net.fec.openrq.util.io.printing.appendable.PrintableAppendable;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -52,13 +52,29 @@ final class LinearSystem {
     private static final long A_SPARSE_THRESHOLD = 0L;
     private static final long MT_SPARSE_THRESHOLD = 0L;
 
-    // private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
-    private static final PrintableAppendable TIMER_PRINTABLE = PrintableAppendable.ofNull(); // DEBUG
+    private static final boolean PRINTING_CODE_ENABLED = false; // DEBUG
+    private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
 
 
-    private static void printMillis(String prefix, long nanos) {
+    private static void debugPrintln() {
 
-        TIMER_PRINTABLE.printf("%s: %.03f ms%n", prefix, TimeUnits.fromNanosDouble(nanos, TimeUnit.MILLISECONDS));
+        if (PRINTING_CODE_ENABLED) {
+            TIMER_PRINTABLE.println();
+        }
+    }
+
+    private static void debugPrintln(String message) {
+
+        if (PRINTING_CODE_ENABLED) {
+            TIMER_PRINTABLE.println(message);
+        }
+    }
+
+    private static void debugPrintlnMillis(String prefix, long nanos) {
+
+        if (PRINTING_CODE_ENABLED) {
+            TIMER_PRINTABLE.printf("%s: %.03f ms%n", prefix, TimeUnits.fromNanosDouble(nanos, TimeUnit.MILLISECONDS));
+        }
     }
 
     private static Factory getMatrixAfactory(int L, int overheadRows) {
@@ -336,8 +352,8 @@ final class LinearSystem {
 
         // DEBUG
         TimerUtils.markTimestamp();
-        TIMER_PRINTABLE.println();
-        printMillis("constraint matrix gen", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
+        debugPrintln();
+        debugPrintlnMillis("constraint matrix gen", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         // return the constraint matrix
         return A;
@@ -987,15 +1003,15 @@ final class LinearSystem {
         }
 
         // DEBUG
-        TIMER_PRINTABLE.println();
-        TIMER_PRINTABLE.println("1st:");
-        printMillis("  init", initNanos);
-        printMillis("  find r", findRNanos);
-        printMillis("  choose row", chooseRowNanos);
-        printMillis("  swap rows", swapRowsNanos);
-        printMillis("  swap columns", swapColumnsNanos);
-        printMillis("  add/mult row", addMultiplyNanos);
-        printMillis("  count nonzeros", countNonZerosNanos);
+        debugPrintln();
+        debugPrintln("1st:");
+        debugPrintlnMillis("  init", initNanos);
+        debugPrintlnMillis("  find r", findRNanos);
+        debugPrintlnMillis("  choose row", chooseRowNanos);
+        debugPrintlnMillis("  swap rows", swapRowsNanos);
+        debugPrintlnMillis("  swap columns", swapColumnsNanos);
+        debugPrintlnMillis("  add/mult row", addMultiplyNanos);
+        debugPrintlnMillis("  count nonzeros", countNonZerosNanos);
 
         return pidPhase2(A, X, D, d, c, L, M, i, u);
     }
@@ -1044,7 +1060,7 @@ final class LinearSystem {
 
         // DEBUG
         TimerUtils.markTimestamp();
-        printMillis("2nd", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
+        debugPrintlnMillis("2nd", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         return pidPhase3(A, X, D, d, c, L, i);
     }
@@ -1089,7 +1105,7 @@ final class LinearSystem {
 
         // DEBUG
         TimerUtils.markTimestamp();
-        printMillis("3rd", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
+        debugPrintlnMillis("3rd", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         return pidPhase4(A, D, d, c, L, i);
     }
@@ -1135,7 +1151,7 @@ final class LinearSystem {
 
         // DEBUG
         TimerUtils.markTimestamp();
-        printMillis("4th", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
+        debugPrintlnMillis("4th", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         return pidPhase5(A, D, d, c, L, i);
     }
@@ -1187,7 +1203,7 @@ final class LinearSystem {
 
         // DEBUG
         TimerUtils.markTimestamp();
-        printMillis("5th", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
+        debugPrintlnMillis("5th", TimerUtils.getEllapsedTimeLong(TimeUnit.NANOSECONDS));
 
         final byte[][] C = new byte[L][];
 
