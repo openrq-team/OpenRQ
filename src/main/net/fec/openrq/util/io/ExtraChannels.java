@@ -39,7 +39,7 @@ public final class ExtraChannels {
      * <p>
      * Calling this method has the same effect as calling
      * {@link #writeBytes(WritableByteChannel, ByteBuffer, int, BufferOperation) writeBytes(ch, buf, buf.remaining(),
-     * BufferOperation.DO_NOTHING)}
+     * BufferOperation.ADVANCE_POSITION)}
      * 
      * @param ch
      *            The channel used to write bytes
@@ -50,7 +50,32 @@ public final class ExtraChannels {
      */
     public static void writeBytes(WritableByteChannel ch, ByteBuffer buf) throws IOException {
 
-        writeBytes(ch, buf, buf.remaining(), BufferOperation.DO_NOTHING);
+        writeBytes(ch, buf, buf.remaining(), BufferOperation.ADVANCE_POSITION);
+    }
+
+    /**
+     * Writes to a channel a specific number of bytes from a buffer.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #writeBytes(WritableByteChannel, ByteBuffer, int, BufferOperation) writeBytes(ch, buf, numBytes,
+     * BufferOperation.ADVANCE_POSITION)}
+     * 
+     * @param ch
+     *            The channel used to write bytes
+     * @param buf
+     *            The buffer containing the bytes to be written
+     * @param numBytes
+     *            The number of bytes to write
+     * @throws IOException
+     *             If an I/O error occurs while writing
+     * @exception IllegalArgumentException
+     *                If {@code numBytes} is negative
+     * @exception BufferUnderflowException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
+     */
+    public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, int numBytes) throws IOException {
+
+        writeBytes(ch, buf, numBytes, BufferOperation.ADVANCE_POSITION);
     }
 
     /**
@@ -73,31 +98,6 @@ public final class ExtraChannels {
     public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, BufferOperation op) throws IOException {
 
         writeBytes(ch, buf, buf.remaining(), op);
-    }
-
-    /**
-     * Writes to a channel a specific number of bytes from a buffer.
-     * <p>
-     * Calling this method has the same effect as calling
-     * {@link #writeBytes(WritableByteChannel, ByteBuffer, int, BufferOperation) writeBytes(ch, buf, numBytes,
-     * BufferOperation.DO_NOTHING)}
-     * 
-     * @param ch
-     *            The channel used to write bytes
-     * @param buf
-     *            The buffer containing the bytes to be written
-     * @param numBytes
-     *            The number of bytes to write
-     * @throws IOException
-     *             If an I/O error occurs while writing
-     * @exception IllegalArgumentException
-     *                If {@code numBytes} is negative
-     * @exception BufferUnderflowException
-     *                If the provided buffer does not have at least {@code numBytes} bytes available to write
-     */
-    public static void writeBytes(WritableByteChannel ch, ByteBuffer buf, int numBytes) throws IOException {
-
-        writeBytes(ch, buf, numBytes, BufferOperation.DO_NOTHING);
     }
 
     /**
@@ -139,7 +139,7 @@ public final class ExtraChannels {
         }
 
         // only apply the operation if no exception was previously thrown
-        op.apply(buf, bufPos);
+        op.apply(buf, bufPos, buf.position());
     }
 
     /**
@@ -266,7 +266,7 @@ public final class ExtraChannels {
      * <p>
      * Calling this method has the same effect as calling
      * {@link #readBytes(ReadableByteChannel, ByteBuffer, int, BufferOperation) readBytes(ch, buf, buf.remaining(),
-     * BufferOperation.DO_NOTHING)}
+     * BufferOperation.ADVANCE_POSITION)}
      * 
      * @param ch
      *            The channel used to read bytes from
@@ -279,7 +279,36 @@ public final class ExtraChannels {
      */
     public static void readBytes(ReadableByteChannel ch, ByteBuffer buf) throws EOFException, IOException {
 
-        readBytes(ch, buf, buf.remaining(), BufferOperation.DO_NOTHING);
+        readBytes(ch, buf, buf.remaining(), BufferOperation.ADVANCE_POSITION);
+    }
+
+    /**
+     * Reads into a buffer a specific number of bytes from a channel.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #readBytes(ReadableByteChannel, ByteBuffer, int, BufferOperation) readBytes(ch, buf, numBytes,
+     * BufferOperation.ADVANCE_POSITION)}
+     * 
+     * @param ch
+     *            The channel used to read bytes from
+     * @param buf
+     *            The buffer used to store the read bytes
+     * @param numBytes
+     *            The number of bytes to read
+     * @throws EOFException
+     *             If the channel has reached end-of-stream
+     * @throws IOException
+     *             If an I/O error occurs while reading
+     * @exception IllegalArgumentException
+     *                If {@code numBytes} is negative
+     * @exception BufferOverflowException
+     *                If the provided buffer does not have at least {@code numBytes} bytes available for storage
+     */
+    public static void readBytes(ReadableByteChannel ch, ByteBuffer buf, int numBytes)
+        throws EOFException, IOException
+    {
+
+        readBytes(ch, buf, numBytes, BufferOperation.ADVANCE_POSITION);
     }
 
     /**
@@ -304,35 +333,6 @@ public final class ExtraChannels {
     {
 
         readBytes(ch, buf, buf.remaining(), op);
-    }
-
-    /**
-     * Reads into a buffer a specific number of bytes from a channel.
-     * <p>
-     * Calling this method has the same effect as calling
-     * {@link #readBytes(ReadableByteChannel, ByteBuffer, int, BufferOperation) readBytes(ch, buf, numBytes,
-     * BufferOperation.DO_NOTHING)}
-     * 
-     * @param ch
-     *            The channel used to read bytes from
-     * @param buf
-     *            The buffer used to store the read bytes
-     * @param numBytes
-     *            The number of bytes to read
-     * @throws EOFException
-     *             If the channel has reached end-of-stream
-     * @throws IOException
-     *             If an I/O error occurs while reading
-     * @exception IllegalArgumentException
-     *                If {@code numBytes} is negative
-     * @exception BufferOverflowException
-     *                If the provided buffer does not have at least {@code numBytes} bytes available for storage
-     */
-    public static void readBytes(ReadableByteChannel ch, ByteBuffer buf, int numBytes)
-        throws EOFException, IOException
-    {
-
-        readBytes(ch, buf, numBytes, BufferOperation.DO_NOTHING);
     }
 
     /**
@@ -376,7 +376,7 @@ public final class ExtraChannels {
         }
 
         // only apply the operation if no exception was previously thrown
-        op.apply(buf, bufPos);
+        op.apply(buf, bufPos, buf.position());
     }
 
     /**

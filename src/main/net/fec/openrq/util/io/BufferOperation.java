@@ -25,71 +25,89 @@ import java.nio.Buffer;
 public enum BufferOperation {
 
     /**
-     * Does nothing to the buffer.
+     * Advance the position of the buffer. It is specific to each operation how much the position is advanced.
      * <p>
      * <ul>
-     * <li>The buffer position will remain updated after another operation.
-     * <li>The buffer limit will remain the same as before another operation.
+     * <li>The buffer position will be advanced
+     * <li>The buffer limit will not be changed
      * </ul>
      */
-    DO_NOTHING {
+    ADVANCE_POSITION {
 
         @Override
-        public void apply(@SuppressWarnings("unused") Buffer buf, @SuppressWarnings("unused") int originalBufPos) {
+        public void apply(
+            Buffer buf,
+            @SuppressWarnings("unused") int beforeBufPos,
+            int afterBufPos)
+        {
 
-            // nothing, really
+            buf.position(afterBufPos);
         }
     },
 
     /**
-     * Restore the original buffer position.
+     * Restore the buffer position to its value before a specific operation took place.
      * <p>
      * <ul>
-     * <li>The buffer position will remain the same as before another operation.
-     * <li>The buffer limit will remain the same as before another operation.
+     * <li>The buffer position will be restored
+     * <li>The buffer limit will not be changed
      * </ul>
      */
     RESTORE_POSITION {
 
         @Override
-        public void apply(Buffer buf, int originalBufPos) {
+        public void apply(
+            Buffer buf,
+            int beforeBufPos,
+            @SuppressWarnings("unused") int afterBufPos)
+        {
 
-            buf.position(originalBufPos);
+            buf.position(beforeBufPos);
         }
     },
 
     /**
-     * Flips the buffer relatively.
+     * Flips the buffer relatively. The position will be restored to its value before a specific operation took place.
+     * The limit will be set to the position value after the specific operation took place.
      * <p>
      * <ul>
-     * <li>The buffer position will remain the same as before another operation.
-     * <li>The buffer limit will be equal to the updated position after another operation.
+     * <li>The buffer position will be restored
+     * <li>The buffer limit be set to the current position
      * </ul>
      */
     FLIP_RELATIVELY {
 
         @Override
-        public void apply(Buffer buf, int originalBufPos) {
+        public void apply(
+            Buffer buf,
+            int beforeBufPos,
+            int afterBufPos)
+        {
 
-            buf.limit(buf.position());
-            buf.position(originalBufPos);
+            buf.position(beforeBufPos);
+            buf.limit(afterBufPos);
         }
     },
 
     /**
-     * Flips the buffer absolutely (the same behavior as calling the method {@link Buffer#flip()}).
+     * Flips the buffer absolutely. The position will be reset. The limit will be set to the position value after a
+     * specific operation took place.
      * <p>
      * <ul>
-     * <li>The buffer position will be equal to 0.
-     * <li>The buffer limit will be equal to the updated position after another operation.
+     * <li>The buffer position will be set to 0
+     * <li>The buffer limit be set to the current position
      * </ul>
      */
     FLIP_ABSOLUTELY {
 
         @Override
-        public void apply(Buffer buf, @SuppressWarnings("unused") int originalBufPos) {
+        public void apply(
+            Buffer buf,
+            @SuppressWarnings("unused") int beforeBufPos,
+            int afterBufPos) {
 
-            buf.flip();
+            buf.position(0);
+            buf.limit(afterBufPos);
         }
     };
 
@@ -97,9 +115,11 @@ public enum BufferOperation {
      * Applies this operation to the provided buffer.
      * 
      * @param buf
-     *            The buffer to be affected after another operation
-     * @param originalBufPos
-     *            The position of the buffer before another operation
+     *            The buffer to be affected by this operation
+     * @param beforeBufPos
+     *            The position of the buffer before a specific operation took place
+     * @param afterBufPos
+     *            The position of the buffer after a specific operation took place
      */
-    public abstract void apply(Buffer buf, int originalBufPos);
+    public abstract void apply(Buffer buf, int beforeBufPos, int afterBufPos);
 }

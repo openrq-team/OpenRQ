@@ -35,18 +35,8 @@ final class ArraySourceSymbol implements SourceSymbol {
      */
     static ArraySourceSymbol newSymbol(byte[] srcDataArray, int symbolOff, int symbolSize) {
 
-        final int codeSize = symbolSize;
         final int transportSize = Math.min(symbolSize, srcDataArray.length - symbolOff);
-
-        ByteBuffer transportBuf = prepareTransportBuffer(srcDataArray, symbolOff, transportSize);
-        return new ArraySourceSymbol(srcDataArray, symbolOff, codeSize, transportBuf);
-    }
-
-    private static ByteBuffer prepareTransportBuffer(byte[] array, int off, int len) {
-
-        // need to return a slice of the wrapped buffer,
-        // otherwise the buffer position will be equal to off
-        return ByteBuffer.wrap(array, off, len).slice();
+        return new ArraySourceSymbol(srcDataArray, symbolOff, symbolSize, transportSize);
     }
 
 
@@ -58,19 +48,21 @@ final class ArraySourceSymbol implements SourceSymbol {
     private final ByteBuffer transportBuf;
 
 
-    private ArraySourceSymbol(
-        byte[] srcDataArray,
-        int symbolOff,
-        int codeSize,
-        ByteBuffer transportBuf)
-    {
+    private ArraySourceSymbol(byte[] srcDataArray, int symbolOff, int codeSize, int transportSize) {
 
         this.srcDataArray = Objects.requireNonNull(srcDataArray);
         this.symbolOff = symbolOff;
 
         this.codeSize = codeSize;
 
-        this.transportBuf = Objects.requireNonNull(transportBuf);
+        this.transportBuf = prepareTransportBuffer(srcDataArray, symbolOff, transportSize);
+    }
+
+    private static ByteBuffer prepareTransportBuffer(byte[] array, int off, int len) {
+
+        // need to return a slice of the wrapped buffer,
+        // otherwise the buffer position will be equal to off
+        return ByteBuffer.wrap(array, off, len).slice();
     }
 
     @Override
@@ -82,7 +74,7 @@ final class ArraySourceSymbol implements SourceSymbol {
     @Override
     public void getCodeData(ByteBuffer dst) {
 
-        getCodeData(dst, BufferOperation.DO_NOTHING);
+        getCodeData(dst, BufferOperation.ADVANCE_POSITION);
     }
 
     @Override
@@ -91,18 +83,18 @@ final class ArraySourceSymbol implements SourceSymbol {
         final int pos = dst.position();
         final int lim = dst.limit();
         final int remaining = lim - pos;
-        if (remaining < codeSize) throw new BufferOverflowException();
+        if (remaining < codeSize()) throw new BufferOverflowException();
 
         dst.put(srcDataArray, symbolOff, transportSize());
-        ByteBuffers.putZeros(dst, codeSize - transportSize());
+        ByteBuffers.putZeros(dst, codeSize() - transportSize());
 
-        op.apply(dst, pos);
+        op.apply(dst, pos, dst.position());
     }
 
     @Override
     public void putCodeData(ByteBuffer src) {
 
-        putCodeData(src, BufferOperation.DO_NOTHING);
+        putCodeData(src, BufferOperation.ADVANCE_POSITION);
     }
 
     @Override
@@ -111,12 +103,12 @@ final class ArraySourceSymbol implements SourceSymbol {
         final int pos = src.position();
         final int lim = src.limit();
         final int remaining = lim - pos;
-        if (remaining < codeSize) throw new BufferUnderflowException();
+        if (remaining < codeSize()) throw new BufferUnderflowException();
 
         src.get(srcDataArray, symbolOff, transportSize());
-        src.position(pos + codeSize); // always advance the position codeSize bytes
+        src.position(pos + codeSize()); // always advance the position codeSize bytes
 
-        op.apply(src, pos);
+        op.apply(src, pos, src.position());
     }
 
     @Override

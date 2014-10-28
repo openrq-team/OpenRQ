@@ -29,10 +29,24 @@ import java.util.Objects;
 public final class ByteBuffers {
 
     /**
+     * Allocates a new buffer.
+     * 
+     * @param capacity
+     *            The capacity of the new buffer
+     * @param isDirect
+     *            Whether the new buffer will be {@linkplain Buffer#isDirect() direct}
+     * @return a new allocated buffer
+     */
+    public static ByteBuffer allocate(int capacity, boolean isDirect) {
+
+        return isDirect ? ByteBuffer.allocateDirect(capacity) : ByteBuffer.allocate(capacity);
+    }
+
+    /**
      * Copies the contents of a buffer to a newly created one.
      * <p>
      * Calling this method has the same effect as calling {@link #copyBuffer(ByteBuffer, int, BufferOperation)
-     * copyBuffer(buf, buf.remaining(), BufferOperation.DO_NOTHING)}.
+     * copyBuffer(buf, buf.remaining(), BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param buf
      *            The buffer to be copied
@@ -40,7 +54,29 @@ public final class ByteBuffers {
      */
     public static ByteBuffer copyBuffer(ByteBuffer buf) {
 
-        return copyBuffer(buf, buf.remaining(), BufferOperation.DO_NOTHING);
+        return copyBuffer(buf, buf.remaining(), BufferOperation.ADVANCE_POSITION);
+    }
+
+    /**
+     * Copies the contents of a buffer to a newly created one.
+     * <p>
+     * Calling this method has the same effect as calling {@link #copyBuffer(ByteBuffer, int, BufferOperation)
+     * copyBuffer(buf, copySize, BufferOperation.ADVANCE_POSITION)}.
+     * 
+     * @param buf
+     *            The buffer to be copied
+     * @param copySize
+     *            The number of bytes to be copied from the source buffer
+     * @return a copy of a buffer
+     * @exception IllegalArgumentException
+     *                If the number of bytes to be copied is negative
+     * @exception BufferUnderflowException
+     *                If the number of bytes to be copied exceeds the number of {@linkplain Buffer#remaining()
+     *                available} bytes in the source buffer
+     */
+    public static ByteBuffer copyBuffer(ByteBuffer buf, int copySize) {
+
+        return copyBuffer(buf, copySize, BufferOperation.ADVANCE_POSITION);
     }
 
     /**
@@ -58,28 +94,6 @@ public final class ByteBuffers {
     public static ByteBuffer copyBuffer(ByteBuffer buf, BufferOperation op) {
 
         return copyBuffer(buf, buf.remaining(), op);
-    }
-
-    /**
-     * Copies the contents of a buffer to a newly created one.
-     * <p>
-     * Calling this method has the same effect as calling {@link #copyBuffer(ByteBuffer, int, BufferOperation)
-     * copyBuffer(buf, copySize, BufferOperation.DO_NOTHING)}.
-     * 
-     * @param buf
-     *            The buffer to be copied
-     * @param copySize
-     *            The number of bytes to be copied from the source buffer
-     * @return a copy of a buffer
-     * @exception IllegalArgumentException
-     *                If the number of bytes to be copied is negative
-     * @exception BufferUnderflowException
-     *                If the number of bytes to be copied exceeds the number of {@linkplain Buffer#remaining()
-     *                available} bytes in the source buffer
-     */
-    public static ByteBuffer copyBuffer(ByteBuffer buf, int copySize) {
-
-        return copyBuffer(buf, copySize, BufferOperation.DO_NOTHING);
     }
 
     /**
@@ -125,29 +139,166 @@ public final class ByteBuffers {
         }
 
         // only apply the operation if no exception was previously thrown
-        op.apply(buf, srcPos);
+        op.apply(buf, srcPos, buf.position());
         return copy;
+    }
+
+    /**
+     * Copies the contents of a source buffer into a destination buffer. The number of bytes to copy is the number of
+     * {@linkplain Buffer#remaining() available} bytes in the source buffer.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #copyBuffer(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
+     * copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, src.remaining())}.
+     * 
+     * @param src
+     *            The source buffer
+     * @param dst
+     *            The destination buffer
+     * @exception BufferOverflowException
+     *                If the number of {@linkplain Buffer#remaining() available} bytes in the source buffer exceeds the
+     *                number of available bytes in the destination buffer
+     */
+    public static void copyBuffer(ByteBuffer src, ByteBuffer dst) {
+
+        copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, src.remaining());
+    }
+
+    /**
+     * Copies the contents of a source buffer into a destination buffer. The number of bytes to copy is the number of
+     * {@linkplain Buffer#remaining() available} bytes in the source buffer.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #copyBuffer(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
+     * copyBuffer(src, srcOp, dst, dstOp, src.remaining())}.
+     * 
+     * @param src
+     *            The source buffer
+     * @param srcOp
+     *            The operation to apply to the source buffer after the copy
+     * @param dst
+     *            The destination buffer
+     * @param dstOp
+     *            The operation to apply to the destination buffer after the copy
+     * @exception BufferOverflowException
+     *                If the number of {@linkplain Buffer#remaining() available} bytes in the source buffer exceeds the
+     *                number of available bytes in the destination buffer
+     */
+    public static void copyBuffer(ByteBuffer src, BufferOperation srcOp, ByteBuffer dst, BufferOperation dstOp) {
+
+        copyBuffer(src, srcOp, dst, dstOp, src.remaining());
+    }
+
+    /**
+     * Copies the contents of a source buffer into a destination buffer.
+     * <p>
+     * Calling this method has the same effect as calling
+     * {@link #copyBuffer(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
+     * copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, copySize)}.
+     * 
+     * @param src
+     *            The source buffer
+     * @param dst
+     *            The destination buffer
+     * @param copySize
+     *            The number of bytes to copy
+     * @exception IllegalArgumentException
+     *                If the number of bytes to copy is negative
+     * @exception BufferUnderflowException
+     *                If the number of bytes to copy exceeds the number of {@linkplain Buffer#remaining()
+     *                available} bytes in the source buffer
+     * @exception BufferOverflowException
+     *                If the number of bytes to copy exceeds the number of {@linkplain Buffer#remaining()
+     *                available} bytes in the destination buffer
+     */
+    public static void copyBuffer(ByteBuffer src, ByteBuffer dst, int copySize) {
+
+        copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, copySize);
+    }
+
+    /**
+     * Copies the contents of a source buffer into a destination buffer.
+     * <p>
+     * The number of bytes to be copied is specified as a parameter. At the end of the copy, the positions of the source
+     * and destination buffers will have advanced the specified number of bytes (before the provided buffer operations
+     * are applied to each buffer).
+     * 
+     * @param src
+     *            The source buffer
+     * @param srcOp
+     *            The operation to apply to the source buffer after the copy
+     * @param dst
+     *            The destination buffer
+     * @param dstOp
+     *            The operation to apply to the destination buffer after the copy
+     * @param copySize
+     *            The number of bytes to copy
+     * @exception IllegalArgumentException
+     *                If the number of bytes to copy is negative
+     * @exception BufferUnderflowException
+     *                If the number of bytes to copy exceeds the number of {@linkplain Buffer#remaining()
+     *                available} bytes in the source buffer
+     * @exception BufferOverflowException
+     *                If the number of bytes to copy exceeds the number of {@linkplain Buffer#remaining()
+     *                available} bytes in the destination buffer
+     */
+    public static void copyBuffer(
+        ByteBuffer src,
+        BufferOperation srcOp,
+        ByteBuffer dst,
+        BufferOperation dstOp,
+        int copySize)
+    {
+
+        final int srcPos = src.position();
+        final int srcLim = src.limit();
+        final int srcRemaining = srcLim - srcPos;
+
+        final int dstPos = dst.position();
+        final int dstLim = dst.limit();
+        final int dstRemaining = dstLim - dstPos;
+
+        if (copySize < 0) throw new IllegalArgumentException("number of bytes to copy is negative");
+        if (srcRemaining < copySize) throw new BufferUnderflowException();
+        if (dstRemaining < copySize) throw new BufferOverflowException();
+        Objects.requireNonNull(srcOp);
+        Objects.requireNonNull(dstOp);
+
+        try {
+            src.limit(srcPos + copySize);
+            dst.limit(dstPos + copySize);
+            dst.put(src);
+        }
+        finally {
+            // always restore the original limits
+            src.limit(srcLim);
+            dst.limit(dstLim);
+        }
+
+        // only apply the operations if no exception was previously thrown
+        srcOp.apply(src, srcPos, src.position());
+        dstOp.apply(dst, dstPos, dst.position());
     }
 
     /**
      * Puts zeros in the provided buffer, starting at the current buffer position.
      * <p>
      * Calling this method has the same effect as calling {@link #putZeros(ByteBuffer, int, BufferOperation)
-     * putZeros(dst, dst.remaining(), BufferOperation.DO_NOTHING)}.
+     * putZeros(dst, dst.remaining(), BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param dst
      *            The buffer to put zeros into
      */
     public static void putZeros(ByteBuffer dst) {
 
-        putZeros(dst, dst.remaining(), BufferOperation.DO_NOTHING);
+        putZeros(dst, dst.remaining(), BufferOperation.ADVANCE_POSITION);
     }
 
     /**
      * Puts zeros in the provided buffer, starting at the current buffer position.
      * <p>
      * Calling this method has the same effect as calling {@link #putZeros(ByteBuffer, int, BufferOperation)
-     * putZeros(dst, numZeros, BufferOperation.DO_NOTHING)}.
+     * putZeros(dst, numZeros, BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param dst
      *            The buffer to put zeros into
@@ -161,7 +312,7 @@ public final class ByteBuffers {
      */
     public static void putZeros(ByteBuffer dst, int numZeros) {
 
-        putZeros(dst, numZeros, BufferOperation.DO_NOTHING);
+        putZeros(dst, numZeros, BufferOperation.ADVANCE_POSITION);
     }
 
     /**
@@ -215,12 +366,7 @@ public final class ByteBuffers {
             remZeros -= amount;
         }
 
-        op.apply(dst, pos);
-    }
-
-    private static ByteBuffer allocate(int capacity, boolean isDirect) {
-
-        return isDirect ? ByteBuffer.allocateDirect(capacity) : ByteBuffer.allocate(capacity);
+        op.apply(dst, pos, dst.position());
     }
 
 

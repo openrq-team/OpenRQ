@@ -47,7 +47,7 @@ interface SourceSymbol {
      * Copies data from this source symbol to the provided buffer, for coding purposes.
      * <p>
      * Calling this method has the same effect as calling {@link #getCodeData(ByteBuffer, BufferOperation)
-     * getCodeData(dst, BufferOperation.DO_NOTHING)}.
+     * getCodeData(dst, BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param dst
      *            The destination buffer of copied data
@@ -76,7 +76,7 @@ interface SourceSymbol {
      * Copies code data from the provided buffer to this symbol.
      * <p>
      * Calling this method has the same effect as calling {@link #putCodeData(ByteBuffer, BufferOperation)
-     * putCodeData(src, BufferOperation.DO_NOTHING)}.
+     * putCodeData(src, BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param src
      *            The source buffer of copied data
