@@ -52,4 +52,11 @@ final class NullWrapper extends AppendableWrapper<NullWrapper.NullAppendable> {
 
         super(NA_INSTANCE);
     }
+
+    @Override
+    @SuppressWarnings("unused")
+    public void printf(String format, Object... args) {
+
+        // do nothing
+    }
 }
