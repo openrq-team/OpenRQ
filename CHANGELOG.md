@@ -5,7 +5,7 @@ Clarified the meaning of "symbol overhead".
 Added new methods for retrieving and changing the symbol overhead value in
 a source block decoder.
 
-Added a new method that returns the number of repair symbol starting at a
+Added a new method that returns the number of repair symbols starting at a
 specified index.
 
 Changed public method signatures:
