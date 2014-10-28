@@ -96,7 +96,7 @@ public class SourceBlockEncodingTest {
 
         final SourceBlockEncodingTest test = new SourceBlockEncodingTest();
         test.setup();
-        final int iters = 500;
+        final int iters = 100_000;
         for (int i = 0; i < iters; i++) {
             test.test();
             System.out.println(i);
