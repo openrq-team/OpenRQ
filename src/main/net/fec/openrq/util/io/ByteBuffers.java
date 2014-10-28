@@ -43,24 +43,121 @@ public final class ByteBuffers {
     }
 
     /**
+     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * <p>
+     * Calling this method has the same effect as calling {@link #getSlice(ByteBuffer, int, BufferOperation) slice(buf,
+     * buf.remaining(), BufferOperation.RESTORE_POSITION)}.
+     * 
+     * @param buf
+     *            The source buffer
+     * @return a buffer slice
+     */
+    public static ByteBuffer getSlice(ByteBuffer buf) {
+
+        return getSlice(buf, buf.remaining(), BufferOperation.RESTORE_POSITION);
+    }
+
+    /**
+     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * <p>
+     * Calling this method has the same effect as calling {@link #getSlice(ByteBuffer, int, BufferOperation) slice(buf,
+     * sliceSize, BufferOperation.RESTORE_POSITION)}.
+     * 
+     * @param buf
+     *            The source buffer
+     * @param sliceSize
+     *            The size of the slice buffer
+     * @return a buffer slice
+     * @exception IllegalArgumentException
+     *                If the size of the slice is negative
+     * @exception BufferUnderflowException
+     *                If the size of the slice exceeds the number of {@linkplain Buffer#remaining() available} bytes in
+     *                the source buffer
+     */
+    public static ByteBuffer getSlice(ByteBuffer buf, int sliceSize) {
+
+        return getSlice(buf, sliceSize, BufferOperation.RESTORE_POSITION);
+    }
+
+    /**
+     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * <p>
+     * Calling this method has the same effect as calling {@link #getSlice(ByteBuffer, int, BufferOperation) slice(buf,
+     * buf.remaining(), op)}.
+     * 
+     * @param buf
+     *            The source buffer
+     * @param op
+     *            The operation to apply to the source buffer after being sliced
+     * @return a buffer slice
+     */
+    public static ByteBuffer getSlice(ByteBuffer buf, BufferOperation op) {
+
+        return getSlice(buf, buf.remaining(), op);
+    }
+
+    /**
+     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * <p>
+     * The size of the slice buffer is specified as a parameter. <em>Note that the position after the slice will be
+     * considered as the original position plus the size of the slice</em> (before the provided buffer operation is
+     * applied to the source buffer).
+     * 
+     * @param buf
+     *            The source buffer
+     * @param sliceSize
+     *            The size of the slice buffer
+     * @param op
+     *            The operation to apply to the source buffer after being sliced
+     * @return a buffer slice
+     * @exception IllegalArgumentException
+     *                If the size of the slice is negative
+     * @exception BufferUnderflowException
+     *                If the size of the slice exceeds the number of {@linkplain Buffer#remaining() available} bytes in
+     *                the source buffer
+     */
+    public static ByteBuffer getSlice(ByteBuffer buf, int sliceSize, BufferOperation op) {
+
+        final int pos = buf.position();
+        final int lim = buf.limit();
+        final int remaining = lim - pos;
+
+        if (sliceSize < 0) throw new IllegalArgumentException("slice size is negative");
+        if (remaining < sliceSize) throw new BufferUnderflowException();
+
+        ByteBuffer slice;
+        try {
+            buf.limit(pos + sliceSize);
+            slice = buf.slice();
+        }
+        finally {
+            buf.limit(lim); // always restore the original limit
+        }
+
+        // only apply the operation if no exception was previously thrown
+        op.apply(buf, pos, pos + sliceSize);
+        return slice;
+    }
+
+    /**
      * Copies the contents of a buffer to a newly created one.
      * <p>
-     * Calling this method has the same effect as calling {@link #copyBuffer(ByteBuffer, int, BufferOperation)
+     * Calling this method has the same effect as calling {@link #getCopy(ByteBuffer, int, BufferOperation)
      * copyBuffer(buf, buf.remaining(), BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param buf
      *            The buffer to be copied
      * @return a copy of a buffer
      */
-    public static ByteBuffer copyBuffer(ByteBuffer buf) {
+    public static ByteBuffer getCopy(ByteBuffer buf) {
 
-        return copyBuffer(buf, buf.remaining(), BufferOperation.ADVANCE_POSITION);
+        return getCopy(buf, buf.remaining(), BufferOperation.ADVANCE_POSITION);
     }
 
     /**
      * Copies the contents of a buffer to a newly created one.
      * <p>
-     * Calling this method has the same effect as calling {@link #copyBuffer(ByteBuffer, int, BufferOperation)
+     * Calling this method has the same effect as calling {@link #getCopy(ByteBuffer, int, BufferOperation)
      * copyBuffer(buf, copySize, BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param buf
@@ -74,15 +171,15 @@ public final class ByteBuffers {
      *                If the number of bytes to be copied exceeds the number of {@linkplain Buffer#remaining()
      *                available} bytes in the source buffer
      */
-    public static ByteBuffer copyBuffer(ByteBuffer buf, int copySize) {
+    public static ByteBuffer getCopy(ByteBuffer buf, int copySize) {
 
-        return copyBuffer(buf, copySize, BufferOperation.ADVANCE_POSITION);
+        return getCopy(buf, copySize, BufferOperation.ADVANCE_POSITION);
     }
 
     /**
      * Copies the contents of a buffer to a newly created one.
      * <p>
-     * Calling this method has the same effect as calling {@link #copyBuffer(ByteBuffer, int, BufferOperation)
+     * Calling this method has the same effect as calling {@link #getCopy(ByteBuffer, int, BufferOperation)
      * copyBuffer(buf, buf.remaining(), op)}.
      * 
      * @param buf
@@ -91,9 +188,9 @@ public final class ByteBuffers {
      *            The operation to apply to the source buffer after being copied
      * @return a copy of a buffer
      */
-    public static ByteBuffer copyBuffer(ByteBuffer buf, BufferOperation op) {
+    public static ByteBuffer getCopy(ByteBuffer buf, BufferOperation op) {
 
-        return copyBuffer(buf, buf.remaining(), op);
+        return getCopy(buf, buf.remaining(), op);
     }
 
     /**
@@ -101,9 +198,9 @@ public final class ByteBuffers {
      * {@linkplain ByteBuffer#order() byte order} and will only be {@linkplain ByteBuffer#isDirect() direct} if the
      * source buffer also is.
      * <p>
-     * The number of bytes to be copied is specified as a parameter. At the end of the copy, the position of the source
-     * buffer will have advanced the specified number of bytes (before the provided buffer operation is applied to the
-     * source buffer).
+     * The number of bytes to be copied is specified as a parameter. <em>At the end of the copy, the position of the
+     * source buffer will have advanced the specified number of bytes</em> (before the provided buffer operation is
+     * applied to the source buffer).
      * 
      * @param buf
      *            The buffer to be copied
@@ -118,7 +215,7 @@ public final class ByteBuffers {
      *                If the number of bytes to be copied exceeds the number of {@linkplain Buffer#remaining()
      *                available} bytes in the source buffer
      */
-    public static ByteBuffer copyBuffer(ByteBuffer buf, int copySize, BufferOperation op) {
+    public static ByteBuffer getCopy(ByteBuffer buf, int copySize, BufferOperation op) {
 
         final int srcPos = buf.position();
         final int srcLim = buf.limit();
@@ -148,7 +245,7 @@ public final class ByteBuffers {
      * {@linkplain Buffer#remaining() available} bytes in the source buffer.
      * <p>
      * Calling this method has the same effect as calling
-     * {@link #copyBuffer(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
+     * {@link #copy(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
      * copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, src.remaining())}.
      * 
      * @param src
@@ -159,9 +256,9 @@ public final class ByteBuffers {
      *                If the number of {@linkplain Buffer#remaining() available} bytes in the source buffer exceeds the
      *                number of available bytes in the destination buffer
      */
-    public static void copyBuffer(ByteBuffer src, ByteBuffer dst) {
+    public static void copy(ByteBuffer src, ByteBuffer dst) {
 
-        copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, src.remaining());
+        copy(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, src.remaining());
     }
 
     /**
@@ -169,7 +266,7 @@ public final class ByteBuffers {
      * {@linkplain Buffer#remaining() available} bytes in the source buffer.
      * <p>
      * Calling this method has the same effect as calling
-     * {@link #copyBuffer(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
+     * {@link #copy(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
      * copyBuffer(src, srcOp, dst, dstOp, src.remaining())}.
      * 
      * @param src
@@ -184,16 +281,16 @@ public final class ByteBuffers {
      *                If the number of {@linkplain Buffer#remaining() available} bytes in the source buffer exceeds the
      *                number of available bytes in the destination buffer
      */
-    public static void copyBuffer(ByteBuffer src, BufferOperation srcOp, ByteBuffer dst, BufferOperation dstOp) {
+    public static void copy(ByteBuffer src, BufferOperation srcOp, ByteBuffer dst, BufferOperation dstOp) {
 
-        copyBuffer(src, srcOp, dst, dstOp, src.remaining());
+        copy(src, srcOp, dst, dstOp, src.remaining());
     }
 
     /**
      * Copies the contents of a source buffer into a destination buffer.
      * <p>
      * Calling this method has the same effect as calling
-     * {@link #copyBuffer(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
+     * {@link #copy(ByteBuffer, BufferOperation, ByteBuffer, BufferOperation, int)
      * copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, copySize)}.
      * 
      * @param src
@@ -211,17 +308,17 @@ public final class ByteBuffers {
      *                If the number of bytes to copy exceeds the number of {@linkplain Buffer#remaining()
      *                available} bytes in the destination buffer
      */
-    public static void copyBuffer(ByteBuffer src, ByteBuffer dst, int copySize) {
+    public static void copy(ByteBuffer src, ByteBuffer dst, int copySize) {
 
-        copyBuffer(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, copySize);
+        copy(src, BufferOperation.ADVANCE_POSITION, dst, BufferOperation.ADVANCE_POSITION, copySize);
     }
 
     /**
      * Copies the contents of a source buffer into a destination buffer.
      * <p>
-     * The number of bytes to be copied is specified as a parameter. At the end of the copy, the positions of the source
-     * and destination buffers will have advanced the specified number of bytes (before the provided buffer operations
-     * are applied to each buffer).
+     * The number of bytes to be copied is specified as a parameter. <em>At the end of the copy, the positions of the
+     * source and destination buffers will have advanced the specified number of bytes</em> (before the provided buffer
+     * operations are applied to each buffer).
      * 
      * @param src
      *            The source buffer
@@ -242,13 +339,7 @@ public final class ByteBuffers {
      *                If the number of bytes to copy exceeds the number of {@linkplain Buffer#remaining()
      *                available} bytes in the destination buffer
      */
-    public static void copyBuffer(
-        ByteBuffer src,
-        BufferOperation srcOp,
-        ByteBuffer dst,
-        BufferOperation dstOp,
-        int copySize)
-    {
+    public static void copy(ByteBuffer src, BufferOperation srcOp, ByteBuffer dst, BufferOperation dstOp, int copySize) {
 
         final int srcPos = src.position();
         final int srcLim = src.limit();
@@ -334,8 +425,8 @@ public final class ByteBuffers {
     /**
      * Puts zeros in the provided buffer, starting at the current buffer position.
      * <p>
-     * At the end of the put, the position of the buffer will have advanced the specified number of zeros (before the
-     * provided buffer operation is applied to the buffer).
+     * <em>At the end of the put, the position of the buffer will have advanced the specified number of zeros</em>
+     * (before the provided buffer operation is applied to the buffer).
      * 
      * @param dst
      *            The buffer to put zeros into

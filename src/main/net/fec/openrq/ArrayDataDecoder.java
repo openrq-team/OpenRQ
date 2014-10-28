@@ -68,7 +68,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
         this.dataArray = dataArray;
         this.fecParams = fecParams;
-        this.srcBlockDecoders = DataUtils.partitionData(
+        this.srcBlockDecoders = DataUtils.partitionSourceData(
             ArraySourceBlockDecoder.class,
             fecParams,
             new SourceBlockSupplier<ArraySourceBlockDecoder>() {

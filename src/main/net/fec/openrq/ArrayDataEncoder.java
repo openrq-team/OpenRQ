@@ -73,7 +73,7 @@ public final class ArrayDataEncoder implements DataEncoder {
 
         this.fecParams = fecParams;
 
-        this.srcBlockEncoders = DataUtils.partitionData(
+        this.srcBlockEncoders = DataUtils.partitionSourceData(
             ArraySourceBlockEncoder.class,
             fecParams,
             offset,

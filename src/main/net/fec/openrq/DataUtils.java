@@ -30,6 +30,7 @@ import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.collection.ImmutableList;
 import net.fec.openrq.util.datatype.SizeOf;
 import net.fec.openrq.util.io.BufferOperation;
+import net.fec.openrq.util.io.ByteBuffers;
 import net.fec.openrq.util.io.ExtraChannels;
 import net.fec.openrq.util.math.ExtraMath;
 
@@ -51,13 +52,13 @@ final class DataUtils {
      * @param supplier
      * @return an immutable list of source block encoders/decoders
      */
-    static <SB> ImmutableList<SB> partitionData(
+    static <SB> ImmutableList<SB> partitionSourceData(
         Class<SB> clazz,
         FECParameters fecParams,
         SourceBlockSupplier<SB> supplier)
     {
 
-        return partitionData(clazz, fecParams, 0, supplier);
+        return partitionSourceData(clazz, fecParams, 0, supplier);
     }
 
     /**
@@ -68,7 +69,7 @@ final class DataUtils {
      * @param supplier
      * @return an immutable list of source block encoders/decoders
      */
-    static <SB> ImmutableList<SB> partitionData(
+    static <SB> ImmutableList<SB> partitionSourceData(
         Class<SB> clazz,
         FECParameters fecParams,
         int startOffset,
@@ -337,22 +338,10 @@ final class DataUtils {
     private static ByteBuffer getSymbolData(ByteBuffer symbols, int symbLen, boolean copySymbols) {
 
         if (copySymbols) {
-            final ByteBuffer copy = ByteBuffer.allocate(symbLen);
-            copy.put(symbols); // advances both buffer positions
-            copy.flip();
-            return copy;
+            return ByteBuffers.getCopy(symbols, symbLen, BufferOperation.ADVANCE_POSITION);
         }
         else {
-            final int prevLim = symbols.limit();
-            final int sliceLim = symbols.position() + symbLen;
-
-            // prepare slice but restore the limit afterwards
-            symbols.limit(sliceLim);
-            final ByteBuffer slice = symbols.slice();
-            symbols.limit(prevLim);
-
-            symbols.position(sliceLim); // advance the position
-            return slice;
+            return ByteBuffers.getSlice(symbols, symbLen, BufferOperation.ADVANCE_POSITION);
         }
     }
 }
