@@ -74,12 +74,12 @@ public final class ArrayDataDecoder implements DataDecoder {
             new SourceBlockSupplier<ArraySourceBlockDecoder>() {
 
                 @Override
-                public ArraySourceBlockDecoder get(int off, int sbn, int K) {
+                public ArraySourceBlockDecoder get(int off, int sbn) {
 
                     return ArraySourceBlockDecoder.newDecoder(
                         ArrayDataDecoder.this, ArrayDataDecoder.this.dataArray, off,
                         ArrayDataDecoder.this.fecParams,
-                        sbn, K, symbOver);
+                        sbn, symbOver);
                 }
             });
     }

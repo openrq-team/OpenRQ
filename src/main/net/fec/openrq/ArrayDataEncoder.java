@@ -80,16 +80,12 @@ public final class ArrayDataEncoder implements DataEncoder {
             new SourceBlockSupplier<ArraySourceBlockEncoder>() {
 
                 @Override
-                public ArraySourceBlockEncoder get(
-                    int off,
-                    int sbn,
-                    int K)
-                {
+                public ArraySourceBlockEncoder get(int off, int sbn) {
 
                     return ArraySourceBlockEncoder.newEncoder(
                         ArrayDataEncoder.this, ArrayDataEncoder.this.array, off,
                         ArrayDataEncoder.this.fecParams,
-                        sbn, K);
+                        sbn);
                 }
             });
     }

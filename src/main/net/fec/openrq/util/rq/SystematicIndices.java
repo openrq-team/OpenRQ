@@ -20,6 +20,11 @@ package net.fec.openrq.util.rq;
  */
 public final class SystematicIndices {
 
+    public static int getISI(int esi, int k, int Kprime) {
+
+        return esi + (Kprime - k);
+    }
+
     public static int getKIndex(int K) {
 
         /*

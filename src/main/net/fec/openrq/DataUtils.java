@@ -41,7 +41,12 @@ final class DataUtils {
 
     static interface SourceBlockSupplier<SB> {
 
-        SB get(int off, int sbn, int K);
+        SB get(int off, int sbn);
+    }
+
+    static interface SourceSymbolSupplier<SS> {
+
+        SS get(int off, int esi, int T);
     }
 
 
@@ -100,14 +105,63 @@ final class DataUtils {
         int off;
 
         for (sbn = 0, off = startOffset; sbn < ZL; sbn++, off += KL * T) { // first ZL
-            srcBlocks[sbn] = supplier.get(off, sbn, KL);
+            srcBlocks[sbn] = supplier.get(off, sbn);
         }
 
         for (; sbn < Z; sbn++, off += KS * T) { // last ZS
-            srcBlocks[sbn] = supplier.get(off, sbn, KS);
+            srcBlocks[sbn] = supplier.get(off, sbn);
         }
 
         return ImmutableList.of(srcBlocks);
+    }
+
+    /**
+     * @param <SS>
+     * @param sbn
+     * @param clazz
+     * @param fecParams
+     * @param supplier
+     * @return an immutable list of source symbols
+     */
+    static <SS> ImmutableList<SS> partitionSourceBlock(
+        int sbn,
+        Class<SS> clazz,
+        FECParameters fecParams,
+        SourceSymbolSupplier<SS> supplier)
+    {
+
+        return partitionSourceBlock(sbn, clazz, fecParams, 0, supplier);
+    }
+
+    /**
+     * @param <SS>
+     * @param sbn
+     * @param clazz
+     * @param fecParams
+     * @param startOffset
+     * @param supplier
+     * @return an immutable list of source symbols
+     */
+    static <SS> ImmutableList<SS> partitionSourceBlock(
+        int sbn,
+        Class<SS> clazz,
+        FECParameters fecParams,
+        int startOffset,
+        SourceSymbolSupplier<SS> supplier)
+    {
+
+        // number of source symbols
+        final int K = getK(fecParams, sbn);
+
+        // partitioned source symbols
+        final SS[] srcSymbols = ArrayUtils.newArray(clazz, K);
+
+        final int T = fecParams.symbolSize();
+        for (int esi = 0, off = startOffset; esi < K; esi++, off += T) {
+            srcSymbols[esi] = supplier.get(off, esi, T);
+        }
+
+        return ImmutableList.of(srcSymbols);
     }
 
     /**

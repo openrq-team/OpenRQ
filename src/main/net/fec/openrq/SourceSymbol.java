@@ -81,7 +81,7 @@ interface SourceSymbol {
      * @param src
      *            The source buffer of copied data
      * @exception BufferUnderflowException
-     *                If the destination buffer does not have at least {@code codeSize()} number of bytes
+     *                If the source buffer does not have at least {@code codeSize()} number of bytes
      *                {@link Buffer#remaining() available}
      */
     void putCodeData(ByteBuffer src);
@@ -96,7 +96,7 @@ interface SourceSymbol {
      * @param op
      *            The operation to apply to the source buffer after the copy
      * @exception BufferUnderflowException
-     *                If the destination buffer does not have at least {@code codeSize()} number of bytes
+     *                If the source buffer does not have at least {@code codeSize()} number of bytes
      *                {@link Buffer#remaining() available}
      */
     void putCodeData(ByteBuffer src, BufferOperation op);
@@ -116,4 +116,31 @@ interface SourceSymbol {
      * @return a read-only buffer containing the data of this source symbol for transport purposes
      */
     ByteBuffer transportData();
+
+    /**
+     * Copies symbol data from the provided transport buffer to this symbol.
+     * <p>
+     * Calling this method has the same effect as calling {@link #putTransportData(ByteBuffer, BufferOperation)
+     * putTransportData(src, BufferOperation.ADVANCE_POSITION)}.
+     * 
+     * @param src
+     *            The source buffer of copied data
+     * @exception BufferUnderflowException
+     *                If the source buffer does not have at least {@code transportSize()} number of bytes
+     *                {@link Buffer#remaining() available}
+     */
+    void putTransportData(ByteBuffer src);
+
+    /**
+     * Copies symbol data from the provided transport buffer to this symbol.
+     * 
+     * @param src
+     *            The source buffer of copied data
+     * @param op
+     *            The operation to apply to the source buffer after the copy
+     * @exception BufferUnderflowException
+     *                If the source buffer does not have at least {@code transportSize()} number of bytes
+     *                {@link Buffer#remaining() available}
+     */
+    void putTransportData(ByteBuffer src, BufferOperation op);
 }

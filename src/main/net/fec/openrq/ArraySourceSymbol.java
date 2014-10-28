@@ -17,7 +17,6 @@ package net.fec.openrq;
 
 
 import java.nio.BufferOverflowException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -101,13 +100,8 @@ final class ArraySourceSymbol implements SourceSymbol {
     public void putCodeData(ByteBuffer src, BufferOperation op) {
 
         final int pos = src.position();
-        final int lim = src.limit();
-        final int remaining = lim - pos;
-        if (remaining < codeSize()) throw new BufferUnderflowException();
-
         src.get(srcDataArray, symbolOff, transportSize());
-        src.position(pos + codeSize()); // always advance the position codeSize bytes
-
+        src.position(pos + codeSize()); // always advance by codeSize() bytes
         op.apply(src, pos, src.position());
     }
 
@@ -121,5 +115,19 @@ final class ArraySourceSymbol implements SourceSymbol {
     public ByteBuffer transportData() {
 
         return transportBuf.asReadOnlyBuffer();
+    }
+
+    @Override
+    public void putTransportData(ByteBuffer src) {
+
+        putTransportData(src, BufferOperation.ADVANCE_POSITION);
+    }
+
+    @Override
+    public void putTransportData(ByteBuffer src, BufferOperation op) {
+
+        final int pos = src.position();
+        src.get(srcDataArray, symbolOff, transportSize());
+        op.apply(src, pos, src.position());
     }
 }
