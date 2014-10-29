@@ -16,11 +16,16 @@
 package net.fec.openrq;
 
 
+import static net.fec.openrq.util.io.ByteBuffers.BufferType.ARRAY_BACKED;
+import static net.fec.openrq.util.io.ByteBuffers.BufferType.DIRECT;
+
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.datatype.UnsignedTypes;
+import net.fec.openrq.util.io.ByteBuffers;
 import net.fec.openrq.util.math.OctetOps;
 
 import org.openjdk.jmh.annotations.Benchmark;
@@ -36,10 +41,10 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
-@BenchmarkMode(Mode.AverageTime)
+@BenchmarkMode(Mode.Throughput)
 @Fork(0)
 @State(Scope.Benchmark)
 public class XorTest {
@@ -50,8 +55,9 @@ public class XorTest {
             SizeOf.LONG + "000",
             SizeOf.LONG + "0000",
             SizeOf.LONG + "00000",
-            SizeOf.LONG + "000000",
-            SizeOf.LONG + "0000000"})
+    // SizeOf.LONG + "000000",
+    // SizeOf.LONG + "0000000"
+    })
     public int size;
 
     private ByteBuffer srcBuf;
@@ -64,13 +70,13 @@ public class XorTest {
     @Setup
     public void setup() {
 
-        srcBuf = ByteBuffer.allocate(size);
-        dstBuf = ByteBuffer.allocate(size);
+        srcBuf = ByteBuffers.allocate(size, ARRAY_BACKED);
+        dstBuf = ByteBuffers.allocate(size, ARRAY_BACKED);
         randomBytes(srcBuf, TestingCommon.newSeededRandom());
         randomBytes(dstBuf, TestingCommon.newSeededRandom());
 
-        srcDirBuf = ByteBuffer.allocateDirect(size);
-        dstDirBuf = ByteBuffer.allocateDirect(size);
+        srcDirBuf = ByteBuffers.allocate(size, DIRECT);
+        dstDirBuf = ByteBuffers.allocate(size, DIRECT);
         randomBytes(srcDirBuf, TestingCommon.newSeededRandom());
         randomBytes(dstDirBuf, TestingCommon.newSeededRandom());
     }
@@ -102,7 +108,8 @@ public class XorTest {
         dstBuf.rewind();
         final int len = size / SizeOf.LONG;
         for (int i = 0; i < len; ++i) {
-            dstBuf.putLong(OctetOps.aLongPlusBLong(srcBuf.getLong(), dstBuf.getLong(dstBuf.position())));
+            final long eL = UnsignedTypes.readLongUnsignedBytes(srcBuf, SizeOf.LONG);
+            dstBuf.putLong(OctetOps.aLongPlusBLong(eL, dstBuf.getLong(dstBuf.position())));
         }
     }
 
@@ -124,7 +131,8 @@ public class XorTest {
         dstDirBuf.rewind();
         final int len = size / SizeOf.LONG;
         for (int i = 0; i < len; ++i) {
-            dstDirBuf.putLong(OctetOps.aLongPlusBLong(srcDirBuf.getLong(), dstDirBuf.getLong(dstDirBuf.position())));
+            final long eL = UnsignedTypes.readLongUnsignedBytes(srcDirBuf, SizeOf.LONG);
+            dstDirBuf.putLong(OctetOps.aLongPlusBLong(eL, dstDirBuf.getLong(dstDirBuf.position())));
         }
     }
 }
