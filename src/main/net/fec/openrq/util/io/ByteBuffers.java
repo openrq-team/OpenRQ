@@ -25,6 +25,8 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+import net.fec.openrq.util.checking.Indexables;
+
 
 /**
  * Class containing utility methods for {@link ByteBuffer} objects.
@@ -286,6 +288,48 @@ public final class ByteBuffers {
 
         // only apply the operation if no exception was previously thrown
         op.apply(buf, srcPos, buf.position());
+        return copy;
+    }
+
+    /**
+     * Copies the contents of an array to a newly created buffer.
+     * <p>
+     * Calling this method has the same effect as calling {@link #getCopy(byte[], int, int, BufferType) getCopy(array,
+     * 0, array.length, type)}.
+     * 
+     * @param array
+     *            The array to be copied
+     * @param type
+     *            The type of the returned buffer
+     * @return a copy of an array
+     */
+    public static ByteBuffer getCopy(byte[] array, BufferType type) {
+
+        return getCopy(array, 0, array.length, type);
+    }
+
+    /**
+     * Copies the contents of an array to a newly created buffer. The array position to start the copy and the number of
+     * bytes to copy are specified as parameters.
+     * 
+     * @param array
+     *            The array to be copied
+     * @param off
+     *            The starting position of the copy
+     * @param len
+     *            The number of bytes to copy
+     * @param type
+     *            The type of the returned buffer
+     * @return a copy of an array
+     */
+    public static ByteBuffer getCopy(byte[] array, int off, int len, BufferType type) {
+
+        Indexables.checkOffsetLengthBounds(off, len, array.length);
+
+        ByteBuffer copy = allocate(len, type);
+        copy.put(array, off, len);
+        copy.rewind();
+
         return copy;
     }
 
