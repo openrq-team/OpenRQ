@@ -155,7 +155,7 @@ final class ISDOps {
         @Override
         public byte[][] apply(byte[][] D) {
 
-            MatrixUtilities.addSymbolsWithMultiplierInPlace(srcMult, D[srcRow], D[dstRow]);
+            OctetOps.vectorVectorAddition(srcMult, D[srcRow], D[dstRow], D[dstRow]);
             return D;
         }
 

@@ -113,25 +113,6 @@ public final class OctetOps {
         return aIsLessThanOrEqualToB(a, b) ? a : b;
     }
 
-    public static byte[] valueVectorProduct(byte value, byte[] vector) {
-
-        return valueVectorProduct(value, vector, 0, vector.length);
-    }
-
-    public static byte[] valueVectorProduct(byte value, byte[] vector, int vecPos, int length) {
-
-        if (value == 1) { // if multiplied by one, simply return the source vector data
-            return Arrays.copyOfRange(vector, vecPos, vecPos + length);
-        }
-        else {
-            final byte[] result = new byte[length];
-            if (value != 0) { // if multiplied by zero, simply return the unfilled result (with all zeros)
-                valueVectorProduct(value, vector, vecPos, result, 0, length);
-            }
-            return result;
-        }
-    }
-
     public static void valueVectorProduct(byte value, byte[] vector, byte[] result) {
 
         valueVectorProduct(value, vector, 0, result, 0, result.length);
@@ -164,23 +145,6 @@ public final class OctetOps {
                     result[rr] = aTimesB(value, vector[vv]);
                 }
             }
-        }
-    }
-
-    public static byte[] valueVectorDivision(byte value, byte[] vector) {
-
-        return valueVectorDivision(value, vector, 0, vector.length);
-    }
-
-    public static byte[] valueVectorDivision(byte value, byte[] vector, int vecPos, int length) {
-
-        if (value == 1) { // if divided by one, simply return the source vector data
-            return Arrays.copyOfRange(vector, vecPos, vecPos + length);
-        }
-        else {
-            final byte[] result = new byte[length];
-            valueVectorDivision(value, vector, vecPos, result, 0, length);
-            return result;
         }
     }
 

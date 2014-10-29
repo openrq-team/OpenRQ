@@ -50,7 +50,7 @@ public class MatrixSourcesTest {
 
     public static final Factory[] FACTORIES = {
                                                new Basic1DFactory(), new Basic2DFactory(),
-                                               new CRSFactory()//, new CCSFactory()
+                                               new CRSFactory()// , new CCSFactory()
     };
 
 

@@ -227,8 +227,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param serParams
      *            A serializable object containing FEC parameters
@@ -255,8 +254,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing FEC parameters
@@ -280,8 +278,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing FEC parameters
@@ -311,8 +308,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param buffer
      *            A buffer containing FEC parameters
@@ -345,8 +341,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are read from the input, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -378,8 +373,7 @@ public final class FECParameters {
      * <ul>
      * <li>If the parsing succeeded, the FEC parameters can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until all FEC parameters are read from the channel, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -692,13 +686,11 @@ public final class FECParameters {
      * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
      * <ul>
      * <li>{@code obj} is non-null
-     * <li>and {@code obj} is an instance of {@code FECParameters}
-     * <li>and {@code this}.{@link #dataLength()} == {@code obj.dataLength()}
-     * <li>and {@code this}.{@link #symbolSize()} == {@code obj.symbolSize()}
-     * <li>and {@code this}.{@link #numberOfSourceBlocks()} == {@code obj.numberOfSourceBlocks()}
-     * <li>and {@code this}. {@link #interleaverLength()} == {@code obj.interleaverLength()}
-     * <li>and {@code this}.{@link #symbolAlignment()} == {@code obj.symbolAlignment()}
-     * </ul>
+     * <li>and {@code obj} is an instance of {@code FECParameters} <li>and {@code this}.{@link #dataLength()} ==
+     * {@code obj.dataLength()} <li>and {@code this}.{@link #symbolSize()} == {@code obj.symbolSize()} <li>and
+     * {@code this}.{@link #numberOfSourceBlocks()} == {@code obj.numberOfSourceBlocks()} <li>and {@code this}.
+     * {@link #interleaverLength()} == {@code obj.interleaverLength()} <li>and {@code this}.{@link #symbolAlignment()}
+     * == {@code obj.symbolAlignment()} </ul>
      */
     @Override
     public boolean equals(Object obj) {

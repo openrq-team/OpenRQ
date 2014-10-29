@@ -17,8 +17,6 @@
 package net.fec.openrq;
 
 
-import java.util.Arrays;
-
 import net.fec.openrq.util.array.ArrayUtils;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.math.OctetOps;
@@ -262,7 +260,7 @@ final class MatrixUtilities {
                     // NOTE: here, subtraction is the same as addition
                     A.addRowsInPlace(beta, r, i);
                     // decoding process - D[d[i]] - (U_lower[i][lead] * D[d[r]])
-                    addSymbolsWithMultiplierInPlace(beta, D[d[r]], D[d[i]]);
+                    OctetOps.vectorVectorAddition(beta, D[d[r]], D[d[i]], D[d[i]]);
                 }
             }
 
@@ -281,61 +279,6 @@ final class MatrixUtilities {
             auxPos = matrix[row][a];
             matrix[row][a] = matrix[row][b];
             matrix[row][b] = auxPos;
-        }
-    }
-
-    static byte[] addSymbols(byte[] left, byte[] right) {
-
-        /*
-         * if(left.length != right.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        byte[] result = new byte[left.length];
-        OctetOps.vectorVectorAddition(left, right, result);
-        return result;
-    }
-
-    static byte[] addSymbolsWithMultiplier(byte leftMultiplier, byte[] left, byte[] right) {
-
-        /*
-         * if(left.length != right.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        if (leftMultiplier != 0) {
-            byte[] result = new byte[left.length];
-            OctetOps.vectorVectorAddition(leftMultiplier, left, right, result);
-            return result;
-        }
-        else {
-            return Arrays.copyOf(right, right.length);
-        }
-    }
-
-    static void addSymbolsInPlace(byte[] src, byte[] dest) {
-
-        /*
-         * if(src.length != dest.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        OctetOps.vectorVectorAddition(src, dest, dest);
-    }
-
-    static void addSymbolsWithMultiplierInPlace(byte srcMultiplier, byte[] src, byte[] dest) {
-
-        /*
-         * if(src.length != dest.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        if (srcMultiplier != 0) {
-            OctetOps.vectorVectorAddition(srcMultiplier, src, dest, dest);
         }
     }
 
@@ -456,9 +399,10 @@ final class MatrixUtilities {
 
                 byte alpha = OctetOps.aDividedByB(A[i][row], A[row][row]);
 
-                temp = OctetOps.valueVectorProduct(alpha, b[row]);
+                temp = new byte[b[row].length];
+                OctetOps.valueVectorProduct(alpha, b[row], temp);
 
-                MatrixUtilities.addSymbolsInPlace(temp, b[i]);
+                OctetOps.vectorVectorAddition(temp, b[i], b[i]);
 
                 for (int j = row; j < ROWS; j++) {
 
@@ -477,14 +421,17 @@ final class MatrixUtilities {
             for (int j = i + 1; j < ROWS; j++) {
 
                 // i*num_cols+j
-                byte[] temp = OctetOps.valueVectorProduct(A[i][j], x[j], 0, num_cols);
+                byte[] temp = new byte[x[j].length];
+                OctetOps.valueVectorProduct(A[i][j], x[j], 0, temp, num_cols);
 
-                MatrixUtilities.addSymbolsInPlace(temp, sum);
+                OctetOps.vectorVectorAddition(temp, sum, sum);
             }
 
-            byte[] temp = MatrixUtilities.addSymbols(b[i], sum);
+            byte[] temp = new byte[sum.length];
+            OctetOps.vectorVectorAddition(b[i], sum, temp);
 
-            x[i] = OctetOps.valueVectorDivision(A[i][i], temp);
+            x[i] = new byte[temp.length];
+            OctetOps.valueVectorDivision(A[i][i], temp, x[i]);
             // for (int bite = 0; bite < num_cols; bite++) {
             //
             // x[(i * num_cols) + bite] = OctetOps.division(temp[bite], A[i][i]);

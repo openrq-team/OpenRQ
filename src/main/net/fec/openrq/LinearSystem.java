@@ -463,13 +463,13 @@ final class LinearSystem {
         for (long j = 0; j < d; j++)
         {
             b = (b + a) % W;
-            MatrixUtilities.addSymbolsInPlace(C[b], result);
+            OctetOps.vectorVectorAddition(C[b], result, result);
         }
 
         while (b1 >= P)
             b1 = (b1 + a1) % P1;
 
-        MatrixUtilities.addSymbolsInPlace(C[W + b1], result);
+        OctetOps.vectorVectorAddition(C[W + b1], result, result);
 
         for (long j = 1; j < d1; j++)
         {
@@ -477,7 +477,7 @@ final class LinearSystem {
                 b1 = (b1 + a1) % P1;
             while (b1 >= P);
 
-            MatrixUtilities.addSymbolsInPlace(C[W + b1], result);
+            OctetOps.vectorVectorAddition(C[W + b1], result, result);
         }
 
         return result;
@@ -961,7 +961,7 @@ final class LinearSystem {
                     A.addRowsInPlace(betaOverAlpha, i, row);
 
                     // decoding process - D[d[row]] + (betaOverAlpha * D[d[i]])
-                    MatrixUtilities.addSymbolsWithMultiplierInPlace(betaOverAlpha, D[d[i]], D[d[row]]);
+                    OctetOps.vectorVectorAddition(betaOverAlpha, D[d[i]], D[d[row]], D[d[row]]);
 
                     // ISDCodeWriter.instance().writePhase1Code(betaOverAlpha, d[i], d[row]); // DEBUG
                 }
@@ -1145,7 +1145,7 @@ final class LinearSystem {
                 // ISDCodeWriter.instance().writePhase4Code(b, d[j], d[row]); // DEBUG
 
                 // decoding process - (beta * D[d[j]]) + D[d[row]]
-                MatrixUtilities.addSymbolsWithMultiplierInPlace(b, D[d[j]], D[d[row]]);
+                OctetOps.vectorVectorAddition(b, D[d[j]], D[d[row]], D[d[row]]);
             }
         }
 
@@ -1197,7 +1197,7 @@ final class LinearSystem {
                 // ISDCodeWriter.instance().writePhase5Code_2(beta, d[eL], d[j]); // DEBUG
 
                 // decoding process - (beta * D[d[eL]]) + D[d[j]]
-                MatrixUtilities.addSymbolsWithMultiplierInPlace(beta, D[d[eL]], D[d[j]]);
+                OctetOps.vectorVectorAddition(beta, D[d[eL]], D[d[j]], D[d[j]]);
             }
         }
 
