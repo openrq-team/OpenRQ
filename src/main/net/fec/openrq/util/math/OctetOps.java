@@ -17,9 +17,14 @@
 package net.fec.openrq.util.math;
 
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 
+import net.fec.openrq.util.datatype.SizeOf;
 import net.fec.openrq.util.datatype.UnsignedTypes;
+import net.fec.openrq.util.io.BufferOperation;
+import net.fec.openrq.util.io.ByteBuffers;
 
 
 /**
@@ -39,11 +44,6 @@ public final class OctetOps {
     public static byte aPlusB(byte u, byte v) {
 
         return (byte)(u ^ v);
-    }
-
-    public static int aIntPlusBInt(int a, int b) {
-
-        return a ^ b;
     }
 
     public static long aLongPlusBLong(long a, long b) {
@@ -148,6 +148,32 @@ public final class OctetOps {
         }
     }
 
+    public static void valueVectorProduct(byte value, ByteBuffer vector, ByteBuffer result) {
+
+        valueVectorProduct(value, vector, result, vector.remaining());
+    }
+
+    public static void valueVectorProduct(byte value, ByteBuffer vector, ByteBuffer result, int length) {
+
+        if (value == 1) { // if multiplied by one, simply copy the source vector data and return
+            if (vector != result) { // avoid unnecessary copy if in-place product
+                BufferOperation op = BufferOperation.RESTORE_POSITION;
+                ByteBuffers.copy(vector, op, result, op, length);
+            }
+        }
+        else if (value == 0) { // if multiplied by zero, simply fill the result with zeros and return
+            ByteBuffers.putZeros(result, length, BufferOperation.RESTORE_POSITION);
+        }
+        else {
+            final int vPos = vector.position();
+            final int rPos = result.position();
+            final int rEnd = rPos + length;
+            for (int vv = vPos, rr = rPos; rr < rEnd; vv++, rr++) {
+                result.put(rr, aTimesB(value, vector.get(vv))); // absolute access to buffer
+            }
+        }
+    }
+
     public static void valueVectorDivision(byte value, byte[] vector, byte[] result) {
 
         valueVectorDivision(value, vector, 0, result, 0, result.length);
@@ -178,6 +204,29 @@ public final class OctetOps {
         }
     }
 
+    public static void valueVectorDivision(byte value, ByteBuffer vector, ByteBuffer result) {
+
+        valueVectorDivision(value, vector, result, vector.remaining());
+    }
+
+    public static void valueVectorDivision(byte value, ByteBuffer vector, ByteBuffer result, int length) {
+
+        if (value == 1) { // if divided by one, simply copy the source vector data and return
+            if (vector != result) { // avoid unnecessary copy if in-place division
+                BufferOperation op = BufferOperation.RESTORE_POSITION;
+                ByteBuffers.copy(vector, op, result, op, length);
+            }
+        }
+        else {
+            final int vPos = vector.position();
+            final int rPos = result.position();
+            final int rEnd = rPos + length;
+            for (int vv = vPos, rr = rPos; rr < rEnd; vv++, rr++) {
+                result.put(rr, aDividedByB(vector.get(vv), value)); // absolute access to buffer
+            }
+        }
+    }
+
     public static void vectorVectorAddition(byte[] vector1, byte[] vector2, byte[] result) {
 
         vectorVectorAddition(vector1, 0, vector2, 0, result, 0, result.length);
@@ -196,6 +245,35 @@ public final class OctetOps {
         final int resEnd = resPos + length;
         for (int v1 = vecPos1, v2 = vecPos2, r = resPos; r < resEnd; v1++, v2++, r++) {
             result[r] = aPlusB(vector1[v1], vector2[v2]);
+        }
+    }
+
+    public static void vectorVectorAddition(ByteBuffer vector1, ByteBuffer vector2, ByteBuffer result) {
+
+        vectorVectorAddition(vector1, vector2, result, result.remaining());
+    }
+
+    public static void vectorVectorAddition(ByteBuffer vector1, ByteBuffer vector2, ByteBuffer result, int length) {
+
+        final int sol = SizeOf.LONG;
+        final int v1Pos = vector1.position();
+        final int v2Pos = vector2.position();
+        final int rPos = result.position();
+
+        final int rEnd = rPos + length;
+        final int rLongEnd = rPos + ((length / sol) * sol);
+
+        int v1 = v1Pos;
+        int v2 = v2Pos;
+        int rr = rPos;
+        for (; rr < rLongEnd; v1 += sol, v2 += sol, rr += sol) {
+            final long sum = aLongPlusBLong(vector1.getLong(v1), vector2.getLong(v2));
+            result.putLong(rr, sum);
+        }
+
+        for (; rr < rEnd; v1++, v2++, rr++) {
+            final byte sum = aPlusB(vector1.get(v1), vector2.get(v2));
+            result.put(rr, sum);
         }
     }
 
@@ -226,12 +304,82 @@ public final class OctetOps {
         }
     }
 
+    public static void vectorVectorAddition(
+        byte vec1Multiplier,
+        ByteBuffer vector1,
+        ByteBuffer vector2,
+        ByteBuffer result)
+    {
+
+        vectorVectorAddition(vec1Multiplier, vector1, vector2, result, result.remaining());
+    }
+
+    public static void vectorVectorAddition(
+        byte vec1Multiplier,
+        ByteBuffer vector1,
+        ByteBuffer vector2,
+        ByteBuffer result,
+        int length)
+    {
+
+        if (vec1Multiplier == 1) { // no need to multiply, just add
+            vectorVectorAddition(vector1, vector2, result, length);
+        }
+        else {
+            final int sol = SizeOf.LONG;
+            final int v1Pos = vector1.position();
+            final int v2Pos = vector2.position();
+            final int rPos = result.position();
+
+            final int rEnd = rPos + length;
+            final int rLongEnd = rPos + ((length / sol) * sol);
+
+            int v1 = v1Pos;
+            int v2 = v2Pos;
+            int rr = rPos;
+            for (; rr < rLongEnd; v1 += sol, v2 += sol, rr += sol) {
+                final long prod = productAsLong(vec1Multiplier, vector1, v1);
+                final long sum = aLongPlusBLong(prod, vector2.getLong(v2));
+                result.putLong(rr, sum);
+            }
+
+            for (; rr < rEnd; v1++, v2++, rr++) {
+                final byte prod = aTimesB(vec1Multiplier, vector1.get(v1));
+                final byte sum = aPlusB(prod, vector2.get(v2));
+                result.put(rr, sum);
+            }
+        }
+    }
+
+    /*
+     * Reads 8 bytes, multiplying each one by the multiplier,
+     * and stores the products inside one long value.
+     */
+    private static long productAsLong(byte multiplier, ByteBuffer vector, int vecPos) {
+
+        long ret = 0L;
+        if (vector.order() == ByteOrder.BIG_ENDIAN) {
+            for (int n = SizeOf.LONG - 1, vv = vecPos; n >= 0; n--, vv++) {
+                ret |= (aTimesB(multiplier, vector.get(vv)) & 0xFFL) << (n * Byte.SIZE);
+            }
+        }
+        else {
+            for (int n = 0, vv = vecPos; n < SizeOf.LONG; n++, vv++) {
+                ret |= (aTimesB(multiplier, vector.get(vv)) & 0xFFL) << (n * Byte.SIZE);
+            }
+        }
+
+        return ret;
+    }
+
     private static int getExp(int i) {
 
         return OCT_EXP[i];
     }
 
 
+    // FIXME replace these with 256x256 multiplication/division tables
+    // to compare the performance
     private static final int[] OCT_EXP =
     {
      1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76,

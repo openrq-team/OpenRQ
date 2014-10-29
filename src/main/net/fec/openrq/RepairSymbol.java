@@ -16,12 +16,12 @@
 package net.fec.openrq;
 
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
 import net.fec.openrq.util.io.BufferOperation;
 import net.fec.openrq.util.io.ByteBuffers;
+import net.fec.openrq.util.io.ByteBuffers.BufferType;
 
 
 /**
@@ -85,13 +85,13 @@ final class RepairSymbol {
     /**
      * Returns a new buffer with a copy of the data from this symbol.
      * 
-     * @param isDirect
-     *            Whether the new buffer will be {@linkplain Buffer#isDirect() direct}
+     * @param type
+     *            The type of buffer to be returned
      * @return a new buffer with a copy of the data from this symbol
      */
-    ByteBuffer copyOfData(boolean isDirect) {
+    ByteBuffer copyOfData(BufferType type) {
 
-        ByteBuffer copy = ByteBuffers.allocate(dataSize(), isDirect);
+        ByteBuffer copy = ByteBuffers.allocate(dataSize(), type);
         ByteBuffers.copy(
             readOnlyData(), BufferOperation.ADVANCE_POSITION,
             copy, BufferOperation.FLIP_ABSOLUTELY,

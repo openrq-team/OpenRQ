@@ -16,6 +16,9 @@
 package net.fec.openrq.util.io;
 
 
+import static net.fec.openrq.util.io.ByteBuffers.BufferType.ARRAY_BACKED;
+import static net.fec.openrq.util.io.ByteBuffers.BufferType.DIRECT;
+
 import java.nio.Buffer;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
@@ -28,18 +31,64 @@ import java.util.Objects;
  */
 public final class ByteBuffers {
 
+    public static enum BufferType {
+
+        ARRAY_BACKED,
+        DIRECT;
+    }
+
+
+    private static BufferType isDirectType(boolean isDirect) {
+
+        return isDirect ? DIRECT : ARRAY_BACKED;
+    }
+
     /**
      * Allocates a new buffer.
      * 
      * @param capacity
      *            The capacity of the new buffer
-     * @param isDirect
-     *            Whether the new buffer will be {@linkplain Buffer#isDirect() direct}
+     * @param type
+     *            The type of the returned buffer
      * @return a new allocated buffer
      */
-    public static ByteBuffer allocate(int capacity, boolean isDirect) {
+    public static ByteBuffer allocate(int capacity, BufferType type) {
 
-        return isDirect ? ByteBuffer.allocateDirect(capacity) : ByteBuffer.allocate(capacity);
+        switch (type) {
+            case ARRAY_BACKED:
+                return ByteBuffer.allocate(capacity);
+
+            case DIRECT:
+                return ByteBuffer.allocateDirect(capacity);
+
+            default:
+                throw new AssertionError("unknown enum type");
+        }
+    }
+
+
+    /**
+     * The maximum capacity of cached buffers.
+     */
+    public static final int MAX_CACHED_BUFFER_CAPACITY = 65536;
+
+
+    /**
+     * Returns a cached (per thread) buffer with at least the specified capacity.
+     * <p>
+     * The specified capacity must not exceed {@link #MAX_CACHED_BUFFER_CAPACITY}.
+     * 
+     * @param minCapacity
+     *            The minimum capacity of the cached buffer
+     * @param type
+     *            The type of the returned buffer
+     * @return a cached (per thread) buffer
+     * @exception IllegalArgumentException
+     *                If {@code minCapacity > }{@value #MAX_CACHED_BUFFER_CAPACITY}
+     */
+    public static ByteBuffer getCached(int minCapacity, BufferType type) {
+
+        return cachedBuffer(minCapacity, type);
     }
 
     /**
@@ -225,7 +274,7 @@ public final class ByteBuffers {
         if (remaining < copySize) throw new BufferUnderflowException();
         Objects.requireNonNull(op);
 
-        ByteBuffer copy = allocate(copySize, buf.isDirect()).order(buf.order());
+        ByteBuffer copy = allocate(copySize, isDirectType(buf.isDirect())).order(buf.order());
         try {
             buf.limit(srcPos + copySize);
             copy.put(buf);
@@ -453,7 +502,7 @@ public final class ByteBuffers {
         int remZeros = numZeros;
         while (remZeros > 0) {
             final int amount = Math.min(remZeros, ZERO_BUFFER_CAPACITY);
-            dst.put(zeroBuffer(amount, dst.isDirect()));
+            dst.put(zeroBuffer(amount, isDirectType(dst.isDirect())));
             remZeros -= amount;
         }
 
@@ -462,12 +511,12 @@ public final class ByteBuffers {
 
 
     private static final int ZERO_BUFFER_CAPACITY = 4096;
-    private static final ThreadLocal<ByteBuffer> ZERO_BUFFER = new ThreadLocal<ByteBuffer>() {
+    private static final ThreadLocal<ByteBuffer> ZERO_ARR_BUFFER = new ThreadLocal<ByteBuffer>() {
 
         @Override
         protected ByteBuffer initialValue() {
 
-            return ByteBuffer.allocate(ZERO_BUFFER_CAPACITY);
+            return allocate(ZERO_BUFFER_CAPACITY, ARRAY_BACKED);
         }
     };
     private static final ThreadLocal<ByteBuffer> ZERO_DIR_BUFFER = new ThreadLocal<ByteBuffer>() {
@@ -475,20 +524,94 @@ public final class ByteBuffers {
         @Override
         protected ByteBuffer initialValue() {
 
-            return ByteBuffer.allocateDirect(ZERO_BUFFER_CAPACITY);
+            return allocate(ZERO_BUFFER_CAPACITY, DIRECT);
         }
     };
 
 
+    private static ThreadLocal<ByteBuffer> zeroTL(BufferType type) {
+
+        switch (type) {
+
+            case ARRAY_BACKED:
+                return ZERO_ARR_BUFFER;
+
+            case DIRECT:
+                return ZERO_DIR_BUFFER;
+
+            default:
+                throw new AssertionError("unknown enum type");
+        }
+    }
+
     /*
      * Requires size <= ZERO_BUFFER_CAPACITY
      */
-    private static ByteBuffer zeroBuffer(int size, boolean direct) {
+    private static ByteBuffer zeroBuffer(int size, BufferType type) {
 
-        ByteBuffer zeroBuf = direct ? ZERO_DIR_BUFFER.get() : ZERO_BUFFER.get();
+        ByteBuffer zeroBuf = zeroTL(type).get();
         zeroBuf.clear();
         zeroBuf.limit(size);
         return zeroBuf;
+    }
+
+
+    private static final int INITIAL_CACHED_BUFFER_SIZE = 256;
+
+    private static final ThreadLocal<ByteBuffer> CACHED_ARR_BUFFER = new ThreadLocal<ByteBuffer>() {
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.ThreadLocal#initialValue()
+         */
+        @Override
+        protected ByteBuffer initialValue() {
+
+            return allocate(INITIAL_CACHED_BUFFER_SIZE, ARRAY_BACKED);
+        }
+    };
+    private static final ThreadLocal<ByteBuffer> CACHED_DIR_BUFFER = new ThreadLocal<ByteBuffer>() {
+
+        @Override
+        protected ByteBuffer initialValue() {
+
+            return allocate(INITIAL_CACHED_BUFFER_SIZE, DIRECT);
+        }
+    };
+
+
+    private static ThreadLocal<ByteBuffer> cachedTL(BufferType type) {
+
+        switch (type) {
+
+            case ARRAY_BACKED:
+                return CACHED_ARR_BUFFER;
+
+            case DIRECT:
+                return CACHED_DIR_BUFFER;
+
+            default:
+                throw new AssertionError("unknown enum type");
+        }
+    }
+
+    private static ByteBuffer cachedBuffer(int minCapacity, BufferType type) {
+
+        if (minCapacity > MAX_CACHED_BUFFER_CAPACITY) {
+            throw new IllegalArgumentException("cached buffer capacity is too large");
+        }
+
+        ThreadLocal<ByteBuffer> tl = cachedTL(type);
+
+        ByteBuffer buf = tl.get();
+        if (minCapacity > buf.capacity()) {
+            buf = allocate(minCapacity, type);
+            tl.set(buf);
+        }
+
+        buf.clear();
+        return buf;
     }
 
     private ByteBuffers() {

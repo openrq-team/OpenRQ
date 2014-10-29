@@ -35,6 +35,7 @@ import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.collection.BitSetIterators;
 import net.fec.openrq.util.collection.ImmutableList;
+import net.fec.openrq.util.io.ByteBuffers.BufferType;
 import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
 import net.fec.openrq.util.rq.SystematicIndices;
 
@@ -423,7 +424,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             }
 
             // fill in missing source symbols in D with the repair symbols
-            D[row] = repairSymbol.copyOfData(false).array();
+            D[row] = repairSymbol.copyOfData(BufferType.ARRAY_BACKED).array();
         }
 
         // insert the values for overhead (repair) symbols
@@ -443,7 +444,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
             }
 
             // update D with the data for that symbol
-            D[row] = repairSymbol.copyOfData(false).array();
+            D[row] = repairSymbol.copyOfData(BufferType.ARRAY_BACKED).array();
         }
 
         /*
