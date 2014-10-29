@@ -218,11 +218,23 @@ public final class OctetOps {
             }
         }
         else {
+            final int sol = SizeOf.LONG;
             final int vPos = vector.position();
             final int rPos = result.position();
+
             final int rEnd = rPos + length;
-            for (int vv = vPos, rr = rPos; rr < rEnd; vv++, rr++) {
-                result.put(rr, aDividedByB(vector.get(vv), value)); // absolute access to buffer
+            final int rLongEnd = rPos + ((length / sol) * sol);
+
+            int vv = vPos;
+            int rr = rPos;
+            for (; rr < rLongEnd; vv += sol, rr += sol) {
+                final long quot = divisionAsLong(value, vector, vv);
+                result.putLong(rr, quot);
+            }
+
+            for (; rr < rEnd; vv++, rr++) {
+                final byte quot = aDividedByB(vector.get(vv), value);
+                result.put(rr, quot);
             }
         }
     }
@@ -366,6 +378,27 @@ public final class OctetOps {
         else {
             for (int n = 0, vv = vecPos; n < SizeOf.LONG; n++, vv++) {
                 ret |= (aTimesB(multiplier, vector.get(vv)) & 0xFFL) << (n * Byte.SIZE);
+            }
+        }
+
+        return ret;
+    }
+
+    /*
+     * Reads 8 bytes, dividing each one by the divisor,
+     * and stores the quotients inside one long value.
+     */
+    private static long divisionAsLong(byte divisor, ByteBuffer vector, int vecPos) {
+
+        long ret = 0L;
+        if (vector.order() == ByteOrder.BIG_ENDIAN) {
+            for (int n = SizeOf.LONG - 1, vv = vecPos; n >= 0; n--, vv++) {
+                ret |= (aDividedByB(vector.get(vv), divisor) & 0xFFL) << (n * Byte.SIZE);
+            }
+        }
+        else {
+            for (int n = 0, vv = vecPos; n < SizeOf.LONG; n++, vv++) {
+                ret |= (aDividedByB(vector.get(vv), divisor) & 0xFFL) << (n * Byte.SIZE);
             }
         }
 
