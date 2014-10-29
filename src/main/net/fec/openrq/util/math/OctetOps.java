@@ -41,6 +41,11 @@ public final class OctetOps {
         return (byte)(u ^ v);
     }
 
+    public static int aIntPlusBInt(int a, int b) {
+
+        return a ^ b;
+    }
+
     public static long aLongPlusBLong(long a, long b) {
 
         return a ^ b;
@@ -108,95 +113,95 @@ public final class OctetOps {
         return aIsLessThanOrEqualToB(a, b) ? a : b;
     }
 
-    public static byte[] betaProduct(byte beta, byte[] vector) {
+    public static byte[] valueVectorProduct(byte value, byte[] vector) {
 
-        return betaProduct(beta, vector, 0, vector.length);
+        return valueVectorProduct(value, vector, 0, vector.length);
     }
 
-    public static byte[] betaProduct(byte beta, byte[] vector, int vecPos, int length) {
+    public static byte[] valueVectorProduct(byte value, byte[] vector, int vecPos, int length) {
 
-        if (beta == 1) { // if multiplied by one, simply return the source vector data
+        if (value == 1) { // if multiplied by one, simply return the source vector data
             return Arrays.copyOfRange(vector, vecPos, vecPos + length);
         }
         else {
             final byte[] result = new byte[length];
-            if (beta != 0) { // if multiplied by zero, simply return the unfilled result (with all zeros)
-                betaProduct(beta, vector, vecPos, result, 0, length);
+            if (value != 0) { // if multiplied by zero, simply return the unfilled result (with all zeros)
+                valueVectorProduct(value, vector, vecPos, result, 0, length);
             }
             return result;
         }
     }
 
-    public static void betaProduct(byte beta, byte[] vector, byte[] result) {
+    public static void valueVectorProduct(byte value, byte[] vector, byte[] result) {
 
-        betaProduct(beta, vector, 0, result, 0, result.length);
+        valueVectorProduct(value, vector, 0, result, 0, result.length);
     }
 
-    public static void betaProduct(byte beta, byte[] vector, int vecPos, byte[] result, int length) {
+    public static void valueVectorProduct(byte value, byte[] vector, int vecPos, byte[] result, int length) {
 
-        betaProduct(beta, vector, vecPos, result, 0, length);
+        valueVectorProduct(value, vector, vecPos, result, 0, length);
     }
 
-    public static void betaProduct(byte beta, byte[] vector, byte[] result, int resPos, int length) {
+    public static void valueVectorProduct(byte value, byte[] vector, byte[] result, int resPos, int length) {
 
-        betaProduct(beta, vector, 0, result, resPos, length);
+        valueVectorProduct(value, vector, 0, result, resPos, length);
     }
 
-    public static void betaProduct(byte beta, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
+    public static void valueVectorProduct(byte value, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
 
-        if (beta == 1) { // if multiplied by one, simply copy the source vector data and return
+        if (value == 1) { // if multiplied by one, simply copy the source vector data and return
             if (vector != result || vecPos != resPos) { // avoid unnecessary copy if in-place product
                 System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
             }
         }
         else {
             final int resEnd = resPos + length;
-            if (beta == 0) { // if multiplied by zero, simply fill the result with zeros and return
+            if (value == 0) { // if multiplied by zero, simply fill the result with zeros and return
                 Arrays.fill(result, resPos, resEnd, (byte)0); // uses from and to indexes
             }
             else {
                 for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
-                    result[rr] = aTimesB(beta, vector[vv]);
+                    result[rr] = aTimesB(value, vector[vv]);
                 }
             }
         }
     }
 
-    public static byte[] betaDivision(byte beta, byte[] vector) {
+    public static byte[] valueVectorDivision(byte value, byte[] vector) {
 
-        return betaDivision(beta, vector, 0, vector.length);
+        return valueVectorDivision(value, vector, 0, vector.length);
     }
 
-    public static byte[] betaDivision(byte beta, byte[] vector, int vecPos, int length) {
+    public static byte[] valueVectorDivision(byte value, byte[] vector, int vecPos, int length) {
 
-        if (beta == 1) { // if divided by one, simply return the source vector data
+        if (value == 1) { // if divided by one, simply return the source vector data
             return Arrays.copyOfRange(vector, vecPos, vecPos + length);
         }
         else {
             final byte[] result = new byte[length];
-            betaDivision(beta, vector, vecPos, result, 0, length);
+            valueVectorDivision(value, vector, vecPos, result, 0, length);
             return result;
         }
     }
 
-    public static void betaDivision(byte beta, byte[] vector, byte[] result) {
+    public static void valueVectorDivision(byte value, byte[] vector, byte[] result) {
 
-        betaDivision(beta, vector, 0, result, 0, result.length);
+        valueVectorDivision(value, vector, 0, result, 0, result.length);
     }
 
-    public static void betaDivision(byte beta, byte[] vector, int vecPos, byte[] result, int length) {
+    public static void valueVectorDivision(byte value, byte[] vector, int vecPos, byte[] result, int length) {
 
-        betaDivision(beta, vector, vecPos, result, 0, length);
+        valueVectorDivision(value, vector, vecPos, result, 0, length);
     }
 
-    public static void betaDivision(byte beta, byte[] vector, byte[] result, int resPos, int length) {
+    public static void valueVectorDivision(byte value, byte[] vector, byte[] result, int resPos, int length) {
 
-        betaDivision(beta, vector, 0, result, resPos, length);
+        valueVectorDivision(value, vector, 0, result, resPos, length);
     }
 
-    public static void betaDivision(byte beta, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
+    public static void valueVectorDivision(byte value, byte[] vector, int vecPos, byte[] result, int resPos, int length) {
 
-        if (beta == 1) { // if divided by one, simply copy the source vector data and return
+        if (value == 1) { // if divided by one, simply copy the source vector data and return
             if (vector != result || vecPos != resPos) { // avoid unnecessary copy if in-place division
                 System.arraycopy(vector, vecPos, result, resPos, length); // uses offset and length
             }
@@ -204,7 +209,55 @@ public final class OctetOps {
         else {
             final int resEnd = resPos + length;
             for (int rr = resPos, vv = vecPos; rr < resEnd; rr++, vv++) {
-                result[rr] = aDividedByB(vector[vv], beta);
+                result[rr] = aDividedByB(vector[vv], value);
+            }
+        }
+    }
+
+    public static void vectorVectorAddition(byte[] vector1, byte[] vector2, byte[] result) {
+
+        vectorVectorAddition(vector1, 0, vector2, 0, result, 0, result.length);
+    }
+
+    public static void vectorVectorAddition(
+        byte[] vector1,
+        int vecPos1,
+        byte[] vector2,
+        int vecPos2,
+        byte[] result,
+        int resPos,
+        int length)
+    {
+
+        final int resEnd = resPos + length;
+        for (int v1 = vecPos1, v2 = vecPos2, r = resPos; r < resEnd; v1++, v2++, r++) {
+            result[r] = aPlusB(vector1[v1], vector2[v2]);
+        }
+    }
+
+    public static void vectorVectorAddition(byte vec1Multiplier, byte[] vector1, byte[] vector2, byte[] result) {
+
+        vectorVectorAddition(vec1Multiplier, vector1, 0, vector2, 0, result, 0, result.length);
+    }
+
+    public static void vectorVectorAddition(
+        byte vec1Multiplier,
+        byte[] vector1,
+        int vecPos1,
+        byte[] vector2,
+        int vecPos2,
+        byte[] result,
+        int resPos,
+        int length)
+    {
+
+        if (vec1Multiplier == 1) {
+            vectorVectorAddition(vector1, vecPos1, vector2, vecPos2, result, resPos, length);
+        }
+        else {
+            final int resEnd = resPos + length;
+            for (int v1 = vecPos1, v2 = vecPos2, r = resPos; r < resEnd; v1++, v2++, r++) {
+                result[r] = aPlusB(aTimesB(vec1Multiplier, vector1[v1]), vector2[v2]);
             }
         }
     }

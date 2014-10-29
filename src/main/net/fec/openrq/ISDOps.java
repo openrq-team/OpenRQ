@@ -211,7 +211,7 @@ final class ISDOps {
         @Override
         public byte[][] apply(byte[][] D) {
 
-            OctetOps.betaDivision(beta, D[row], D[row]); // in place division
+            OctetOps.valueVectorDivision(beta, D[row], D[row]); // in place division
             return D;
         }
 

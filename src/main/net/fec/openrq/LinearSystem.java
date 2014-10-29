@@ -1178,7 +1178,7 @@ final class LinearSystem {
                 // ISDCodeWriter.instance().writePhase5Code_1(beta, d[j]); // DEBUG
 
                 // decoding process - D[d[j]] / beta
-                OctetOps.betaDivision(beta, D[d[j]], D[d[j]]); // in place division
+                OctetOps.valueVectorDivision(beta, D[d[j]], D[d[j]]); // in place division
             }
 
             // "For eL from 1 to j-1"

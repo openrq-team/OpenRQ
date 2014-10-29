@@ -251,7 +251,7 @@ final class MatrixUtilities {
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
                 // byte[] / beta
                 final int dIndex = d[r];
-                OctetOps.betaDivision(beta, D[dIndex], D[dIndex]); // in place division
+                OctetOps.valueVectorDivision(beta, D[dIndex], D[dIndex]); // in place division
             }
 
             for (i = fromRow; i < toRow; i++) {
@@ -292,13 +292,9 @@ final class MatrixUtilities {
          * }
          */
 
-        byte[] xor = new byte[left.length];
-
-        for (int i = 0; i < left.length; i++) {
-            xor[i] = OctetOps.aPlusB(left[i], right[i]);
-        }
-
-        return xor;
+        byte[] result = new byte[left.length];
+        OctetOps.vectorVectorAddition(left, right, result);
+        return result;
     }
 
     static byte[] addSymbolsWithMultiplier(byte leftMultiplier, byte[] left, byte[] right) {
@@ -308,14 +304,11 @@ final class MatrixUtilities {
          * throw new IllegalArgumentException("Symbols must be of the same size.");
          * }
          */
+
         if (leftMultiplier != 0) {
-            byte[] xor = new byte[left.length];
-
-            for (int i = 0; i < left.length; i++) {
-                xor[i] = OctetOps.aPlusB(OctetOps.aTimesB(leftMultiplier, left[i]), right[i]);
-            }
-
-            return xor;
+            byte[] result = new byte[left.length];
+            OctetOps.vectorVectorAddition(leftMultiplier, left, right, result);
+            return result;
         }
         else {
             return Arrays.copyOf(right, right.length);
@@ -330,9 +323,7 @@ final class MatrixUtilities {
          * }
          */
 
-        for (int i = 0; i < dest.length; i++) {
-            dest[i] = OctetOps.aPlusB(src[i], dest[i]);
-        }
+        OctetOps.vectorVectorAddition(src, dest, dest);
     }
 
     static void addSymbolsWithMultiplierInPlace(byte srcMultiplier, byte[] src, byte[] dest) {
@@ -344,9 +335,7 @@ final class MatrixUtilities {
          */
 
         if (srcMultiplier != 0) {
-            for (int i = 0; i < dest.length; i++) {
-                dest[i] = OctetOps.aPlusB(OctetOps.aTimesB(srcMultiplier, src[i]), dest[i]);
-            }
+            OctetOps.vectorVectorAddition(srcMultiplier, src, dest, dest);
         }
     }
 
@@ -467,7 +456,7 @@ final class MatrixUtilities {
 
                 byte alpha = OctetOps.aDividedByB(A[i][row], A[row][row]);
 
-                temp = OctetOps.betaProduct(alpha, b[row]);
+                temp = OctetOps.valueVectorProduct(alpha, b[row]);
 
                 MatrixUtilities.addSymbolsInPlace(temp, b[i]);
 
@@ -488,14 +477,14 @@ final class MatrixUtilities {
             for (int j = i + 1; j < ROWS; j++) {
 
                 // i*num_cols+j
-                byte[] temp = OctetOps.betaProduct(A[i][j], x[j], 0, num_cols);
+                byte[] temp = OctetOps.valueVectorProduct(A[i][j], x[j], 0, num_cols);
 
                 MatrixUtilities.addSymbolsInPlace(temp, sum);
             }
 
             byte[] temp = MatrixUtilities.addSymbols(b[i], sum);
 
-            x[i] = OctetOps.betaDivision(A[i][i], temp);
+            x[i] = OctetOps.valueVectorDivision(A[i][i], temp);
             // for (int bite = 0; bite < num_cols; bite++) {
             //
             // x[(i * num_cols) + bite] = OctetOps.division(temp[bite], A[i][i]);
