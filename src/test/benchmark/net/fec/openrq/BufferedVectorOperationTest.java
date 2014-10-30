@@ -45,7 +45,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @BenchmarkMode(Mode.Throughput)
 @Fork(0)
 @State(Scope.Benchmark)
-public class VectorOperationTest {
+public class BufferedVectorOperationTest {
 
     private static final int SYMBOL_SIZE = 1500;
 
