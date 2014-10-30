@@ -58,19 +58,13 @@ public final class OctetOps {
 
     public static byte aTimesB(byte u, byte v) {
 
-        if (u == 0 || v == 0) return 0;
-        if (u == 1) return v;
-        if (v == 1) return u;
-
-        return (byte)getExp(getLog(UNSIGN(u - 1)) + getLog(UNSIGN(v - 1)));
+        return MULT_TABLE[UNSIGN(u)][UNSIGN(v)];
     }
 
     public static byte aDividedByB(byte u, byte v) {
 
         if (v == 0) throw new ArithmeticException("cannot divide by zero");
-        if (u == 0) return 0;
-
-        return (byte)getExp(getLog(UNSIGN(u - 1)) - getLog(UNSIGN(v - 1)) + 255);
+        return DIV_TABLE[UNSIGN(u)][UNSIGN(v)];
     }
 
     public static byte minByte() {
@@ -407,13 +401,16 @@ public final class OctetOps {
 
     private static int getExp(int i) {
 
-        return OCT_EXP[i];
+        return EXP_TABLE[i];
+    }
+
+    private static int getLog(int i) {
+
+        return LOG_TABLE[i];
     }
 
 
-    // FIXME replace these with 256x256 multiplication/division tables
-    // to compare the performance
-    private static final int[] OCT_EXP =
+    private static final int[] EXP_TABLE =
     {
      1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38, 76,
      152, 45, 90, 180, 117, 234, 201, 143, 3, 6, 12, 24, 48, 96, 192, 157,
@@ -452,14 +449,7 @@ public final class OctetOps {
      142
     };
 
-
-    private static int getLog(int i) {
-
-        return OCT_LOG[i];
-    }
-
-
-    private static final int[] OCT_LOG =
+    private static final int[] LOG_TABLE =
     {
      0, 1, 25, 2, 50, 26, 198, 3, 223, 51, 238, 27, 104, 199, 75, 4, 100,
      224, 14, 52, 141, 239, 129, 28, 193, 105, 248, 200, 8, 76, 113, 5,
@@ -481,6 +471,42 @@ public final class OctetOps {
      88, 175
     };
 
+    private static final byte[][] MULT_TABLE;
+    private static final byte[][] DIV_TABLE;
+
+    static {
+        final int size = 1 << Byte.SIZE;
+
+        MULT_TABLE = new byte[size][size];
+        DIV_TABLE = new byte[size][size];
+
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                MULT_TABLE[x][y] = expLogATimesB((byte)x, (byte)y);
+                if (y != 0) {
+                    DIV_TABLE[x][y] = expLogADividedByB((byte)x, (byte)y);
+                }
+            }
+        }
+    }
+
+
+    private static byte expLogATimesB(byte u, byte v) {
+
+        if (u == 0 || v == 0) return 0;
+        if (u == 1) return v;
+        if (v == 1) return u;
+
+        return (byte)getExp(getLog(UNSIGN(u - 1)) + getLog(UNSIGN(v - 1)));
+    }
+
+    private static byte expLogADividedByB(byte u, byte v) {
+
+        if (v == 0) throw new ArithmeticException("cannot divide by zero");
+        if (u == 0) return 0;
+
+        return (byte)getExp(getLog(UNSIGN(u - 1)) - getLog(UNSIGN(v - 1)) + 255);
+    }
 
     private OctetOps() {
 
