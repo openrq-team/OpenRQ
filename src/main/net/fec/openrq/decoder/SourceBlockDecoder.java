@@ -68,7 +68,7 @@ import net.fec.openrq.parameters.ParameterChecker;
  * {@link #setSymbolOverhead(int)} changes that value.
  * <p>
  * Below are example symbol overhead values that allow a successful decoding with a specific probability given a number
- * of encoding symbols <em>(the probability values only apply if some of the encoding symbols are repair symbols)<em>:
+ * of encoding symbols <em>(the probability values only apply if some of the encoding symbols are repair symbols)</em>:
  * <blockquote>
  * <table summary="Probability of successful decoding for different values of symbol overhead">
  * <tr>
