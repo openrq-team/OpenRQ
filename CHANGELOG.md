@@ -1,5 +1,7 @@
 ## 3.3
 
+Improved performance a lot.
+
 Clarified the meaning of "symbol overhead".
 
 Added new methods for retrieving and changing the symbol overhead value in
