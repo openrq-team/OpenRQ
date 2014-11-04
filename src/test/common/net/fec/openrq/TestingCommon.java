@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package net.fec.openrq;
 
 
-import static net.fec.openrq.util.arithmetic.ExtraMath.integerPow;
+import static net.fec.openrq.util.math.ExtraMath.integerPow;
 
 import java.util.BitSet;
 import java.util.Collection;
@@ -184,6 +184,38 @@ public final class TestingCommon {
             col.add(eL);
         }
         return col;
+    }
+
+    public static void checkParamsForSingleSourceBlockData(long datalen, int srcsymbs) {
+
+        if (ParameterChecker.isDataLengthOutOfBounds(datalen)) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "by default, the data length (%d) must be within [%d, %d] bytes",
+                    datalen,
+                    ParameterChecker.minDataLength(),
+                    ParameterChecker.maxDataLength()));
+        }
+
+        if (ParameterChecker.isNumSourceSymbolsPerBlockOutOfBounds(srcsymbs)) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "by default, the number of source symbols (%d) must be within [%d, %d]",
+                    srcsymbs,
+                    ParameterChecker.minNumSourceSymbolsPerBlock(),
+                    ParameterChecker.maxNumSourceSymbolsPerBlock()));
+        }
+
+        final long minF = (long)srcsymbs * ParameterChecker.minSymbolSize();
+        final long maxF = (long)srcsymbs * ParameterChecker.maxSymbolSize();
+        if (datalen < minF || maxF < datalen) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "%d source symbol(s) can only support a data length within [%d, %d] bytes",
+                    srcsymbs,
+                    minF,
+                    maxF));
+        }
     }
 
 

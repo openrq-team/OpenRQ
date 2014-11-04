@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,21 @@
 package net.fec.openrq;
 
 
+import static net.fec.openrq.util.io.ByteBuffers.BufferType.ARRAY_BACKED;
+import static net.fec.openrq.util.io.ByteBuffers.BufferType.DIRECT;
+
 import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.datatype.UnsignedTypes;
+import net.fec.openrq.util.io.ByteBuffers;
+import net.fec.openrq.util.math.OctetOps;
+
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -33,46 +41,98 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
-@Fork(1)
-@BenchmarkMode(Mode.AverageTime)
+@BenchmarkMode(Mode.Throughput)
+@Fork(0)
 @State(Scope.Benchmark)
 public class XorTest {
 
-    @Param({"1", "10", "100", "1000", "10000", "100000", "1000000", "10000000", "100000000"})
+    @Param({SizeOf.LONG + "",
+            SizeOf.LONG + "0",
+            SizeOf.LONG + "00",
+            SizeOf.LONG + "000",
+            SizeOf.LONG + "0000",
+            SizeOf.LONG + "00000",
+    // SizeOf.LONG + "000000",
+    // SizeOf.LONG + "0000000"
+    })
     public int size;
 
-    private byte[] array;
-    private LongBuffer buffer;
+    private ByteBuffer srcBuf;
+    private ByteBuffer dstBuf;
+
+    private ByteBuffer srcDirBuf;
+    private ByteBuffer dstDirBuf;
 
 
     @Setup
     public void setup() {
 
-        array = new byte[size];
-        buffer = ByteBuffer.wrap(array).asLongBuffer();
+        srcBuf = ByteBuffers.allocate(size, ARRAY_BACKED);
+        dstBuf = ByteBuffers.allocate(size, ARRAY_BACKED);
+        randomBytes(srcBuf, TestingCommon.newSeededRandom());
+        randomBytes(dstBuf, TestingCommon.newSeededRandom());
+
+        srcDirBuf = ByteBuffers.allocate(size, DIRECT);
+        dstDirBuf = ByteBuffers.allocate(size, DIRECT);
+        randomBytes(srcDirBuf, TestingCommon.newSeededRandom());
+        randomBytes(dstDirBuf, TestingCommon.newSeededRandom());
     }
 
-    @GenerateMicroBenchmark
-    public byte testArray() {
+    private static void randomBytes(ByteBuffer b, Random rand) {
 
-        byte result = 0;
-        for (int i = 0, len = array.length; i < len; ++i) {
-            result ^= array[i];
-        }
-        return result;
+        final int pos = b.position();
+        final byte[] array = new byte[b.remaining()];
+        rand.nextBytes(array);
+        b.put(array);
+        b.position(pos);
     }
 
-    @GenerateMicroBenchmark
-    public long testBuffer() {
+    @Benchmark
+    public void testArrayBytes() {
 
-        long result = 0L;
-        buffer.rewind();
-        while (buffer.hasRemaining()) {
-            result ^= buffer.get();
+        srcBuf.rewind();
+        dstBuf.rewind();
+        final int len = size;
+        for (int i = 0; i < len; ++i) {
+            dstBuf.put(OctetOps.aPlusB(srcBuf.get(), dstBuf.get(dstBuf.position())));
         }
-        return result;
+    }
+
+    @Benchmark
+    public void testArrayLongs() {
+
+        srcBuf.rewind();
+        dstBuf.rewind();
+        final int len = size / SizeOf.LONG;
+        for (int i = 0; i < len; ++i) {
+            final long eL = UnsignedTypes.readLongUnsignedBytes(srcBuf, SizeOf.LONG);
+            dstBuf.putLong(OctetOps.aLongPlusBLong(eL, dstBuf.getLong(dstBuf.position())));
+        }
+    }
+
+    @Benchmark
+    public void testDirectBytes() {
+
+        srcDirBuf.rewind();
+        dstDirBuf.rewind();
+        final int len = size;
+        for (int i = 0; i < len; ++i) {
+            dstDirBuf.put(OctetOps.aPlusB(srcDirBuf.get(), dstDirBuf.get(dstDirBuf.position())));
+        }
+    }
+
+    @Benchmark
+    public void testDirectLongs() {
+
+        srcDirBuf.rewind();
+        dstDirBuf.rewind();
+        final int len = size / SizeOf.LONG;
+        for (int i = 0; i < len; ++i) {
+            final long eL = UnsignedTypes.readLongUnsignedBytes(srcDirBuf, SizeOf.LONG);
+            dstDirBuf.putLong(OctetOps.aLongPlusBLong(eL, dstDirBuf.getLong(dstDirBuf.position())));
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,14 @@ import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.parameters.ParameterIO;
-import net.fec.openrq.util.arithmetic.ExtraMath;
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.collection.ImmutableList;
-import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.io.BufferOperation;
+import net.fec.openrq.util.io.ByteBuffers;
+import net.fec.openrq.util.io.ExtraChannels;
+import net.fec.openrq.util.math.ExtraMath;
 
 
 /**
@@ -37,7 +41,12 @@ final class DataUtils {
 
     static interface SourceBlockSupplier<SB> {
 
-        SB get(int off, int sbn, int K);
+        SB get(int off, int sbn);
+    }
+
+    static interface SourceSymbolSupplier<SS> {
+
+        SS get(int off, int esi, int T);
     }
 
 
@@ -48,12 +57,13 @@ final class DataUtils {
      * @param supplier
      * @return an immutable list of source block encoders/decoders
      */
-    static <SB> ImmutableList<SB> partitionData(
+    static <SB> ImmutableList<SB> partitionSourceData(
         Class<SB> clazz,
         FECParameters fecParams,
-        SourceBlockSupplier<SB> supplier) {
+        SourceBlockSupplier<SB> supplier)
+    {
 
-        return partitionData(clazz, fecParams, 0, supplier);
+        return partitionSourceData(clazz, fecParams, 0, supplier);
     }
 
     /**
@@ -64,11 +74,12 @@ final class DataUtils {
      * @param supplier
      * @return an immutable list of source block encoders/decoders
      */
-    static <SB> ImmutableList<SB> partitionData(
+    static <SB> ImmutableList<SB> partitionSourceData(
         Class<SB> clazz,
         FECParameters fecParams,
         int startOffset,
-        SourceBlockSupplier<SB> supplier) {
+        SourceBlockSupplier<SB> supplier)
+    {
 
         final int Kt = fecParams.totalSymbols();
         final int Z = fecParams.numberOfSourceBlocks();
@@ -94,14 +105,63 @@ final class DataUtils {
         int off;
 
         for (sbn = 0, off = startOffset; sbn < ZL; sbn++, off += KL * T) { // first ZL
-            srcBlocks[sbn] = supplier.get(off, sbn, KL);
+            srcBlocks[sbn] = supplier.get(off, sbn);
         }
 
         for (; sbn < Z; sbn++, off += KS * T) { // last ZS
-            srcBlocks[sbn] = supplier.get(off, sbn, KS);
+            srcBlocks[sbn] = supplier.get(off, sbn);
         }
 
         return ImmutableList.of(srcBlocks);
+    }
+
+    /**
+     * @param <SS>
+     * @param sbn
+     * @param clazz
+     * @param fecParams
+     * @param supplier
+     * @return an immutable list of source symbols
+     */
+    static <SS> ImmutableList<SS> partitionSourceBlock(
+        int sbn,
+        Class<SS> clazz,
+        FECParameters fecParams,
+        SourceSymbolSupplier<SS> supplier)
+    {
+
+        return partitionSourceBlock(sbn, clazz, fecParams, 0, supplier);
+    }
+
+    /**
+     * @param <SS>
+     * @param sbn
+     * @param clazz
+     * @param fecParams
+     * @param startOffset
+     * @param supplier
+     * @return an immutable list of source symbols
+     */
+    static <SS> ImmutableList<SS> partitionSourceBlock(
+        int sbn,
+        Class<SS> clazz,
+        FECParameters fecParams,
+        int startOffset,
+        SourceSymbolSupplier<SS> supplier)
+    {
+
+        // number of source symbols
+        final int K = getK(fecParams, sbn);
+
+        // partitioned source symbols
+        final SS[] srcSymbols = ArrayUtils.newArray(clazz, K);
+
+        final int T = fecParams.symbolSize();
+        for (int esi = 0, off = startOffset; esi < K; esi++, off += T) {
+            srcSymbols[esi] = supplier.get(off, esi, T);
+        }
+
+        return ImmutableList.of(srcSymbols);
     }
 
     /**
@@ -155,9 +215,10 @@ final class DataUtils {
         byte[] symbols,
         int off,
         int len,
-        boolean copySymbols) {
+        boolean copySymbols)
+    {
 
-        ArrayUtils.checkArrayBounds(off, len, symbols.length);
+        Indexables.checkOffsetLengthBounds(off, len, symbols.length);
         return parsePacket(dec, sbn, esi, ByteBuffer.wrap(symbols, off, len), copySymbols);
     }
 
@@ -207,7 +268,7 @@ final class DataUtils {
      */
     static Parsed<EncodingPacket> parsePacket(DataDecoder dec, byte[] array, int off, int len, boolean copySymbols) {
 
-        ArrayUtils.checkArrayBounds(off, len, array.length);
+        Indexables.checkOffsetLengthBounds(off, len, array.length);
         return parsePacket(dec, ByteBuffer.wrap(array, off, len), copySymbols);
     }
 
@@ -266,20 +327,14 @@ final class DataUtils {
     static Parsed<EncodingPacket> readPacketFrom(DataDecoder dec, ReadableByteChannel ch) throws IOException {
 
         final ByteBuffer intsBuf = ByteBuffer.allocate(SizeOf.INT + SizeOf.INT);
-        while (intsBuf.hasRemaining()) {
-            ch.read(intsBuf);
-        }
-        intsBuf.flip();
+        ExtraChannels.readBytes(ch, intsBuf, BufferOperation.FLIP_ABSOLUTELY);
 
         final int fecPayloadID = intsBuf.getInt();
         final int symbLen = intsBuf.getInt();
         if (symbLen <= 0) return Parsed.invalid("size of symbols data is non-positive");
 
         final ByteBuffer symbols = ByteBuffer.allocate(symbLen);
-        while (symbols.hasRemaining()) {
-            ch.read(symbols);
-        }
-        symbols.flip();
+        ExtraChannels.readBytes(ch, symbols, BufferOperation.FLIP_ABSOLUTELY);
 
         final int sbn = ParameterIO.extractSourceBlockNumber(fecPayloadID);
         final int esi = ParameterIO.extractEncodingSymbolID(fecPayloadID);
@@ -293,7 +348,8 @@ final class DataUtils {
         int esi,
         ByteBuffer symbols,
         int symbLen,
-        boolean copySymbols) {
+        boolean copySymbols)
+    {
 
         final int Z = dec.numberOfSourceBlocks();
         if (!ParameterChecker.isValidFECPayloadID(sbn, esi, Z)) {
@@ -336,22 +392,10 @@ final class DataUtils {
     private static ByteBuffer getSymbolData(ByteBuffer symbols, int symbLen, boolean copySymbols) {
 
         if (copySymbols) {
-            final ByteBuffer copy = ByteBuffer.allocate(symbLen);
-            copy.put(symbols); // advances both buffer positions
-            copy.flip();
-            return copy;
+            return ByteBuffers.getCopy(symbols, symbLen, BufferOperation.ADVANCE_POSITION);
         }
         else {
-            final int prevLim = symbols.limit();
-            final int sliceLim = symbols.position() + symbLen;
-
-            // prepare slice but restore the limit afterwards
-            symbols.limit(sliceLim);
-            final ByteBuffer slice = symbols.slice();
-            symbols.limit(prevLim);
-
-            symbols.position(sliceLim); // advance the position
-            return slice;
+            return ByteBuffers.getSlice(symbols, symbLen, BufferOperation.ADVANCE_POSITION);
         }
     }
 }

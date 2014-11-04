@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public class SBDInfoReadWriteTest {
         }
 
         final int KforZeroSBN = DataUtils.getK(FEC_PARAMS, 0);
-        
+
         final Set<Integer> empty = Collections.emptySet();
         final Set<Integer> zeroSrcESI = Collections.singleton(0);
         final Set<Integer> KESI = Collections.singleton(KforZeroSBN);

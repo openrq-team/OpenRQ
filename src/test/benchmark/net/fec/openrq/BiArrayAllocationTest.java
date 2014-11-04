@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package net.fec.openrq;
 
 import java.util.concurrent.TimeUnit;
 
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -34,8 +34,8 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
-@Fork(2)
 @BenchmarkMode(Mode.AverageTime)
+@Fork(0)
 @State(Scope.Benchmark)
 public class BiArrayAllocationTest {
 
@@ -51,7 +51,7 @@ public class BiArrayAllocationTest {
         preAllocated = new byte[size][size];
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public byte[][] testPreAllocated() {
 
         final byte[][] preAllocated = this.preAllocated;
@@ -64,7 +64,7 @@ public class BiArrayAllocationTest {
         return preAllocated;
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public byte[][] testNewlyAllocated() {
 
         final int size = this.size;

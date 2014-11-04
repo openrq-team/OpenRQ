@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
-Copyright 2014 Jose Lopes
+Copyright 2014 OpenRQ Team
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,27 +20,36 @@ limitations under the License.
     </description>
 
 <!-- ================ Properties initialization ================ -->
-    <property name="version" value="3.2"/>
+    <property name="version" value="3.3"/>
+
+    <property name="javac-debug" value="off"/>
+    <property name="javac-debuglevel" value="lines"/>
+    <property name="javac-args" value="-Xlint:none"/>
     
     <property name="top.src_dir" location="src"/>
-    <property name="top.build_dir" location="build"/>
     <property name="top.lib_dir" location="lib"/>
+
+    <property name="classes.build_dir" location="build"/>
     
     <property name="main.src_dir" location="${top.src_dir}/main"/>
-    <property name="main.build_dir" location="${top.build_dir}/main"/>
     <property name="main.jar_file" location="openrq-${version}.jar"/>
+
+    <property name="resources.src_dir" location="${top.src_dir}/resources"/>
 
     <property name="test-common.src_dir" location="${top.src_dir}/test/common"/>
 
     <property name="test-functional.src_dir" location="${top.src_dir}/test/functional"/>
-    <property name="test-functional.build_dir" location="${top.build_dir}/test/functional"/>
     <property name="test-functional.jar_file" location="openrq-${version}-functional-test.jar"/>
     <property name="test-functional.script_file" location="${top.lib_dir}/test/functional/build.xml"/>
     
     <property name="test-benchmark.src_dir" location="${top.src_dir}/test/benchmark"/>
-    <property name="test-benchmark.build_dir" location="${top.build_dir}/test/benchmark"/>
     <property name="test-benchmark.jar_file" location="openrq-${version}-benchmark-test.jar"/>
     <property name="test-benchmark.script_file" location="${top.lib_dir}/test/benchmark/build.xml"/>
+
+    <property name="jcommander.jar_file" location="${top.lib_dir}/jcommander-1.35.jar" />
+	
+    <property name="opt.src_dir" location="${top.src_dir}/opt"/>
+	<property name="opt.jar_file" location="openrq-${version}-opt.jar"/>
     
     <property name="docs.src_dir" location="${top.src_dir}/docs"/>
     <property name="docs.build_dir" location="docs"/>
@@ -54,7 +63,7 @@ limitations under the License.
 <!-- ================ Cleaning targets ================ -->
     <target name="clean" description="Remove binary files.">
 
-        <delete dir="${top.build_dir}"/>
+        <delete dir="${classes.build_dir}"/>
 
     </target>
 
@@ -63,6 +72,7 @@ limitations under the License.
 
         <delete dir="${docs.build_dir}"/>
         <delete file="${main.jar_file}"/>
+    	<delete file="${opt.jar_file}"/>
         <delete file="${test-functional.jar_file}"/>
         <delete file="${test-benchmark.jar_file}"/>
 
@@ -73,11 +83,18 @@ limitations under the License.
     <target name="build"
             description="Compile the main Java classes.">
 
-        <delete dir="${main.build_dir}"/>
-        <mkdir dir="${main.build_dir}"/>
-        <javac srcdir="${main.src_dir}" destdir="${main.build_dir}"
+        <delete dir="${classes.build_dir}"/>
+        <mkdir dir="${classes.build_dir}"/>
+        <javac srcdir="${main.src_dir}" destdir="${classes.build_dir}"
                classpath="."
-               includeAntRuntime="false"/>
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}" />
+        </copy>
 
     </target>
 
@@ -85,7 +102,58 @@ limitations under the License.
             description="Compile the main Java classes and pack them into a Jar file.">
 
         <delete file="${main.jar_file}"/>
-        <jar destfile="${main.jar_file}" basedir="${main.build_dir}"/>
+        <jar destfile="${main.jar_file}" basedir="${classes.build_dir}"/>
+
+    </target>
+
+    <target name="srcjar" depends="build"
+
+            description="Compile the main Java classes and pack them into a Jar file (include source files).">
+
+        <delete file="${main.jar_file}"/>
+        <jar destfile="${main.jar_file}" duplicate="preserve">
+            <fileset dir="${classes.build_dir}"/>
+            <fileset dir="${main.src_dir}"/>
+        </jar>
+
+    </target>
+
+
+<!-- ================ Optional targets ================ -->
+    <target name="buildopt"
+            description="Compile the main and optional Java classes.">
+            
+        <delete dir="${classes.build_dir}"/>
+        <mkdir dir="${classes.build_dir}"/>
+        <javac srcdir="${main.src_dir}:${opt.src_dir}" destdir="${classes.build_dir}"
+               classpath="."
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}" />
+        </copy>
+    </target>
+
+    <target name="jaropt" depends="buildopt"
+            description="Compile the main and optional Java classes and pack them into a Jar file.">
+
+        <delete file="${opt.jar_file}"/>
+        <jar destfile="${opt.jar_file}" basedir="${classes.build_dir}"/>
+
+    </target>
+
+    <target name="srcjaropt" depends="buildopt"
+            description="Compile the main and optional Java classes and pack them into a Jar file (include source files).">
+
+        <delete file="${opt.jar_file}"/>
+        <jar destfile="${opt.jar_file}" duplicate="preserve">
+            <fileset dir="${classes.build_dir}"/>
+            <fileset dir="${main.src_dir}"/>
+            <fileset dir="${opt.src_dir}"/>
+        </jar>
 
     </target>
 
@@ -94,7 +162,7 @@ limitations under the License.
     <target name="docs"
             description="Generate the Javadoc files for the public API.">
 
-    	<delete dir="${docs.build_dir}"/>
+        <delete dir="${docs.build_dir}"/>
         <javadoc destdir="${docs.build_dir}"
                  classpath="." source="1.7"
                  access="public"
@@ -118,13 +186,22 @@ limitations under the License.
 
 
 <!-- ================ Functional testing targets ================ -->
-    <!-- overriden private target from junit-build.xml -->
+    <!-- overriden private target -->
     <target name="-init-functional-properties">
         
         <property name="func.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-functional.src_dir}"/>
-        <property name="func.build_dir" value="${test-functional.build_dir}"/>
+        <property name="func.build_dir" value="${classes.build_dir}"/>
         <property name="func.jar_file" value="${test-functional.jar_file}"/>
         
+    </target>
+    
+    <!-- overriden private target -->
+    <target name="-functional-post-compile">
+
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}"/>
+        </copy>
+
     </target>
     
     <!-- requires jar target to be defined in the imported script -->
@@ -139,13 +216,22 @@ limitations under the License.
 
 
 <!-- ================ Benchmark testing targets ================ -->    
-    <!-- overriden private target from junit-build.xml -->
+    <!-- overriden private target -->
     <target name="-init-benchmark-properties">
         
         <property name="bench.src_dirs" value="${main.src_dir}:${test-common.src_dir}:${test-benchmark.src_dir}"/>
-        <property name="bench.build_dir" value="${test-benchmark.build_dir}"/>
+        <property name="bench.build_dir" value="${classes.build_dir}"/>
         <property name="bench.jar_file" value="${test-benchmark.jar_file}"/>
         
+    </target>
+    
+    <!-- overriden private target -->
+    <target name="-benchmark-post-compile">
+
+        <copy todir="${classes.build_dir}">
+            <fileset dir="${resources.src_dir}" />
+        </copy>
+
     </target>
     
     <!-- requires jar target to be defined in the imported script -->

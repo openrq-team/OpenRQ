@@ -35,8 +35,8 @@ questions.
     -->
     <dirname property="benchmark-ant.basedir" file="${ant.file.benchmark-ant}"/>
 
-    <property name="jmh-core.jar" location="${benchmark-ant.basedir}/jmh-core-0.7.3.jar"/>
-    <property name="jmh-generator-annprocess.jar" location="${benchmark-ant.basedir}/jmh-generator-annprocess-0.7.3.jar"/>
+    <property name="jmh-core.jar" location="${benchmark-ant.basedir}/jmh-core-0.9.jar"/>
+    <property name="jmh-generator-annprocess.jar" location="${benchmark-ant.basedir}/jmh-generator-annprocess-0.9.jar"/>
 
     <property name="joptsimple.jar" location="${benchmark-ant.basedir}/jopt-simple-4.6.jar"/>
     <property name="commonsmath.jar" location="${benchmark-ant.basedir}/commons-math3-3.3.jar"/>
@@ -83,10 +83,19 @@ questions.
         <mkdir dir="${bench.build_dir}"/>
         
         <javac srcdir="${bench.src_dirs}" destdir="${bench.build_dir}"
-               classpath=".:${jmh-core.jar}:${jmh-generator-annprocess.jar}"
-               includeAntRuntime="false"/>
+               classpath=".:${jmh-core.jar}:${jmh-generator-annprocess.jar}:${jcommander.jar_file}"
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
+               
+        <subant target="-benchmark-post-compile" buildpath="." failonerror="true"/>
                
     </target>
+    
+    <!-- private target to be overriden in importing script if necessary-->
+    <target name="-benchmark-post-compile"/>
 
     <!-- private target to be called by importing script -->
     <target name="-benchmark-jar" depends="-init-benchmark-properties,-compile-with-jmh">
@@ -100,6 +109,7 @@ questions.
             <zipfileset src="${jmh-core.jar}" excludes="**/META-INF/services/**" />
             <zipfileset src="${joptsimple.jar}" />
             <zipfileset src="${commonsmath.jar}" />
+            <zipfileset src="${jcommander.jar_file}" />
         </jar>
 
     </target>

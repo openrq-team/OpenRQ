@@ -1,3 +1,27 @@
+## 3.3
+
+Improved performance a lot.
+
+Clarified the meaning of "symbol overhead".
+
+Added new methods for retrieving and changing the symbol overhead value in
+a source block decoder.
+
+Added a new method that returns the number of repair symbols starting at a
+specified index.
+
+Changed public method signatures:
+(++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.OpenRQ
+ * ++ public static ArrayDataDecoder newDecoderWithZeroOverhead(FECParameters)
+ * ++ public static ArrayDataDecoder newDecoderWithOneOverhead(FECParameters)
+ * ++ public static ArrayDataDecoder newDecoderWithTwoOverhead(FECParameters)
+* net.fec.openrq.decoder.SourceBlockDecoder
+ * public int symbolOverhead()
+ * public void setSymbolOverhead(int)
+* net.fec.openrq.parameters.ParameterChecker
+ * ++ public static int numRepairSymbolsPerBlock(int, int)
+
 ## 3.2
 
 Turned "net.fec.openrq.decoder.SourceBlockDecoder" thread safe, and added
@@ -21,6 +45,7 @@ Changed public method signatures:
  * ++ public Iterable<? extends SourceBlockDecoder> sourceBlockIterable()
 * net.fec.openrq.decoder.SourceBlockDecoder
  * ++ public SourceBlockState latestState()
+ * ++ public SBDInfo information()
 * net.fec.openrq.parameters.ParameterChecker
  * ++ public static int minNumSourceSymbolsPerBlock()
  * ++ public static boolean isNumSourceSymbolsPerBlockOutOfBounds(int)

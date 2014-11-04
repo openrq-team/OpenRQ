@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,11 @@ package net.fec.openrq.util.rq;
 /**
  */
 public final class SystematicIndices {
+
+    public static int getISI(int esi, int k, int Kprime) {
+
+        return esi + (Kprime - k);
+    }
 
     public static int getKIndex(int K) {
 
@@ -91,6 +96,19 @@ public final class SystematicIndices {
         }
 
         throw new RuntimeException("Invalid table state");
+    }
+
+    public static boolean containsKPrime(int Kprime) {
+
+        if (Kprime >= K(0) && Kprime <= K(table2.length - 1)) {
+            for (int i = 0; i < table2.length; i++) {
+                if (K(i) == Kprime) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 

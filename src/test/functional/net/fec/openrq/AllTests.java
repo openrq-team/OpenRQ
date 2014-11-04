@@ -1,8 +1,5 @@
-package net.fec.openrq;
-
-
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +13,12 @@ package net.fec.openrq;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.fec.openrq;
 
-import net.fec.openrq.parameters.DeriverParametersBoundsTest;
-import net.fec.openrq.parameters.FECParametersBoundsTest;
-import net.fec.openrq.parameters.FECParametersReadWriteTest;
+
+import net.fec.openrq.suites.LinearAlgebraSuite;
+import net.fec.openrq.suites.ParametersBoundsSuite;
+import net.fec.openrq.suites.ReadWriteSuite;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -28,13 +27,11 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-               DataIntegrityCheckTest.class,
-               FECParametersBoundsTest.class,
-               DeriverParametersBoundsTest.class,
-               FECParametersReadWriteTest.class,
+               LinearAlgebraSuite.class,
+               ParametersBoundsSuite.class,
                OpenRQClassTest.class,
-               OpenRQClassExceptionTest.class,
-               SBDInfoReadWriteTest.class
+               DataIntegrityCheckTest.class,
+               ReadWriteSuite.class
 })
 public class AllTests {
 

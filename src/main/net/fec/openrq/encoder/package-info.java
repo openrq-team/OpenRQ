@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 /**
  * This package contains RaptorQ encoder related classes. Please refer to the documentation of the
- * <a href="{@docRoot}/net/fec/openrq/package-summary.html#package_description">
- * net.fec.openrq
- * </a> package for more details.
+ * <a href="../package-summary.html#package_description">net.fec.openrq</a> package for more details.
  */
 package net.fec.openrq.encoder;
+

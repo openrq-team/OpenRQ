@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package net.fec.openrq;
 
 
 import net.fec.openrq.decoder.DataDecoder;
+import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
@@ -84,29 +85,102 @@ public final class OpenRQ {
 
     /**
      * Returns a {@link DataDecoder} object that decodes source data into an array of bytes, configured according to the
-     * provided FEC parameters and repair symbol overhead.
+     * provided FEC parameters and symbol overhead. All source block decoders will initially be configured with the
+     * provided symbol overhead value.
      * <p>
-     * The repair symbol overhead is given as a number of extra repair symbols that add up together with the amount of
-     * source symbols as the total number of encoding symbols that trigger a decoding operation. The larger the symbol
-     * overhead, the less likely is a decoding failure to occur, at the cost of more data to be transmitted. Naturally,
-     * this only applies when some source symbols are missing and repair symbols are available to substitute them.
+     * For information on the symbol overhead value, refer to the section on
+     * <a href="decoder/SourceBlockDecoder.html#symbol-overhead"><em>Symbol overhead</em></a> in the
+     * {@link SourceBlockDecoder} class header.
      * <p>
      * Note that the maximum supported data length is {@link Integer#MAX_VALUE}.
      * 
      * @param fecParams
      *            FEC parameters that configure the returned data decoder object
-     * @param extraSymbols
-     *            Repair symbol overhead (must be non-negative)
+     * @param symbolOverhead
+     *            Symbol overhead (must be non-negative)
      * @return a data decoder object that decodes source data into an array of bytes
      * @exception NullPointerException
      *                If {@code fecParams} is {@code null}
      * @exception IllegalArgumentException
-     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || extraSymbols < 0}
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || symbolOverhead < 0}
      */
-    public static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
+    public static ArrayDataDecoder newDecoder(FECParameters fecParams, int symbolOverhead) {
 
         // exceptions are checked inside the invoked method
-        return ArrayDataDecoder.newDecoder(fecParams, extraSymbols);
+        return ArrayDataDecoder.newDecoder(fecParams, symbolOverhead);
+    }
+
+    /**
+     * Returns a {@link DataDecoder} object that decodes source data into an array of bytes, configured according to the
+     * provided FEC parameters. The symbol overhead value will be set to {@code 0}, and all source block decoders will
+     * initially be configured with that value. The probability of decoding failure given this overhead is 1%.
+     * <p>
+     * For information on the symbol overhead value, refer to the section on
+     * <a href="decoder/SourceBlockDecoder.html#symbol-overhead"><em>Symbol overhead</em></a> in the
+     * {@link SourceBlockDecoder} class header.
+     * <p>
+     * Note that the maximum supported data length is {@link Integer#MAX_VALUE}.
+     * 
+     * @param fecParams
+     *            FEC parameters that configure the returned data decoder object
+     * @return a data decoder object that decodes source data into an array of bytes
+     * @exception NullPointerException
+     *                If {@code fecParams} is {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
+     */
+    public static ArrayDataDecoder newDecoderWithZeroOverhead(FECParameters fecParams) {
+
+        return newDecoder(fecParams, 0);
+    }
+
+    /**
+     * Returns a {@link DataDecoder} object that decodes source data into an array of bytes, configured according to the
+     * provided FEC parameters. The symbol overhead value will be set to {@code 1}, and all source block decoders will
+     * initially be configured with that value. The probability of decoding failure given this overhead is 0.01%.
+     * <p>
+     * For information on the symbol overhead value, refer to the section on
+     * <a href="decoder/SourceBlockDecoder.html#symbol-overhead"><em>Symbol overhead</em></a> in the
+     * {@link SourceBlockDecoder} class header.
+     * <p>
+     * Note that the maximum supported data length is {@link Integer#MAX_VALUE}.
+     * 
+     * @param fecParams
+     *            FEC parameters that configure the returned data decoder object
+     * @return a data decoder object that decodes source data into an array of bytes
+     * @exception NullPointerException
+     *                If {@code fecParams} is {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
+     */
+    public static ArrayDataDecoder newDecoderWithOneOverhead(FECParameters fecParams) {
+
+        return newDecoder(fecParams, 1);
+    }
+
+    /**
+     * Returns a {@link DataDecoder} object that decodes source data into an array of bytes, configured according to the
+     * provided FEC parameters. The symbol overhead value will be set to {@code 2}, and all source block decoders will
+     * initially be configured with that value. The probability of decoding failure given this overhead is 0.0001% (one
+     * in a million chance).
+     * <p>
+     * For information on the symbol overhead value, refer to the section on
+     * <a href="decoder/SourceBlockDecoder.html#symbol-overhead"><em>Symbol overhead</em></a> in the
+     * {@link SourceBlockDecoder} class header.
+     * <p>
+     * Note that the maximum supported data length is {@link Integer#MAX_VALUE}.
+     * 
+     * @param fecParams
+     *            FEC parameters that configure the returned data decoder object
+     * @return a data decoder object that decodes source data into an array of bytes
+     * @exception NullPointerException
+     *                If {@code fecParams} is {@code null}
+     * @exception IllegalArgumentException
+     *                If {@code fecParams.dataLength() > Integer.MAX_VALUE}
+     */
+    public static ArrayDataDecoder newDecoderWithTwoOverhead(FECParameters fecParams) {
+
+        return newDecoder(fecParams, 2);
     }
 
     /**
@@ -114,32 +188,35 @@ public final class OpenRQ {
      * rate.
      * 
      * @param numSourceSymbols
-     *            The number of source symbols in the source block (must be positive)
-     * @param extraSymbols
-     *            Number of extra repair symbols necessary for decoding (must be non-negative)
+     *            The number of source symbols in the source block (must be between 1 and 56_403)
+     * @param symbolOverhead
+     *            Number of extra encoding symbols necessary for decoding (must be non-negative)
      * @param loss
      *            The expected network loss rate (must be between 0 and 1).
      * @return the minimum number of repair symbols that should be transmitted
      * @exception IllegalArgumentException
-     *                If {@code numSourceSymbols}, {@code extraSymbols} or {@code loss} are out of bounds
+     *                If {@code numSourceSymbols}, {@code symbolOverhead} or {@code loss} are out of bounds
      */
-    public static final int minRepairSymbols(int numSourceSymbols, int extraSymbols, double loss) {
+    public static final int minRepairSymbols(int numSourceSymbols, int symbolOverhead, double loss) {
 
         if (numSourceSymbols < 1 || numSourceSymbols > ParameterChecker.maxNumSourceSymbolsPerBlock()) {
             throw new IllegalArgumentException("invalid number of source symbols");
         }
-        if (extraSymbols < 0 || extraSymbols > ParameterChecker.maxEncodingSymbolID() - numSourceSymbols) {
-            throw new IllegalArgumentException("invalid number of extra symbols");
+        if (symbolOverhead < 0) {
+            throw new IllegalArgumentException("invalid symbol overhead");
         }
         if (loss < 0.0 || loss > 1.0) {
             throw new IllegalArgumentException("invalid network loss rate");
         }
 
+        // the symbol overhead cannot exceed the number of repair symbols
+        symbolOverhead = Math.min(symbolOverhead, ParameterChecker.numRepairSymbolsPerBlock(numSourceSymbols));
+
         double temp_var = loss;
 
         // calculate
         temp_var *= numSourceSymbols;
-        temp_var += extraSymbols;
+        temp_var += symbolOverhead;
         temp_var /= (1 - loss);
 
         // ceil to an integer and return

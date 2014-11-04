@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.arithmetic.ExtraMath;
+import net.fec.openrq.util.math.ExtraMath;
 
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -61,7 +61,7 @@ public final class DataIntegrityCheckTest {
     public static Iterable<Object[]> getFECParams() {
 
         final int[] Fs = TestingCommon.primeExponentialDistribution(2, 15);
-        final int[] Ks = TestingCommon.primeExponentialDistribution(10, 2);
+        final int[] Ks = TestingCommon.primeExponentialDistribution(10, 3);
         final int[] Zs = TestingCommon.primeExponentialDistribution(2, 3);
         final int N = 1;
 
@@ -87,6 +87,8 @@ public final class DataIntegrityCheckTest {
             }
         }
 
+        System.out.printf("Testing data integrity with F=[%d, %d] K=[%d, %d] Z=[%d, %d] N=%d%n",
+            Fs[0], Fs[Fs.length - 1], Ks[0], Ks[Ks.length - 1], Zs[0], Zs[Zs.length - 1], N, N);
         System.out.println("Testing " + 2 * params.size() + " data integrity tests...");
         return params;
     }

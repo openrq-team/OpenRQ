@@ -13,7 +13,7 @@ import java.util.RandomAccess;
  * This class is a simple implementation of an immutable list where all the "write" methods simply throw an
  * {@code UnsupportedOperationException}.
  * 
- * @author Ricardo Fonseca &lt;ricardof&#064;lasige.di.fc.ul.pt&gt;
+ * @author Ricardo Fonseca &lt;rfonseca&#064;lasige.di.fc.ul.pt&gt;
  * @param <E>
  *            The element type of the list
  */

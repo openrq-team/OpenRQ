@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,11 @@ import java.util.Set;
 import net.fec.openrq.decoder.SourceBlockState;
 import net.fec.openrq.parameters.FECParameters;
 import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.array.ArrayUtils;
-import net.fec.openrq.util.numericaltype.SizeOf;
-import net.fec.openrq.util.numericaltype.UnsignedTypes;
+import net.fec.openrq.util.checking.Indexables;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.datatype.UnsignedTypes;
+import net.fec.openrq.util.io.BufferOperation;
+import net.fec.openrq.util.io.ExtraChannels;
 
 
 /**
@@ -93,8 +95,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param serInfo
      *            A serializable object containing source block decoder information
@@ -122,8 +123,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing source block decoder information
@@ -151,8 +151,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param array
      *            An array of bytes containing source block decoder information
@@ -170,7 +169,7 @@ public final class SBDInfo {
      */
     public static Parsed<SBDInfo> parse(byte[] array, int off, int len, FECParameters fecParams) {
 
-        ArrayUtils.checkArrayBounds(off, len, array.length);
+        Indexables.checkOffsetLengthBounds(off, len, array.length);
         return parse(ByteBuffer.wrap(array, off, len), fecParams);
     }
 
@@ -188,8 +187,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * 
      * @param buffer
      *            A buffer containing source block decoder information
@@ -235,8 +233,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is read from the input, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -247,7 +244,7 @@ public final class SBDInfo {
      *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code DataInput} object
+     *             If an I/O error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
      *                If any argument is {@code null}
      */
@@ -285,8 +282,7 @@ public final class SBDInfo {
      * <ul>
      * <li>If the parsing succeeded, the information can be retrieved by calling the method {@link Parsed#value()}
      * <li>If the parsing failed, the container object will be {@linkplain Parsed#isValid() invalid} and the reason for
-     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()}
-     * </ul>
+     * the parsing failure can be retrieved by calling the method {@link Parsed#failureReason()} </ul>
      * <p>
      * <b><em>Blocking behavior</em></b>: this method blocks until the whole information is read from the channel, or a
      * parsing failure is detected, or an {@code IOException} is throw.
@@ -297,7 +293,7 @@ public final class SBDInfo {
      *            FEC parameters associated to the source data containing the source block being decoded
      * @return a container object containing source block decoder information or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     *             If an I/O error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
      *                If any argument is {@code null}
      */
@@ -305,23 +301,30 @@ public final class SBDInfo {
 
         try {
             final ByteBuffer sbnAndStateBuf = ByteBuffer.allocate(SizeOf.BYTE + SizeOf.BYTE);
-            readFromChannel(ch, sbnAndStateBuf);
+            ExtraChannels.readBytes(ch, sbnAndStateBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final int sbn = readSBN(sbnAndStateBuf, fecParams);
             final int K = DataUtils.getK(fecParams, sbn);
             final SourceBlockState state = readState(sbnAndStateBuf);
 
             final ByteBuffer numMissBuf = ByteBuffer.allocate(SizeOf.SHORT);
-            readFromChannel(ch, numMissBuf);
+            ExtraChannels.readBytes(ch, numMissBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final int numMiss = readNumMissingSourceSymbols(numMissBuf, K, state);
+
             final ByteBuffer missingBuf = ByteBuffer.allocate(numMiss * SizeOf.SHORT);
-            readFromChannel(ch, missingBuf);
+            ExtraChannels.readBytes(ch, missingBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final Set<Integer> missing = readMissingSourceSymbols(missingBuf, numMiss, K);
 
             final ByteBuffer numAvailBuf = ByteBuffer.allocate(SizeOf.UNSIGNED_3_BYTES);
-            readFromChannel(ch, numAvailBuf);
+            ExtraChannels.readBytes(ch, numAvailBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final int numAvail = readNumAvailableRepairSymbols(numAvailBuf, K, state);
+
             final ByteBuffer availableBuf = ByteBuffer.allocate(numAvail * SizeOf.UNSIGNED_3_BYTES);
-            readFromChannel(ch, availableBuf);
+            ExtraChannels.readBytes(ch, availableBuf, BufferOperation.FLIP_ABSOLUTELY);
+
             final Set<Integer> available = readAvailableRepairSymbols(availableBuf, numAvail, K);
 
             return newRemoteInfo(sbn, state, missing, available);
@@ -329,15 +332,6 @@ public final class SBDInfo {
         catch (InternalParsingException e) {
             return Parsed.invalid(e.getMessage());
         }
-    }
-
-    private static void readFromChannel(ReadableByteChannel ch, ByteBuffer buf) throws IOException {
-
-        final int initPos = buf.position();
-        while (buf.hasRemaining()) {
-            ch.read(buf);
-        }
-        buf.position(initPos);
     }
 
     private static Parsed<SBDInfo> newRemoteInfo(
@@ -437,12 +431,10 @@ public final class SBDInfo {
      * This instance ({@code this}) is equal to another object ({@code obj}), if and only if:
      * <ul>
      * <li>{@code obj} is non-null
-     * <li>and {@code obj} is an instance of {@code SBDInfo}
-     * <li>and {@code this}.{@link #sourceBlockNumber()} == {@code obj.sourceBlockNumber()}
-     * <li>and {@code this}.{@link #state()}{@code .equals(obj.state())}
-     * <li>and {@code this}.{@link #missingSourceSymbols()}{@code .equals(obj.missingSourceSymbols())}
-     * <li>and {@code this}.{@link #availableRepairSymbols()}{@code .equals(obj.availableRepairSymbols())}
-     * </ul>
+     * <li>and {@code obj} is an instance of {@code SBDInfo} <li>and {@code this}.{@link #sourceBlockNumber()} ==
+     * {@code obj.sourceBlockNumber()} <li>and {@code this}.{@link #state()}{@code .equals(obj.state())} <li>and
+     * {@code this}.{@link #missingSourceSymbols()}{@code .equals(obj.missingSourceSymbols())} <li>and {@code this}.
+     * {@link #availableRepairSymbols()}{@code .equals(obj.availableRepairSymbols())} </ul>
      */
     @Override
     public boolean equals(Object obj) {
@@ -496,9 +488,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The array will contain the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -521,9 +512,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -550,9 +540,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -585,9 +574,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The buffer will contain the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -611,9 +599,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The write consists of the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -650,9 +637,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -669,7 +655,7 @@ public final class SBDInfo {
      * @param out
      *            A {@code DataOutput} object into which the information is written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code DataOutput} object
+     *             If an I/O error occurs while writing to the {@code DataOutput} object
      * @exception NullPointerException
      *                If {@code out} is {@code null}
      */
@@ -689,9 +675,8 @@ public final class SBDInfo {
      * <p>
      * Let:
      * <ul>
-     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()}
-     * <li>{@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()}
-     * </ul>
+     * <li>{@code NUM_MISSING_BYTES} = {@code 2} &times; {@link #missingSourceSymbols()}{@code .size()} <li>
+     * {@code NUM_AVAILABLE_BYTES} = {@code 3} &times; {@link #availableRepairSymbols()}{@code .size()} </ul>
      * <p>
      * The method will write the {@linkplain #sourceBlockNumber() source block number}, followed by a byte value
      * corresponding to the {@linkplain #state() latest state of the source block}, followed by
@@ -705,16 +690,13 @@ public final class SBDInfo {
      * @param ch
      *            A {@code WritableByteChannel} object into which the information is written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code WritableByteChannel} object
+     *             If an I/O error occurs while writing to the {@code WritableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */
     public void writeTo(WritableByteChannel ch) throws IOException {
 
-        final ByteBuffer buffer = asBuffer();
-        while (buffer.hasRemaining()) {
-            ch.write(buffer);
-        }
+        ExtraChannels.writeBytes(ch, asBuffer());
     }
 
     private int getEncodedByteSize() {

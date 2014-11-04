@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package net.fec.openrq;
 
 
-import java.util.Arrays;
-
-import net.fec.openrq.util.rq.OctectOps;
+import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.linearalgebra.matrix.ByteMatrix;
+import net.fec.openrq.util.math.OctetOps;
 
 
 /**
@@ -34,14 +34,14 @@ final class MatrixUtilities {
         for (int i = 0; i < M; i++)
             if (matrix[i].length != N) throw new IllegalArgumentException("Invalid matrix dimensions.");
 
-        System.out.printf("    ");
+        System.out.printf("   ");
         for (int j = 0; j < N; j++)
             System.out.printf("* %02d ", j);
 
         System.out.println("|");
 
         for (int i = 0; i < M; i++) {
-            System.out.printf(" %02d)", i);
+            System.out.printf("%02d)", i);
             for (int j = 0; j < N; j++)
                 System.out.printf("| %02X ", (matrix[i][j]));
             System.out.println("|");
@@ -68,7 +68,7 @@ final class MatrixUtilities {
             for (int j = 0; j < C[0].length; j++) {
                 for (int k = 0; k < A[0].length; k++) {
 
-                    byte temp = OctectOps.product(A[i][k], B[k][j]);
+                    byte temp = OctetOps.aTimesB(A[i][k], B[k][j]);
 
                     C[i][j] = (byte)(C[i][j] ^ temp);
                 }
@@ -84,12 +84,20 @@ final class MatrixUtilities {
      * 
      * @param A
      *            Matrix A
+     * @param first_rowA
+     * @param first_colA
+     * @param last_rowA
+     * @param last_colA
      * @param B
      *            Matrix B
+     * @param first_rowB
+     * @param first_colB
+     * @param last_rowB
+     * @param last_colB
      * @return A*B
      */
-    static byte[][] multiplyMatrices(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA,
-        byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB) {
+    static byte[][] multiplyMatrices(byte[][] A, int first_rowA, int last_rowA, int first_colA, int last_colA,
+        byte[][] B, int first_rowB, int last_rowB, int first_colB, int last_colB) {
 
         // if ((last_colA - first_colA) != (last_rowB - first_rowB)) throw new
         // RuntimeException("Illegal matrix dimensions.");
@@ -105,7 +113,7 @@ final class MatrixUtilities {
 
                 for (int k = 0; k < colsA; k++) {
 
-                    byte temp = OctectOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
+                    byte temp = OctetOps.aTimesB(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
 
                     C[i][j] = (byte)(C[i][j] ^ temp);
                 }
@@ -121,15 +129,26 @@ final class MatrixUtilities {
      * 
      * @param A
      *            Matrix A
+     * @param first_rowA
+     * @param first_colA
+     * @param last_rowA
+     * @param last_colA
      * @param B
      *            Matrix B
+     * @param first_rowB
+     * @param first_colB
+     * @param last_rowB
+     * @param last_colB
      * @param C
      *            Matrix where the results should be stored.
-     * @return C
+     * @param first_rowC
+     * @param first_colC
+     * @param last_rowC
+     * @param last_colC
      */
-    static void multiplyMatrices(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA,
-        byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB,
-        byte[][] C, int first_rowC, int first_colC, int last_rowC, int last_colC) {
+    static void multiplyMatrices(byte[][] A, int first_rowA, int last_rowA, int first_colA, int last_colA,
+        byte[][] B, int first_rowB, int last_rowB, int first_colB, int last_colB,
+        byte[][] C, int first_rowC, int last_rowC, int first_colC, int last_colC) {
 
         // if ((last_colA - first_colA) != (last_rowB - first_rowB)) throw new
         // RuntimeException("Illegal matrix dimensions.");
@@ -142,54 +161,11 @@ final class MatrixUtilities {
             for (int j = 0; j < colsC; j++) {
                 for (int k = 0; k < colsA; k++) {
 
-                    byte temp = OctectOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
+                    byte temp = OctetOps.aTimesB(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
 
                     C[i + first_rowC][j + first_colC] = (byte)(C[i + first_rowC][j + first_colC] ^ temp);
                 }
             }
-        }
-    }
-
-    /**
-     * Multiplies a sub-matrix of Matrix A by a sub-matrix of Matrix B. Requires the number
-     * of columns in A's sub-matrix to be equal to the number of rows in B's sub-matrix.
-     * <p>
-     * This is a hack function that uses a temporary line vector and stores the product in Matrix A.
-     * 
-     * @param A
-     *            Matrix A
-     * @param B
-     *            Matrix B
-     * @param C
-     *            Matrix where the results should be stored.
-     * @return C
-     */
-    static void multiplyMatricesHack(byte[][] A, int first_rowA, int first_colA, int last_rowA, int last_colA,
-        byte[][] B, int first_rowB, int first_colB, int last_rowB, int last_colB,
-        byte[][] C, int first_rowC, int first_colC, int last_rowC, int last_colC) {
-
-        // if ((last_colA - first_colA) != (last_rowB - first_rowB)) throw new
-        // RuntimeException("Illegal matrix dimensions.");
-
-        int rowsA = last_rowA - first_rowA;
-        int colsA = last_colA - first_colA;
-        int colsB = last_colB - first_colB;
-
-        final byte[] tempLine = new byte[colsB];
-
-        for (int i = 0; i < rowsA; i++) {
-            for (int j = 0; j < colsB; j++) {
-                for (int k = 0; k < colsA; k++) {
-
-                    byte temp = OctectOps.product(A[i + first_rowA][k + first_colA], B[k + first_rowB][j + first_colB]);
-
-                    tempLine[j + first_colC] = (byte)(tempLine[j + first_colC] ^ temp);
-                }
-            }
-
-            // NOTE: this prevents changing matrix C while multiplying
-            System.arraycopy(tempLine, 0, C[i + first_rowC], first_colC, colsB);
-            Arrays.fill(tempLine, (byte)0);
         }
     }
 
@@ -201,7 +177,7 @@ final class MatrixUtilities {
      * @param line
      * @param line_length
      * @param vector
-     * @return
+     * @return a vector
      */
     static byte[] multiplyByteLineBySymbolVector(byte[] line, int line_length, byte[][] vector) {
 
@@ -213,38 +189,7 @@ final class MatrixUtilities {
 
             for (int colRow = 0; colRow < line_length; colRow++) {
 
-                byte temp = OctectOps.product(line[colRow], vector[colRow][octet]);
-
-                result[octet] = (byte)(result[octet] ^ temp);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Multiplies a row (<code>line</code>) by a vector.
-     * The number of columns in <code>line</code> must be equal to the number of rows
-     * in <code>vector</coder>
-     * 
-     * @param line
-     * @param line_length
-     * @param d
-     * @param D
-     * @return
-     */
-    static byte[] multiplyByteLineBySymbolVector(byte[] line, int line_length,
-        int[] d, byte[][] D) {
-
-        final int symbol_size = D[0].length;
-
-        byte[] result = new byte[symbol_size];
-
-        for (int octet = 0; octet < symbol_size; octet++) {
-
-            for (int colRow = 0; colRow < line_length; colRow++) {
-
-                byte temp = OctectOps.product(line[colRow], D[d[colRow]][octet]);
+                byte temp = OctetOps.aTimesB(line[colRow], vector[colRow][octet]);
 
                 result[octet] = (byte)(result[octet] ^ temp);
             }
@@ -258,80 +203,64 @@ final class MatrixUtilities {
      * form. The operations are also performed in matrix D, with indices in d.
      * 
      * @param A
-     * @param first_row
-     * @param last_row
-     * @param first_col
-     * @param last_col
+     * @param fromRow
+     * @param toRow
+     * @param fromCol
+     * @param toCol
      * @param d
      * @param D
      */
     static void reduceToRowEchelonForm(
-        byte[][] A,
-        int first_row,
-        int last_row,
-        int first_col,
-        int last_col,
+        ByteMatrix A,
+        final int fromRow,
+        final int toRow,
+        final int fromCol,
+        final int toCol,
         int[] d,
         byte[][] D) {
 
-        int lead = 0;
-        int rowCount = last_row - first_row;
-        int columnCount = last_col - first_col;
-
-        for (int r = 0; r < rowCount; r++) {
-
-            if (columnCount <= lead) return;
+        int lead = fromCol;
+        for (int r = fromRow; r < toRow; r++) {
+            if (lead >= toCol) {
+                return;
+            }
 
             int i = r;
-            while (A[i + first_row][lead + first_col] == 0) {
-
+            while (A.isZeroAt(i, lead)) {
                 i++;
-
-                if (rowCount == i) {
-
+                if (i == toRow) {
                     i = r;
                     lead++;
-                    if (columnCount == lead) return;
+                    if (lead >= toCol) {
+                        return;
+                    }
                 }
             }
 
             if (i != r) {
-
-                byte[] auxRow = A[i + first_row];
-                A[i + first_row] = A[r + first_row];
-                A[r + first_row] = auxRow;
-
+                A.swapRows(i, r);
                 // decoding process - swap d[i] with d[r] in d
-                int auxIndex = d[i + first_row];
-                d[i + first_row] = d[r + first_row];
-                d[r + first_row] = auxIndex;
-
+                ArrayUtils.swapInts(d, i, r);
             }
 
-            byte beta = A[r + first_row][lead + first_col];
+            byte beta = A.get(r, lead);
             if (beta != 0) {
-                for (int col = 0; col < columnCount; col++)
-                    A[r + first_row][col + first_col] = OctectOps.division(A[r + first_row][col + first_col], beta);
-
+                A.divideRowInPlace(r, beta);
                 // decoding process - divide D[d[r]] by U_lower[r][lead]
-                OctectOps.betaDivisionInPlace(D[d[r + first_row]], beta);
+                // byte[] / beta
+                final int dIndex = d[r];
+                OctetOps.valueVectorDivision(beta, D[dIndex], D[dIndex]); // in place division
             }
 
-            for (i = 0; i < rowCount; i++) {
-
-                beta = A[i + first_row][lead + first_col];
-
+            for (i = fromRow; i < toRow; i++) {
                 if (i != r) {
+                    beta = A.get(i, lead);
+
                     // U_lower[i] - (U_lower[i][lead] * U_lower[r])
-                    byte[] product = OctectOps.betaProduct(beta, A[r + first_row], first_col, columnCount);
-
-                    for (int col = 0; col < columnCount; col++)
-                        A[i + first_row][col + first_col] = OctectOps.subtraction(A[i + first_row][col + first_col],
-                            product[col]);
-
-                    // decoding process - D[d[i+first_row]] - (U_lower[i][lead] * D[d[r+first_row]])
-                    product = OctectOps.betaProduct(beta, D[d[r + first_row]]);
-                    xorSymbolInPlace(D[d[i + first_row]], product);
+                    // NOTE: here, subtraction is the same as addition
+                    A.addRowsInPlace(beta, r, i);
+                    // decoding process - D[d[i]] - (U_lower[i][lead] * D[d[r]])
+                    OctetOps.vectorVectorAddition(beta, D[d[r]], D[d[i]], D[d[i]]);
                 }
             }
 
@@ -351,53 +280,6 @@ final class MatrixUtilities {
             matrix[row][a] = matrix[row][b];
             matrix[row][b] = auxPos;
         }
-    }
-
-    static byte[] xorSymbol(byte[] s1, byte[] s2) {
-
-        /*
-         * if(s1.length != s2.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        byte[] xor = new byte[s1.length];
-
-        for (int i = 0; i < s1.length; i++) {
-            xor[i] = (byte)(s1[i] ^ s2[i]);
-        }
-
-        return xor;
-    }
-
-    static void xorSymbolInPlace(byte[] s1, byte[] s2) {
-
-        /*
-         * if(s1.length != s2.length){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        for (int i = 0; i < s1.length; i++) {
-            s1[i] = (byte)(s1[i] ^ s2[i]);
-        }
-    }
-
-    static byte[] xorSymbol(byte[] s1, int pos1, byte[] s2, int pos2, int length) {
-
-        /*
-         * if((s1.length - pos1) < length || (s2.length - pos2) < length ){
-         * throw new IllegalArgumentException("Symbols must be of the same size.");
-         * }
-         */
-
-        byte[] xor = new byte[length];
-
-        for (int i = 0; i < length; i++) {
-            xor[i] = (byte)(s1[pos1 + i] ^ s2[pos2 + i]);
-        }
-
-        return xor;
     }
 
     static long ceilPrime(long p) {
@@ -422,24 +304,12 @@ final class MatrixUtilities {
         return true;
     }
 
-    static boolean checkIdentity(byte[][] A, int L) {
-
-        for (int row = 0; row < L; row++)
-            for (int col = 0; col < L; col++)
-                if (row != col && A[row][col] != 0) return false;
-                else if (row == col && A[row][col] != 1) return false;
-
-        return true;
-    }
-
-    // works only for matrices in row echelon form
-    static boolean validateRank(
+    static int nonZeroRows(
         byte[][] matrix,
         int first_row,
-        int first_col,
         int last_row,
-        int last_col,
-        int rank_lower_limit)
+        int first_col,
+        int last_col)
     {
 
         int nonZeroRows = 0;
@@ -448,16 +318,33 @@ final class MatrixUtilities {
 
             for (int col = first_col; col < last_col; col++) {
 
-                if (matrix[row][col] == 0) continue;
-                else {
+                if (matrix[row][col] != 0) {
                     nonZeroRows++;
                     break;
                 }
             }
         }
 
-        if (nonZeroRows < rank_lower_limit) return false;
-        else return true;
+        return nonZeroRows;
+    }
+
+    static int nonZeroRows(
+        ByteMatrix matrix,
+        int first_row,
+        int last_row,
+        int first_col,
+        int last_col)
+    {
+
+        int nonZeroRows = 0;
+
+        for (int row = first_row; row < last_row; row++) {
+            if (matrix.nonZerosInRow(row, first_col, last_col) != 0) {
+                nonZeroRows++;
+            }
+        }
+
+        return nonZeroRows;
     }
 
     /**
@@ -488,7 +375,7 @@ final class MatrixUtilities {
 
             // find pivot row and swap
             for (int i = row + 1; i < ROWS; i++)
-                if (OctectOps.UNSIGN(A[i][row]) > OctectOps.UNSIGN(A[max][row])) max = i;
+                if (OctetOps.UNSIGN(A[i][row]) > OctetOps.UNSIGN(A[max][row])) max = i;
 
             // this destroys the original matrixes... dont really need a fix, but should be kept in mind
             byte[] temp = A[row];
@@ -510,17 +397,18 @@ final class MatrixUtilities {
             // pivot within A and b
             for (int i = row + 1; i < ROWS; i++) {
 
-                byte alpha = OctectOps.division(A[i][row], A[row][row]);
+                byte alpha = OctetOps.aDividedByB(A[i][row], A[row][row]);
 
-                temp = OctectOps.betaProduct(alpha, b[row]);
+                temp = new byte[b[row].length];
+                OctetOps.valueVectorProduct(alpha, b[row], temp);
 
-                MatrixUtilities.xorSymbolInPlace(b[i], temp);
+                OctetOps.vectorVectorAddition(temp, b[i], b[i]);
 
                 for (int j = row; j < ROWS; j++) {
 
-                    byte aux = OctectOps.product(alpha, A[row][j]);
+                    byte aux = OctetOps.aTimesB(alpha, A[row][j]);
 
-                    A[i][j] = OctectOps.subtraction(A[i][j], aux);
+                    A[i][j] = OctetOps.aMinusB(A[i][j], aux);
                 }
             }
         }
@@ -533,17 +421,20 @@ final class MatrixUtilities {
             for (int j = i + 1; j < ROWS; j++) {
 
                 // i*num_cols+j
-                byte[] temp = OctectOps.betaProduct(A[i][j], x[j], 0, num_cols);
+                byte[] temp = new byte[x[j].length];
+                OctetOps.valueVectorProduct(A[i][j], x[j], 0, temp, num_cols);
 
-                MatrixUtilities.xorSymbolInPlace(sum, temp);
+                OctetOps.vectorVectorAddition(temp, sum, sum);
             }
 
-            byte[] temp = MatrixUtilities.xorSymbol(b[i], sum);
+            byte[] temp = new byte[sum.length];
+            OctetOps.vectorVectorAddition(b[i], sum, temp);
 
-            x[i] = OctectOps.betaDivision(temp, A[i][i]);
+            x[i] = new byte[temp.length];
+            OctetOps.valueVectorDivision(A[i][i], temp, x[i]);
             // for (int bite = 0; bite < num_cols; bite++) {
             //
-            // x[(i * num_cols) + bite] = OctectOps.division(temp[bite], A[i][i]);
+            // x[(i * num_cols) + bite] = OctetOps.division(temp[bite], A[i][i]);
             // }
         }
 

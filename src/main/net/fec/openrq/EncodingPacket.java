@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ import net.fec.openrq.decoder.DataDecoder;
 import net.fec.openrq.decoder.SourceBlockDecoder;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.ParameterIO;
-import net.fec.openrq.util.numericaltype.SizeOf;
+import net.fec.openrq.util.datatype.SizeOf;
+import net.fec.openrq.util.io.ExtraChannels;
 
 
 /**
@@ -271,7 +272,7 @@ public abstract class EncodingPacket {
      *            A {@code DataInput} object from which an encoding packet is read
      * @return a container object containing an encoding packet or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code DataInput} object
+     *             If an I/O error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
      *                If {@code dec} or {@code in} are {@code null}
      */
@@ -290,7 +291,7 @@ public abstract class EncodingPacket {
      *            A {@code ReadableByteChannel} object from which an encoding packet is read
      * @return a container object containing an encoding packet or a parsing failure reason string
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     *             If an I/O error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
      *                If {@code dec} or {@code ch} are {@code null}
      */
@@ -314,9 +315,9 @@ public abstract class EncodingPacket {
     public abstract int encodingSymbolID();
 
     /**
-     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330. For the exact format, refer to the <a
-     * href="parameters/ParameterIO.html#fec-payload-id"> section on "FEC Payload ID"</a> in the {@link ParameterIO}
-     * class header.
+     * Returns a <em>FEC Payload ID</em> as defined in RFC 6330. For the exact format, refer to the section on
+     * <a href="parameters/ParameterIO.html#fec-payload-id"><em>FEC Payload ID</em></a> in the {@link ParameterIO} class
+     * header.
      * 
      * @return a <em>FEC Payload ID</em> as defined in RFC 6330
      */
@@ -398,8 +399,7 @@ public abstract class EncodingPacket {
      * {@linkplain #fecPayloadID() FEC payload ID}, followed by the symbols data length, followed by the symbols data
      * itself.
      * <p>
-     * The provided array must have at least {@code (8 + symbolsLength())} bytes between the given index and its
-     * length.
+     * The provided array must have at least {@code (8 + symbolsLength())} bytes between the given index and its length.
      * 
      * @param array
      *            An array on which the packet contents are written
@@ -454,7 +454,7 @@ public abstract class EncodingPacket {
      * @param out
      *            A {@code DataOutput} object into which the packet is written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code DataOutput} object
+     *             If an I/O error occurs while writing to the {@code DataOutput} object
      * @exception NullPointerException
      *                If {@code out} is {@code null}
      */
@@ -474,7 +474,7 @@ public abstract class EncodingPacket {
      * @param ch
      *            A {@code WritableByteChannel} object into which the packet is written
      * @throws IOException
-     *             If an IO error occurs while writing to the {@code WritableByteChannel} object
+     *             If an I/O error occurs while writing to the {@code WritableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */
@@ -621,12 +621,8 @@ public abstract class EncodingPacket {
             intsBuf.putInt(fecPayloadID).putInt(symbolsLength());
             intsBuf.flip();
 
-            while (intsBuf.hasRemaining()) {
-                ch.write(intsBuf);
-            }
-            while (symbolsBuf.hasRemaining()) {
-                ch.write(symbolsBuf);
-            }
+            ExtraChannels.writeBytes(ch, intsBuf);
+            ExtraChannels.writeBytes(ch, symbolsBuf);
         }
     }
 

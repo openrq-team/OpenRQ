@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ public final class ArrayDataDecoder implements DataDecoder {
     /**
      * @param fecParams
      *            FEC parameters that configure the returned data decoder object
-     * @param extraSymbols
+     * @param symbOver
      *            Repair symbol overhead (must be non-negative)
      * @return a data decoder object that decodes source data into an array of bytes
      * @exception NullPointerException
@@ -44,18 +44,18 @@ public final class ArrayDataDecoder implements DataDecoder {
      * @exception IllegalArgumentException
      *                If {@code fecParams.dataLength() > Integer.MAX_VALUE || extraSymbols < 0}
      */
-    static ArrayDataDecoder newDecoder(FECParameters fecParams, int extraSymbols) {
+    static ArrayDataDecoder newDecoder(FECParameters fecParams, int symbOver) {
 
         // throws NullPointerException if null fecParams
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
-        if (extraSymbols < 0) {
-            throw new IllegalArgumentException("negative number of extra symbols");
+        if (symbOver < 0) {
+            throw new IllegalArgumentException("negative symbol overhead");
         }
 
         final byte[] dataArray = new byte[fecParams.dataLengthAsInt()];
-        return new ArrayDataDecoder(dataArray, fecParams, extraSymbols);
+        return new ArrayDataDecoder(dataArray, fecParams, symbOver);
     }
 
 
@@ -64,22 +64,22 @@ public final class ArrayDataDecoder implements DataDecoder {
     private final ImmutableList<ArraySourceBlockDecoder> srcBlockDecoders;
 
 
-    private ArrayDataDecoder(byte[] dataArray, FECParameters fecParams, final int extraSymbols) {
+    private ArrayDataDecoder(byte[] dataArray, FECParameters fecParams, final int symbOver) {
 
         this.dataArray = dataArray;
         this.fecParams = fecParams;
-        this.srcBlockDecoders = DataUtils.partitionData(
+        this.srcBlockDecoders = DataUtils.partitionSourceData(
             ArraySourceBlockDecoder.class,
             fecParams,
             new SourceBlockSupplier<ArraySourceBlockDecoder>() {
 
                 @Override
-                public ArraySourceBlockDecoder get(int off, int sbn, int K) {
+                public ArraySourceBlockDecoder get(int off, int sbn) {
 
                     return ArraySourceBlockDecoder.newDecoder(
                         ArrayDataDecoder.this, ArrayDataDecoder.this.dataArray, off,
                         ArrayDataDecoder.this.fecParams,
-                        sbn, K, extraSymbols);
+                        sbn, symbOver);
                 }
             });
     }
@@ -247,7 +247,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code DataInput} object
+     *             If an I/O error occurs while reading from the {@code DataInput} object
      * @exception NullPointerException
      *                If {@code in} is {@code null}
      */
@@ -261,7 +261,7 @@ public final class ArrayDataDecoder implements DataDecoder {
      * {@inheritDoc}
      * 
      * @throws IOException
-     *             If an IO error occurs while reading from the {@code ReadableByteChannel} object
+     *             If an I/O error occurs while reading from the {@code ReadableByteChannel} object
      * @exception NullPointerException
      *                If {@code ch} is {@code null}
      */

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
-Copyright 2014 Jose Lopes
+Copyright 2014 OpenRQ Team
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -59,9 +59,17 @@ limitations under the License.
         
         <javac srcdir="${func.src_dirs}" destdir="${func.build_dir}"
                classpath=".:${junit-core.jar}:${hamcrest-core.jar}"
-               includeAntRuntime="false"/>
-               
+               debug="${javac-debug}"
+               debuglevel="${javac-debuglevel}"
+               includeAntRuntime="false">
+            <compilerarg value="${javac-args}" />
+        </javac>
+
+        <subant target="-functional-post-compile" buildpath="." failonerror="true"/>
     </target>
+    
+    <!-- private target to be overriden in importing script if necessary-->
+    <target name="-functional-post-compile"/>
 
     <!-- private target to be called by importing script -->
     <target name="-functional-jar" depends="-init-functional-properties,-compile-with-junit">

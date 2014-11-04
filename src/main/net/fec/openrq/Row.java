@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,13 +46,5 @@ final class Row {
         originalDegree = d;
         nodes = e;
         isHDPC = hdpc;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-
-        if (!o.getClass().getName().equals(this.getClass().getName())) return false;
-        else if (((Row)o).position == this.position) return true;
-        else return false;
     }
 }

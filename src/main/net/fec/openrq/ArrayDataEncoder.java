@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Jose Lopes
+ * Copyright 2014 OpenRQ Team
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import net.fec.openrq.DataUtils.SourceBlockSupplier;
 import net.fec.openrq.encoder.DataEncoder;
 import net.fec.openrq.encoder.SourceBlockEncoder;
 import net.fec.openrq.parameters.FECParameters;
-import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.checking.Indexables;
 import net.fec.openrq.util.collection.ImmutableList;
 
 
@@ -53,7 +53,7 @@ public final class ArrayDataEncoder implements DataEncoder {
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
         }
-        ArrayUtils.checkArrayBounds(offset, fecParams.dataLengthAsInt(), data.length);
+        Indexables.checkOffsetLengthBounds(offset, fecParams.dataLengthAsInt(), data.length);
 
         return new ArrayDataEncoder(data, offset, fecParams);
     }
@@ -73,23 +73,19 @@ public final class ArrayDataEncoder implements DataEncoder {
 
         this.fecParams = fecParams;
 
-        this.srcBlockEncoders = DataUtils.partitionData(
+        this.srcBlockEncoders = DataUtils.partitionSourceData(
             ArraySourceBlockEncoder.class,
             fecParams,
             offset,
             new SourceBlockSupplier<ArraySourceBlockEncoder>() {
 
                 @Override
-                public ArraySourceBlockEncoder get(
-                    int off,
-                    int sbn,
-                    int K)
-                {
+                public ArraySourceBlockEncoder get(int off, int sbn) {
 
                     return ArraySourceBlockEncoder.newEncoder(
                         ArrayDataEncoder.this, ArrayDataEncoder.this.array, off,
                         ArrayDataEncoder.this.fecParams,
-                        sbn, K);
+                        sbn);
                 }
             });
     }
@@ -126,7 +122,7 @@ public final class ArrayDataEncoder implements DataEncoder {
      * @see #numberOfSourceBlocks()
      */
     @Override
-    public ArraySourceBlockEncoder sourceBlock(int sbn) {
+    public SourceBlockEncoder sourceBlock(int sbn) {
 
         try {
             return srcBlockEncoders.get(sbn); // list is random access
