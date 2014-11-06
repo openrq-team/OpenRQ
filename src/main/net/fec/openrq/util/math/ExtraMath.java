@@ -125,6 +125,66 @@ public final class ExtraMath {
     }
 
     /**
+     * <b>NOTE: Copied from {@code java.lang.Math} in Java 8.</b>
+     * <p>
+     * Returns the value of the {@code long} argument;
+     * throwing an exception if the value overflows an {@code int}.
+     * 
+     * @param value
+     *            the long value
+     * @return the argument as an int
+     * @throws ArithmeticException
+     *             if the {@code argument} overflows an int
+     */
+    public static int toIntExact(long value) {
+
+        if ((int)value != value) {
+            throw new ArithmeticException("integer overflow");
+        }
+        return (int)value;
+    }
+
+    /**
+     * Returns {@code (a + b) % mod} while avoiding integer overflow.
+     * 
+     * @param a
+     *            the left hand value
+     * @param b
+     *            the right hand value
+     * @param mod
+     *            the modulo value
+     * @return {@code (a + b) % mod}
+     */
+    public static int addModulo(int a, int b, int mod) {
+
+        return (int)(((long)a + b) % mod);
+    }
+
+    /**
+     * Returns {@code (a + b) % mod} while avoiding long integer overflow.
+     * 
+     * @param a
+     *            the left hand value
+     * @param b
+     *            the right hand value
+     * @param mod
+     *            the modulo value
+     * @return {@code (a + b) % mod}
+     */
+    public static int addModulo(long a, long b, int mod) {
+
+        final long naiveSum = a + b;
+
+        // HD 2-12 Overflow iff both arguments have the opposite sign of the result
+        if (((a ^ naiveSum) & (b ^ naiveSum)) < 0) {
+            return BigInteger.valueOf(a).add(BigInteger.valueOf(b)).remainder(BigInteger.valueOf(mod)).intValue();
+        }
+        else {
+            return (int)(naiveSum % mod);
+        }
+    }
+
+    /**
      * Returns the ceiling value of an integer division (requires non-negative arguments).
      * 
      * @param num
