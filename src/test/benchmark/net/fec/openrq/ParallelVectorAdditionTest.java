@@ -16,18 +16,20 @@
 package net.fec.openrq;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import net.fec.openrq.parameters.ParameterChecker;
-import net.fec.openrq.util.math.ExtraMath;
 import net.fec.openrq.util.math.OctetOps;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -51,12 +53,7 @@ public class ParallelVectorAdditionTest {
     private static final int DEF_NUMVECS = 1000;
     private static final int DEF_VECSIZE = 1500;
 
-    /*
-     * Matched against the total number of bytes of all available source vectors.
-     * If total is less than or equal to this value, the addition(s) are performed
-     * sequentially.
-     */
-    private static final long VECTOR_BYTES_THRESHOLD = ParameterChecker.maxSymbolSize();
+    private static final int PARALLEL_NUM_TASKS = 2 * Runtime.getRuntime().availableProcessors();
 
     @Param("" + DEF_NUMVECS)
     private int numvecs;
@@ -64,14 +61,22 @@ public class ParallelVectorAdditionTest {
     @Param("" + DEF_VECSIZE)
     private int vecsize;
 
-    private final ForkJoinPool pool = new ForkJoinPool();
+    private final ThreadPoolExecutor pool = (ThreadPoolExecutor)Executors.newFixedThreadPool(PARALLEL_NUM_TASKS);
     private final Random rand = TestingCommon.newSeededRandom();
 
     private byte[][] srcVecs;
     private byte[][] dstVecs;
 
+    private List<ParVectorAdditionTask> parTasks;
 
-    @Setup
+
+    @Setup(Level.Trial)
+    public void init() {
+
+        pool.prestartAllCoreThreads();
+    }
+
+    @Setup(Level.Iteration)
     public void setup() {
 
         srcVecs = new byte[numvecs][vecsize];
@@ -79,6 +84,23 @@ public class ParallelVectorAdditionTest {
 
         dstVecs = new byte[numvecs][vecsize];
         randomBytes(dstVecs, rand);
+
+        final int numTasks = Math.min(numvecs, PARALLEL_NUM_TASKS);
+        parTasks = new ArrayList<>(numTasks);
+
+        final Partition part = new Partition(numvecs, numTasks);
+        final int NL = part.get(1);
+        final int NS = part.get(2);
+        final int TL = part.get(3);
+
+        int t, off;
+        for (t = 0, off = 0; t < TL; t++, off += NL) {
+            parTasks.add(new ParVectorAdditionTask(srcVecs, dstVecs, off, off + NL));
+        }
+
+        for (; t < numTasks; t++, off += NS) {
+            parTasks.add(new ParVectorAdditionTask(srcVecs, dstVecs, off, off + NS));
+        }
     }
 
     private static void randomBytes(byte[][] bytes, Random rand) {
@@ -88,14 +110,14 @@ public class ParallelVectorAdditionTest {
         }
     }
 
-    @TearDown
+    @TearDown(Level.Trial)
     public void finish() {
 
         pool.shutdown();
     }
 
     @Benchmark
-    public void testSequential() {
+    public void testSeq() {
 
         for (int i = 0; i < numvecs; i++) {
             OctetOps.vectorVectorAddition(srcVecs[i], dstVecs[i], dstVecs[i]);
@@ -103,101 +125,34 @@ public class ParallelVectorAdditionTest {
     }
 
     @Benchmark
-    public void testParallel() {
+    public void testPar() throws InterruptedException {
 
-        pool.invoke(new ForkVectorAddition(srcVecs, 0, dstVecs, 0, 0, (long)numvecs * vecsize));
+        pool.invokeAll(parTasks);
     }
 
 
-    private static final class ForkVectorAddition extends RecursiveAction {
+    private static final class ParVectorAdditionTask implements Callable<Void> {
 
-        private static final long serialVersionUID = 1L;
-
-        private final byte[][] srcVecs;
-        private final int srcIndex;
-
-        private final byte[][] dstVecs;
-        private final int dstIndex;
-
-        private final int vecOff;
-        private final long totalBytes;
+        private final byte[][] srcVecs, dstVecs;
+        private final int from, to;
 
 
-        ForkVectorAddition(
-            byte[][] srcVecs,
-            int srcIndex,
-            byte[][] dstVecs,
-            int dstIndex,
-            int vecOff,
-            long totalBytes)
-        {
+        ParVectorAdditionTask(byte[][] srcVecs, byte[][] dstVecs, int from, int to) {
 
             this.srcVecs = srcVecs;
-            this.srcIndex = srcIndex;
-
             this.dstVecs = dstVecs;
-            this.dstIndex = dstIndex;
-
-            this.vecOff = vecOff;
-            this.totalBytes = totalBytes;
+            this.from = from;
+            this.to = to;
         }
 
         @Override
-        protected void compute() {
+        public Void call() {
 
-            if (totalBytes <= VECTOR_BYTES_THRESHOLD) {
-                addVectors();
+            for (int i = from; i < to; i++) {
+                OctetOps.vectorVectorAddition(srcVecs[i], dstVecs[i], dstVecs[i]);
             }
-            else {
-                final long fstTotalHalf = totalBytes / 2;
-                final long sndTotalHalf = totalBytes - fstTotalHalf;
 
-                final long virtualOff = ExtraMath.addExact(vecOff, fstTotalHalf);
-
-                final int midNumVecs = ExtraMath.toIntExact(virtualOff / vectorLength());
-                final int midSI = ExtraMath.addExact(srcIndex, midNumVecs);
-                final int midDI = ExtraMath.addExact(dstIndex, midNumVecs);
-                final int midVecOff = ExtraMath.toIntExact(virtualOff % vectorLength());
-
-                invokeAll(
-                    new ForkVectorAddition(srcVecs, srcIndex, dstVecs, dstIndex, vecOff, fstTotalHalf),
-                    new ForkVectorAddition(srcVecs, midSI, dstVecs, midDI, midVecOff, sndTotalHalf));
-            }
-        }
-
-        private int vectorLength() {
-
-            return (srcVecs.length == 0) ? 0 : srcVecs[0].length;
-        }
-
-        private void addVectors() {
-
-            int si = srcIndex;
-            int di = dstIndex;
-            int vo = vecOff;
-            long remaining = totalBytes;
-
-            for /* ever */(;;) {
-                final byte[] src = srcVecs[si];
-                final byte[] dst = dstVecs[di];
-                final int numBytes = (int)Math.min(remaining, vectorLength() - vo);
-                addInPlace(src, vo, dst, vo, numBytes);
-
-                if (remaining > numBytes) {
-                    remaining -= numBytes;
-                    si++;
-                    di++;
-                    vo = 0;
-                }
-                else {
-                    break;
-                }
-            }
-        }
-
-        private static void addInPlace(byte[] vector1, int vecPos1, byte[] vector2, int vecPos2, int length) {
-
-            OctetOps.vectorVectorAddition(vector1, vecPos1, vector2, vecPos2, vector2, vecPos2, length);
+            return null;
         }
     }
 }
