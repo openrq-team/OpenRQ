@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import net.fec.openrq.util.math.ExtraMath;
 import net.fec.openrq.util.math.OctetOps;
 
 import org.openjdk.jmh.annotations.Benchmark;
@@ -39,6 +40,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.BenchmarkParams;
 
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -52,11 +54,17 @@ public class ParallelVectorAdditionTest {
     // default parameter values
     private static final int DEF_NUMVECS = 1000;
     private static final int DEF_VECSIZE = 1500;
-    private static final int DEF_MAX_THREADS = 2;
+    private static final int DEF_PAR_TASKS = 4;
 
-    private static final int MAX_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
+    private static final int PROC_MULTIPLIER = 1;
+
+    public static final int MAX_THREAD_POOL_SIZE =
+                                                   ExtraMath.multiplyExact(
+                                                       PROC_MULTIPLIER,
+                                                       Runtime.getRuntime().availableProcessors());
 
     private final ThreadPoolExecutor pool = (ThreadPoolExecutor)Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
+    private final List<ParVectorAdditionTask> parTasks = new ArrayList<>();
     private final Random rand = TestingCommon.newSeededRandom();
 
     @Param("" + DEF_NUMVECS)
@@ -65,44 +73,42 @@ public class ParallelVectorAdditionTest {
     @Param("" + DEF_VECSIZE)
     private int vecsize;
 
-    @Param("" + DEF_MAX_THREADS)
-    private int maxthreads;
+    @Param("" + DEF_PAR_TASKS)
+    private int numpartasks;
 
     private byte[][] srcVecs;
     private byte[][] dstVecs;
 
-    private List<ParVectorAdditionTask> parTasks;
 
-
-    @Setup(Level.Iteration)
-    public void setup() {
+    @Setup(Level.Trial)
+    public void init(BenchmarkParams benchParams) {
 
         srcVecs = new byte[numvecs][vecsize];
         randomBytes(srcVecs, rand);
 
         dstVecs = new byte[numvecs][vecsize];
         randomBytes(dstVecs, rand);
-        
-        final int maxT = Math.min(MAX_THREAD_POOL_SIZE, Math.max(1, maxthreads));
-        pool.setCorePoolSize(maxT);
-        pool.setMaximumPoolSize(maxT);
-        pool.prestartAllCoreThreads();
-        
-        final int numTasks = Math.min(numvecs, maxT);
-        parTasks = new ArrayList<>(numTasks);
 
-        final Partition part = new Partition(numvecs, numTasks);
-        final int NL = part.get(1);
-        final int NS = part.get(2);
-        final int TL = part.get(3);
+        if (!benchParams.getBenchmark().equals(ParallelVectorAdditionTest.class.getName() + ".testSeq")) {
+            pool.prestartAllCoreThreads();
+            parTasks.clear();
 
-        int t, off;
-        for (t = 0, off = 0; t < TL; t++, off += NL) {
-            parTasks.add(new ParVectorAdditionTask(srcVecs, dstVecs, off, off + NL));
-        }
+            final int maxTasks = Math.min(MAX_THREAD_POOL_SIZE, Math.max(1, numpartasks));
+            final int numTasks = Math.min(numvecs, maxTasks);
 
-        for (; t < numTasks; t++, off += NS) {
-            parTasks.add(new ParVectorAdditionTask(srcVecs, dstVecs, off, off + NS));
+            final Partition part = new Partition(numvecs, numTasks);
+            final int NL = part.get(1);
+            final int NS = part.get(2);
+            final int TL = part.get(3);
+
+            int t, off;
+            for (t = 0, off = 0; t < TL; t++, off += NL) {
+                parTasks.add(new ParVectorAdditionTask(srcVecs, dstVecs, off, off + NL));
+            }
+
+            for (; t < numTasks; t++, off += NS) {
+                parTasks.add(new ParVectorAdditionTask(srcVecs, dstVecs, off, off + NS));
+            }
         }
     }
 

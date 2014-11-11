@@ -63,9 +63,9 @@ public final class ParallelBenchmarkRunner {
         try {
             final InputOptions options = parseOptions(jCommander, args);
 
-            final List<Integer> subKs = getNumSymbolsSubsetList(options.numSourceSymbols, options.granularity);
-            final List<Integer> Ts = options.symbolSizeList();
-            final List<Integer> maxTs = getMaxThreadsList();
+            final List<Integer> subKList = getNumSymbolsSubsetList(options.numSourceSymbols, options.granularity);
+            final List<Integer> TList = options.symbolSizeList();
+            final List<Integer> pTasksList = getNumParallelTasksList();
             final int forks = options.forks;
             final VerboseMode verbMode = getVerboseMode(options);
 
@@ -76,11 +76,11 @@ public final class ParallelBenchmarkRunner {
             final long startNanos = System.nanoTime();
             STDOUT.println("Starting benchmark runners...");
 
-            for (int subK : subKs) {
-                for (int T : Ts) {
-                    for (int maxT : maxTs) {
-                        STDOUT.printf("Running benchmark for SUB_K = %d; T = %d; MAX_THREADS = %d%n", subK, T, maxT);
-                        Runner encRunner = newRunner(subK, T, maxT, forks, verbMode);
+            for (int subK : subKList) {
+                for (int T : TList) {
+                    for (int pTasks : pTasksList) {
+                        STDOUT.printf("Running benchmark for SUB_K = %d; T = %d; PAR_TASKS = %d%n", subK, T, pTasks);
+                        Runner encRunner = newRunner(subK, T, pTasks, forks, verbMode);
                         results.addAll(encRunner.run());
                     }
                 }
@@ -120,9 +120,9 @@ public final class ParallelBenchmarkRunner {
         return list;
     }
 
-    private static List<Integer> getMaxThreadsList() {
+    private static List<Integer> getNumParallelTasksList() {
 
-        final int maxT = Runtime.getRuntime().availableProcessors();
+        final int maxT = ParallelVectorAdditionTest.MAX_THREAD_POOL_SIZE;
         final int size = (maxT == 1) ? 1 : ExtraMath.ceilLog2(maxT);
 
         final List<Integer> list = new ArrayList<>(size);
@@ -147,13 +147,13 @@ public final class ParallelBenchmarkRunner {
         }
     }
 
-    private static Runner newRunner(int numvecs, int vecsize, int maxthreads, int forks, VerboseMode mode) {
+    private static Runner newRunner(int numvecs, int vecsize, int numpartasks, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
             .include(ParallelVectorAdditionTest.class.getName() + ".*")
             .param("numvecs", numvecs + "")
             .param("vecsize", vecsize + "")
-            .param("maxthreads", maxthreads + "")
+            .param("numpartasks", numpartasks + "")
             .forks(forks)
             .build();
 
