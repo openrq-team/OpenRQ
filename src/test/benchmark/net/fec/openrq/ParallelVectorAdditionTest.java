@@ -52,8 +52,12 @@ public class ParallelVectorAdditionTest {
     // default parameter values
     private static final int DEF_NUMVECS = 1000;
     private static final int DEF_VECSIZE = 1500;
+    private static final int DEF_MAX_THREADS = 2;
 
-    private static final int PARALLEL_NUM_TASKS = 2 * Runtime.getRuntime().availableProcessors();
+    private static final int MAX_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
+
+    private final ThreadPoolExecutor pool = (ThreadPoolExecutor)Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
+    private final Random rand = TestingCommon.newSeededRandom();
 
     @Param("" + DEF_NUMVECS)
     private int numvecs;
@@ -61,20 +65,14 @@ public class ParallelVectorAdditionTest {
     @Param("" + DEF_VECSIZE)
     private int vecsize;
 
-    private final ThreadPoolExecutor pool = (ThreadPoolExecutor)Executors.newFixedThreadPool(PARALLEL_NUM_TASKS);
-    private final Random rand = TestingCommon.newSeededRandom();
+    @Param("" + DEF_MAX_THREADS)
+    private int maxthreads;
 
     private byte[][] srcVecs;
     private byte[][] dstVecs;
 
     private List<ParVectorAdditionTask> parTasks;
 
-
-    @Setup(Level.Trial)
-    public void init() {
-
-        pool.prestartAllCoreThreads();
-    }
 
     @Setup(Level.Iteration)
     public void setup() {
@@ -84,8 +82,13 @@ public class ParallelVectorAdditionTest {
 
         dstVecs = new byte[numvecs][vecsize];
         randomBytes(dstVecs, rand);
-
-        final int numTasks = Math.min(numvecs, PARALLEL_NUM_TASKS);
+        
+        final int maxT = Math.min(MAX_THREAD_POOL_SIZE, Math.max(1, maxthreads));
+        pool.setCorePoolSize(maxT);
+        pool.setMaximumPoolSize(maxT);
+        pool.prestartAllCoreThreads();
+        
+        final int numTasks = Math.min(numvecs, maxT);
         parTasks = new ArrayList<>(numTasks);
 
         final Partition part = new Partition(numvecs, numTasks);

@@ -137,7 +137,7 @@ public final class EncodecodeBenchmarkRunner {
     private static Runner newEncodingRunner(int datalen, int srcsymbs, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
-            .include(".*" + SourceBlockEncodingTest.class.getSimpleName() + ".*")
+            .include(SourceBlockEncodingTest.class.getName() + ".*")
             .param("datalen", datalen + "")
             .param("srcsymbs", srcsymbs + "")
             .forks(forks)
@@ -149,7 +149,7 @@ public final class EncodecodeBenchmarkRunner {
     private static Runner newDecodingRunner(int datalen, int srcsymbs, int symbover, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
-            .include(".*" + SourceBlockDecodingTest.class.getSimpleName() + ".*")
+            .include(SourceBlockDecodingTest.class.getName() + ".*")
             .param("datalen", datalen + "")
             .param("srcsymbs", srcsymbs + "")
             .param("symbover", symbover + "")

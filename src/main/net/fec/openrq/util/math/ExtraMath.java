@@ -25,6 +25,66 @@ import java.math.BigInteger;
 public final class ExtraMath {
 
     /**
+     * Returns the logarithm in base 2 of the provided value, rounded down to the nearest integer.
+     * 
+     * @param value
+     *            A value (must be positive)
+     * @return the logarithm in base 2 of the provided value, rounded down to the nearest integer
+     * @exception IllegalArgumentException
+     *                If {@code value <= 0}
+     */
+    public static int log2(int value) {
+
+        if (value <= 0) throw new IllegalArgumentException("value must be positive");
+        return 31 - Integer.numberOfLeadingZeros(value);
+    }
+
+    /**
+     * Returns the logarithm in base 2 of the provided value, rounded down to the nearest integer.
+     * 
+     * @param value
+     *            A value (must be positive)
+     * @return the logarithm in base 2 of the provided value, rounded down to the nearest integer
+     * @exception IllegalArgumentException
+     *                If {@code value <= 0}
+     */
+    public static long log2(long value) {
+
+        if (value <= 0) throw new IllegalArgumentException("value must be positive");
+        return 63 - Long.numberOfLeadingZeros(value);
+    }
+
+    /**
+     * Returns the logarithm in base 2 of the provided value, rounded up to the nearest integer.
+     * 
+     * @param value
+     *            A value (must be positive)
+     * @return the logarithm in base 2 of the provided value, rounded up to the nearest integer
+     * @exception IllegalArgumentException
+     *                If {@code value <= 0}
+     */
+    public static int ceilLog2(int value) {
+
+        if (value <= 0) throw new IllegalArgumentException("value must be positive");
+        return 32 - Integer.numberOfLeadingZeros(value - 1);
+    }
+
+    /**
+     * Returns the logarithm in base 2 of the provided value, rounded up to the nearest integer.
+     * 
+     * @param value
+     *            A value (must be positive)
+     * @return the logarithm in base 2 of the provided value, rounded up to the nearest integer
+     * @exception IllegalArgumentException
+     *                If {@code value <= 0}
+     */
+    public static long ceilLog2(long value) {
+
+        if (value <= 0) throw new IllegalArgumentException("value must be positive");
+        return 32 - Long.numberOfLeadingZeros(value - 1);
+    }
+
+    /**
      * <b>NOTE: Copied from {@code java.lang.Math} in Java 8.</b>
      * <p>
      * Returns the sum of its arguments, throwing an exception if the result overflows an {@code int}.
