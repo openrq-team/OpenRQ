@@ -47,7 +47,7 @@ import com.beust.jcommander.ParameterException;
 /**
  * 
  */
-public final class ParallelBenchmarkRunner {
+public final class ParallelVecAddBenchmarkRunner {
 
     private static final PrintStream STDOUT = SafeStandardStreams.safeSTDOUT();
     private static final int DEFAULT_NUM_SYMBOLS = 1000;
@@ -303,7 +303,7 @@ public final class ParallelBenchmarkRunner {
     }
 
 
-    private ParallelBenchmarkRunner() {
+    private ParallelVecAddBenchmarkRunner() {
 
         // not instantiable
     }
