@@ -65,7 +65,7 @@ public final class ParallelBenchmarkRunner {
 
             final List<Integer> subKList = getNumSymbolsSubsetList(options.numSourceSymbols, options.granularity);
             final List<Integer> TList = options.symbolSizeList();
-            final List<Integer> pTasksList = getNumParallelTasksList();
+            final List<Integer> pTasksList = getNumParallelTasksList(options.varyParTasks);
             final int forks = options.forks;
             final VerboseMode verbMode = getVerboseMode(options);
 
@@ -120,18 +120,23 @@ public final class ParallelBenchmarkRunner {
         return list;
     }
 
-    private static List<Integer> getNumParallelTasksList() {
+    private static List<Integer> getNumParallelTasksList(boolean varyParTasks) {
 
         final int maxT = ParallelVectorAdditionTest.MAX_THREAD_POOL_SIZE;
-        final int size = (maxT == 1) ? 1 : ExtraMath.ceilLog2(maxT);
+        if (varyParTasks) {
+            final int size = (maxT == 1) ? 1 : ExtraMath.ceilLog2(maxT);
 
-        final List<Integer> list = new ArrayList<>(size);
-        for (int n = 0; n < size; n++) {
-            long powerOf2 = 1L << (n + 1);
-            list.add((int)Math.min(powerOf2, maxT));
+            final List<Integer> list = new ArrayList<>(size);
+            for (int n = 0; n < size; n++) {
+                long powerOf2 = 1L << (n + 1);
+                list.add((int)Math.min(powerOf2, maxT));
+            }
+
+            return list;
         }
-
-        return list;
+        else {
+            return Collections.singletonList(maxT);
+        }
     }
 
     private static VerboseMode getVerboseMode(InputOptions options) {
@@ -200,6 +205,10 @@ public final class ParallelBenchmarkRunner {
             validateValueWith = SymbolSizeValidator.class)
         private List<String> symbolSizeList = defaultSymbolSizeList();
 
+        @Parameter(names = {"-p", "-P", "--varypartasks"},
+            description = "Vary number of parallel tasks in powers of 2 until number of cores")
+        private boolean varyParTasks = false;
+
         @Parameter(names = {"-f", "--forks"},
             description = "How many times to fork a single benchmark",
             variableArity = true,
@@ -259,7 +268,7 @@ public final class ParallelBenchmarkRunner {
                     if (ParameterChecker.isSymbolSizeOutOfBounds(T)) {
                         throw new ParameterException(String.format(
                             "Symbol size (%d) must be within [%d, %d] bytes",
-                            value,
+                            T,
                             ParameterChecker.minSymbolSize(),
                             ParameterChecker.maxSymbolSize()));
                     }
