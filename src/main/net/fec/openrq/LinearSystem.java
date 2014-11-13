@@ -52,7 +52,7 @@ final class LinearSystem {
     private static final long A_SPARSE_THRESHOLD = 0L;
     private static final long MT_SPARSE_THRESHOLD = 0L;
 
-    private static final boolean TIMER_CODE_ENABLED = false; // DEBUG
+    private static final boolean TIMER_CODE_ENABLED = true; // DEBUG
     private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
 
 
@@ -1123,11 +1123,15 @@ final class LinearSystem {
     {
 
         // DEBUG
-        debugStartTimer();
+        long matMatMult = 0L;
+        long matVecMult = 0L;
 
         /*
          * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
          */
+
+        // DEBUG
+        debugStartTimer();
 
         final int Arows = i;
         final int Acols = L;
@@ -1137,23 +1141,34 @@ final class LinearSystem {
         // A can be safely re-assigned because the product matrix has the same dimensions of A
         A = X.multiply(A, 0, Xrows, 0, Xcols, 0, Arows, 0, Acols);
 
+        // DEBUG
+        debugEndTimer();
+        matMatMult = debugEllapsedNanos();
+
+        // DEBUG
+        debugStartTimer();
+
         // decoding process
         final int Drows = Xrows;
         final int Dcols = (D.length == 0) ? 0 : D[0].length;
         final byte[][] DShallowCopy = Arrays.copyOf(D, D.length);
         final ByteMatrix DM = new RowIndirected2DByteMatrix(Drows, Dcols, DShallowCopy, d);
-
         for (int row = 0; row < Xrows; row++) {
             // multiply X[row] by D
             BasicByteVector prod = (BasicByteVector)X.multiplyRow(row, DM, 0, Xcols, LinearAlgebra.BASIC2D_FACTORY);
             D[d[row]] = prod.getInternalArray();
         }
 
+        // DEBUG
+        debugEndTimer();
+        matVecMult = debugEllapsedNanos();
+
         // ISDCodeWriter.instance().writePhase3Code(X, Xrows, Xcols, d); // DEBUG
 
         // DEBUG
-        debugEndTimer();
-        debugPrintMillis("3rd", debugEllapsedNanos());
+        debugPrintLine("3rd:");
+        debugPrintMillis("  matrix/matrix mult", matMatMult);
+        debugPrintMillis("  matrix/vector mult", matVecMult);
 
         return pidPhase4(A, D, d, c, L, i);
     }
