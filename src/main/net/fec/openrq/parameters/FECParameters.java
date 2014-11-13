@@ -35,6 +35,7 @@ import net.fec.openrq.Parsed;
 import net.fec.openrq.util.datatype.SizeOf;
 import net.fec.openrq.util.io.BufferOperation;
 import net.fec.openrq.util.io.ExtraChannels;
+import net.fec.openrq.util.math.ExtraMath;
 
 
 /**
@@ -660,12 +661,7 @@ public final class FECParameters {
      */
     public int dataLengthAsInt() {
 
-        final long F = dataLength();
-        if (F > Integer.MAX_VALUE) {
-            throw new ArithmeticException("data length value does not fit inside an int");
-        }
-
-        return (int)F;
+        return ExtraMath.toIntExact(dataLength());
     }
 
     /**
