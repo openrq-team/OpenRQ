@@ -25,9 +25,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import net.fec.openrq.util.array.ArrayUtils;
+import net.fec.openrq.util.concurrent.SilentFuture;
 import net.fec.openrq.util.linearalgebra.LinearAlgebra;
 import net.fec.openrq.util.linearalgebra.factory.Factory;
 import net.fec.openrq.util.linearalgebra.io.ByteVectorIterator;
@@ -52,7 +54,7 @@ final class LinearSystem {
     private static final long A_SPARSE_THRESHOLD = 0L;
     private static final long MT_SPARSE_THRESHOLD = 0L;
 
-    private static final boolean TIMER_CODE_ENABLED = true; // DEBUG
+    private static final boolean TIMER_CODE_ENABLED = false; // DEBUG
     private static final PrintStream TIMER_PRINTABLE = System.out; // DEBUG
 
 
@@ -1123,30 +1125,26 @@ final class LinearSystem {
     {
 
         // DEBUG
-        long matMatMult = 0L;
-        long matVecMult = 0L;
-
-        /*
-         * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
-         */
-
-        // DEBUG
         debugStartTimer();
 
+        final ByteMatrix oldA = A;
         final int Arows = i;
         final int Acols = L;
         final int Xrows = Arows;
         final int Xcols = Arows;
 
-        // A can be safely re-assigned because the product matrix has the same dimensions of A
-        A = X.multiply(A, 0, Xrows, 0, Xcols, 0, Arows, 0, Acols);
+        // multiply in parallel
+        SilentFuture<ByteMatrix> lateA = Parallelism.submitTask(new Callable<ByteMatrix>() {
 
-        // DEBUG
-        debugEndTimer();
-        matMatMult = debugEllapsedNanos();
+            @Override
+            public ByteMatrix call() {
 
-        // DEBUG
-        debugStartTimer();
+                /*
+                 * "... the matrix X is multiplied with the submatrix of A consisting of the first i rows of A."
+                 */
+                return X.multiply(oldA, 0, Xrows, 0, Xcols, 0, Arows, 0, Acols);
+            }
+        });
 
         // decoding process
         final int Drows = Xrows;
@@ -1159,16 +1157,14 @@ final class LinearSystem {
             D[d[row]] = prod.getInternalArray();
         }
 
-        // DEBUG
-        debugEndTimer();
-        matVecMult = debugEllapsedNanos();
-
         // ISDCodeWriter.instance().writePhase3Code(X, Xrows, Xcols, d); // DEBUG
 
+        // A can be safely re-assigned because the product matrix has the same dimensions of A
+        A = lateA.get();
+
         // DEBUG
-        debugPrintLine("3rd:");
-        debugPrintMillis("  matrix/matrix mult", matMatMult);
-        debugPrintMillis("  matrix/vector mult", matVecMult);
+        debugEndTimer();
+        debugPrintMillis("3rd", debugEllapsedNanos());
 
         return pidPhase4(A, D, d, c, L, i);
     }
