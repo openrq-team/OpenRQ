@@ -16,8 +16,6 @@
 package net.fec.openrq;
 
 
-import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
-
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +24,7 @@ import net.fec.openrq.parameters.FECParameters;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -45,25 +44,25 @@ import org.openjdk.jmh.annotations.Warmup;
 public class SourceBlockEncodingTest {
 
     // default parameter values
-    private static final int DEF_DATA_LEN = 15000;
-    private static final int DEF_NUM_SOURCE_SYMBOLS = 10;
+    private static final int DEF_SYMBOL_SIZE = 1500;
+    private static final int DEF_NUM_SOURCE_SYMBOLS = 1000;
 
 
-    private static ArraySourceBlockEncoder newSBEncoder(int F, int K) {
+    private static ArraySourceBlockEncoder newSBEncoder(int T, int K) {
 
-        TestingCommon.checkParamsForSingleSourceBlockData(F, K);
+        TestingCommon.checkParamsForSingleSourceBlockData(T, K);
 
         // force single source block
-        final FECParameters fecParams = FECParameters.newParameters(F, ceilDiv(F, K), 1);
+        final FECParameters fecParams = FECParameters.newParameters((long)T * K, T, 1);
         final Random rand = TestingCommon.newSeededRandom();
 
-        final byte[] data = TestingCommon.randomBytes(F, rand);
+        final byte[] data = TestingCommon.randomBytes(fecParams.dataLengthAsInt(), rand);
         return (ArraySourceBlockEncoder)OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
     }
 
 
-    @Param({"" + DEF_DATA_LEN})
-    private int datalen;
+    @Param({"" + DEF_SYMBOL_SIZE})
+    private int symbsize;
 
     @Param({"" + DEF_NUM_SOURCE_SYMBOLS})
     private int srcsymbs;
@@ -73,16 +72,16 @@ public class SourceBlockEncodingTest {
 
     public SourceBlockEncodingTest() {
 
-        this.datalen = DEF_DATA_LEN;
+        this.symbsize = DEF_SYMBOL_SIZE;
         this.srcsymbs = DEF_NUM_SOURCE_SYMBOLS;
 
         this.enc = null;
     }
 
-    @Setup
+    @Setup(Level.Trial)
     public void setup() {
 
-        enc = newSBEncoder(datalen, srcsymbs);
+        enc = newSBEncoder(symbsize, srcsymbs);
     }
 
     @Benchmark

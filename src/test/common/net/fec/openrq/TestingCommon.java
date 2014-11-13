@@ -186,15 +186,15 @@ public final class TestingCommon {
         return col;
     }
 
-    public static void checkParamsForSingleSourceBlockData(long datalen, int srcsymbs) {
+    public static void checkParamsForSingleSourceBlockData(int symbsize, int srcsymbs) {
 
-        if (ParameterChecker.isDataLengthOutOfBounds(datalen)) {
+        if (ParameterChecker.isSymbolSizeOutOfBounds(symbsize)) {
             throw new IllegalArgumentException(
                 String.format(
-                    "by default, the data length (%d) must be within [%d, %d] bytes",
-                    datalen,
-                    ParameterChecker.minDataLength(),
-                    ParameterChecker.maxDataLength()));
+                    "by default, the symbol size (%d) must be within [%d, %d] bytes",
+                    symbsize,
+                    ParameterChecker.minSymbolSize(),
+                    ParameterChecker.maxSymbolSize()));
         }
 
         if (ParameterChecker.isNumSourceSymbolsPerBlockOutOfBounds(srcsymbs)) {
@@ -204,17 +204,6 @@ public final class TestingCommon {
                     srcsymbs,
                     ParameterChecker.minNumSourceSymbolsPerBlock(),
                     ParameterChecker.maxNumSourceSymbolsPerBlock()));
-        }
-
-        final long minF = (long)srcsymbs * ParameterChecker.minSymbolSize();
-        final long maxF = (long)srcsymbs * ParameterChecker.maxSymbolSize();
-        if (datalen < minF || maxF < datalen) {
-            throw new IllegalArgumentException(
-                String.format(
-                    "%d source symbol(s) can only support a data length within [%d, %d] bytes",
-                    srcsymbs,
-                    minF,
-                    maxF));
         }
     }
 

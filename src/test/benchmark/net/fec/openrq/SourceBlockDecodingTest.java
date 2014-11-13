@@ -16,8 +16,6 @@
 package net.fec.openrq;
 
 
-import static net.fec.openrq.util.math.ExtraMath.ceilDiv;
-
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +27,7 @@ import net.fec.openrq.parameters.FECParameters;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -51,21 +50,21 @@ public class SourceBlockDecodingTest {
     private static final boolean PREFER_SOURCE_SYMBOLS = false;
 
     // default parameter values
-    private static final int DEF_DATA_LEN = 9_999;
-    private static final int DEF_NUM_SOURCE_SYMBOLS = 250;
+    private static final int DEF_SYMBOL_SIZE = 1500;
+    private static final int DEF_NUM_SOURCE_SYMBOLS = 1000;
     private static final int DEF_EXTRA_SYMBOLS = 0;
 
 
-    private static ArraySourceBlockDecoder newRandomSBDecoder(int F, int K, int overhead) {
+    private static ArraySourceBlockDecoder newRandomSBDecoder(int T, int K, int overhead) {
 
-        TestingCommon.checkParamsForSingleSourceBlockData(F, K);
+        TestingCommon.checkParamsForSingleSourceBlockData(T, K);
         if (overhead < 0) throw new IllegalArgumentException("symbol overhead must be non-negative");
 
         // force single source block
-        final FECParameters fecParams = FECParameters.newParameters(F, ceilDiv(F, K), 1);
+        final FECParameters fecParams = FECParameters.newParameters((long)T * K, T, 1);
         final Random rand = TestingCommon.newSeededRandom();
 
-        final byte[] data = TestingCommon.randomBytes(F, rand);
+        final byte[] data = TestingCommon.randomBytes(fecParams.dataLengthAsInt(), rand);
         final int numESIs = K + overhead;
         final Set<Integer> esis = randomESIs(rand, K, numESIs);
         final SourceBlockEncoder enc = OpenRQ.newEncoder(data, fecParams).sourceBlock(0);
@@ -92,8 +91,8 @@ public class SourceBlockDecodingTest {
     }
 
 
-    @Param({"" + DEF_DATA_LEN})
-    private int datalen;
+    @Param({"" + DEF_SYMBOL_SIZE})
+    private int symbsize;
 
     @Param({"" + DEF_NUM_SOURCE_SYMBOLS})
     private int srcsymbs;
@@ -106,17 +105,17 @@ public class SourceBlockDecodingTest {
 
     public SourceBlockDecodingTest() {
 
-        this.datalen = DEF_DATA_LEN;
+        this.symbsize = DEF_SYMBOL_SIZE;
         this.srcsymbs = DEF_NUM_SOURCE_SYMBOLS;
         this.symbover = DEF_EXTRA_SYMBOLS;
 
         this.dec = null;
     }
 
-    @Setup
+    @Setup(Level.Trial)
     public void setup() {
 
-        dec = newRandomSBDecoder(datalen, srcsymbs, symbover);
+        dec = newRandomSBDecoder(symbsize, srcsymbs, symbover);
     }
 
     @Benchmark

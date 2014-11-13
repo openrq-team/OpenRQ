@@ -79,21 +79,17 @@ public final class EncodecodeBenchmarkRunner {
 
             if (runEncoding) {
                 for (int K : Ks) {
-                    final int F = deriveDataLength(K, T);
-
                     STDOUT.println("Running encoding benchmark for K = " + K);
-                    Runner encRunner = newEncodingRunner(F, K, forks, verbMode);
+                    Runner encRunner = newEncodingRunner(T, K, forks, verbMode);
                     results.addAll(encRunner.run());
                 }
             }
 
             if (runDecoding) {
                 for (int K : Ks) {
-                    final int F = deriveDataLength(K, T);
-
                     for (int symbover : sos) {
                         STDOUT.println("Running decoding benchmark for K = " + K + " and symbol overhead = " + symbover);
-                        Runner decRunner = newDecodingRunner(F, K, symbover, forks, verbMode);
+                        Runner decRunner = newDecodingRunner(T, K, symbover, forks, verbMode);
                         results.addAll(decRunner.run());
                     }
                 }
@@ -116,11 +112,6 @@ public final class EncodecodeBenchmarkRunner {
         }
     }
 
-    private static int deriveDataLength(int srcsymbs, int symbsize) {
-
-        return srcsymbs * symbsize;
-    }
-
     private static VerboseMode getVerboseMode(InputOptions options) {
 
         if (options.extraVerbose) {
@@ -134,11 +125,11 @@ public final class EncodecodeBenchmarkRunner {
         }
     }
 
-    private static Runner newEncodingRunner(int datalen, int srcsymbs, int forks, VerboseMode mode) {
+    private static Runner newEncodingRunner(int symbsize, int srcsymbs, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
             .include(SourceBlockEncodingTest.class.getName() + ".*")
-            .param("datalen", datalen + "")
+            .param("symbsize", symbsize + "")
             .param("srcsymbs", srcsymbs + "")
             .forks(forks)
             .build();
@@ -146,11 +137,11 @@ public final class EncodecodeBenchmarkRunner {
         return new Runner(opt, getOutputFormat(mode));
     }
 
-    private static Runner newDecodingRunner(int datalen, int srcsymbs, int symbover, int forks, VerboseMode mode) {
+    private static Runner newDecodingRunner(int symbsize, int srcsymbs, int symbover, int forks, VerboseMode mode) {
 
         Options opt = new OptionsBuilder()
             .include(SourceBlockDecodingTest.class.getName() + ".*")
-            .param("datalen", datalen + "")
+            .param("symbsize", symbsize + "")
             .param("srcsymbs", srcsymbs + "")
             .param("symbover", symbover + "")
             .forks(forks)
