@@ -13,57 +13,57 @@ public final class SizeOf {
     // The same applies for all the unsigned sizes.
 
     /**
-     * The size of a {@code byte} in bytes.
+     * The size of a {@code byte} in bytes ({@value}).
      */
     public static final int BYTE = Byte.SIZE / Byte.SIZE;
 
     /**
-     * The size of an unsigned {@code byte} in bytes.
+     * The size of an unsigned {@code byte} in bytes ({@value}).
      */
     public static final int UNSIGNED_BYTE = BYTE;
 
     /**
-     * The size of a {@code char} in bytes.
+     * The size of a {@code char} in bytes ({@value}).
      */
     public static final int CHAR = Character.SIZE / Byte.SIZE;
 
     /**
-     * The size of a {@code short} in bytes.
+     * The size of a {@code short} in bytes ({@value}).
      */
     public static final int SHORT = Short.SIZE / Byte.SIZE;
 
     /**
-     * The size of an unsigned {@code short} in bytes.
+     * The size of an unsigned {@code short} in bytes ({@value}).
      */
     public static final int UNSIGNED_SHORT = SHORT;
 
     /**
-     * The size of an unsigned 3-byte number in bytes.
+     * The size of an unsigned 3-byte number in bytes ({@value}).
      */
     public static final int UNSIGNED_3_BYTES = 3 * BYTE;
 
     /**
-     * The size of an {@code int} in bytes.
+     * The size of an {@code int} in bytes ({@value}).
      */
     public static final int INT = Integer.SIZE / Byte.SIZE;
 
     /**
-     * The size of an unsigned {@code int} in bytes.
+     * The size of an unsigned {@code int} in bytes ({@value}).
      */
     public static final int UNSIGNED_INT = INT;
 
     /**
-     * The size of a {@code long} in bytes.
+     * The size of a {@code long} in bytes ({@value}).
      */
     public static final int LONG = Long.SIZE / Byte.SIZE;
 
     /**
-     * The size of a {@code float} in bytes.
+     * The size of a {@code float} in bytes ({@value}).
      */
     public static final int FLOAT = Float.SIZE / Byte.SIZE;
 
     /**
-     * The size of a {@code double} in bytes.
+     * The size of a {@code double} in bytes ({@value}).
      */
     public static final int DOUBLE = Double.SIZE / Byte.SIZE;
 

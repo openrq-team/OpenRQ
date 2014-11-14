@@ -18,17 +18,17 @@ public final class UnsignedTypes {
     private static final long UNSIGNED_INT_MASK = (1L << (SizeOf.UNSIGNED_INT * Byte.SIZE)) - 1L;
 
     /**
-     * The maximum value for an unsigned byte.
+     * The maximum value for an unsigned byte ({@value}).
      */
     public static final int MAX_UNSIGNED_BYTE_VALUE = UNSIGNED_BYTE_MASK;
 
     /**
-     * The maximum value for an unsigned short.
+     * The maximum value for an unsigned short ({@value}).
      */
     public static final int MAX_UNSIGNED_SHORT_VALUE = UNSIGNED_SHORT_MASK;
 
     /**
-     * The maximum value for an unsigned int.
+     * The maximum value for an unsigned int ({@value}).
      */
     public static final long MAX_UNSIGNED_INT_VALUE = UNSIGNED_INT_MASK;
 

@@ -72,7 +72,7 @@ public enum BufferOperation {
      * <p>
      * <ul>
      * <li>The buffer position will be restored
-     * <li>The buffer limit be set to the current position
+     * <li>The buffer limit will be set to the current position
      * </ul>
      */
     FLIP_RELATIVELY {
@@ -95,7 +95,7 @@ public enum BufferOperation {
      * <p>
      * <ul>
      * <li>The buffer position will be set to 0
-     * <li>The buffer limit be set to the current position
+     * <li>The buffer limit will be set to the current position
      * </ul>
      */
     FLIP_ABSOLUTELY {

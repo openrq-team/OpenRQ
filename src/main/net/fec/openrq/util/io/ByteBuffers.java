@@ -33,9 +33,20 @@ import net.fec.openrq.util.checking.Indexables;
  */
 public final class ByteBuffers {
 
+    /**
+     * A type of {@code ByteBuffer}.
+     */
     public static enum BufferType {
 
+        /**
+         * The type of a {@code ByteBuffer} obtained via the method {@link ByteBuffer#allocate(int)} or the methods
+         * {@link ByteBuffer#wrap(byte[])} or {@link ByteBuffer#wrap(byte[], int, int)}.
+         */
         ARRAY_BACKED,
+
+        /**
+         * The type of a {@code ByteBuffer} obtained via the method {@link ByteBuffer#allocateDirect(int)}.
+         */
         DIRECT;
     }
 
@@ -46,13 +57,13 @@ public final class ByteBuffers {
     }
 
     /**
-     * Allocates a new buffer.
+     * Allocates a new byte buffer.
      * 
      * @param capacity
      *            The capacity of the new buffer
      * @param type
      *            The type of the returned buffer
-     * @return a new allocated buffer
+     * @return a new allocated byte buffer
      */
     public static ByteBuffer allocate(int capacity, BufferType type) {
 
@@ -70,13 +81,14 @@ public final class ByteBuffers {
 
 
     /**
-     * The maximum capacity of cached buffers.
+     * The maximum capacity of cached buffers ({@value} ).
      */
     public static final int MAX_CACHED_BUFFER_CAPACITY = 65536;
 
 
     /**
-     * Returns a cached (per thread) buffer with at least the specified capacity.
+     * Returns a cached (per thread) byte buffer. The returned buffer's position will be zero, its limit will be its
+     * capacity and its capacity will be at least the specified capacity.
      * <p>
      * The specified capacity must not exceed {@link #MAX_CACHED_BUFFER_CAPACITY}.
      * 
@@ -84,9 +96,9 @@ public final class ByteBuffers {
      *            The minimum capacity of the cached buffer
      * @param type
      *            The type of the returned buffer
-     * @return a cached (per thread) buffer
+     * @return a cached (per thread) byte buffer
      * @exception IllegalArgumentException
-     *                If {@code minCapacity > }{@value #MAX_CACHED_BUFFER_CAPACITY}
+     *                If {@code minCapacity > }{@link #MAX_CACHED_BUFFER_CAPACITY}
      */
     public static ByteBuffer getCached(int minCapacity, BufferType type) {
 
@@ -94,14 +106,14 @@ public final class ByteBuffers {
     }
 
     /**
-     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * Returns a {@linkplain ByteBuffer#slice() slice} of a byte buffer.
      * <p>
      * Calling this method has the same effect as calling {@link #getSlice(ByteBuffer, int, BufferOperation) slice(buf,
      * buf.remaining(), BufferOperation.RESTORE_POSITION)}.
      * 
      * @param buf
-     *            The source buffer
-     * @return a buffer slice
+     *            A byte buffer
+     * @return a slice of a byte buffer
      */
     public static ByteBuffer getSlice(ByteBuffer buf) {
 
@@ -109,21 +121,21 @@ public final class ByteBuffers {
     }
 
     /**
-     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * Returns a {@linkplain ByteBuffer#slice() slice} of a byte buffer.
      * <p>
      * Calling this method has the same effect as calling {@link #getSlice(ByteBuffer, int, BufferOperation) slice(buf,
      * sliceSize, BufferOperation.RESTORE_POSITION)}.
      * 
      * @param buf
-     *            The source buffer
+     *            A byte buffer
      * @param sliceSize
-     *            The size of the slice buffer
-     * @return a buffer slice
+     *            The size of the slice
+     * @return a slice of a byte buffer
      * @exception IllegalArgumentException
      *                If the size of the slice is negative
      * @exception BufferUnderflowException
      *                If the size of the slice exceeds the number of {@linkplain Buffer#remaining() available} bytes in
-     *                the source buffer
+     *                the buffer
      */
     public static ByteBuffer getSlice(ByteBuffer buf, int sliceSize) {
 
@@ -131,16 +143,16 @@ public final class ByteBuffers {
     }
 
     /**
-     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * Returns a {@linkplain ByteBuffer#slice() slice} of a byte buffer.
      * <p>
      * Calling this method has the same effect as calling {@link #getSlice(ByteBuffer, int, BufferOperation) slice(buf,
      * buf.remaining(), op)}.
      * 
      * @param buf
-     *            The source buffer
+     *            A byte buffer
      * @param op
-     *            The operation to apply to the source buffer after being sliced
-     * @return a buffer slice
+     *            The operation to apply to the buffer after being sliced
+     * @return a slice of a byte buffer
      */
     public static ByteBuffer getSlice(ByteBuffer buf, BufferOperation op) {
 
@@ -148,24 +160,24 @@ public final class ByteBuffers {
     }
 
     /**
-     * Returns a buffer {@linkplain ByteBuffer#slice() slice}, starting at the current buffer position.
+     * Returns a {@linkplain ByteBuffer#slice() slice} of a byte buffer. The contents of the slice will begin at the
+     * buffer's current position and will have the specified size in number of bytes.
      * <p>
-     * The size of the slice buffer is specified as a parameter. <em>Note that the position after the slice will be
-     * considered as the original position plus the size of the slice</em> (before the provided buffer operation is
-     * applied to the source buffer).
+     * <em>The buffer's new position after being sliced will be equal to its original position plus the size of the
+     * slice</em> (before the provided buffer operation is applied to the buffer).
      * 
      * @param buf
-     *            The source buffer
+     *            A byte buffer
      * @param sliceSize
-     *            The size of the slice buffer
+     *            The size of the slice
      * @param op
-     *            The operation to apply to the source buffer after being sliced
-     * @return a buffer slice
+     *            The operation to apply to the buffer after being sliced
+     * @return a slice of a byte buffer
      * @exception IllegalArgumentException
      *                If the size of the slice is negative
      * @exception BufferUnderflowException
      *                If the size of the slice exceeds the number of {@linkplain Buffer#remaining() available} bytes in
-     *                the source buffer
+     *                the buffer
      */
     public static ByteBuffer getSlice(ByteBuffer buf, int sliceSize, BufferOperation op) {
 
@@ -176,7 +188,7 @@ public final class ByteBuffers {
         if (sliceSize < 0) throw new IllegalArgumentException("slice size is negative");
         if (remaining < sliceSize) throw new BufferUnderflowException();
 
-        ByteBuffer slice;
+        final ByteBuffer slice;
         try {
             buf.limit(pos + sliceSize);
             slice = buf.slice();
@@ -191,14 +203,14 @@ public final class ByteBuffers {
     }
 
     /**
-     * Copies the contents of a buffer to a newly created one.
+     * Copies the contents of a byte buffer to a newly created one.
      * <p>
      * Calling this method has the same effect as calling {@link #getCopy(ByteBuffer, int, BufferOperation)
      * copyBuffer(buf, buf.remaining(), BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param buf
-     *            The buffer to be copied
-     * @return a copy of a buffer
+     *            A byte buffer
+     * @return a copy of a byte buffer
      */
     public static ByteBuffer getCopy(ByteBuffer buf) {
 
@@ -206,21 +218,21 @@ public final class ByteBuffers {
     }
 
     /**
-     * Copies the contents of a buffer to a newly created one.
+     * Copies the contents of a byte buffer to a newly created one.
      * <p>
      * Calling this method has the same effect as calling {@link #getCopy(ByteBuffer, int, BufferOperation)
      * copyBuffer(buf, copySize, BufferOperation.ADVANCE_POSITION)}.
      * 
      * @param buf
-     *            The buffer to be copied
+     *            A byte buffer
      * @param copySize
-     *            The number of bytes to be copied from the source buffer
-     * @return a copy of a buffer
+     *            The number of bytes to be copied from the buffer
+     * @return a copy of a byte buffer
      * @exception IllegalArgumentException
      *                If the number of bytes to be copied is negative
      * @exception BufferUnderflowException
      *                If the number of bytes to be copied exceeds the number of {@linkplain Buffer#remaining()
-     *                available} bytes in the source buffer
+     *                available} bytes in the buffer
      */
     public static ByteBuffer getCopy(ByteBuffer buf, int copySize) {
 
@@ -228,16 +240,16 @@ public final class ByteBuffers {
     }
 
     /**
-     * Copies the contents of a buffer to a newly created one.
+     * Copies the contents of a byte buffer to a newly created one.
      * <p>
      * Calling this method has the same effect as calling {@link #getCopy(ByteBuffer, int, BufferOperation)
      * copyBuffer(buf, buf.remaining(), op)}.
      * 
      * @param buf
-     *            The buffer to be copied
+     *            A byte buffer
      * @param op
-     *            The operation to apply to the source buffer after being copied
-     * @return a copy of a buffer
+     *            The operation to apply to the buffer after being copied
+     * @return a copy of a byte buffer
      */
     public static ByteBuffer getCopy(ByteBuffer buf, BufferOperation op) {
 
@@ -245,26 +257,27 @@ public final class ByteBuffers {
     }
 
     /**
-     * Copies the contents of a buffer to a newly created one. The buffer copy will have the same
-     * {@linkplain ByteBuffer#order() byte order} and will only be {@linkplain ByteBuffer#isDirect() direct} if the
-     * source buffer also is.
+     * Copies the contents of a byte buffer to a newly created one. The copy will begin at the buffer's current position
+     * and will have the specified size in number of bytes.
      * <p>
-     * The number of bytes to be copied is specified as a parameter. <em>At the end of the copy, the position of the
-     * source buffer will have advanced the specified number of bytes</em> (before the provided buffer operation is
-     * applied to the source buffer).
+     * <em>The buffer's new position after being copied will be equal to its original position plus the size of the
+     * copy</em> (before the provided buffer operation is applied to the buffer).
+     * <p>
+     * The copy will have the same {@linkplain BufferType type} and {@linkplain ByteBuffer#order() byte order} of the
+     * buffer.
      * 
      * @param buf
-     *            The buffer to be copied
+     *            A byte buffer
      * @param copySize
-     *            The number of bytes to be copied from the source buffer
+     *            The number of bytes to be copied from the buffer
      * @param op
-     *            The operation to apply to the source buffer after being copied
-     * @return a copy of a buffer
+     *            The operation to apply to the buffer after being copied
+     * @return a copy of a byte buffer
      * @exception IllegalArgumentException
      *                If the number of bytes to be copied is negative
      * @exception BufferUnderflowException
      *                If the number of bytes to be copied exceeds the number of {@linkplain Buffer#remaining()
-     *                available} bytes in the source buffer
+     *                available} bytes in the buffer
      */
     public static ByteBuffer getCopy(ByteBuffer buf, int copySize, BufferOperation op) {
 
@@ -276,7 +289,7 @@ public final class ByteBuffers {
         if (remaining < copySize) throw new BufferUnderflowException();
         Objects.requireNonNull(op);
 
-        ByteBuffer copy = allocate(copySize, isDirectType(buf.isDirect())).order(buf.order());
+        final ByteBuffer copy = allocate(copySize, isDirectType(buf.isDirect())).order(buf.order());
         try {
             buf.limit(srcPos + copySize);
             copy.put(buf);
@@ -292,16 +305,16 @@ public final class ByteBuffers {
     }
 
     /**
-     * Copies the contents of an array to a newly created buffer.
+     * Copies an array of bytes to a newly created byte buffer.
      * <p>
      * Calling this method has the same effect as calling {@link #getCopy(byte[], int, int, BufferType) getCopy(array,
      * 0, array.length, type)}.
      * 
      * @param array
-     *            The array to be copied
+     *            An array of bytes
      * @param type
      *            The type of the returned buffer
-     * @return a copy of an array
+     * @return a byte buffer containing a copy of an array of bytes
      */
     public static ByteBuffer getCopy(byte[] array, BufferType type) {
 
@@ -309,18 +322,18 @@ public final class ByteBuffers {
     }
 
     /**
-     * Copies the contents of an array to a newly created buffer. The array position to start the copy and the number of
-     * bytes to copy are specified as parameters.
+     * Copies an array of bytes to a newly created byte buffer. The copy will begin at the specified array position and
+     * will have the specified size in number of bytes.
      * 
      * @param array
-     *            The array to be copied
+     *            An array of bytes
      * @param off
      *            The starting position of the copy
      * @param len
      *            The number of bytes to copy
      * @param type
      *            The type of the returned buffer
-     * @return a copy of an array
+     * @return a byte buffer containing a copy of an array of bytes
      */
     public static ByteBuffer getCopy(byte[] array, int off, int len, BufferType type) {
 
@@ -576,7 +589,6 @@ public final class ByteBuffers {
     private static ThreadLocal<ByteBuffer> zeroTL(BufferType type) {
 
         switch (type) {
-
             case ARRAY_BACKED:
                 return ZERO_ARR_BUFFER;
 
@@ -628,7 +640,6 @@ public final class ByteBuffers {
     private static ThreadLocal<ByteBuffer> cachedTL(BufferType type) {
 
         switch (type) {
-
             case ARRAY_BACKED:
                 return CACHED_ARR_BUFFER;
 
