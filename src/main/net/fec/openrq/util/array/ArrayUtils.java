@@ -207,6 +207,23 @@ public final class ArrayUtils {
     }
 
     /**
+     * Swaps two longs in an array of longs.
+     * 
+     * @param array
+     *            The array of longs
+     * @param a
+     *            One of the indices of the values to be swapped
+     * @param b
+     *            One of the indices of the values to be swapped
+     */
+    public static void swapLongs(long[] array, int a, int b) {
+
+        long tmp = array[a]; // checks for null array and illegal a index
+        array[a] = array[b]; // checks for illegal b index before any changes can be made to the array
+        array[b] = tmp;
+    }
+
+    /**
      * Swaps two Objects in an array of Objects.
      * 
      * @param array

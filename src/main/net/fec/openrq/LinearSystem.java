@@ -17,13 +17,12 @@ package net.fec.openrq;
 
 
 import java.io.PrintStream;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -539,13 +538,32 @@ final class LinearSystem {
         // ISDCodeWriter.instance().prepare(); // DEBUG
         // ISDCodeWriter.instance().writeKprimeCode(Kprime); // DEBUG
 
-        return pidPhase1(A, D, Kprime, S, H, L, P, M);
+        return pidPhase1(A, D, S, H, L, P, M);
+    }
+
+
+    private static final long ISHDPC_BITS = 0xFFFFFFFF00000000L;
+    private static final long DEGREE_BITS = 0x00000000FFFFFFFFL;
+
+
+    private static long buildRowInfo(boolean isHDPC, int degree) {
+
+        return (isHDPC ? ISHDPC_BITS : 0L) | (degree & DEGREE_BITS);
+    }
+
+    private static boolean isHDPCRow(long rowInfo) {
+
+        return (rowInfo & ISHDPC_BITS) != 0;
+    }
+
+    private static int getRowDegree(long rowInfo) {
+
+        return (int)(rowInfo & DEGREE_BITS);
     }
 
     private static byte[][] pidPhase1(
         final ByteMatrix A,
         final byte[][] D,
-        final int Kprime,
         final int S,
         final int H,
         final int L,
@@ -554,14 +572,63 @@ final class LinearSystem {
         throws SingularMatrixException
     {
 
+        /*
+         * In the first phase of the Gaussian elimination, the matrix A is
+         * conceptually partitioned into submatrices and, additionally, a matrix
+         * X is created. This matrix has as many rows and columns as A, and it
+         * will be a lower triangular matrix throughout the first phase. At the
+         * beginning of this phase, the matrix A is copied into the matrix X.
+         * 
+         * The submatrix sizes are parameterized by non-negative integers i and
+         * u, which are initialized to 0 and P, the number of PI symbols,
+         * respectively. The submatrices of A are:
+         * 
+         * 1. The submatrix I defined by the intersection of the first i rows
+         * and first i columns. This is the identity matrix at the end of
+         * each step in the phase.
+         * 
+         * 2. The submatrix defined by the intersection of the first i rows and
+         * all but the first i columns and last u columns. All entries of
+         * this submatrix are zero.
+         * 
+         * 3. The submatrix defined by the intersection of the first i columns
+         * and all but the first i rows. All entries of this submatrix are
+         * zero.
+         * 
+         * 4. The submatrix U defined by the intersection of all the rows and
+         * the last u columns.
+         * 
+         * 5. The submatrix V formed by the intersection of all but the first i
+         * columns and the last u columns and all but the first i rows.
+         * 
+         * The Figure bellow illustrates the submatrices of A. At the beginning
+         * of the first phase, V consists of the first L-P columns of A, and U
+         * consists of the last P columns corresponding to the PI symbols. In
+         * each step, a row of A is chosen.
+         * 
+         * 
+         * +-----------+-----------------+---------+
+         * |...........|.................|.........|
+         * |.... I ....|....All Zeros....|.........|
+         * |...........|.................|.........|
+         * +-----------+-----------------+... U ...|
+         * |...........|.................|.........|
+         * |...........|.................|.........|
+         * | All Zeros |...... V ........|.........|
+         * |...........|.................|.........|
+         * |...........|.................|.........|
+         * +-----------+-----------------+---------+
+         * 
+         * Figure: Submatrices of A in the First Phase
+         */
+
         // DEBUG
         long initNanos = 0L;
         long findRNanos = 0L;
-        long chooseRowNanos = 0L;
+        long chooseRowUsingGraphNanos = 0L;
         long swapRowsNanos = 0L;
         long swapColumnsNanos = 0L;
         long addMultiplyNanos = 0L;
-        long countNonZerosNanos = 0L;
 
         // DEBUG
         debugStartTimer();
@@ -586,46 +653,18 @@ final class LinearSystem {
         // initialize i and u parameters, for the submatrices sizes
         int i = 0, u = P;
 
-        // counts how many rows have been chosen already
-        int chosenRowsCounter = 0;
-
-        // the number of rows that are not HDPC
-        // (these should be chosen first)
-        int nonHDPCRows = S + Kprime;
-
-        // maps the index of a row to an object Row (which stores that row's characteristics)
-        final Map<Integer, Row> rows = new HashMap<>(M + 1, 1.0f);
+        // maps the index of a row to row information
+        final long[] rowInfos = new long[M];
         for (int row = 0; row < M; row++) {
-            // retrieve the number of non-zeros in the row
-            final int nonZeros = A.nonZerosInRow(row, 0, L - u); // exclude last u columns
-            // is this a HDPC row?
             final boolean isHDPC = (row >= S && row < S + H);
-
-            // this is an optimization
-            if (nonZeros == 2 && !isHDPC) {
-                int originalDegree = 0;
-                final Set<Integer> nodes = new HashSet<>(2 + 1, 1.0f); // we already know there are only 2 non zeros
-
-                ByteVectorIterator it = A.nonZeroRowIterator(row, 0, L - u);
-                while (it.hasNext()) {
-                    it.next();
-                    originalDegree += OctetOps.UNSIGN(it.get()); // add to the degree of this row
-                    nodes.add(it.index()); // add the column index to the nodes
-                }
-
-                rows.put(row, new Row(row, nonZeros, originalDegree, isHDPC, nodes));
+            int degree = 0;
+            ByteVectorIterator it = A.nonZeroRowIterator(row, 0, L - u);
+            while (it.hasNext()) {
+                it.next();
+                degree += OctetOps.UNSIGN(it.get()); // add to the degree of this row
             }
-            else {
-                int originalDegree = 0;
 
-                ByteVectorIterator it = A.nonZeroRowIterator(row, 0, L - u);
-                while (it.hasNext()) {
-                    it.next();
-                    originalDegree += OctetOps.UNSIGN(it.get()); // add to the degree of this row
-                }
-
-                rows.put(row, new Row(row, nonZeros, originalDegree, isHDPC));
-            }
+            rowInfos[row] = buildRowInfo(isHDPC, degree); // store the row information
         }
 
         // DEBUG
@@ -635,43 +674,83 @@ final class LinearSystem {
         // at most L steps
         while (i + u != L)
         {
-            // the degree of the 'currently chosen' row
-            int minDegree = 256 * L;
-
-            // number of non-zeros in the 'currently chosen' row
-            int r = L + 1;
-
-            // currently chosen row
-            Row chosenRow = null;
-
-            // decoding failure?
-            boolean allZeros = true;
-
-            // there is a row with exactly two ones
-            boolean two1s = false;
-
             /*
-             * find r
+             * The following graph defined by the structure of V is used in
+             * determining which row of A is chosen. The columns that intersect V
+             * are the nodes in the graph, and the rows that have exactly 2 nonzero
+             * entries in V and are not HDPC rows are the edges of the graph that
+             * connect the two columns (nodes) in the positions of the two ones. A
+             * component in this graph is a maximal set of nodes (columns) and edges
+             * (rows) such that there is a path between each pair of nodes/edges in
+             * the graph. The size of a component is the number of nodes (columns)
+             * in the component.
+             * 
+             * There are at most L steps in the first phase. The phase ends
+             * successfully when i + u = L, i.e., when V and the all zeros submatrix
+             * above V have disappeared, and A consists of I, the all zeros
+             * submatrix below I, and U. The phase ends unsuccessfully in decoding
+             * failure if at some step before V disappears there is no nonzero row
+             * in V to choose in that step. In each step, a row of A is chosen as
+             * follows:
+             * 
+             * - If all entries of V are zero, then no row is chosen and decoding
+             * fails.
+             * 
+             * - Let r be the minimum integer such that at least one row of A has
+             * exactly r nonzeros in V. [HERE WE ASSUME r > 0]
+             * 
+             * --- If r != 2, then choose a row with exactly r nonzeros in V with
+             * minimum original degree among all such rows, except that HDPC
+             * rows should not be chosen until all non-HDPC rows have been
+             * processed. [HERE WE CONSIDER 'ALL NON-HDPC ROWS' TO BE INCLUDED
+             * IN THE SET OF ALL ROWS WITH EXACTLY R NONZEROS]
+             * 
+             * --- If r = 2 and there is a row with exactly 2 ones in V, then
+             * choose any row with exactly 2 ones in V that is part of a
+             * maximum size component in the graph described above that is
+             * defined by V.
+             * 
+             * --- If r = 2 and there is no row with exactly 2 ones in V, then
+             * choose any row with exactly 2 nonzeros in V. [HERE THE CHOSEN ROW
+             * CAN ONLY BE AN HDPC ROW] [FURTHERMORE, THE CHOSEN ROW WILL HAVE
+             * THE MINIMUM ORIGINAL DEGREE AMONG ALL CURRENT HDPC ROWS]
              */
 
             // DEBUG
             debugStartTimer();
 
-            for (Row row : rows.values()) {
-                if (row.nonZeros != 0) allZeros = false;
-                if (row.isHDPC && chosenRowsCounter < nonHDPCRows) continue;
+            int regularRow = -1;
+            int regularRowNonZeros = Integer.MAX_VALUE;
+            int regularRowOriginalDegree = Integer.MAX_VALUE;
 
-                // if it's an edge, then it must have exactly two 1's
-                if (row.nodes != null) two1s = true;
+            int hdpcRow = -1;
+            int hdpcRowNonZeros = Integer.MAX_VALUE;
+            int hdpcRowOriginalDegree = Integer.MAX_VALUE;
 
-                if (row.nonZeros < r && row.nonZeros > 0) {
-                    chosenRow = row;
-                    r = chosenRow.nonZeros;
-                    minDegree = chosenRow.originalDegree;
+            for (int row = i; row < M; row++) {
+                // count the number of nonzeros in V inside A
+                final int nonZeros = A.nonZerosInRow(row, i, L - u);
+                if (nonZeros == 0) continue; // we never choose a row with only zeros in it
+
+                if (isHDPCRow(rowInfos[row])) {
+                    if (nonZeros <= hdpcRowNonZeros) {
+                        final int rowDegree = getRowDegree(rowInfos[row]);
+                        if (nonZeros < hdpcRowNonZeros || rowDegree < hdpcRowOriginalDegree) {
+                            hdpcRow = row;
+                            hdpcRowNonZeros = nonZeros;
+                            hdpcRowOriginalDegree = rowDegree;
+                        }
+                    }
                 }
-                else if (row.nonZeros == r && row.originalDegree < minDegree) {
-                    chosenRow = row;
-                    minDegree = chosenRow.originalDegree;
+                else {
+                    if (nonZeros <= regularRowNonZeros) {
+                        final int rowDegree = getRowDegree(rowInfos[row]);
+                        if (nonZeros < regularRowNonZeros || rowDegree < regularRowOriginalDegree) {
+                            regularRow = row;
+                            regularRowNonZeros = nonZeros;
+                            regularRowOriginalDegree = rowDegree;
+                        }
+                    }
                 }
             }
 
@@ -679,203 +758,122 @@ final class LinearSystem {
             debugEndTimer();
             findRNanos += debugEllapsedNanos();
 
-            if (allZeros) {// DECODING FAILURE
-                throw new SingularMatrixException(
-                    "Decoding Failure - PI Decoding @ Phase 1: All entries in V are zero.");
-            }
-
             /*
              * choose the row
              */
 
-            // DEBUG
-            debugStartTimer();
+            final int r; // the real value of r is not found yet
+            final int chosenRow; // the actual chosen row is not yet known
 
-            if (r == 2 && two1s) {
-
-                /*
-                 * create graph
-                 */
-
-                // allocate memory
-                Map<Integer, Set<Integer>> graph = new HashMap<>(L - u - i + 1, 1.0f);
-
-                // lets go through all the rows... (yet again!)
-                for (Row row : rows.values())
-                {
-                    // is this row an edge?
-                    if (row.nodes != null)
-                    {
-                        // get the nodes connected through this edge
-                        Integer[] edge = row.nodes.toArray(new Integer[2]);
-                        int node1 = edge[0];
-                        int node2 = edge[1];
-
-                        // node1 already in graph?
-                        if (graph.keySet().contains(node1))
-                        { // it is
-
-                            // then lets add node 2 to its neighbours
-                            graph.get(node1).add(node2);
-                        }
-                        else
-                        { // it isn't
-
-                            // allocate memory for its neighbours
-                            Set<Integer> edges = new HashSet<>(L - u - i + 1, 1.0f);
-
-                            // add node 2 to its neighbours
-                            edges.add(node2);
-
-                            // finally, add node 1 to the graph along with its neighbours
-                            graph.put(node1, edges);
-                        }
-
-                        // node2 already in graph?
-                        if (graph.keySet().contains(node2))
-                        { // it is
-
-                            // then lets add node 1 to its neighbours
-                            graph.get(node2).add(node1);
-                        }
-                        else
-                        { // it isn't
-
-                            // allocate memory for its neighbours
-                            Set<Integer> edges = new HashSet<>(L - u - i + 1, 1.0f);
-
-                            // add node 1 to its neighbours
-                            edges.add(node1);
-
-                            // finally, add node 2 to the graph along with its neighbours
-                            graph.put(node2, edges);
-                        }
-                    }
-                    else continue;
-                }
-
-                /*
-                 * the graph is complete, now we must
-                 * find the maximum size component
-                 */
-
-                // set of visited nodes
-                Set<Integer> visited = null;
-
-                /*
-                 * TODO Optimization: I already searched, and there are optimized algorithms to find connected
-                 * components. Then we just find and use the best one available...
-                 */
-
-                // what is the size of the largest component we've already found
-                int maximumSize = 0;
-
-                // the maximum size component
-                Set<Integer> greatestComponent = null;
-
-                // which nodes have already been used (either in visited or in toVisit)
-                Set<Integer> used = new HashSet<>(L - u - i + 1, 1.0f);
-
-                // iterates the nodes in the graph
-                Iterator<Map.Entry<Integer, Set<Integer>>> it = graph.entrySet().iterator();
-
-                // let's iterate through the nodes in the graph, looking for the maximum
-                // size component. we will be doing a breadth first search // TODO optimize this with a better
-                // algorithm?
-                while (it.hasNext())
-                {
-                    // get our initial node
-                    Map.Entry<Integer, Set<Integer>> node = it.next();
-                    int initialNode = node.getKey();
-
-                    // we can't have used it before!
-                    if (used.contains(initialNode)) continue;
-
-                    // what are the edges of our initial node?
-                    Integer[] edges = node.getValue().toArray(new Integer[node.getValue().size()]);
-
-                    // allocate memory for the set of visited nodes
-                    visited = new HashSet<>(L - u - i + 1, 1.0f);
-
-                    // the set of nodes we must still visit
-                    List<Integer> toVisit = new LinkedList<>();
-
-                    // add the initial node to the set of used and visited nodes
-                    visited.add(initialNode);
-                    used.add(initialNode);
-
-                    // add my edges to the set of nodes we must visit
-                    // and also put them in the used set
-                    for (Integer edge : edges)
-                    {
-                        toVisit.add(edge);
-                        used.add(edge);
-                    }
-
-                    // start the search!
-                    while (toVisit.size() != 0)
-                    {
-                        // the node we are visiting
-                        int no = toVisit.remove(0);
-
-                        // add node to visited set
-                        visited.add(no);
-
-                        // queue edges to be visited (if they haven't been already
-                        for (Integer edge : graph.get(no))
-                            if (!visited.contains(edge)) toVisit.add(edge);
-                    }
-
-                    // is the number of visited nodes, greater than the 'currently' largest component?
-                    if (visited.size() > maximumSize)
-                    { // it is! we've found a greater component then...
-
-                        // update the maximum size
-                        maximumSize = visited.size();
-
-                        // update our greatest component
-                        greatestComponent = visited;
-                    }
-                    else continue;
-                }
-
-                /*
-                 * we've found the maximum size connected component -- 'greatestComponent'
-                 */
-
-                // let's choose the row
-                for (Row row : rows.values())
-                {
-                    // is it a node in the graph?
-                    if (row.nodes != null)
-                    { // it is
-
-                        // get the nodes connected through this edge
-                        Integer[] edge = row.nodes.toArray(new Integer[2]);
-                        int node1 = edge[0];
-                        int node2 = edge[1];
-
-                        // is this row an edge in the maximum size component?
-                        if (greatestComponent.contains(node1) && greatestComponent.contains(node2))
-                        {
-                            chosenRow = row;
-                            break;
-                        }
-                        else continue;
-                    }
-                    else continue;
-                }
-
-                chosenRowsCounter++;
-
-                // DEBUG
-                debugEndTimer();
-                chooseRowNanos += debugEllapsedNanos();
+            if (regularRow == -1 && hdpcRow == -1) { // decoding failure (no row is available)
+                throw new SingularMatrixException("@ Phase 1: all entries in V are zero");
             }
-            else {
+            else if (regularRow == -1) { // only HDPC rows are available
+                r = hdpcRowNonZeros;
+                chosenRow = hdpcRow;
+            }
+            else { // a regular row is available (an HDPC row may or may not be available)
+                if (hdpcRow != -1 && hdpcRowNonZeros < regularRowNonZeros) {
+                    // an HDPC row is available and has less nonzeros than the regular one
+                    r = hdpcRowNonZeros;
+                    chosenRow = hdpcRow;
+                }
+                else {
+                    r = regularRowNonZeros;
+                    if (r != 2) { // easy scenario where we already have the chosen row
+                        chosenRow = regularRow;
+                    }
+                    else { // tricky scenario where we have to choose the row using the graph
 
-                // already chosen (in 'find r')
-                chosenRowsCounter++;
+                        // DEBUG
+                        debugStartTimer();
+
+                        /*
+                         * create graph
+                         */
+
+                        // conservative initial capacities to remove re-hashes
+                        final Map<Integer, int[]> edges = new HashMap<>(M - i + 1, 1.0f);
+                        final Map<Integer, Set<Integer>> nodes = new HashMap<>(L - u - i + 1, 1.0f);
+                        final Set<Integer> nodesToVisit = new HashSet<>(L - u - i + 1, 1.0f); // for later search
+
+                        for (int edge = i; edge < M; edge++) {
+                            if (isHDPCRow(rowInfos[edge])) continue; // shortcut
+
+                            // count the number of nonzeros in V inside A
+                            if (A.nonZerosInRow(edge, i, L - u) != 2) continue; // not an edge
+
+                            final int[] nodesInThisEdge = A.nonZeroPositionsInRow(edge, i, L - u);
+                            edges.put(edge, nodesInThisEdge);
+
+                            for (int node : nodesInThisEdge) {
+                                Set<Integer> edgesInThisNode = nodes.get(node);
+
+                                // if we don't have this node yet
+                                if (edgesInThisNode == null) {
+                                    edgesInThisNode = new HashSet<>();
+                                    nodes.put(node, edgesInThisNode);
+                                    nodesToVisit.add(node); // add node for later traversal
+                                }
+
+                                edgesInThisNode.add(edge);
+                            }
+                        }
+
+                        /*
+                         * the graph is complete, now we must
+                         * find the maximum size component
+                         */
+
+                        // size of the largest component so far
+                        int maximumComponentSize = 1;
+
+                        // any edge contained in largest component
+                        int edgeInMaximumComponent = regularRow;
+
+                        // used repeatedly throughout the BFSes
+                        final Queue<Integer> queue = new ArrayDeque<>();
+                        final Set<Integer> visited = new HashSet<>();
+
+                        // perform multiple BFS to find the connected components
+                        while (nodesToVisit.size() > 1) {
+                            final int start = nodesToVisit.iterator().next(); // any node
+                            nodesToVisit.remove(start);
+
+                            visited.clear();
+                            queue.clear();
+
+                            visited.add(start);
+                            queue.add(start);
+                            int componentSize = 1;
+
+                            while (!queue.isEmpty()) {
+                                final int node = queue.poll();
+                                for (int edge : nodes.get(node)) {
+                                    final int[] nodesInEdge = edges.get(edge);
+                                    final int adj = (nodesInEdge[0] == node) ? nodesInEdge[1] : nodesInEdge[0];
+                                    if (!visited.contains(adj)) {
+                                        visited.add(adj);
+                                        queue.add(adj);
+                                        componentSize++;
+
+                                        nodesToVisit.remove(adj); // don't start another BFS with repeated nodes
+                                    }
+                                }
+                            }
+
+                            if (componentSize > maximumComponentSize) {
+                                edgeInMaximumComponent = nodes.get(start).iterator().next(); // any edge
+                            }
+                        }
+
+                        chosenRow = edgeInMaximumComponent;
+
+                        // DEBUG
+                        debugEndTimer();
+                        chooseRowUsingGraphNanos += debugEllapsedNanos();
+                    }
+                }
             }
 
             /*
@@ -887,27 +885,22 @@ final class LinearSystem {
              * with the chosen row so that the chosen row is the first row that intersects V."
              */
 
-            final int chosenRowPos = chosenRow.position;
-
             // if the chosen row is not 'i' already
-            if (chosenRowPos != i) {
+            if (chosenRow != i) {
                 // DEBUG
                 debugStartTimer();
 
                 // swap in A
-                A.swapRows(i, chosenRowPos);
+                A.swapRows(i, chosenRow);
 
                 // swap in X
-                X.swapRows(i, chosenRowPos);
+                X.swapRows(i, chosenRow);
 
                 // decoding process - swap in d
-                ArrayUtils.swapInts(d, i, chosenRowPos);
+                ArrayUtils.swapInts(d, i, chosenRow);
 
-                // update values in 'rows' map
-                Row other = rows.remove(i);
-                rows.put(chosenRowPos, other);
-                other.position = chosenRowPos;
-                chosenRow.position = i;
+                // also swap in row information table
+                ArrayUtils.swapLongs(rowInfos, i, chosenRow);
 
                 // DEBUG
                 debugEndTimer();
@@ -1015,39 +1008,6 @@ final class LinearSystem {
              */
             i++;
             u += r - 1;
-
-            // DEBUG
-            debugStartTimer();
-
-            // update nonZeros
-            for (Row row : rows.values()) {
-                // update the non zero count
-                row.nonZeros = A.nonZerosInRow(row.position, i, L - u);
-
-                if (row.nonZeros != 2 || row.isHDPC) {
-                    row.nodes = null;
-                }
-                else {
-                    Set<Integer> nodes = row.nodes;
-                    if (nodes == null) {
-                        nodes = new HashSet<>(2 + 1, 1.0f); // we know there will only be two non zeros
-                        row.nodes = nodes;
-                    }
-                    else {
-                        nodes.clear(); // optimization
-                    }
-
-                    ByteVectorIterator it = A.nonZeroRowIterator(row.position, i, L - u);
-                    while (it.hasNext()) {
-                        it.next();
-                        nodes.add(it.index()); // add node to this edge (column index)
-                    }
-                }
-            }
-
-            // DEBUG
-            debugEndTimer();
-            countNonZerosNanos += debugEllapsedNanos();
         }
 
         // DEBUG
@@ -1055,11 +1015,10 @@ final class LinearSystem {
         debugPrintLine("1st:");
         debugPrintMillis("  init", initNanos);
         debugPrintMillis("  find r", findRNanos);
-        debugPrintMillis("  choose row", chooseRowNanos);
+        debugPrintMillis("  choose row with graph", chooseRowUsingGraphNanos);
         debugPrintMillis("  swap rows", swapRowsNanos);
         debugPrintMillis("  swap columns", swapColumnsNanos);
         debugPrintMillis("  add/mult row", addMultiplyNanos);
-        debugPrintMillis("  count nonzeros", countNonZerosNanos);
 
         return pidPhase2(A, X, D, d, c, L, M, i, u);
     }
@@ -1099,8 +1058,7 @@ final class LinearSystem {
 
         // check U_lower's rank, if it's less than 'u' we've got a decoding failure
         if (MatrixUtilities.nonZeroRows(A, i, M, i, L) < u) {
-            throw new SingularMatrixException(
-                "Decoding Failure - PI Decoding @ Phase 2: U_lower's rank is less than u.");
+            throw new SingularMatrixException("@ Phase 2: U_lower's rank is less than u");
         }
 
         /*
