@@ -845,7 +845,6 @@ final class LinearSystem {
 
                             visited.add(start);
                             queue.add(start);
-                            int componentSize = 1;
 
                             while (!queue.isEmpty()) {
                                 final int node = queue.poll();
@@ -855,14 +854,14 @@ final class LinearSystem {
                                     if (!visited.contains(adj)) {
                                         visited.add(adj);
                                         queue.add(adj);
-                                        componentSize++;
 
                                         nodesToVisit.remove(adj); // don't start another BFS with repeated nodes
                                     }
                                 }
                             }
 
-                            if (componentSize > maximumComponentSize) {
+                            if (visited.size() > maximumComponentSize) {
+                                maximumComponentSize = visited.size();
                                 edgeInMaximumComponent = nodes.get(start).iterator().next(); // any edge
                             }
                         }
