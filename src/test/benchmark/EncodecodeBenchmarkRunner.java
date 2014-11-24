@@ -26,6 +26,7 @@ import net.fec.openrq.SourceBlockEncodingTest;
 import net.fec.openrq.parameters.ParameterChecker;
 import net.fec.openrq.util.io.SafeStandardStreams;
 
+import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.results.format.ResultFormat;
 import org.openjdk.jmh.results.format.ResultFormatFactory;
@@ -38,6 +39,8 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.VerboseMode;
 
+import com.beust.jcommander.IParameterValidator;
+import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.IValueValidator;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -52,6 +55,7 @@ public final class EncodecodeBenchmarkRunner {
     private static final PrintStream STDOUT = SafeStandardStreams.safeSTDOUT();
     private static final int DEFAULT_SYMBOL_SIZE = 1500; // in bytes
     private static final int DEFAULT_SYMBOL_OVERHEAD = 0;
+    private static final BenchmarkMode DEFAULT_BENCHMARK_MODE = BenchmarkMode.AVERAGE_LATENCY;
     private static final int DEFAULT_FORKS = 1;
 
 
@@ -67,6 +71,8 @@ public final class EncodecodeBenchmarkRunner {
             final List<Integer> sos = options.symbolOverheadList();
             final boolean runEncoding = options.runEncodingBenchmarks();
             final boolean runDecoding = options.runDecodingBenchmarks();
+            final Mode benchMode = options.benchmarkMode().getMode();
+            final TimeUnit benchUnit = options.benchmarkMode().getUnit();
             final int forks = options.forks();
             final VerboseMode verbMode = getVerboseMode(options);
 
@@ -80,7 +86,7 @@ public final class EncodecodeBenchmarkRunner {
             if (runEncoding) {
                 for (int K : Ks) {
                     STDOUT.println("Running encoding benchmark for K = " + K);
-                    Runner encRunner = newEncodingRunner(T, K, forks, verbMode);
+                    Runner encRunner = newEncodingRunner(T, K, benchMode, benchUnit, forks, verbMode);
                     results.addAll(encRunner.run());
                 }
             }
@@ -89,7 +95,7 @@ public final class EncodecodeBenchmarkRunner {
                 for (int K : Ks) {
                     for (int symbover : sos) {
                         STDOUT.println("Running decoding benchmark for K = " + K + " and symbol overhead = " + symbover);
-                        Runner decRunner = newDecodingRunner(T, K, symbover, forks, verbMode);
+                        Runner decRunner = newDecodingRunner(T, K, symbover, benchMode, benchUnit, forks, verbMode);
                         results.addAll(decRunner.run());
                     }
                 }
@@ -125,25 +131,44 @@ public final class EncodecodeBenchmarkRunner {
         }
     }
 
-    private static Runner newEncodingRunner(int symbsize, int srcsymbs, int forks, VerboseMode mode) {
+    private static Runner newEncodingRunner(
+        int symbsize,
+        int srcsymbs,
+        Mode benchMode,
+        TimeUnit benchUnit,
+        int forks,
+        VerboseMode mode)
+    {
 
         Options opt = new OptionsBuilder()
             .include(SourceBlockEncodingTest.class.getName() + ".*")
             .param("symbsize", symbsize + "")
             .param("srcsymbs", srcsymbs + "")
+            .timeUnit(benchUnit)
+            .mode(benchMode)
             .forks(forks)
             .build();
 
         return new Runner(opt, getOutputFormat(mode));
     }
 
-    private static Runner newDecodingRunner(int symbsize, int srcsymbs, int symbover, int forks, VerboseMode mode) {
+    private static Runner newDecodingRunner(
+        int symbsize,
+        int srcsymbs,
+        int symbover,
+        Mode benchMode,
+        TimeUnit benchUnit,
+        int forks,
+        VerboseMode mode)
+    {
 
         Options opt = new OptionsBuilder()
             .include(SourceBlockDecodingTest.class.getName() + ".*")
             .param("symbsize", symbsize + "")
             .param("srcsymbs", srcsymbs + "")
             .param("symbover", symbover + "")
+            .mode(benchMode)
+            .timeUnit(benchUnit)
             .forks(forks)
             .build();
 
@@ -198,6 +223,12 @@ public final class EncodecodeBenchmarkRunner {
         @Parameter(names = {"-d", "-D", "--decodingonly"},
             description = "Only run decoding benchmarks  (unless option \"-e\" is used as well)")
         private boolean runDecodingOnly = false;
+
+        @Parameter(names = {"-b", "-B", "--benchmode"},
+            description = "Benchmark mode (\"avg\" for average latency; \"tpt\" for throughput)",
+            validateWith = BenchmarkModeParameterValidator.class,
+            converter = BenchmarkModeCoverter.class)
+        private BenchmarkMode benchmarkMode = DEFAULT_BENCHMARK_MODE;
 
         @Parameter(names = {"-f", "--forks"},
             description = "How many times to fork a single benchmark",
@@ -256,9 +287,92 @@ public final class EncodecodeBenchmarkRunner {
             return runDecodingOnly || !runEncodingOnly;
         }
 
+        BenchmarkMode benchmarkMode() {
+
+            return benchmarkMode;
+        }
+
         int forks() {
 
             return forks;
+        }
+    }
+
+    private static enum BenchmarkMode {
+
+        AVERAGE_LATENCY {
+
+            @Override
+            Mode getMode() {
+
+                return Mode.AverageTime;
+            }
+
+            @Override
+            TimeUnit getUnit() {
+
+                return TimeUnit.MICROSECONDS;
+            }
+
+            @Override
+            public String toString() {
+
+                return "avg";
+            }
+        },
+        THROUGHPUT {
+
+            @Override
+            Mode getMode() {
+
+                return Mode.Throughput;
+            }
+
+            @Override
+            TimeUnit getUnit() {
+
+                return TimeUnit.SECONDS;
+            }
+
+            @Override
+            public String toString() {
+
+                return "tpt";
+            }
+        };
+
+        abstract Mode getMode();
+
+        abstract TimeUnit getUnit();
+    }
+
+    public static final class BenchmarkModeParameterValidator implements IParameterValidator {
+
+        @Override
+        public void validate(@SuppressWarnings("unused") String name, String value) throws ParameterException {
+
+            for (BenchmarkMode mode : BenchmarkMode.values()) {
+                if (value.equalsIgnoreCase(mode.toString())) {
+                    return;
+                }
+            }
+
+            throw new ParameterException("Invalid benchmark mode");
+        }
+    }
+
+    public static final class BenchmarkModeCoverter implements IStringConverter<BenchmarkMode> {
+
+        @Override
+        public BenchmarkMode convert(String arg) {
+
+            for (BenchmarkMode mode : BenchmarkMode.values()) {
+                if (arg.equalsIgnoreCase(mode.toString())) {
+                    return mode;
+                }
+            }
+
+            throw new IllegalArgumentException("Invalid benchmark mode");
         }
     }
 
