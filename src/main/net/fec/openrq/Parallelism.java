@@ -35,6 +35,11 @@ final class Parallelism {
         return SilentFuture.of(INSTANCE.submit(task));
     }
 
+    static SilentFuture<?> submitTask(Runnable task) {
+
+        return SilentFuture.of(INSTANCE.submit(task));
+    }
+
 
     private static final Parallelism INSTANCE = init();
 
@@ -83,6 +88,11 @@ final class Parallelism {
     }
 
     private <T> Future<T> submit(Callable<T> task) {
+
+        return executor.submit(task);
+    }
+
+    private Future<?> submit(Runnable task) {
 
         return executor.submit(task);
     }
