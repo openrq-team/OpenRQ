@@ -20,7 +20,7 @@ limitations under the License.
     </description>
 
 <!-- ================ Properties initialization ================ -->
-    <property name="version" value="3.3"/>
+    <property name="version" value="3.3.1"/>
 
     <property name="javac-debug" value="off"/>
     <property name="javac-debuglevel" value="lines"/>
