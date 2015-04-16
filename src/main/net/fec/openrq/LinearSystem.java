@@ -425,7 +425,7 @@ final class LinearSystem {
 
         indexes.add((int)b);
 
-        for (long j = 0; j < d; j++)
+        for (long j = 1; j < d; j++)
         {
             b = (b + a) % W;
             indexes.add((int)b);
@@ -486,7 +486,7 @@ final class LinearSystem {
          * encoding -- refer to section 5.3.5.3 of RFC 6330
          */
 
-        for (long j = 0; j < d; j++)
+        for (long j = 1; j < d; j++)
         {
             b = (b + a) % W;
             OctetOps.vectorVectorAddition(C[b], result, result);

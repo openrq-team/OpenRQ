@@ -27,7 +27,7 @@ limitations under the License.
     -->
     <dirname property="functional-ant.basedir" file="${ant.file.functional-ant}"/>
 
-    <property name="junit-core.jar" location="${functional-ant.basedir}/junit-4.11.jar"/>
+    <property name="junit-core.jar" location="${functional-ant.basedir}/junit-4.12.jar"/>
     <property name="hamcrest-core.jar" location="${functional-ant.basedir}/hamcrest-core-1.3.jar"/>
 
     <!-- private target to be overriden in importing script -->
