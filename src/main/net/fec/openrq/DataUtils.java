@@ -51,35 +51,28 @@ final class DataUtils {
 
 
     /**
-     * @param <SB>
-     * @param clazz
      * @param fecParams
+     * @param clazz
      * @param supplier
      * @return an immutable list of source block encoders/decoders
      */
     static <SB> ImmutableList<SB> partitionSourceData(
-        Class<SB> clazz,
         FECParameters fecParams,
-        SourceBlockSupplier<SB> supplier)
-    {
+        Class<SB> clazz, SourceBlockSupplier<SB> supplier) {
 
-        return partitionSourceData(clazz, fecParams, 0, supplier);
+        return partitionSourceData(fecParams, 0, clazz, supplier);
     }
 
     /**
-     * @param <SB>
-     * @param clazz
      * @param fecParams
      * @param startOffset
+     * @param clazz
      * @param supplier
      * @return an immutable list of source block encoders/decoders
      */
     static <SB> ImmutableList<SB> partitionSourceData(
-        Class<SB> clazz,
-        FECParameters fecParams,
-        int startOffset,
-        SourceBlockSupplier<SB> supplier)
-    {
+        FECParameters fecParams, int startOffset,
+        Class<SB> clazz, SourceBlockSupplier<SB> supplier) {
 
         final int Kt = fecParams.totalSymbols();
         final int Z = fecParams.numberOfSourceBlocks();
@@ -94,9 +87,9 @@ final class DataUtils {
         final SB[] srcBlocks = ArrayUtils.newArray(clazz, Z);
 
         /*
-         * The object MUST be partitioned into Z = ZL + ZS contiguous source blocks.
-         * Each source block contains a region of the data array, except the last source block
-         * which may also contain extra padding.
+         * The object MUST be partitioned into Z = ZL + ZS contiguous source
+         * blocks. Each source block contains a region of the data array, except
+         * the last source block which may also contain extra padding.
          */
 
         final int T = fecParams.symbolSize();
@@ -116,39 +109,30 @@ final class DataUtils {
     }
 
     /**
-     * @param <SS>
      * @param sbn
-     * @param clazz
      * @param fecParams
+     * @param clazz
      * @param supplier
      * @return an immutable list of source symbols
      */
     static <SS> ImmutableList<SS> partitionSourceBlock(
-        int sbn,
-        Class<SS> clazz,
-        FECParameters fecParams,
-        SourceSymbolSupplier<SS> supplier)
-    {
+        int sbn, FECParameters fecParams,
+        Class<SS> clazz, SourceSymbolSupplier<SS> supplier) {
 
-        return partitionSourceBlock(sbn, clazz, fecParams, 0, supplier);
+        return partitionSourceBlock(sbn, fecParams, 0, clazz, supplier);
     }
 
     /**
-     * @param <SS>
      * @param sbn
-     * @param clazz
      * @param fecParams
      * @param startOffset
+     * @param clazz
      * @param supplier
      * @return an immutable list of source symbols
      */
     static <SS> ImmutableList<SS> partitionSourceBlock(
-        int sbn,
-        Class<SS> clazz,
-        FECParameters fecParams,
-        int startOffset,
-        SourceSymbolSupplier<SS> supplier)
-    {
+        int sbn, FECParameters fecParams, int startOffset,
+        Class<SS> clazz, SourceSymbolSupplier<SS> supplier) {
 
         // number of source symbols
         final int K = getK(fecParams, sbn);
@@ -169,7 +153,8 @@ final class DataUtils {
      * 
      * @param fecParams
      * @param sbn
-     * @return the number of source symbols of a source block identified by the provided source block number
+     * @return the number of source symbols of a source block identified by the
+     *         provided source block number
      */
     static int getK(FECParameters fecParams, int sbn) {
 
@@ -193,9 +178,11 @@ final class DataUtils {
      * @param copySymbols
      * @return a parsed encoding packet
      */
-    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, int sbn, int esi, byte[] symbols, boolean copySymbols) {
+    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, int sbn,
+        int esi, byte[] symbols, boolean copySymbols) {
 
-        return parsePacket(dec, sbn, esi, symbols, 0, symbols.length, copySymbols);
+        return parsePacket(dec, sbn, esi, symbols, 0, symbols.length,
+            copySymbols);
     }
 
     /**
@@ -208,18 +195,12 @@ final class DataUtils {
      * @param copySymbols
      * @return a parsed encoding packet
      */
-    static Parsed<EncodingPacket> parsePacket(
-        DataDecoder dec,
-        int sbn,
-        int esi,
-        byte[] symbols,
-        int off,
-        int len,
-        boolean copySymbols)
-    {
+    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, int sbn,
+        int esi, byte[] symbols, int off, int len, boolean copySymbols) {
 
         Indexables.checkOffsetLengthBounds(off, len, symbols.length);
-        return parsePacket(dec, sbn, esi, ByteBuffer.wrap(symbols, off, len), copySymbols);
+        return parsePacket(dec, sbn, esi, ByteBuffer.wrap(symbols, off, len),
+            copySymbols);
     }
 
     /**
@@ -230,9 +211,11 @@ final class DataUtils {
      * @param copySymbols
      * @return a parsed encoding packet
      */
-    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, int sbn, int esi, ByteBuffer symbols, boolean copySymbols) {
+    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, int sbn,
+        int esi, ByteBuffer symbols, boolean copySymbols) {
 
-        return parsePacket(dec, sbn, esi, symbols, symbols.remaining(), copySymbols);
+        return parsePacket(dec, sbn, esi, symbols, symbols.remaining(),
+            copySymbols);
     }
 
     /**
@@ -241,10 +224,11 @@ final class DataUtils {
      * @param copySymbols
      * @return a parsed encoding packet
      */
-    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, SerializablePacket ser, boolean copySymbols) {
+    static Parsed<EncodingPacket> parsePacket(DataDecoder dec,
+        SerializablePacket ser, boolean copySymbols) {
 
-        return parsePacket(dec,
-            ser.sourceBlockNumber(), ser.encodingSymbolID(), ser.symbols(), copySymbols);
+        return parsePacket(dec, ser.sourceBlockNumber(),
+            ser.encodingSymbolID(), ser.symbols(), copySymbols);
     }
 
     /**
@@ -253,7 +237,8 @@ final class DataUtils {
      * @param copySymbols
      * @return a parsed encoding packet
      */
-    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, byte[] array, boolean copySymbols) {
+    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, byte[] array,
+        boolean copySymbols) {
 
         return parsePacket(dec, array, 0, array.length, copySymbols);
     }
@@ -266,7 +251,8 @@ final class DataUtils {
      * @param copySymbols
      * @return a parsed encoding packet
      */
-    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, byte[] array, int off, int len, boolean copySymbols) {
+    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, byte[] array,
+        int off, int len, boolean copySymbols) {
 
         Indexables.checkOffsetLengthBounds(off, len, array.length);
         return parsePacket(dec, ByteBuffer.wrap(array, off, len), copySymbols);
@@ -278,7 +264,8 @@ final class DataUtils {
      * @param copySymbols
      * @return a parsed encoding packet
      */
-    static Parsed<EncodingPacket> parsePacket(DataDecoder dec, ByteBuffer buffer, boolean copySymbols) {
+    static Parsed<EncodingPacket> parsePacket(DataDecoder dec,
+        ByteBuffer buffer, boolean copySymbols) {
 
         if (buffer.remaining() < SizeOf.INT) return Parsed.invalid("FEC Payload ID is missing");
         final int fecPayloadID = buffer.getInt();
@@ -289,8 +276,10 @@ final class DataUtils {
 
         final int rem = buffer.remaining();
         if (rem < symbLen) {
-            return Parsed.invalid(String.format(
-                "symbols data is incomplete, required %d bytes but only %d bytes are available", symbLen, rem));
+            return Parsed
+                .invalid(String
+                    .format("symbols data is incomplete, required %d bytes but only %d bytes are available",
+                        symbLen, rem));
         }
 
         final int sbn = ParameterIO.extractSourceBlockNumber(fecPayloadID);
@@ -304,7 +293,8 @@ final class DataUtils {
      * @return a parsed encoding packet
      * @throws IOException
      */
-    static Parsed<EncodingPacket> readPacketFrom(DataDecoder dec, DataInput in) throws IOException {
+    static Parsed<EncodingPacket> readPacketFrom(DataDecoder dec, DataInput in)
+        throws IOException {
 
         final int fecPayloadID = in.readInt();
         final int symbLen = in.readInt();
@@ -324,7 +314,8 @@ final class DataUtils {
      * @return a parsed encoding packet
      * @throws IOException
      */
-    static Parsed<EncodingPacket> readPacketFrom(DataDecoder dec, ReadableByteChannel ch) throws IOException {
+    static Parsed<EncodingPacket> readPacketFrom(DataDecoder dec,
+        ReadableByteChannel ch) throws IOException {
 
         final ByteBuffer intsBuf = ByteBuffer.allocate(SizeOf.INT + SizeOf.INT);
         ExtraChannels.readBytes(ch, intsBuf, BufferOperation.FLIP_ABSOLUTELY);
@@ -342,60 +333,65 @@ final class DataUtils {
     }
 
     // requires valid symbLen
-    private static Parsed<EncodingPacket> parsePacket(
-        DataDecoder dec,
-        int sbn,
-        int esi,
-        ByteBuffer symbols,
-        int symbLen,
-        boolean copySymbols)
-    {
+    private static Parsed<EncodingPacket> parsePacket(DataDecoder dec, int sbn,
+        int esi, ByteBuffer symbols, int symbLen, boolean copySymbols) {
 
         final int Z = dec.numberOfSourceBlocks();
         if (!ParameterChecker.isValidFECPayloadID(sbn, esi, Z)) {
-            return Parsed.invalid(ParameterChecker.getFECPayloadIDErrorString(sbn, esi, Z));
+            return Parsed.invalid(ParameterChecker.getFECPayloadIDErrorString(
+                sbn, esi, Z));
         }
 
         final int T = dec.symbolSize();
         final int K = dec.sourceBlock(sbn).numberOfSourceSymbols();
-        final int numSymbols = ExtraMath.ceilDiv(symbLen, T); // account for smaller last symbol
+        final int numSymbols = ExtraMath.ceilDiv(symbLen, T); // account for
+                                                              // smaller last
+                                                              // symbol
         if (numSymbols == 0) {
             return Parsed.invalid("there is no symbols data");
         }
 
         if (esi < K) { // source symbols
             if (numSymbols <= K - esi) {
-                return Parsed.of(EncodingPacket.newSourcePacket(
-                    sbn, esi, getSymbolData(symbols, symbLen, copySymbols), numSymbols));
+                return Parsed.of(EncodingPacket.newSourcePacket(sbn, esi,
+                    getSymbolData(symbols, symbLen, copySymbols),
+                    numSymbols));
             }
             else {
-                return Parsed.invalid(String.format(
-                    "an ESI of %d requires a number of source symbols (%d) of at most %d",
-                    esi, numSymbols, K - esi));
+                return Parsed
+                    .invalid(String
+                        .format("an ESI of %d requires a number of source symbols (%d) of at most %d",
+                            esi, numSymbols, K - esi));
             }
         }
         else { // repair symbols
             final int maxESI = ParameterChecker.maxEncodingSymbolID();
             if (numSymbols <= (1 + maxESI - esi)) {
-                return Parsed.of(EncodingPacket.newRepairPacket(
-                    sbn, esi, getSymbolData(symbols, symbLen, copySymbols), numSymbols));
+                return Parsed.of(EncodingPacket.newRepairPacket(sbn, esi,
+                    getSymbolData(symbols, symbLen, copySymbols),
+                    numSymbols));
             }
             else {
-                return Parsed.invalid(String.format(
-                    "an ESI of %d requires a number of repair symbols (%d) of at most %d",
-                    esi, numSymbols, 1 + maxESI - esi));
+                return Parsed
+                    .invalid(String
+                        .format("an ESI of %d requires a number of repair symbols (%d) of at most %d",
+                            esi, numSymbols, 1 + maxESI - esi));
             }
         }
     }
 
     // requires valid symbolsLen
-    private static ByteBuffer getSymbolData(ByteBuffer symbols, int symbLen, boolean copySymbols) {
+    private static ByteBuffer getSymbolData(ByteBuffer symbols, int symbLen,
+        boolean copySymbols) {
 
         if (copySymbols) {
-            return ByteBuffers.getCopy(symbols, symbLen, BufferOperation.ADVANCE_POSITION);
+            return ByteBuffers.getCopy(symbols, symbLen,
+                BufferOperation.ADVANCE_POSITION);
         }
         else {
-            return ByteBuffers.getSlice(symbols, symbLen, BufferOperation.ADVANCE_POSITION);
+            return ByteBuffers.getSlice(symbols, symbLen,
+                BufferOperation.ADVANCE_POSITION);
         }
     }
 }
+
