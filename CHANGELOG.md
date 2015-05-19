@@ -1,3 +1,32 @@
+## 3.3.2
+
+Simplified the API for return types in Encoding/Decoding classes.
+The returned generic types no longer have wildcards.
+This modification is "backwards-compatible" with previous versions
+(old code may have to change in declarations, for example,
+from Iterable<? extends Something> to Iterable<Something>)
+
+Changed public method signatures:
+(++/-- mean new/old methods, xx means deleted method)
+* net.fec.openrq.ArrayDataDecoder
+ * ++ public Iterable<SourceBlockDecoder> sourceBlockIterable()
+ * -- public Iterable<? extends SourceBlockDecoder> sourceBlockIterable()
+* net.fec.openrq.ArrayDataEncoder
+ * ++ public Iterable<SourceBlockEncoder> sourceBlockIterable()
+ * -- public Iterable<? extends SourceBlockEncoder> sourceBlockIterable()
+* net.fec.openrq.decoder.DataDecoder
+ * ++ public Iterable<SourceBlockDecoder> sourceBlockIterable()
+ * -- public Iterable<? extends SourceBlockDecoder> sourceBlockIterable()
+* net.fec.openrq.encoder.DataEncoder
+ * ++ public Iterable<SourceBlockEncoder> sourceBlockIterable()
+ * -- public Iterable<? extends SourceBlockEncoder> sourceBlockIterable()
+
+
+## 3.3.1
+
+Fixed a bug in the decoding algorithm that affected the code resilience.
+
+
 ## 3.3
 
 Improved performance a lot.
@@ -17,10 +46,11 @@ Changed public method signatures:
  * ++ public static ArrayDataDecoder newDecoderWithOneOverhead(FECParameters)
  * ++ public static ArrayDataDecoder newDecoderWithTwoOverhead(FECParameters)
 * net.fec.openrq.decoder.SourceBlockDecoder
- * public int symbolOverhead()
- * public void setSymbolOverhead(int)
+ * ++ public int symbolOverhead()
+ * ++ public void setSymbolOverhead(int)
 * net.fec.openrq.parameters.ParameterChecker
  * ++ public static int numRepairSymbolsPerBlock(int, int)
+
 
 ## 3.2
 
@@ -51,6 +81,7 @@ Changed public method signatures:
  * ++ public static boolean isNumSourceSymbolsPerBlockOutOfBounds(int)
  * ++ public static int numRepairSymbolsPerBlock(int)
 
+
 ## 3.1
 
 Added new methods for reading/writing FEC parameters. They now mimic those
@@ -69,6 +100,7 @@ Changed public method signatures:
  * ++ public byte[] asArray()
  * ++ public void writeTo(byte[])
  * ++ public ByteBuffer asBuffer()
+
 
 ## 3.0
 
@@ -105,6 +137,7 @@ Changed public method signatures:
  * ++ public static int minAllowedPayloadLength(long)
  * ++ public static long maxAllowedDataLength(int, long)
 
+
 ## 2.0.1
 
 Changed a method from non-static to static (backwards compatible with previous
@@ -115,7 +148,6 @@ Changed public method signatures:
 * net.fec.openrq.parameters.ParameterChecker
  * ++ public static int minAllowedSymbolSize()
  * -- public int minAllowedSymbolSize()
- * 
 
 
 ## 2.0
