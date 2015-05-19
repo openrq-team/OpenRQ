@@ -61,7 +61,7 @@ public final class ArrayDataDecoder implements DataDecoder {
 
     private final byte[] dataArray;
     private final FECParameters fecParams;
-    private final ImmutableList<ArraySourceBlockDecoder> srcBlockDecoders;
+    private final ImmutableList<SourceBlockDecoder> srcBlockDecoders;
 
 
     private ArrayDataDecoder(byte[] dataArray, FECParameters fecParams, final int symbOver) {
@@ -69,12 +69,11 @@ public final class ArrayDataDecoder implements DataDecoder {
         this.dataArray = dataArray;
         this.fecParams = fecParams;
         this.srcBlockDecoders = DataUtils.partitionSourceData(
-            ArraySourceBlockDecoder.class,
             fecParams,
-            new SourceBlockSupplier<ArraySourceBlockDecoder>() {
+            SourceBlockDecoder.class, new SourceBlockSupplier<SourceBlockDecoder>() {
 
                 @Override
-                public ArraySourceBlockDecoder get(int off, int sbn) {
+                public SourceBlockDecoder get(int off, int sbn) {
 
                     return ArraySourceBlockDecoder.newDecoder(
                         ArrayDataDecoder.this, ArrayDataDecoder.this.dataArray, off,
@@ -138,7 +137,7 @@ public final class ArrayDataDecoder implements DataDecoder {
     }
 
     @Override
-    public Iterable<? extends SourceBlockDecoder> sourceBlockIterable() {
+    public Iterable<SourceBlockDecoder> sourceBlockIterable() {
 
         return srcBlockDecoders;
     }
@@ -271,3 +270,4 @@ public final class ArrayDataDecoder implements DataDecoder {
         return DataUtils.readPacketFrom(this, ch);
     }
 }
+

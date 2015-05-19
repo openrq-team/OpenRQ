@@ -54,15 +54,14 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         int symbOver)
     {
 
-        ImmutableList<ArraySourceSymbol> sourceSymbols = DataUtils.partitionSourceBlock(
+        ImmutableList<SourceSymbol> sourceSymbols = DataUtils.partitionSourceBlock(
             sbn,
-            ArraySourceSymbol.class,
             fecParams,
             arrayOff,
-            new DataUtils.SourceSymbolSupplier<ArraySourceSymbol>() {
+            SourceSymbol.class, new DataUtils.SourceSymbolSupplier<SourceSymbol>() {
 
                 @Override
-                public ArraySourceSymbol get(int off, @SuppressWarnings("unused") int esi, int T) {
+                public SourceSymbol get(int off, @SuppressWarnings("unused") int esi, int T) {
 
                     return ArraySourceSymbol.newSymbol(array, off, T);
                 }
@@ -82,7 +81,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
     private ArraySourceBlockDecoder(
         ArrayDataDecoder dataDecoder,
         int sbn,
-        ImmutableList<ArraySourceSymbol> sourceSymbols,
+        ImmutableList<SourceSymbol> sourceSymbols,
         int symbOver)
     {
 
@@ -508,7 +507,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
 
         private SourceBlockState sbState;
 
-        private final ImmutableList<ArraySourceSymbol> sourceSymbols;
+        private final ImmutableList<SourceSymbol> sourceSymbols;
         private final Map<Integer, RepairSymbol> repairSymbols;
 
         private final BitSet sourceSymbolsBitSet;
@@ -520,7 +519,7 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         private final Lock symbolsStateLock;
 
 
-        SymbolsState(ImmutableList<ArraySourceSymbol> sourceSymbols, int symbOver) {
+        SymbolsState(ImmutableList<SourceSymbol> sourceSymbols, int symbOver) {
 
             this.sbState = SourceBlockState.INCOMPLETE;
 
@@ -727,3 +726,4 @@ final class ArraySourceBlockDecoder implements SourceBlockDecoder {
         }
     }
 }
+

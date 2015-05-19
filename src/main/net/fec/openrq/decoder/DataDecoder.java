@@ -108,7 +108,7 @@ public interface DataDecoder {
      * 
      * @return a new iterable over all source block decoders
      */
-    public Iterable<? extends SourceBlockDecoder> sourceBlockIterable();
+    public Iterable<SourceBlockDecoder> sourceBlockIterable();
 
     /**
      * Parses an encoding packet from the given source block number, encoding symbol identifier of the first symbol, and
@@ -352,3 +352,4 @@ public interface DataDecoder {
      */
     public Parsed<EncodingPacket> readPacketFrom(ReadableByteChannel ch) throws IOException;
 }
+

@@ -46,24 +46,27 @@ public final class ArrayDataEncoder implements DataEncoder {
      * @exception IndexOutOfBoundsException
      *                If {@code offset < 0 || fecParams.dataLength() > (data.length - offset)}
      */
-    static ArrayDataEncoder newEncoder(byte[] data, int offset, FECParameters fecParams) {
+    static ArrayDataEncoder newEncoder(byte[] data, int offset,
+        FECParameters fecParams) {
 
         Objects.requireNonNull(data);
         // throws NullPointerException if null fecParams
         if (fecParams.dataLength() > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("data length must be at most 2^^31 - 1");
+            throw new IllegalArgumentException(
+                "data length must be at most 2^^31 - 1");
         }
-        Indexables.checkOffsetLengthBounds(offset, fecParams.dataLengthAsInt(), data.length);
+        Indexables.checkOffsetLengthBounds(offset, fecParams.dataLengthAsInt(),
+            data.length);
 
         return new ArrayDataEncoder(data, offset, fecParams);
     }
 
 
     private final byte[] array; // to return to the user
-    private final int offset;   // to return to the user
+    private final int offset; // to return to the user
 
     private final FECParameters fecParams;
-    private final ImmutableList<ArraySourceBlockEncoder> srcBlockEncoders;
+    private final ImmutableList<SourceBlockEncoder> srcBlockEncoders;
 
 
     private ArrayDataEncoder(byte[] array, int offset, FECParameters fecParams) {
@@ -74,18 +77,16 @@ public final class ArrayDataEncoder implements DataEncoder {
         this.fecParams = fecParams;
 
         this.srcBlockEncoders = DataUtils.partitionSourceData(
-            ArraySourceBlockEncoder.class,
-            fecParams,
-            offset,
-            new SourceBlockSupplier<ArraySourceBlockEncoder>() {
+            fecParams, offset,
+            SourceBlockEncoder.class, new SourceBlockSupplier<SourceBlockEncoder>() {
 
                 @Override
-                public ArraySourceBlockEncoder get(int off, int sbn) {
+                public SourceBlockEncoder get(int off, int sbn) {
 
                     return ArraySourceBlockEncoder.newEncoder(
-                        ArrayDataEncoder.this, ArrayDataEncoder.this.array, off,
-                        ArrayDataEncoder.this.fecParams,
-                        sbn);
+                        ArrayDataEncoder.this,
+                        ArrayDataEncoder.this.array, off,
+                        ArrayDataEncoder.this.fecParams, sbn);
                 }
             });
     }
@@ -133,7 +134,7 @@ public final class ArrayDataEncoder implements DataEncoder {
     }
 
     @Override
-    public Iterable<? extends SourceBlockEncoder> sourceBlockIterable() {
+    public Iterable<SourceBlockEncoder> sourceBlockIterable() {
 
         return srcBlockEncoders;
     }
@@ -158,3 +159,4 @@ public final class ArrayDataEncoder implements DataEncoder {
         return offset;
     }
 }
+

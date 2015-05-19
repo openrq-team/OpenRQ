@@ -92,5 +92,6 @@ public interface DataEncoder {
      * 
      * @return a new iterable over all source block encoders
      */
-    public Iterable<? extends SourceBlockEncoder> sourceBlockIterable();
+    public Iterable<SourceBlockEncoder> sourceBlockIterable();
 }
+
