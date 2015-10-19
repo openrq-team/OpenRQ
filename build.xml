@@ -25,7 +25,11 @@ limitations under the License.
     <property name="javac-debug" value="off"/>
     <property name="javac-debuglevel" value="lines"/>
     <property name="javac-args" value="-Xlint:none"/>
+    <property name="javac-source-version" value="1.7"/>
+    <property name="javac-target-version" value="1.7"/>
     
+    <property name="javadoc-source-version" value="1.7"/>
+
     <property name="top.src_dir" location="src"/>
     <property name="top.lib_dir" location="lib"/>
 
@@ -86,6 +90,8 @@ limitations under the License.
         <delete dir="${classes.build_dir}"/>
         <mkdir dir="${classes.build_dir}"/>
         <javac srcdir="${main.src_dir}" destdir="${classes.build_dir}"
+               source="${javac-source-version}"
+               target="${javac-target-version}"
                classpath="."
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
@@ -126,6 +132,8 @@ limitations under the License.
         <delete dir="${classes.build_dir}"/>
         <mkdir dir="${classes.build_dir}"/>
         <javac srcdir="${main.src_dir}:${opt.src_dir}" destdir="${classes.build_dir}"
+               source="${javac-source-version}"
+               target="${javac-target-version}"
                classpath="."
                debug="${javac-debug}"
                debuglevel="${javac-debuglevel}"
@@ -164,7 +172,8 @@ limitations under the License.
 
         <delete dir="${docs.build_dir}"/>
         <javadoc destdir="${docs.build_dir}"
-                 classpath="." source="1.7"
+                 source="${javadoc-source-version}"
+                 classpath="."
                  access="public"
                  doctitle="OpenRQ API ${version}"
                  splitindex="true" author="true" use="true"
