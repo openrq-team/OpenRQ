@@ -34,7 +34,7 @@ Current block decoding throughputs by total number of source symbols:
 
 #### Development status
 
-Staled for the moment. No planned time to return to an active development.
+Not being actively developed any more, but still accepting bug reports and pull requests. Other than that, we have no planned time to return to an active development.
 
 ---
 
