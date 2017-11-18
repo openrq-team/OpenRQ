@@ -2,9 +2,7 @@
 
 Please visit the [OpenRQ Wiki](https://github.com/openrq-team/OpenRQ/wiki) for information about the project.
 
----
-
-#### Implementation maturity
+### Implementation maturity
 
 OpenRQ is an implementation of a raptor code that follows exactly the instructions of [RFC 6330 (RaptorQ)](https://tools.ietf.org/html/rfc6330). The following features are available:
 - splitting of data into blocks where each block can be independently encoded/decoded
@@ -18,7 +16,7 @@ There is one feature still *missing*, though:
 
 Other useful features, such as allowing encoding/decoding directly from files or continually from streams, are not implemented yet. Users can only encode/decode from arrays of bytes.
 
-#### Performance
+### Performance
 
 Performance is still not optimal due to a bottleneck present in the decoding function.<sup>2</sup>
 
@@ -32,9 +30,13 @@ Current block decoding throughputs by total number of source symbols:
 | 500               | 26.21 Mbps |
 | 1000              | 15.39 Mbps |
 
-#### Development status
+### Development status
 
 Not being actively developed any more, but still accepting bug reports and pull requests. Other than that, we have no planned time to return to an active development.
+
+### Related projects
+
+- [orq](https://github.com/olanmatt/orq) - An open-source RaptorQ implementation in C++
 
 ---
 
